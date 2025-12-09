@@ -1,4 +1,4 @@
-# 📘 **CODE_OF_CONDUCT — M.A.N.G.O Project**
+# 📘 **CODE OF CONDUCT — M.A.N.G.O Project**
 
 # **Contributor Code of Conduct**
 

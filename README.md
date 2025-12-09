@@ -12,6 +12,12 @@
   ![Changelog](https://img.shields.io/badge/Changelog-v1.0.0-blue?style=for-the-badge&link=https://github.com/T4t4n32/M.A.N.G.O/blob/main/CHANGELOG.md)
 </p>
 
+![Release](https://img.shields.io/github/v/release/T4t4n32/M_A_N_G_O?include_prereleases&style=for-the-badge&color=orange&label=Release)
+![Version](https://img.shields.io/github/v/tag/T4t4n32/M_A_N_G_O?style=for-the-badge&color=green&label=Version)
+![License](https://img.shields.io/github/license/T4t4n32/M_A_N_G_O?style=for-the-badge&color=blue&label=License)
+![Issues](https://img.shields.io/github/issues/T4t4n32/M_A_N_G_O?style=for-the-badge&color=red&label=Issues)
+![Stars](https://img.shields.io/github/stars/T4t4n32/M_A_N_G_O?style=for-the-badge&color=yellow&label=Stars)
+
 ### **Real-time environmental insights for protecting mangrove ecosystems in Colombia.**
 
 
