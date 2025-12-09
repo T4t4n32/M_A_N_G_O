@@ -165,13 +165,19 @@ Directory structure:
     ├── CONTRIBUTING.md
     ├── LICENSE.md
     ├── .NOTES.md
-    
+    │
     ├── DEGREE PROJECT/ (Documentación principal del proyecto de grado)
     │   ├── M A N G O.md
     │   └── overview/
     │       ├── IMPORTANT DATA/ (Documentos base, plantillas, presentaciones y datos como PRECIOS.xlsx)
-    │       └── PARTS/ (Carpetas por sección del proyecto: 1-INTRODUCCION, 2-PROBLEMATICA, 3-OBJETIVOS, 4-MARCO TEORICO, 7-CONCLUSION, 9-BIBLIOGRAFIA con borradores y fuentes de referencia)
-    
+    │       └── PARTS/ (Carpetas por sección del proyecto: 1-INTRODUCCION
+    │                                                      2-PROBLEMATICA
+    │                                                      3-OBJETIVOS
+    │                                                      4-MARCO TEORICO
+    │                                                      7-CONCLUSION
+    │                                                      9-BIBLIOGRAFIA 
+    │                                                      (con borradores y fuentes de referencia)
+    │
     ├── hardware/ (Información y archivos relacionados con los componentes físicos)
     │   ├── README.md
     │   └── Files_information_components/ 
@@ -179,12 +185,12 @@ Directory structure:
     │       ├── 3D_Folder_Design/ (Diseños 3D de hélices y propulsores)
     │       ├── DX-LR30-433 Information Package/ (Documentación técnica del módulo de radio DX-LR30)
     │       └── LoRa/ (Ejemplos de código y librerías para módulos LoRa/ESP32 de Heltec)
-    
+    │
     ├── SENA/ (Presentaciones específicas del proyecto)
     │   ├── FS_MANGO.pptx
     │   ├── SENA_MANGO.pptx
     │   └── SF_MANGO.pptx
-    
+    │
     └── software/ (Código fuente y archivos de la aplicación y el firmware)
         ├── README.md
         ├── database/ (Archivos de configuración y esquema SQL de la base de datos)
