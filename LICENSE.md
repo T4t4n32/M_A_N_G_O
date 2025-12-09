@@ -1,6 +1,6 @@
 MIT License
 
-Copyright (c) 2025 Sebastián Sánchez
+Copyright (c) 2025 Sebastián Sánchez Chacón
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -21,4 +21,4 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 
 Project Note:
-This project was originally created as a high-school research initiative under the group "CALIBOTS". After the group disbanded, the project was entrusted entirely to Sebastián Sánchez, who continued its development independently. M.A.N.G.O represents an educational and scientific effort to support environmental monitoring in Colombian mangrove ecosystems.
+This project was originally created as a high-school research initiative under the group "CALIBOTS". After the group disbanded, the project was entrusted entirely to Sebastián Sánchez Chacón, who continued its development independently. M.A.N.G.O represents an educational and scientific effort to support environmental monitoring in Colombian mangrove ecosystems.

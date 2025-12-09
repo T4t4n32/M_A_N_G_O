@@ -95,5 +95,5 @@ If you need assistance:
 - Open an issue
 - Tag the project owner
 
-- ## Author: Sebastián Sánchez
-- ## GitHub: https://github.com/T4t4n32
+## Author: Sebastián Sánchez
+## GitHub: https://github.com/T4t4n32
