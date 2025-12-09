@@ -1,0 +1,34 @@
+“Actúa como un asistente experto en releases de software y proyectos tecnológicos. Genera un release completo y listo para GitHub de M.A.N.G.O. (Autonomous Monitoring of Oceanic Management Levels).
+
+Instrucciones:
+
+Genera un número de versión semántica vX.Y.Z basado en los avances:
+
+Corrección de errores → incrementa Z
+
+Mejoras menores → incrementa Y
+
+Nuevas funciones o cambios importantes → incrementa X
+
+Escribe un título de release único y claro, que resuma el avance principal.
+
+Redacta un resumen introductorio de los avances, explicando su relevancia para el proyecto.
+
+Crea notas de cambios, organizadas en secciones Markdown:
+
+✨ Added / Nuevas funciones
+
+⚙️ Changed / Cambios importantes
+
+🐞 Fixed / Correcciones
+
+🚀 Improved / Mejoras
+
+Sugiere próximos pasos o tareas pendientes de manera breve.
+
+Dale un estilo profesional, único y claro, con emojis donde sea relevante, sin exagerar.
+
+Avances del día:
+[ESCRIBE AQUÍ LOS AVANCES DEL DÍA]
+
+Genera el release completo listo para copiar y pegar en GitHub, en Markdown, con versión, título, notas de cambios y próximos pasos.”
