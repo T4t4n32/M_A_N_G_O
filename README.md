@@ -1,4 +1,4 @@
-# 🌱 **M.A.N.G.O — Autonomous Monitoring of Oceanic Management Levels**
+# **M.A.N.G.O — Autonomous Monitoring of Oceanic Management Levels**
 
 <p align="center">
   <img src="DEGREE PROJECT/INVESTIGATION/LOGO.png" width="369" alt="MANGO Logo">
@@ -12,7 +12,7 @@
 ![Issues](https://img.shields.io/github/issues/T4t4n32/M_A_N_G_O?style=for-the-badge&color=red&label=Issues)
 ![Stars](https://img.shields.io/github/stars/T4t4n32/M_A_N_G_O?style=for-the-badge&color=yellow&label=Stars)
 
-## 📌 **What is M.A.N.G.O?**
+## **What is M.A.N.G.O?**
 
 **M.A.N.G.O** is a **low-cost, portable, modular monitoring system** designed to measure key water conditions in mangrove ecosystems.  
 Its goal: provide **accurate, real-time environmental information** to support conservation, research, and decision-making.
@@ -30,7 +30,7 @@ These ecosystems face threats such as **pollution, illegal mining, and climate c
 
 
 
-## 🌊 **System Measurements**
+## **System Measurements**
 
 M.A.N.G.O records:
 
@@ -42,7 +42,7 @@ Data flow: Sensors → **Jetson TK1** → **LoRa IoT** → Base station → Clou
 
 
 
-## ⚠️ **Important Clarification**
+## **Important Clarification**
 
 The device **does NOT operate 24/7 in water**. Instead:
 
@@ -55,7 +55,7 @@ This ensures **practicality, portability, and ecosystem safety**.
 
 
 
-## ⚡ **Why M.A.N.G.O Matters**
+## **Why M.A.N.G.O Matters**
 
 Traditional monitoring in mangroves is:
 
@@ -74,7 +74,7 @@ M.A.N.G.O provides:
 
 
 
-## 🧠 **System Overview**
+## **System Overview**
 
 ### **Hardware**
 
@@ -94,7 +94,7 @@ M.A.N.G.O provides:
 
 
 
-## 📍 **Planned Pilot Test Site**
+## **Planned Pilot Test Site**
 
 Official pilot test will be conducted in **one mangrove area on the Colombian Pacific coast**:  
 
@@ -106,7 +106,7 @@ Selection based on **safety, accessibility, and environmental conditions**.
 
 
 
-## 🌍 **Alignment with UN Sustainable Development Goals**
+## **Alignment with UN Sustainable Development Goals**
 
 M.A.N.G.O contributes to:
 
@@ -116,7 +116,7 @@ M.A.N.G.O contributes to:
 
 
 
-## 📁 **Repository Structure**
+## **Repository Structure**
 ```
 M.A.N.G.O/
 │
@@ -158,7 +158,7 @@ M.A.N.G.O/
 - [Source Code (TAR.GZ)](https://github.com/T4t4n32/M_A_N_G_O/releases/tag/v1.0.0-robotics/M.A.N.G.O-1.0.0.tar.gz)  
 - [Additional Video](https://github.com/T4t4n32/M_A_N_G_O/releases/tag/v1.0.0-robotics/0001-0250.mkv)  
 
-## 🚀 **Current Development Status**
+## **Current Development Status**
 
 * Core concept defined  
 * Sensors selected and tested  
@@ -169,33 +169,33 @@ M.A.N.G.O/
 
 
 
-## 🤝 **Contributing**
+## **Contributing**
 
 Contributions and ideas are welcome. See [**CONTRIBUTING.md**](CONTRIBUTING.md) for instructions.
 
 
 
-## 📜 **License**
+## **License**
 
 This project uses the [**MIT License**](LICENSE.md).
 
 
 
-## 📝 **Changelog & Releases**
+## **Changelog & Releases**
 
 Check the official [CHANGELOG](https://github.com/T4t4n32/M.A.N.G.O/blob/main/CHANGELOG.md) for a full release history.  
 See the [v1.0.0 Release](https://github.com/T4t4n32/M.A.N.G.O/releases/tag/v1.0.0) for the first stable release.
 
 
 
-## 👤 **Author**
+## **Author**
 
 **Sebastián Sánchez**  
 GitHub: [M.A.N.G.O](https://github.com/T4t4n32)
 
 
 
-## ✨ **Project Tagline**
+## **Project Tagline**
 
 > **“Technology protecting life — one mangrove at a time.”**
 
