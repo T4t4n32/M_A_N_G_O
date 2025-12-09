@@ -88,10 +88,12 @@ To get a local copy up and running, follow these simple steps.
 1.  **Clone the Repository:**
     ```bash
     git clone [https://github.com/T4t4n32/M_A_N_G_O.git](https://github.com/T4t4n32/M_A_N_G_O.git)
+    ```
+    ```bash
     cd M_A_N_G_O
     ```
 2.  **Configure Firmware:**
-    * Load the appropriate `.ino` file from `software/firmware/` onto the micro-controller.
+    * Load the appropriate `.ino` file from `firmware/` onto the micro-controller.
 3.  **Setup Database:**
     * Execute `database/schema.sql` to initialize your database structure.
 4.  **Run Dashboard:**
