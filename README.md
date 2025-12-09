@@ -10,7 +10,7 @@
 
 [![Release](https://img.shields.io/github/v/release/T4t4n32/M_A_N_G_O?include_prereleases&style=for-the-badge&color=orange&label=Release)](https://github.com/T4t4n32/M_A_N_G_O/releases)
 [![Version](https://img.shields.io/github/v/tag/T4t4n32/M_A_N_G_O?style=for-the-badge&color=green&label=Version)](https://github.com/T4t4n32/M_A_N_G_O/tags)
-[![License](https://img.shields.io/github/license/T4t4n32/M_A_N_G_O?style=for-the-badge&color=blue&label=License)](LICENSE)
+[![License](https://img.shields.io/github/License/T4t4n32/M_A_N_G_O?style=for-the-badge&color=blue&label=License)](LICENSE)
 [![Issues](https://img.shields.io/github/issues/T4t4n32/M_A_N_G_O?style=for-the-badge&color=red&label=Issues)](https://github.com/T4t4n32/M_A_N_G_O/issues)
 [![Pull Requests](https://img.shields.io/github/issues-pr/T4t4n32/M_A_N_G_O?style=for-for-the-badge&color=brightgreen&label=Pull%20Requests)](https://github.com/T4t4n32/M_A_N_G_O/pulls)
 [![Stars](https://img.shields.io/github/stars/T4t4n32/M_A_N_G_O?style=for-the-badge&color=yellow&label=Stars)](https://github.com/T4t4n32/M_A_N_G_O/stargazers)
@@ -219,7 +219,7 @@ Directory structure:
 Contributions and ideas are welcome. See [**CONTRIBUTING**](CONTRIBUTING.md) for instructions.
 
 ## **License**
-This project uses the [**MIT License**](LICENSE.md).
+This project uses the [**MIT License**](LICENSE).
 
 ## **Changelog & Releases**
 Check the official [CHANGELOG](https://github.com/T4t4n32/M.A.N.G.O/blob/main/CHANGELOG.md) for a full release history.
