@@ -156,38 +156,42 @@ M.A.N.G.O contributes to:
 
 ## ** Repository Structure**
 ```
-M.A.N.G.O/
-│
-├── README.md                 # Project overview
-├── LICENSE.md                # MIT License
-├── CONTRIBUTING.md           # Contribution guidelines
-│
-├── docs/
-│   ├── overview/             # Concepts and summaries
-│   ├── architecture/         # System architecture and diagrams
-│   ├── media/                # Logo, banner, diagrams
-│   └── tests/                # Notes from calibration and field tests
-│
-├── hardware/                 # Physical components and design
-│   ├── CAD/
-│   ├── STL/
-│   ├── BOM.md
-│   └── wiring.md
-│
-├── software/                 # Code for sensors, Jetson, and LoRa
-│   ├── firmware/
-│   ├── jetson/
-│   ├── sensors/
-│   └── utils/
-│
-├── database/                 # SQL schema and config
-│   ├── schema.sql
-│   ├── queries.md
-│   └── cloud_config.md
-│
-└── dashboard/                # Visualization tools
-    ├── grafana/
-    └── web_dashboard/
+Directory structure:
+└── M_A_N_G_O/
+    ├── README.md
+    ├── ARCHITECTURE.md
+    ├── CHANGELOG.md
+    ├── CODE_OF_CONDUCT.md
+    ├── CONTRIBUTING.md
+    ├── LICENSE.md
+    ├── .NOTES.md
+    
+    ├── DEGREE PROJECT/ (Documentación principal del proyecto de grado)
+    │   ├── M A N G O.md
+    │   └── overview/
+    │       ├── IMPORTANT DATA/ (Documentos base, plantillas, presentaciones y datos como PRECIOS.xlsx)
+    │       └── PARTS/ (Carpetas por sección del proyecto: 1-INTRODUCCION, 2-PROBLEMATICA, 3-OBJETIVOS, 4-MARCO TEORICO, 7-CONCLUSION, 9-BIBLIOGRAFIA con borradores y fuentes de referencia)
+    
+    ├── hardware/ (Información y archivos relacionados con los componentes físicos)
+    │   ├── README.md
+    │   └── Files_information_components/ 
+    │       ├── SENSORES_MONITORES.docx (Listado de componentes)
+    │       ├── 3D_Folder_Design/ (Diseños 3D de hélices y propulsores)
+    │       ├── DX-LR30-433 Information Package/ (Documentación técnica del módulo de radio DX-LR30)
+    │       └── LoRa/ (Ejemplos de código y librerías para módulos LoRa/ESP32 de Heltec)
+    
+    ├── SENA/ (Presentaciones específicas del proyecto)
+    │   ├── FS_MANGO.pptx
+    │   ├── SENA_MANGO.pptx
+    │   └── SF_MANGO.pptx
+    
+    └── software/ (Código fuente y archivos de la aplicación y el firmware)
+        ├── README.md
+        ├── database/ (Archivos de configuración y esquema SQL de la base de datos)
+        ├── FBD/ (Programas de control para sensores y motores escritos en Arduino y Python)
+        ├── firmware/ (Ejemplos de código y pruebas de firmware)
+        └── sensor/ (Pruebas iniciales de comunicación, como Transmisor y Receptor LoRa)
+
 ```
 ### Assets
 -   [Animation Video](https://github.com/T4t4n32/M_A_N_G_O/releases/tag/v1.0.0-robotics/ANIMACION_RAMM.mp4)
