@@ -34,10 +34,10 @@ The most recent version introduces the following key features:
 ## 🧭 Table of Contents
 **Anclajes Corregidos (Lowercase y guiones):**
 
-* [What is M.A.N.G.O.?](#What is M.A.N.G.O?)
-* [Key Features](# Key Features)
-* [Technology Stack](# Technology Stack)
-* [Installation and Usage](# Installation and Usage)
+* [What is M.A.N.G.O.?](#what-is-mango)
+* [Key Features](#key-features)
+* [Technology Stack](#technology-stack)
+* [Installation and Usage](#installation-and-usage)
 * [System Measurements](#system-measurements)
 * [Important Clarification](#important-clarification)
 * [Why M.A.N.G.O. Matters](#why-mango-matters)
