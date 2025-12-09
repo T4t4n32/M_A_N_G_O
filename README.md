@@ -19,7 +19,7 @@
 
 </div>
 
-## 📢 Latest Release - [vX.Y.Z]
+## 📢 Latest Release - [v1.0.0]
 
 The most recent version introduces the following key features:
 
@@ -27,30 +27,30 @@ The most recent version introduces the following key features:
 * **Energy Consumption Optimization:** Firmware improvements on the **ESP32** to extend the buoy's battery life.
 * **Interactive Dashboard:** Updated web interface for more intuitive visualization and automatic report generation.
 
-[**View the Full Changelog (CHANGELOG.md)**](CHANGELOG.md) | [**View All Releases**](https://github.com/T4t4n32/M_A_N_G_O/releases)
+[**View the Full Changelog (CHANGELOG)**](CHANGELOG.md) | [**View All Releases**](https://github.com/T4t4n32/M_A_N_G_O/releases)
 
 ---
 
 ## 🧭 Table of Contents
 **Anclajes Corregidos (Lowercase y guiones):**
 
-* [🌱 What is M.A.N.G.O.?](#what-is-mango)
-* [✨ Key Features](#key-features)
-* [🛠️ Technology Stack](#technology-stack)
-* [💻 Installation and Usage](#installation-and-usage)
-* [⚙️ System Measurements](#system-measurements)
-* [⚠️ Important Clarification](#important-clarification)
-* [💡 Why M.A.N.G.O. Matters](#why-mango-matters)
-* [🔄 System Overview](#system-overview)
-* [🗺️ Planned Pilot Test Site](#planned-pilot-test-site)
-* [🌍 Alignment with UN SDGs](#alignment-with-un-sustainable-development-goals)
-* [📂 Repository Structure](#repository-structure)
-* [✅ Current Development Status](#current-development-status)
-* [🤝 Contributing](#contributing)
-* [📝 License](#license)
-* [📜 Changelog & Releases](#changelog--releases)
-* [🧑‍💻 Author](#author)
-* [🏷️ Project Tagline](#project-tagline)
+* [What is M.A.N.G.O.?](# What is M.A.N.G.O?)
+* [Key Features](# Key Features)
+* [Technology Stack](# Technology Stack)
+* [Installation and Usage](# Installation and Usage)
+* [System Measurements](#system-measurements)
+* [Important Clarification](#important-clarification)
+* [Why M.A.N.G.O. Matters](#why-mango-matters)
+* [System Overview](#system-overview)
+* [Planned Pilot Test Site](#planned-pilot-test-site)
+* [Alignment with UN SDGs](#alignment-with-un-sustainable-development-goals)
+* [Repository Structure](#repository-structure)
+* [Current Development Status](#current-development-status)
+* [Contributing](#contributing)
+* [License](#license)
+* [Changelog & Releases](#changelog--releases)
+* [Author](#author)
+* [Project Tagline](#project-tagline)
 
 ---
 
