@@ -1,7 +1,9 @@
 # 🌱 **M.A.N.G.O — Autonomous Monitoring of Oceanic Management Levels**
+
 <p align="center">
   <img src="DEGREE PROJECT/INVESTIGATION/LOGO.png" width="369" alt="MANGO Logo">
 </p>
+
 ### **Real-time environmental insights for protecting mangrove ecosystems in Colombia.**
 
 ![Release](https://img.shields.io/github/v/release/T4t4n32/M_A_N_G_O?include_prereleases&style=for-the-badge&color=orange&label=Release)
@@ -11,10 +13,10 @@
 ![Stars](https://img.shields.io/github/stars/T4t4n32/M_A_N_G_O?style=for-the-badge&color=yellow&label=Stars)
 
 ### Assets
-- [Animation Video](https://github.com/T4t4n32/M_A_N_G_O/releases/download/robotics/ANIMACION_RAMM.mp4)  
-- [Source Code (ZIP)](https://github.com/T4t4n32/M_A_N_G_O/releases/download/robotics/M.A.N.G.O-1.0.0.zip)  
-- [Source Code (TAR.GZ)](https://github.com/T4t4n32/M_A_N_G_O/releases/download/robotics/M.A.N.G.O-1.0.0.tar.gz)  
-- [Additional Video](https://github.com/T4t4n32/M_A_N_G_O/releases/download/robotics/0001-0250.mkv)  
+- [Animation Video](https://github.com/T4t4n32/M_A_N_G_O/releases/tag/v1.0.0-robotics/ANIMACION_RAMM.mp4)  
+- [Source Code (ZIP)](https://github.com/T4t4n32/M_A_N_G_O/releases/tag/v1.0.0-robotics/M.A.N.G.O-1.0.0.zip)  
+- [Source Code (TAR.GZ)](https://github.com/T4t4n32/M_A_N_G_O/releases/tag/v1.0.0-robotics/M.A.N.G.O-1.0.0.tar.gz)  
+- [Additional Video](https://github.com/T4t4n32/M_A_N_G_O/releases/tag/v1.0.0-robotics/0001-0250.mkv)  
 
 ## 📌 **What is M.A.N.G.O?**
 
