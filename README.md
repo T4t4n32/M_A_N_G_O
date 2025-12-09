@@ -24,7 +24,8 @@ However, these ecosystems are disappearing due to pollution, illegal mining, and
 
 M.A.N.G.O helps solve this problem by collecting important water measurements and storing them safely in a **24/7 cloud database**, where they can be used even when the device is not deployed.
 
----
+
+
 
 ## 🌊 **What the System Measures**
 
@@ -36,7 +37,8 @@ M.A.N.G.O records three essential water parameters:
 
 The sensors connect to a **Jetson TK1**, which processes the data and sends it through **LoRa IoT** to the base station and then to the cloud database.
 
----
+
+
 
 ## ⚠️ **Important Clarification**
 
@@ -50,7 +52,8 @@ Instead:
 
 This makes the system practical, portable, and safer for both the device and the ecosystem.
 
----
+
+
 
 ## ⚡ **Why M.A.N.G.O Matters**
 
@@ -67,7 +70,8 @@ M.A.N.G.O offers:
 - ✔ Clear information for communities and researchers
 - ✔ Scalable for more zones in the future
 
----
+
+
 
 ## 🧠 **System Overview**
 
@@ -89,7 +93,8 @@ M.A.N.G.O offers:
 * Dashboard for graphs and alerts
 * Optional AI predictions (future phase)
 
----
+
+
 
 ## 📍 **Planned Pilot Test Site**
 
@@ -103,7 +108,8 @@ Possible locations:
 
 Only **one** will be selected as the pilot test site based on safety, accessibility, and environmental conditions.
 
----
+
+
 
 ## 🌍 **Alignment with the UN Sustainable Development Goals**
 
@@ -113,7 +119,8 @@ M.A.N.G.O contributes to:
 * **SDG 13** — Climate Action
 * **SDG 14** — Life Below Water
 
----
+
+
 
 ## 📁 **Repository Structure**
 
@@ -152,7 +159,8 @@ M.A.N.G.O/
     └── web_dashboard/
 ```
 
----
+
+
 
 ## 🚀 **Current Development Status**
 
@@ -163,31 +171,31 @@ M.A.N.G.O/
 * Dashboard experimentation in progress
 * Pilot site selection pending
 
----
+
+
 
 ## 🤝 **Contributing**
 
 Contributions and ideas are welcome. See [**CONTRIBUTING.md**](CONTRIBUTING.md) for instructions.
 
----
+
+
 
 ## 📜 **License**
 
 This project uses the [**MIT License**.](LICENSE.md)
 
----
+
+
 
 ## 👤 **Author**
 
 **Sebastián Sánchez**
 GitHub: [M.A.N.G.O](https://github.com/T4t4n32)
 
----
+
+
 
 ## ✨ **Project Tagline**
 
 > **“Technology protecting life — one mangrove at a time.”**
-
----
-
-
