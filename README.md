@@ -10,7 +10,7 @@
 
 [![Release](https://img.shields.io/github/v/release/T4t4n32/M_A_N_G_O?include_prereleases&style=for-the-badge&color=orange&label=Release)](https://github.com/T4t4n32/M_A_N_G_O/releases)
 [![Version](https://img.shields.io/github/v/tag/T4t4n32/M_A_N_G_O?style=for-the-badge&color=green&label=Version)](https://github.com/T4t4n32/M_A_N_G_O/tags)
-[![License](https://img.shields.io/github/license/T4t4n32/M_A_N_G_O?style=for-the-badge&color=blue&label=License)](LICENSE)
+[![License](https://img.shields.io/github/license/T4t4n32/M_A_N_G_O?style=for-the-badge&color=blue&label=License)](LICENSE.md)
 [![Issues](https://img.shields.io/github/issues/T4t4n32/M_A_N_G_O?style=for-the-badge&color=red&label=Issues)](https://github.com/T4t4n32/M_A_N_G_O/issues)
 [![Pull Requests](https://img.shields.io/github/issues-pr/T4t4n32/M_A_N_G_O?style=for-for-the-badge&color=brightgreen&label=Pull%20Requests)](https://github.com/T4t4n32/M_A_N_G_O/pulls)
 [![Stars](https://img.shields.io/github/stars/T4t4n32/M_A_N_G_O?style=for-the-badge&color=yellow&label=Stars)](https://github.com/T4t4n32/M_A_N_G_O/stargazers)
@@ -155,6 +155,7 @@ M.A.N.G.O contributes to:
 * **SDG 14** — Life Below Water
 
 ## ** Repository Structure**
+
 ```
 Directory structure:
 └── M_A_N_G_O/
@@ -199,6 +200,7 @@ Directory structure:
         └── sensor/ (Pruebas iniciales de comunicación, como Transmisor y Receptor LoRa)
 
 ```
+
 ### Assets
 -   [Animation Video](https://github.com/T4t4n32/M_A_N_G_O/releases/tag/v1.0.0-robotics/ANIMACION_RAMM.mp4)
 -   [Source Code (ZIP)](https://github.com/T4t4n32/M_A_N_G_O/releases/tag/v1.0.0-robotics/M.A.N.G.O-1.0.0.zip)
