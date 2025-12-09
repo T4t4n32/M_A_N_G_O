@@ -177,7 +177,7 @@ See **CONTRIBUTING.md** for instructions.
 
 ## 📜 **License**
 
-This project uses the **MIT License**.
+This project uses the [[**LICENSE.md|MIT License**.]]
 
 ---
 
