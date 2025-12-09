@@ -1,6 +1,3 @@
-
----
-
 # 🌱 **M.A.N.G.O — Autonomous Monitoring of Oceanic Management Levels**
 
 <p align="center">
@@ -9,7 +6,7 @@
 
 ### **Real-time environmental insights for protecting mangrove ecosystems in Colombia.**
 
----
+
 
 ## 📌 **What is M.A.N.G.O?**
 
