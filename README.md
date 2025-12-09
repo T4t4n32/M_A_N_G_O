@@ -34,7 +34,7 @@ The most recent version introduces the following key features:
 ## 🧭 Table of Contents
 **Anclajes Corregidos (Lowercase y guiones):**
 
-* [What is M.A.N.G.O.?](# What is M.A.N.G.O?)
+* [What is M.A.N.G.O.?](#What is M.A.N.G.O?)
 * [Key Features](# Key Features)
 * [Technology Stack](# Technology Stack)
 * [Installation and Usage](# Installation and Usage)
