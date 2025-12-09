@@ -1,7 +1,7 @@
 # **M.A.N.G.O — Autonomous Monitoring of Ocean Management Levels**
 
 <p align="center">
-  <img src="DEGREE PROJECT/INVESTIGATION/LOGO.png" width="369" alt="MANGO Logo" style="max-width: 100%;">
+  <img src="DEGREE PROJECT/overview/LOGO.png" width="369" alt="MANGO Logo" style="max-width: 100%;">
 </p>
 <h3 align="center">
   Real-time environmental data collection for the protection and management of mangrove ecosystems in Colombia.
