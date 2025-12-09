@@ -177,14 +177,14 @@ See **CONTRIBUTING.md** for instructions.
 
 ## 📜 **License**
 
-This project uses the [[**LICENSE.md|MIT License**.]]
+This project uses the [**MIT License**.](LICENSE.md)
 
 ---
 
 ## 👤 **Author**
 
 **Sebastián Sánchez**
-GitHub: [https://github.com/T4t4n32](https://github.com/T4t4n32)
+GitHub: [M.A.N.G.O](https://github.com/T4t4n32)
 
 ---
 
