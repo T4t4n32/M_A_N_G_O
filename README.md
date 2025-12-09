@@ -7,10 +7,6 @@
 <h3 align="center">
   Real-time environmental data collection for the protection and management of mangrove ecosystems in Colombia.
 </h3>
-
-<p align="center">***</p>
-
-
 <div align="center">
 
 [![Release](https://img.shields.io/github/v/release/T4t4n32/M_A_N_G_O?include_prereleases&style=for-the-badge&color=orange&label=Release)](https://github.com/T4t4n32/M_A_N_G_O/releases)
