@@ -156,7 +156,8 @@ M.A.N.G.O contributes to:
 * **SDG 13** — Climate Action
 * **SDG 14** — Life Below Water
 
-## ** Repository Structure**
+## **Repository Structure**
+
 
 ```
 Directory structure:
