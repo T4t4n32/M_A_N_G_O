@@ -231,3 +231,6 @@ GitHub: [M.A.N.G.O](https://github.com/T4t4n32/M_A_N_G_O)
 
 ## **Project Tagline**
 > **“Technology protecting life — one mangrove at a time.”**
+
+#### Project Note:
+This project was originally created as a high-school research initiative under the group "CALIBOTS". After the group disbanded, the project was entrusted entirely to Sebastián Sánchez Chacón, who continued its development independently. M.A.N.G.O represents an educational and scientific effort to support environmental monitoring in Colombian mangrove ecosystems.
