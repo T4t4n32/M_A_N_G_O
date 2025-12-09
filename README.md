@@ -4,7 +4,7 @@
 # 🌱 **M.A.N.G.O — Autonomous Monitoring of Oceanic Management Levels**
 
 <p align="center">
-  <img src="DEGREE PROJECT/INVESTIGATION/LOGO.png" width="180" alt="MANGO Logo">
+  <img src="DEGREE PROJECT/INVESTIGATION/LOGO.png" width="369" alt="MANGO Logo">
 </p>
 
 ### **Real-time environmental insights for protecting mangrove ecosystems in Colombia.**
