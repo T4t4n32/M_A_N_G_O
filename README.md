@@ -170,8 +170,7 @@ M.A.N.G.O/
 
 ## 🤝 **Contributing**
 
-Contributions and ideas are welcome.
-See **CONTRIBUTING.md** for instructions.
+Contributions and ideas are welcome. See [**CONTRIBUTING.md**](CONTRIBUTING.md) for instructions.
 
 ---
 
