@@ -58,17 +58,17 @@ This makes the system practical, portable, and safer for both the device and the
 ## ⚡ **Why M.A.N.G.O Matters**
 
 Traditional environmental monitoring in mangroves is:
-❌ Manual
-❌ Slow
-❌ Infrequent
-❌ Expensive
+-  ❌ Manual
+- ❌ Slow
+- ❌ Infrequent
+- ❌ Expensive
 
 M.A.N.G.O offers:
-✔ Accurate field measurements
-✔ 24/7 access to stored environmental data
-✔ Low-cost and portable hardware
-✔ Clear information for communities and researchers
-✔ Scalable for more zones in the future
+- ✔ Accurate field measurements
+- ✔ 24/7 access to stored environmental data
+- ✔ Low-cost and portable hardware
+- ✔ Clear information for communities and researchers
+- ✔ Scalable for more zones in the future
 
 ---
 
