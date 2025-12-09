@@ -2,8 +2,10 @@
 
 <p align="center">
   <img src="DEGREE PROJECT/INVESTIGATION/LOGO.png" width="369" alt="MANGO Logo" style="max-width: 100%;">
+  <h3 align="center">
+  Real-time environmental insights for protecting mangrove ecosystems in Colombia.
+</h3>
 </p>
-
 <h3 align="center">
   Real-time environmental insights for protecting mangrove ecosystems in Colombia.
 </h3>
