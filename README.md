@@ -54,7 +54,7 @@ The most recent version introduces the following key features:
 
 ---
 
-## **🌱 What is M.A.N.G.O?**
+## **What is M.A.N.G.O?**
 
 **M.A.N.G.O** is a **low-cost, portable, modular monitoring system** designed to measure key water conditions in mangrove ecosystems. Its goal: provide **accurate, real-time environmental information** to support conservation, research, and decision-making.
 
@@ -71,7 +71,7 @@ These ecosystems face threats such as **pollution, illegal mining, and climate c
 
 ---
 
-## **✨ Key Features**
+## **Key Features**
 *(Esta sección es nueva y enlaza correctamente con el ToC.)*
 
 * **Autonomous Sensing:** Continuous, automated collection of water quality parameters (pH, Turbidity, Temperature).
@@ -82,7 +82,7 @@ These ecosystems face threats such as **pollution, illegal mining, and climate c
 
 ---
 
-## **🛠️ Technology Stack**
+## **Technology Stack**
 *(Esta sección es nueva y enlaza correctamente con el ToC.)*
 
 | Component | Technology / Hardware | Purpose |
@@ -95,7 +95,7 @@ These ecosystems face threats such as **pollution, illegal mining, and climate c
 
 ---
 
-## **💻 Installation and Usage**
+## **Installation and Usage**
 *(Esta sección es nueva y enlaza correctamente con el ToC.)*
 
 To get a local copy up and running, follow these simple steps.
@@ -128,7 +128,7 @@ To get a local copy up and running, follow these simple steps.
 
 ---
 
-## **⚙️ System Measurements**
+## **System Measurements**
 
 M.A.N.G.O records:
 
@@ -140,7 +140,7 @@ Data flow: Sensors → **Jetson TK1** → **LoRa IoT** → Base station → Clou
 
 ---
 
-## **⚠️ Important Clarification**
+## **Important Clarification**
 
 The device **does NOT operate 24/7 in water**. Instead:
 
@@ -153,7 +153,7 @@ This ensures **practicality, portability, and ecosystem safety**.
 
 ---
 
-## **💡 Why M.A.N.G.O. Matters**
+## **Why M.A.N.G.O. Matters**
 
 Traditional monitoring in mangroves is:
 
@@ -172,7 +172,7 @@ M.A.N.G.O provides:
 
 ---
 
-## **🔄 System Overview**
+## **System Overview**
 
 ### **Hardware**
 
@@ -192,7 +192,7 @@ M.A.N.G.O provides:
 
 ---
 
-## **🗺️ Planned Pilot Test Site**
+## **Planned Pilot Test Site**
 
 Official pilot test will be conducted in **one mangrove area on the Colombian Pacific coast**:
 
@@ -204,7 +204,7 @@ Selection based on **safety, accessibility, and environmental conditions**.
 
 ---
 
-## **🌍 Alignment with UN Sustainable Development Goals**
+## **Alignment with UN Sustainable Development Goals**
 
 M.A.N.G.O contributes to:
 
@@ -258,7 +258,7 @@ M.A.N.G.O/
 
 ---
 
-## **✅ Current Development Status**
+## **Current Development Status**
 
 * Core concept defined
 * Sensors selected and tested
@@ -269,32 +269,32 @@ M.A.N.G.O/
 
 ---
 
-## **🤝 Contributing**
+## **Contributing**
 
 Contributions and ideas are welcome. See [**CONTRIBUTING.md**](CONTRIBUTING.md) for instructions.
 
 ---
 
-## **📝 License**
+## **License**
 
 This project uses the [**MIT License**](LICENSE.md).
 
 ---
 
-## **📜 Changelog & Releases**
+## **Changelog & Releases**
 
 Check the official [CHANGELOG](https://github.com/T4t4n32/M.A.N.G.O/blob/main/CHANGELOG.md) for a full release history.
 See the [v1.0.0 Release](https://github.com/T4t4n32/M_A_N_G_O/releases/tag/v1.0.0) for the first stable release.
 
 ---
 
-## **🧑‍💻 Author**
+## **Author**
 
 **Sebastián Sánchez**
-GitHub: [M.A.N.G.O](https://github.com/T4t4n32)
+GitHub: [M.A.N.G.O](https://github.com/T4t4n32/M_A_N_G_O)
 
 ---
 
-## **🏷️ Project Tagline**
+## **Project Tagline**
 
 > **“Technology protecting life — one mangrove at a time.”**
