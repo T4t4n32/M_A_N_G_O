@@ -9,11 +9,12 @@
   ![Release](https://img.shields.io/github/v/release/T4t4n32/M.A.N.G.O?style=for-the-badge&color=orange&label=Release)
   ![Version](https://img.shields.io/github/v/tag/T4t4n32/M.A.N.G.O?style=for-the-badge&color=green&label=Version)
   ![Status](https://img.shields.io/badge/status-stable-brightgreen?style=for-the-badge)
+  ![Changelog](https://img.shields.io/badge/Changelog-v1.0.0-blue?style=for-the-badge&link=https://github.com/T4t4n32/M.A.N.G.O/blob/main/CHANGELOG.md)
 </p>
 
 ### **Real-time environmental insights for protecting mangrove ecosystems in Colombia.**
 
----
+
 
 ## 📌 **What is M.A.N.G.O?**
 
@@ -31,7 +32,7 @@ These ecosystems face threats such as **pollution, illegal mining, and climate c
 
 **M.A.N.G.O addresses this** by collecting essential water parameters and storing them in a **24/7 cloud database**, accessible even when the device is not deployed.
 
----
+
 
 ## 🌊 **System Measurements**
 
@@ -43,7 +44,7 @@ M.A.N.G.O records:
 
 Data flow: Sensors → **Jetson TK1** → **LoRa IoT** → Base station → Cloud database  
 
----
+
 
 ## ⚠️ **Important Clarification**
 
@@ -56,7 +57,7 @@ The device **does NOT operate 24/7 in water**. Instead:
 
 This ensures **practicality, portability, and ecosystem safety**.
 
----
+
 
 ## ⚡ **Why M.A.N.G.O Matters**
 
@@ -75,7 +76,7 @@ M.A.N.G.O provides:
 - ✔ Clear information for communities and researchers  
 - ✔ Scalable to additional zones  
 
----
+
 
 ## 🧠 **System Overview**
 
@@ -95,7 +96,7 @@ M.A.N.G.O provides:
 * Dashboard for graphs and alerts  
 * Optional AI predictions (future phase)  
 
----
+
 
 ## 📍 **Planned Pilot Test Site**
 
@@ -107,7 +108,7 @@ Official pilot test will be conducted in **one mangrove area on the Colombian Pa
 
 Selection based on **safety, accessibility, and environmental conditions**.
 
----
+
 
 ## 🌍 **Alignment with UN Sustainable Development Goals**
 
@@ -117,10 +118,9 @@ M.A.N.G.O contributes to:
 * **SDG 13** — Climate Action  
 * **SDG 14** — Life Below Water  
 
----
+
 
 ## 📁 **Repository Structure**
-
 ```
 M.A.N.G.O/
 │
@@ -156,8 +156,6 @@ M.A.N.G.O/
     └── web_dashboard/
 ```
 
----
-
 ## 🚀 **Current Development Status**
 
 * Core concept defined  
@@ -167,27 +165,35 @@ M.A.N.G.O/
 * Dashboard experimentation in progress  
 * Pilot site selection pending  
 
----
+
 
 ## 🤝 **Contributing**
 
 Contributions and ideas are welcome. See [**CONTRIBUTING.md**](CONTRIBUTING.md) for instructions.
 
----
+
 
 ## 📜 **License**
 
 This project uses the [**MIT License**](LICENSE.md).
 
----
+
+
+## 📝 **Changelog & Releases**
+
+Check the official [CHANGELOG](https://github.com/T4t4n32/M.A.N.G.O/blob/main/CHANGELOG.md) for a full release history.  
+See the [v1.0.0 Release](https://github.com/T4t4n32/M.A.N.G.O/releases/tag/v1.0.0) for the first stable release.
+
+
 
 ## 👤 **Author**
 
 **Sebastián Sánchez**  
-GitHub: [https://github.com/T4t4n32](https://github.com/T4t4n32)
+GitHub: [M.A.N.G.O](https://github.com/T4t4n32)
 
----
+
 
 ## ✨ **Project Tagline**
 
 > **“Technology protecting life — one mangrove at a time.”**
+
