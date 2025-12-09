@@ -1,10 +1,14 @@
 # 🌱 **M.A.N.G.O — Autonomous Monitoring of Oceanic Management Levels**
 
 <p align="center">
-  <img src="DEGREE PROJECT/INVESTIGATION/LOGO.png" width="369" alt="MANGO Logo">
+  <img src="DEGREE PROJECT/INVESTIGATION/LOGO.png" width="369" alt="MANGO Logo" style="max-width: 100%;">
 </p>
 
-### **Real-time environmental insights for protecting mangrove ecosystems in Colombia.**
+<h3 align="center">
+  Real-time environmental insights for protecting mangrove ecosystems in Colombia.
+</h3>
+
+<p align="center">***</p>
 
 ![Release](https://img.shields.io/github/v/release/T4t4n32/M_A_N_G_O?include_prereleases&style=for-the-badge&color=orange&label=Release)
 ![Version](https://img.shields.io/github/v/tag/T4t4n32/M_A_N_G_O?style=for-the-badge&color=green&label=Version)
