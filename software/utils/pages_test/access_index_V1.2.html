@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>M.A.N.G.O. | Autonomous Monitoring</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        /* --- VARIABLES DE COLOR (Basados en tus imágenes) --- */
+        :root {
+            --primary-purple: #2E004F;
+            --primary-teal: #008080;
+            --accent-yellow: #FFC107;
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --text-light: #ffffff;
+            --section-bg: rgba(0, 0, 0, 0.2);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, var(--primary-purple), #1a4a5a, var(--primary-teal));
+            min-height: 100vh;
+            color: var(--text-light);
+        }
+
+        /* --- FONDO USANDO EL BANNER --- */
+        .bg-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('docs/media/0-BANNER/banner_v1.6.jpg'); 
+            background-size: cover;
+            background-position: center;
+            opacity: 0.1;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        /* --- HEADER (NavBar) --- */
+        .header-nav {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(5px);
+            padding: 15px 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo-small {
+            height: 30px; 
+            border-radius: 50%;
+        }
+
+        .nav-links a {
+            color: var(--text-light);
+            text-decoration: none;
+            margin-left: 25px;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        .nav-links a:hover {
+            color: var(--accent-yellow);
+        }
+
+        /* --- SECCIÓN HERO / ACCESO --- */
+        .hero-section {
+            padding: 80px 5%;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-around;
+            align-items: center;
+            min-height: 70vh;
+            gap: 40px;
+        }
+
+        .hero-info {
+            flex: 1 1 500px;
+        }
+
+        .logo-large {
+            width: 100px; 
+            height: 100px;
+            border-radius: 50%;
+            border: 3px solid var(--accent-yellow);
+            box-shadow: 0 0 20px var(--accent-yellow);
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            font-size: 3rem;
+            font-weight: 800;
+            letter-spacing: 2px;
+            color: #fff;
+            margin-bottom: 10px;
+        }
+
+        .tagline {
+            font-size: 1.2rem;
+            color: #ccc;
+            margin-bottom: 30px;
+            font-style: italic;
+        }
+
+        .cta-buttons {
+            display: flex;
+            gap: 20px;
+        }
+
+        .btn {
+            padding: 12px 25px;
+            border-radius: 30px;
+            font-weight: bold;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .btn-github {
+            background: var(--accent-yellow);
+            color: var(--primary-purple);
+        }
+
+        .btn-github:hover {
+            opacity: 0.9;
+            box-shadow: 0 0 15px var(--accent-yellow);
+        }
+        
+        /* --- LOGIN CARD (Mantenemos el Glassmorphism) --- */
+        .login-card {
+            flex: 0 1 380px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            text-align: center;
+        }
+
+        .login-card h3 {
+            margin-bottom: 25px;
+            color: var(--accent-yellow);
+            text-transform: uppercase;
+        }
+
+        .input-group {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .input-group i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-light);
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 12px 15px 12px 45px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            color: #fff;
+            outline: none;
+        }
+
+        .btn-login {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(45deg, var(--primary-teal), #00a8a8);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        /* --- SECCIONES DE CONTENIDO --- */
+        .content-section {
+            padding: 60px 5%;
+            background: var(--section-bg);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            gap: 40px;
+            align-items: flex-start;
+        }
+        
+        .content-section:nth-child(even) {
+            flex-direction: row-reverse; 
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        .section-text {
+            flex: 1;
+        }
+
+        .section-title {
+            color: var(--accent-yellow);
+            font-size: 2rem;
+            margin-bottom: 20px;
+        }
+
+        .section-text ul {
+            list-style: disc; /* Usar bullet points claros */
+            padding-left: 20px;
+            margin-top: 10px;
+            line-height: 1.8;
+        }
+        
+        .section-text ul li {
+            margin-bottom: 8px;
+        }
+
+        .section-image {
+            flex: 0 0 400px;
+            max-width: 100%;
+            height: auto;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Pie de página */
+        .footer {
+            text-align: center;
+            padding: 30px;
+            background: rgba(0, 0, 0, 0.5);
+            font-size: 0.9rem;
+            color: #aaa;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="bg-overlay"></div>
+
+    <header class="header-nav">
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <img src="docs/media/0-LOGO/v_2.0.1.png" alt="M.A.N.G.O." class="logo-small">
+            <span style="font-weight: bold; color: var(--accent-yellow);">M.A.N.G.O.</span>
+        </div>
+        <nav class="nav-links">
+            <a href="#inicio">Inicio</a>
+            <a href="#objetivos">Objetivos</a>
+            <a href="#construccion">Construcción</a>
+            <a href="https://github.com/T4t4n32/M_A_N_G_O.git" target="_blank">Repositorio</a>
+        </nav>
+    </header>
+
+    <section class="hero-section" id="inicio">
+        <div class="hero-info">
+            <img src="docs/media/0-LOGO/v_2.0.1.png" alt="Logo M.A.N.G.O." class="logo-large">
+            <h1>M.A.N.G.O. Project</h1>
+            <p class="tagline">Autonomous Monitoring of Oceanic Levels and Management</p>
+            <p style="margin-bottom: 30px;">
+                Un proyecto de código abierto enfocado en la monitorización ambiental crítica. Acceda a la documentación o inicie sesión en el sistema de gestión.
+            </p>
+            
+            <div class="cta-buttons">
+                <a href="https://github.com/T4t4n32/M_A_N_G_O.git" target="_blank" class="btn btn-github">
+                    <i class="fab fa-github"></i> Repositorio Oficial
+                </a>
+                <a href="#objetivos" class="btn" style="background: rgba(255, 255, 255, 0.2); border: 1px solid #fff;">
+                    Conocer Más
+                </a>
+            </div>
+        </div>
+
+        <div class="login-card">
+            <h3><i class="fas fa-server"></i> Acceso al Sistema</h3>
+            <form action="dashboard.html">
+                <div class="input-group">
+                    <i class="fas fa-user"></i>
+                    <input type="text" placeholder="Usuario de Acceso" required>
+                </div>
+                <div class="input-group">
+                    <i class="fas fa-lock"></i>
+                    <input type="password" placeholder="Contraseña" required>
+                </div>
+                <button type="submit" class="btn-login">Ingresar al Dashboard</button>
+            </form>
+            <p style="margin-top: 15px; font-size: 0.8rem; color: #aaa;">Acceso restringido a usuarios autorizados.</p>
+        </div>
+    </section>
+
+    <section class="content-section" id="objetivos">
+        <div class="section-text">
+            <h2 class="section-title"><i class="fas fa-bullseye"></i> Objetivos del Proyecto</h2>
+            <p style="margin-bottom: 15px;">
+                M.A.N.G.O. nace de la necesidad de obtener datos ambientales precisos y continuos con una infraestructura de bajo costo y alta fiabilidad. Buscamos democratizar la monitorización oceánica.
+            </p>
+            <ul>
+                <li>Recolección autónoma de datos de nivel y temperatura del agua.</li>
+                <li>Implementación de un servidor virtualizado (Proxmox) para gestión y análisis centralizados.</li>
+                <li>Desarrollo de un dashboard web para visualización de datos en tiempo real (evidencia de construcción).</li>
+                <li>Garantizar la escalabilidad y el mantenimiento a largo plazo del sistema.</li>
+            </ul>
+        </div>
+        <img src="https://via.placeholder.com/400x300?text=DIAGRAMA+CONCEPTUAL" alt="Diagrama conceptual" class="section-image">
+    </section>
+
+    <section class="content-section" id="construccion">
+        <div class="section-text">
+            <h2 class="section-title"><i class="fas fa-tools"></i> Evidencia de Construcción (Tech Stack)</h2>
+            <p style="margin-bottom: 15px;">
+                La solidez del proyecto M.A.N.G.O. se basa en tecnologías robustas, desde el hardware de los sensores hasta la infraestructura de virtualización.
+            </p>
+            <p style="margin-bottom: 15px; font-weight: bold;">Infraestructura de Servidor:</p>
+            <ul style="list-style-type: none; padding-left: 0;">
+                <li><i class="fas fa-server" style="color: var(--primary-teal);"></i> **Virtualización:** Proxmox VE sobre Debian 12.</li>
+                <li><i class="fas fa-database" style="color: var(--accent-yellow);"></i> **Base de Datos:** PostgreSQL / InfluxDB (para series de tiempo).</li>
+                <li><i class="fas fa-code-branch" style="color: var(--accent-yellow);"></i> **Código:** Python (backend) y HTML/CSS/JS (frontend).</li>
+            </ul>
+            <p style="margin-top: 20px;"><a href="https://github.com/T4t4n32/M_A_N_G_O.git/blob/main/docs/DOCUMENTACION.md" target="_blank" style="color: var(--primary-teal);">Ver documentación técnica completa.</a></p>
+        </div>
+        <img src="https://via.placeholder.com/400x300?text=CAPTURA+DE+PROXMOX" alt="Captura de Proxmox" class="section-image">
+    </section>
+
+    <footer class="footer">
+        &copy; 2025 M.A.N.G.O. Project. Desarrollado con Proxmox VE y software de código abierto.
+    </footer>
+
+</body>
+</html>
