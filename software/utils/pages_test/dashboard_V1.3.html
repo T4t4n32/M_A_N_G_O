@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>M.A.N.G.O. — Dashboard</title>
+  <meta name="description" content="Dashboard M.A.N.G.O. — Visualización clara de datos oceánicos." />
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    :root{
+      --bg-1:#061222;
+      --bg-2:#0a2f3a;
+      --accent:#ffc107;
+      --muted:#9fb0bf;
+      --glass:rgba(255,255,255,0.06);
+      --radius:14px;
+      --max:1200px;
+      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;min-height:100vh;color:#eaf3f9;
+      background:linear-gradient(135deg,var(--bg-1),var(--bg-2));
+      display:flex;justify-content:center
+    }
+    .wrap{width:100%;max-width:var(--max);padding:18px}
+
+    header{display:flex;align-items:center;justify-content:space-between;gap:12px}
+    header h1{margin:0;font-size:1.3rem;color:var(--accent)}
+    header .user{color:var(--muted);font-size:.95rem}
+
+    .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:14px;margin-top:14px}
+
+    .card{
+      grid-column:span 6;
+      background:var(--glass);
+      border-radius:var(--radius);
+      padding:16px
+    }
+    .card h3{margin:0 0 10px;color:var(--accent);font-size:1.05rem}
+
+    .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+    .stat{background:rgba(255,255,255,0.04);border-radius:12px;padding:14px}
+    .stat .v{font-size:1.4rem;font-weight:700}
+    .stat .k{color:var(--muted);font-size:.9rem}
+
+    canvas{width:100%!important;height:260px!important}
+
+    .controls{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+    select,button{
+      background:transparent;border:1px solid rgba(255,255,255,0.1);
+      color:inherit;border-radius:999px;padding:6px 12px
+    }
+
+    footer{margin-top:18px;color:var(--muted);font-size:.9rem;text-align:center}
+    @media(max-width:900px){.card{grid-column:span 12}}
+  </style>
+</head>
+
+<body>
+<div class="wrap">
+
+<header>
+  <h1>M.A.N.G.O. — Dashboard</h1>
+  <div class="user">
+    Usuario: <strong>admin</strong> ·
+    <a href="index.html" style="color:var(--accent)">Salir</a>
+  </div>
+</header>
+
+<section class="grid">
+
+  <!-- KPIs -->
+  <div class="card" style="grid-column:span 12">
+    <div class="stats">
+      <div class="stat"><div class="v" id="stat-level">—</div><div class="k">Nivel (cm)</div></div>
+      <div class="stat"><div class="v" id="stat-temp">—</div><div class="k">Temperatura (°C)</div></div>
+      <div class="stat"><div class="v" id="stat-sal">—</div><div class="k">Salinidad (ppt)</div></div>
+    </div>
+  </div>
+
+  <!-- Charts -->
+  <div class="card">
+    <h3>Nivel del agua</h3>
+    <select id="range-level">
+      <option value="1">Última hora</option>
+      <option value="6">6 horas</option>
+      <option value="24" selected>24 horas</option>
+    </select>
+    <button onclick="reloadLevel()">Actualizar</button>
+    <canvas id="chartLevel"></canvas>
+  </div>
+
+  <div class="card">
+    <h3>Temperatura</h3>
+    <select id="range-temp">
+      <option value="1">Última hora</option>
+      <option value="6">6 horas</option>
+      <option value="24" selected>24 horas</option>
+    </select>
+    <button onclick="reloadTemp()">Actualizar</button>
+    <canvas id="chartTemp"></canvas>
+  </div>
+
+  <div class="card">
+    <h3>Salinidad</h3>
+    <select id="range-sal">
+      <option value="1">Última hora</option>
+      <option value="6">6 horas</option>
+      <option value="24" selected>24 horas</option>
+    </select>
+    <button onclick="reloadSal()">Actualizar</button>
+    <canvas id="chartSal"></canvas>
+  </div>
+
+</section>
+
+<footer>
+  Datos en tiempo real · M.A.N.G.O.
+</footer>
+
+</div>
+
+<script>
+
+async function checkAuth(){
+  const res = await fetch(`${API_BASE}/me`, {
+    credentials: "include"
+  });
+
+  if (!res.ok) {
+    window.location.href = "index.html";
+  }
+}
+
+checkAuth();
+
+
+/* =============================
+   CONFIGURACIÓN BACKEND
+   ============================= */
+const API_BASE = "http://localhost:5000/api";
+// 🔧 CAMBIA ESTO si usas otro host/puerto
+
+/* =============================
+   CHARTS
+   ============================= */
+const baseOptions = {
+  responsive:true,
+  maintainAspectRatio:false,
+  plugins:{legend:{display:false}}
+};
+
+function makeChart(id){
+  return new Chart(document.getElementById(id),{
+    type:'line',
+    data:{labels:[],datasets:[{data:[],borderWidth:2,pointRadius:0}]},
+    options:baseOptions
+  });
+}
+
+const levelChart = makeChart("chartLevel");
+const tempChart  = makeChart("chartTemp");
+const salChart   = makeChart("chartSal");
+
+/* =============================
+   LOAD HISTORICAL DATA
+   ============================= */
+async function loadSeries(type, hours){
+  const res = await fetch(
+    `${API_BASE}/range/${type}?hours=${hours}`,
+    { credentials:"include" }
+  );
+  if(!res.ok) throw new Error("Unauthorized");
+  return res.json();
+}
+
+async function reloadLevel(){
+  const h = rangeValue("range-level");
+  const d = await loadSeries("level", h);
+  updateChart(levelChart, d);
+  stat("stat-level", d);
+}
+
+async function reloadTemp(){
+  const h = rangeValue("range-temp");
+  const d = await loadSeries("temperature", h);
+  updateChart(tempChart, d);
+  stat("stat-temp", d);
+}
+
+async function reloadSal(){
+  const h = rangeValue("range-sal");
+  const d = await loadSeries("salinity", h);
+  updateChart(salChart, d);
+  stat("stat-sal", d);
+}
+
+function rangeValue(id){
+  return +document.getElementById(id).value;
+}
+
+function updateChart(chart, data){
+  chart.data.labels = data.map(x =>
+    new Date(x.timestamp).toLocaleTimeString()
+  );
+  chart.data.datasets[0].data = data.map(x => x.value);
+  chart.update();
+}
+
+function stat(id, data){
+  document.getElementById(id).innerText =
+    data[data.length - 1].value;
+}
+
+/* =============================
+   REALTIME SSE
+   ============================= */
+function startSSE(){
+  const sse = new EventSource(`${API_BASE}/stream`, {
+    withCredentials:true
+  });
+
+  sse.onmessage = e => {
+    const d = JSON.parse(e.data);
+    const t = new Date(d.timestamp).toLocaleTimeString();
+
+    push(levelChart, t, d.level);
+    push(tempChart,  t, d.temperature);
+    push(salChart,   t, d.salinity);
+
+    document.getElementById("stat-level").innerText = d.level;
+    document.getElementById("stat-temp").innerText  = d.temperature;
+    document.getElementById("stat-sal").innerText   = d.salinity;
+  };
+}
+
+function push(chart, label, value){
+  chart.data.labels.push(label);
+  chart.data.datasets[0].data.push(value);
+  if(chart.data.labels.length > 100){
+    chart.data.labels.shift();
+    chart.data.datasets[0].data.shift();
+  }
+  chart.update("none");
+}
+
+/* =============================
+   INIT
+   ============================= */
+reloadLevel();
+reloadTemp();
+reloadSal();
+startSSE();
+</script>
+
+</body>
+</html>

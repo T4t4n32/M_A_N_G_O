@@ -1,0 +1,2 @@
+class Config:
+    SECRET_KEY = "MANGO_PROJECT_SEBASTIAN"  # 🔧 CAMBIA ESTO

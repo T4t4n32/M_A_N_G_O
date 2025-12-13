@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>M.A.N.G.O. — Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+body{
+  margin:0;
+  font-family:system-ui;
+  background:#061222;
+  color:#eef6fb;
+}
+.wrap{max-width:1100px;margin:auto;padding:20px}
+.card{
+  background:rgba(255,255,255,0.06);
+  padding:16px;
+  border-radius:12px;
+  margin-bottom:16px;
+}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.stat{background:rgba(255,255,255,0.04);padding:12px;border-radius:10px}
+canvas{height:240px!important}
+button{padding:6px 12px;margin-left:6px}
+</style>
+</head>
+
+<body>
+<div class="wrap">
+
+<h1>M.A.N.G.O. — Dashboard</h1>
+
+<div class="stats">
+  <div class="stat">🌡️ Temp: <strong id="temp">—</strong></div>
+  <div class="stat">🧪 pH: <strong id="ph">—</strong></div>
+  <div class="stat">🌫️ Turbidez: <strong id="turb">—</strong></div>
+</div>
+
+<div class="card">
+  <h3>Temperatura</h3>
+  <canvas id="cTemp"></canvas>
+</div>
+
+<div class="card">
+  <h3>pH</h3>
+  <canvas id="cPh"></canvas>
+</div>
+
+<div class="card">
+  <h3>Turbidez</h3>
+  <canvas id="cTurb"></canvas>
+</div>
+
+</div>
+
+<script>
+const API = "http://localhost:5000/api";
+
+/* ================= AUTH ================= */
+async function checkAuth(){
+  const r = await fetch(`${API}/health`,{ credentials:"include" });
+  if(!r.ok) location.href="index.html";
+}
+checkAuth();
+
+/* ================= CHARTS ================= */
+function makeChart(id){
+  return new Chart(document.getElementById(id),{
+    type:"line",
+    data:{labels:[],datasets:[{data:[],borderWidth:2,pointRadius:0}]},
+    options:{plugins:{legend:{display:false}}}
+  });
+}
+
+const ct = makeChart("cTemp");
+const cp = makeChart("cPh");
+const cu = makeChart("cTurb");
+
+/* ================= LOAD LATEST ================= */
+async function loadLatest(){
+  const r = await fetch(`${API}/latest`,{credentials:"include"});
+  const d = await r.json();
+  document.getElementById("temp").innerText = d.temperature;
+  document.getElementById("ph").innerText   = d.ph;
+  document.getElementById("turb").innerText = d.turbidity;
+}
+loadLatest();
+
+/* ================= RANGE ================= */
+async function loadRange(type, chart){
+  const r = await fetch(`${API}/range/${type}?hours=24`,{credentials:"include"});
+  const d = await r.json();
+  chart.data.labels = d.map(x=>new Date(x.timestamp).toLocaleTimeString());
+  chart.data.datasets[0].data = d.map(x=>x.value);
+  chart.update();
+}
+
+loadRange("temperature",ct);
+loadRange("ph",cp);
+loadRange("turbidity",cu);
+
+/* ================= SSE ================= */
+const sse = new EventSource(`${API}/stream`,{withCredentials:true});
+sse.onmessage = e =>{
+  const d = JSON.parse(e.data);
+  const t = new Date(d.timestamp).toLocaleTimeString();
+
+  push(ct,t,d.temperature);
+  push(cp,t,d.ph);
+  push(cu,t,d.turbidity);
+
+  document.getElementById("temp").innerText=d.temperature;
+  document.getElementById("ph").innerText=d.ph;
+  document.getElementById("turb").innerText=d.turbidity;
+};
+
+function push(chart,l,v){
+  chart.data.labels.push(l);
+  chart.data.datasets[0].data.push(v);
+  if(chart.data.labels.length>100){
+    chart.data.labels.shift();
+    chart.data.datasets[0].data.shift();
+  }
+  chart.update("none");
+}
+</script>
+
+</body>
+</html>
