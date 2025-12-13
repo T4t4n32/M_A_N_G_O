@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard | M.A.N.G.O.</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        /* --- VARIABLES DE COLOR --- */
+        :root {
+            --primary-teal: #008080;
+            --accent-yellow: #FFC107;
+            --danger-red: #ff4d4d;
+            --glass-bg: rgba(20, 20, 35, 0.6);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --text-light: #e0e0e0;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #1a1a2e, var(--primary-teal));
+            color: var(--text-light);
+            min-height: 100vh;
+            display: flex;
+            overflow: hidden;
+        }
+
+        /* --- SIDEBAR --- */
+        .sidebar {
+            width: 250px;
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            border-right: 1px solid var(--glass-border);
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .brand img {
+            width: 40px; 
+            height: 40px;
+            border-radius: 50%;
+            border: 2px solid var(--accent-yellow);
+        }
+
+        .menu-item {
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            color: #aaa;
+            text-decoration: none;
+        }
+
+        .menu-item:hover, .menu-item.active {
+            background: rgba(255, 193, 7, 0.15);
+            color: var(--accent-yellow);
+        }
+
+        /* --- CONTENIDO PRINCIPAL --- */
+        .main-content {
+            flex: 1;
+            padding: 30px;
+            overflow-y: auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: var(--glass-bg);
+            padding: 8px 15px;
+            border-radius: 20px;
+            border: 1px solid var(--glass-border);
+        }
+
+        /* --- GRID DE TARJETAS (KPIs) --- */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 15px;
+            padding: 20px;
+            backdrop-filter: blur(5px);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 10px;
+        }
+
+        .card-icon {
+            font-size: 1.5rem;
+            padding: 10px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .card-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #fff;
+        }
+
+        .card-label {
+            font-size: 0.9rem;
+            color: #aaa;
+        }
+
+        /* Colores específicos para iconos */
+        .icon-water { color: #00bcd4; }
+        .icon-temp { color: #ff9800; }
+        .icon-server { color: #9c27b0; }
+
+        /* --- SECCIÓN DE GRÁFICOS Y ESTADO --- */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+        }
+
+        .chart-container, .server-status {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 15px;
+            padding: 20px;
+        }
+
+        h3 {
+            margin-bottom: 20px;
+            font-weight: 500;
+            color: var(--accent-yellow);
+        }
+
+        /* Barras de progreso personalizadas */
+        .progress-group {
+            margin-bottom: 15px;
+        }
+        
+        .progress-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+        }
+
+        .progress-bg {
+            width: 100%;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 1s ease;
+        }
+
+        /* Responsive */
+        @media (max-width: 900px) {
+            .dashboard-grid { grid-template-columns: 1fr; }
+            body { flex-direction: column; overflow: auto; }
+            .sidebar { width: 100%; flex-direction: row; overflow-x: auto; }
+            .brand { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="sidebar">
+        <div class="brand">
+            <img src="docs/media/0-LOGO/v_2.0.1.png" alt="M.A.N.G.O. Logo">
+            <h3>M.A.N.G.O.</h3>
+        </div>
+        <a href="#" class="menu-item active"><i class="fas fa-home"></i> General</a>
+        <a href="#" class="menu-item"><i class="fas fa-water"></i> Sensores</a>
+        <a href="#" class="menu-item"><i class="fas fa-server"></i> Proxmox Node</a>
+        <a href="#" class="menu-item"><i class="fas fa-database"></i> Base de Datos</a>
+        <a href="index.html" class="menu-item" style="margin-top: auto; color: var(--danger-red);"><i class="fas fa-sign-out-alt"></i> Salir</a>
+    </nav>
+
+    <main class="main-content">
+        <header class="header">
+            <div>
+                <h2>Panel de Control</h2>
+                <p style="color: #aaa; font-size: 0.9rem;">Monitoreo en tiempo real</p>
+            </div>
+            <div class="user-profile">
+                <i class="fas fa-user-circle"></i>
+                <span>Usuario Administrador</span>
+            </div>
+        </header>
+
+        <div class="kpi-grid">
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-label">Nivel Oceánico</span>
+                    <i class="fas fa-water card-icon icon-water"></i>
+                </div>
+                <div class="card-value">12.5 <span style="font-size: 1rem;">m</span></div>
+                <span style="color: #00ff00; font-size: 0.8rem;"><i class="fas fa-arrow-up"></i> Estable</span>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-label">Temperatura Agua</span>
+                    <i class="fas fa-thermometer-half card-icon icon-temp"></i>
+                </div>
+                <div class="card-value">24.2 <span style="font-size: 1rem;">°C</span></div>
+                <span style="color: var(--accent-yellow); font-size: 0.8rem;">+0.5° vs ayer</span>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-label">VM Principal (Debian)</span>
+                    <i class="fas fa-desktop card-icon icon-server"></i>
+                </div>
+                <div class="card-value">Running</div>
+                <span style="color: #00ff00; font-size: 0.8rem;">Uptime: 14d 2h</span>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-label">Alertas Activas</span>
+                    <i class="fas fa-bell card-icon" style="color: var(--danger-red);"></i>
+                </div>
+                <div class="card-value">0</div>
+                <span style="color: #aaa; font-size: 0.8rem;">Sistema Normal</span>
+            </div>
+        </div>
+
+        <div class="dashboard-grid">
+            
+            <div class="chart-container">
+                <h3><i class="fas fa-chart-line"></i> Histórico de Niveles (Últimas 24h)</h3>
+                <canvas id="oceanLevelChart"></canvas>
+            </div>
+
+            <div class="server-status">
+                <h3><i class="fas fa-server"></i> Estado del Nodo (PVE)</h3>
+                
+                <div class="progress-group">
+                    <div class="progress-label">
+                        <span>CPU Usage (12 vCores)</span>
+                        <span id="cpu-text">15%</span>
+                    </div>
+                    <div class="progress-bg">
+                        <div class="progress-fill" style="width: 15%; background: #00bcd4;" id="cpu-bar"></div>
+                    </div>
+                </div>
+
+                <div class="progress-group">
+                    <div class="progress-label">
+                        <span>RAM Usage (32GB)</span>
+                        <span id="ram-text">42%</span>
+                    </div>
+                    <div class="progress-bg">
+                        <div class="progress-fill" style="width: 42%; background: #9c27b0;" id="ram-bar"></div>
+                    </div>
+                </div>
+
+                <div class="progress-group">
+                    <div class="progress-label">
+                        <span>Storage (Local-LVM)</span>
+                        <span>68%</span>
+                    </div>
+                    <div class="progress-bg">
+                        <div class="progress-fill" style="width: 68%; background: var(--accent-yellow);"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        // 1. Configuración del Gráfico (Chart.js)
+        const ctx = document.getElementById('oceanLevelChart').getContext('2d');
+        
+        // Datos iniciales de prueba
+        const dataValues = [12.1, 12.2, 12.3, 12.1, 12.0, 12.4, 12.5, 12.6, 12.5, 12.4, 12.3, 12.5];
+        const labels = ['00:00', '02:00', '04:00', '06:00', '08:00', '10:00', '12:00', '14:00', '16:00', '18:00', '20:00', '22:00'];
+
+        const oceanChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Nivel del Mar (metros)',
+                    data: dataValues,
+                    borderColor: 'var(--accent-yellow)', 
+                    backgroundColor: 'rgba(255, 193, 7, 0.1)',
+                    borderWidth: 2,
+                    tension: 0.4,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { labels: { color: '#e0e0e0' } }
+                },
+                scales: {
+                    y: { 
+                        grid: { color: 'rgba(255,255,255,0.05)' },
+                        ticks: { color: '#aaa' } 
+                    },
+                    x: { 
+                        grid: { display: false },
+                        ticks: { color: '#aaa' } 
+                    }
+                }
+            }
+        });
+
+        // 2. Simulación de Datos en Tiempo Real
+        setInterval(() => {
+            // Simular cambio en CPU
+            const randomCPU = Math.floor(Math.random() * (30 - 10 + 1) + 10);
+            document.getElementById('cpu-bar').style.width = randomCPU + '%';
+            document.getElementById('cpu-text').innerText = randomCPU + '%';
+
+            // Simular cambio pequeño en RAM
+            const randomRAM = Math.floor(Math.random() * (45 - 40 + 1) + 40);
+            document.getElementById('ram-bar').style.width = randomRAM + '%';
+            document.getElementById('ram-text').innerText = randomRAM + '%';
+
+        }, 3000);
+    </script>
+</body>
+</html>

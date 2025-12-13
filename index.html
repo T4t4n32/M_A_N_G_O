@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>M.A.N.G.O. — Autonomous Monitoring</title>
+  <meta name="description" content="M.A.N.G.O. — Open-source project for autonomous oceanic monitoring. Data, docs and way to collaborate." />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <style>
+    :root{
+      --bg-1: #071428; /* deep */
+      --bg-2: #06384b; /* teal */
+      --accent: #ffc107; /* yellow */
+      --muted: #98a6b3;
+      --glass: rgba(255,255,255,0.06);
+      --radius: 12px;
+      --max-width: 1100px;
+      --content-padding: 24px;
+      font-family: Inter, 'Segoe UI', Roboto, system-ui, -apple-system, 'Helvetica Neue', Arial;
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      min-height:100%;
+      background: linear-gradient(135deg,var(--bg-1) 0%, #0b3b4b 60%, var(--bg-2) 100%);
+      color:#eef6fb;
+      -webkit-font-smoothing:antialiased;
+      line-height:1.45;
+      display:flex;flex-direction:column;align-items:center;
+    }
+
+    .container{width:100%;max-width:var(--max-width);padding:16px}
+
+    header{
+      width:100%;display:flex;align-items:center;justify-content:space-between;padding:14px 0;
+    }
+    .brand{display:flex;align-items:center;gap:12px}
+    .brand img{width:52px;height:52px;border-radius:10px;border:2px solid rgba(255,255,255,0.06)}
+    .brand h1{font-size:1.05rem;margin:0;color:var(--accent);letter-spacing:1px}
+
+    nav{display:flex;gap:14px;align-items:center}
+    nav a{color:var(--muted);text-decoration:none;font-weight:600;padding:8px 12px;border-radius:10px}
+    nav a:hover{color:#fff;background:var(--glass)}
+
+    .hero{
+      display:flex;gap:28px;align-items:center;margin:18px 0;padding:28px;background:linear-gradient(180deg,rgba(255,255,255,0.02),transparent);border-radius:var(--radius);backdrop-filter:blur(6px)
+    }
+
+    .hero-left{flex:1;min-width:260px}
+    .hero-left h2{font-size:2rem;margin:0 0 8px}
+    .tag{color:var(--muted);font-style:italic;margin-bottom:18px}
+    .hero-left p{color: #dceefc;max-width:58ch}
+
+    .cta-row{display:flex;gap:12px;margin-top:18px}
+    .btn{padding:10px 16px;border-radius:999px;background:var(--accent);color:#06222a;font-weight:700;text-decoration:none}
+    .btn-outline{background:transparent;border:1px solid rgba(255,255,255,0.08);color:var(--muted)}
+
+    .hero-right{width:340px;min-width:260px}
+    .card{background:var(--glass);padding:18px;border-radius:12px;color:#fff}
+    form .field{margin-bottom:10px}
+    input,button{width:100%;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.06);background:transparent;color:inherit}
+    input::placeholder{color:rgba(255,255,255,0.5)}
+
+    /* sections */
+    section.features{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:16px}
+    .feature{background:rgba(255,255,255,0.03);padding:18px;border-radius:12px}
+    .feature h4{margin:0 0 8px;color:var(--accent)}
+
+    .timeline{margin-top:18px;background:transparent;padding:18px;border-radius:12px}
+    .timeline ul{list-style:none;padding:0;margin:0}
+    .timeline li{display:flex;gap:12px;padding:10px 0;border-bottom:1px dashed rgba(255,255,255,0.03)}
+    .timeline li time{min-width:88px;color:var(--muted)}
+
+    footer{width:100%;padding:18px 0;color:var(--muted);margin-top:28px;text-align:center;font-size:0.95rem}
+
+    /* responsive */
+    @media (max-width:980px){
+      .hero{flex-direction:column}
+      section.features{grid-template-columns:repeat(2,1fr)}
+      .hero-right{width:100%}
+    }
+    @media (max-width:600px){
+      nav{display:none}
+      section.features{grid-template-columns:1fr}
+      header{padding:8px 0}
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="brand">
+        <img src="docs/media/0-LOGO/v_2.0.1.png" alt="M.A.N.G.O. logo">
+        <div>
+          <h1>M.A.N.G.O.</h1>
+          <div style="font-size:0.8rem;color:var(--muted)">Autonomous Monitoring of Oceanic Levels</div>
+        </div>
+      </div>
+
+      <nav aria-label="Main navigation">
+        <a href="#about">About</a>
+        <a href="#evidence">Evidence</a>
+        <a href="#data">Data</a>
+        <a href="#contribute">Contribute</a>
+        <a href="https://github.com/T4t4n32/M_A_N_G_O.git" target="_blank">Repo</a>
+      </nav>
+    </header>
+
+    <main>
+      <div class="hero" role="region" aria-label="Intro">
+        <div class="hero-left">
+          <h2>M.A.N.G.O. — Open, low-cost ocean monitoring</h2>
+          <div class="tag">Bring environmental data to communities, researchers and decision-makers.</div>
+          <p>We build simple, robust devices and an open stack so anyone can collect, visualize and share oceanic data (levels, temperature, salinity). Explore docs, view public visualizations or request access to raw device data.</p>
+
+          <div class="cta-row">
+            <a class="btn" href="#data">Ver visualizaciones</a>
+            <a class="btn-outline" href="#contribute">Cómo colaborar</a>
+          </div>
+
+          <div style="margin-top:14px;color:var(--muted);font-size:0.95rem">¿Quieres acceso para ver los datos en bruto? Solicita una cuenta o conecta tu dispositivo.</div>
+        </div>
+
+        <aside class="hero-right">
+          <div class="card" aria-hidden="false">
+            <h3 style="margin-top:0;color:var(--accent)"><i class="fas fa-server"></i> Acceso al Dashboard</h3>
+            <form action="dashboard.html" method="get" onsubmit="return fakeAuth(event)">
+              <div class="field"><label class="sr-only">Usuario</label><input id="u" name="u" placeholder="Usuario" required></div>
+              <div class="field"><label class="sr-only">Contraseña</label><input id="p" type="password" name="p" placeholder="Contraseña" required></div>
+              <div style="display:flex;gap:8px;margin-top:8px"><button class="btn" type="submit">Ingresar</button><a class="btn-outline" href="#contribute">Crear cuenta</a></div>
+              <div style="margin-top:8px;font-size:0.85rem;color:var(--muted)">Acceso para colaboradores y administradores.</div>
+            </form>
+          </div>
+
+          <div style="height:14px"></div>
+
+          <div class="card" style="display:flex;gap:10px;align-items:center">
+            <i class="fas fa-file-alt" style="font-size:1.6rem;color:var(--accent)"></i>
+            <div>
+              <div style="font-weight:700">Docs y guías</div>
+              <div style="color:var(--muted);font-size:0.9rem">Hardware, instalación y API.</div>
+            </div>
+          </div>
+        </aside>
+      </div>
+
+      <!-- quick features -->
+      <section class="features" aria-labelledby="features-title">
+        <div class="feature" id="features-title">
+          <h4>Open Source</h4>
+          <p class="muted">Código y documentación pública para replicar el sistema.</p>
+        </div>
+        <div class="feature">
+          <h4>Low cost</h4>
+          <p class="muted">Diseño pensado para despliegues múltiples y comunidades con recursos limitados.</p>
+        </div>
+        <div class="feature">
+          <h4>Data First</h4>
+          <p class="muted">APIs y dashboard para acceder a series temporales y descargar datos.</p>
+      </section>
+
+      <!-- evidence / timeline -->
+      <section class="timeline" id="evidence">
+        <h3 style="color:var(--accent);margin:0 0 10px">Evidencia del proyecto</h3>
+        <ul>
+          <li><time>2025-07</time><div><strong>Prototype v0</strong> — Primer prototipo de sensor de nivel desplegado en pruebas locales.</div></li>
+          <li><time>2025-09</time><div><strong>Infra</strong> — Nodo Proxmox y base de datos para series de tiempo.</div></li>
+          <li><time>2025-11</time><div><strong>Dashboard</strong> — Interfaz inicial (estadísticas y gráficos) para visualización.</div></li>
+        </ul>
+      </section>
+
+      <!-- call to action for contribution -->
+      <section style="margin-top:18px;padding:18px;background:rgba(255,255,255,0.02);border-radius:12px" id="contribute">
+        <h3 style="color:var(--accent);margin:0 0 6px">¿Quieres colaborar?</h3>
+        <p style="margin:0 0 10px;color:var(--muted)">Puedes: revisar el repositorio, abrir issues, proponer hardware alternativo o solicitar datos para investigación.</p>
+        <div style="display:flex;gap:10px;flex-wrap:wrap"><a class="btn" href="https://github.com/T4t4n32/M_A_N_G_O.git" target="_blank">Ir al Repo</a><a class="btn-outline" href="mailto:contacto@example.com">Contactar al equipo</a></div>
+      </section>
+
+      <!-- small data preview -->
+      <section style="margin-top:18px" id="data">
+        <h3 style="color:var(--accent);margin:0 0 10px">Visualizaciones públicas</h3>
+        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px">
+          <div class="card"><strong>Nivel (24h)</strong><div style="margin-top:8px;color:var(--muted)">Gráfico público con últimas 24 horas (si hay datos)</div></div>
+          <div class="card"><strong>Temperatura (24h)</strong><div style="margin-top:8px;color:var(--muted)">Panel resumido para público general</div></div>
+        </div>
+      </section>
+
+    </main>
+
+    <footer>
+      <div>&copy; 2025 M.A.N.G.O. — Built with open tools • <a href="#" style="color:var(--accent);text-decoration:none">Privacy</a></div>
+    </footer>
+
+  </div>
+
+  <script>
+    // Small client-side demonstration of login: replace with real backend in production.
+    function fakeAuth(e){
+      e.preventDefault();
+      const u = document.getElementById('u').value;
+      const p = document.getElementById('p').value;
+      // Simple local check (demo only)
+      if(u === 'admin' && p === 'admin'){
+        // redirect to dashboard
+        window.location.href = 'dashboard.html';
+      } else {
+        alert('Credenciales incorrectas. Para demo use: admin / admin.');
+      }
+      return false;
+    }
+  </script>
+</body>
+</html>

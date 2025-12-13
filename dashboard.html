@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>M.A.N.G.O. — Dashboard</title>
+  <meta name="description" content="Dashboard M.A.N.G.O. — Visualización clara de datos oceánicos." />
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    :root{
+      --bg-1:#061222;
+      --bg-2:#0a2f3a;
+      --accent:#ffc107;
+      --muted:#9fb0bf;
+      --glass:rgba(255,255,255,0.06);
+      --radius:14px;
+      --max:1200px;
+      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;min-height:100vh;color:#eaf3f9;
+      background:linear-gradient(135deg,var(--bg-1),var(--bg-2));
+      display:flex;justify-content:center
+    }
+    .wrap{width:100%;max-width:var(--max);padding:18px}
+
+    header{display:flex;align-items:center;justify-content:space-between;gap:12px}
+    header h1{margin:0;font-size:1.3rem;color:var(--accent)}
+    header .user{color:var(--muted);font-size:.95rem}
+
+    .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:14px;margin-top:14px}
+
+    .card{
+      grid-column:span 6;
+      background:var(--glass);
+      border-radius:var(--radius);
+      padding:16px
+    }
+    .card h3{margin:0 0 10px;color:var(--accent);font-size:1.05rem}
+    .card small{color:var(--muted)}
+
+    .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+    .stat{background:rgba(255,255,255,0.04);border-radius:12px;padding:14px}
+    .stat .v{font-size:1.4rem;font-weight:700}
+    .stat .k{color:var(--muted);font-size:.9rem}
+
+    canvas{width:100%!important;height:260px!important}
+
+    .controls{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+    select,button{
+      background:transparent;border:1px solid rgba(255,255,255,0.1);
+      color:inherit;border-radius:999px;padding:6px 12px
+    }
+    button.primary{background:var(--accent);color:#06222a;border:none;font-weight:700}
+
+    footer{margin-top:18px;color:var(--muted);font-size:.9rem;text-align:center}
+
+    @media(max-width:900px){.card{grid-column:span 12}}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>M.A.N.G.O. — Dashboard</h1>
+      <div class="user">Usuario: <strong>admin</strong> · <a href="index.html" style="color:var(--accent);text-decoration:none">Salir</a></div>
+    </header>
+
+    <!-- quick stats -->
+    <section class="grid">
+      <div class="card" style="grid-column:span 12">
+        <div class="stats">
+          <div class="stat"><div class="v" id="stat-level">—</div><div class="k">Nivel actual (cm)</div></div>
+          <div class="stat"><div class="v" id="stat-temp">—</div><div class="k">Temperatura (°C)</div></div>
+          <div class="stat"><div class="v" id="stat-sal">—</div><div class="k">Salinidad (ppt)</div></div>
+        </div>
+      </div>
+
+      <!-- charts -->
+      <div class="card">
+        <h3>Nivel del agua</h3>
+        <div class="controls">
+          <select id="range-level">
+            <option value="1">Última hora</option>
+            <option value="6">6 horas</option>
+            <option value="24" selected>24 horas</option>
+          </select>
+          <button onclick="reloadLevel()">Actualizar</button>
+        </div>
+        <canvas id="chartLevel"></canvas>
+      </div>
+
+      <div class="card">
+        <h3>Temperatura</h3>
+        <div class="controls">
+          <select id="range-temp">
+            <option value="1">Última hora</option>
+            <option value="6">6 horas</option>
+            <option value="24" selected>24 horas</option>
+          </select>
+          <button onclick="reloadTemp()">Actualizar</button>
+        </div>
+        <canvas id="chartTemp"></canvas>
+      </div>
+
+      <div class="card">
+        <h3>Salinidad</h3>
+        <div class="controls">
+          <select id="range-sal">
+            <option value="1">Última hora</option>
+            <option value="6">6 horas</option>
+            <option value="24" selected>24 horas</option>
+          </select>
+          <button onclick="reloadSal()">Actualizar</button>
+        </div>
+        <canvas id="chartSal"></canvas>
+      </div>
+    </section>
+
+    <footer>
+      Demo con API simulada en JavaScript · M.A.N.G.O.
+    </footer>
+  </div>
+
+  <script>
+  /* =============================
+     API SIMULADA (FRONTEND ONLY)
+     Reemplazar por fetch real en B
+  ==============================*/
+
+  function fakeFetchSeries(type, hours){
+    return new Promise(res=>{
+      const points = hours * 6; // 1 dato cada 10 min
+      const now = Date.now();
+      const data = [];
+      let base;
+      if(type==='level') base = 120;
+      if(type==='temp') base = 26;
+      if(type==='sal') base = 32;
+
+      for(let i=points;i>=0;i--){
+        const t = new Date(now - i*10*60*1000);
+        const noise = (Math.random()-0.5);
+        let v = base + noise*5;
+        data.push({time:t.toLocaleTimeString(), value:+v.toFixed(2)});
+      }
+      setTimeout(()=>res(data),400);
+    })
+  }
+
+  /* =============================
+     CHARTS
+  ==============================*/
+  const baseOptions = {
+    responsive:true,
+    maintainAspectRatio:false,
+    scales:{x:{ticks:{color:'#9fb0bf'}},y:{ticks:{color:'#9fb0bf'}}},
+    plugins:{legend:{display:false}}
+  };
+
+  const levelChart = new Chart(document.getElementById('chartLevel'),{
+    type:'line',
+    data:{labels:[],datasets:[{data:[],borderWidth:2,pointRadius:0}]},
+    options:baseOptions
+  });
+
+  const tempChart = new Chart(document.getElementById('chartTemp'),{
+    type:'line',
+    data:{labels:[],datasets:[{data:[],borderWidth:2,pointRadius:0}]},
+    options:baseOptions
+  });
+
+  const salChart = new Chart(document.getElementById('chartSal'),{
+    type:'line',
+    data:{labels:[],datasets:[{data:[],borderWidth:2,pointRadius:0}]},
+    options:baseOptions
+  });
+
+  /* =============================
+     LOADERS
+  ==============================*/
+  async function reloadLevel(){
+    const h = +document.getElementById('range-level').value;
+    const d = await fakeFetchSeries('level',h);
+    levelChart.data.labels = d.map(x=>x.time);
+    levelChart.data.datasets[0].data = d.map(x=>x.value);
+    levelChart.update();
+    document.getElementById('stat-level').innerText = d[d.length-1].value;
+  }
+
+  async function reloadTemp(){
+    const h = +document.getElementById('range-temp').value;
+    const d = await fakeFetchSeries('temp',h);
+    tempChart.data.labels = d.map(x=>x.time);
+    tempChart.data.datasets[0].data = d.map(x=>x.value);
+    tempChart.update();
+    document.getElementById('stat-temp').innerText = d[d.length-1].value;
+  }
+
+  async function reloadSal(){
+    const h = +document.getElementById('range-sal').value;
+    const d = await fakeFetchSeries('sal',h);
+    salChart.data.labels = d.map(x=>x.time);
+    salChart.data.datasets[0].data = d.map(x=>x.value);
+    salChart.update();
+    document.getElementById('stat-sal').innerText = d[d.length-1].value;
+  }
+
+  /* =============================
+     SIMULACIÓN SSE (REALTIME)
+     Cada 5s agrega un punto nuevo
+  ==============================*/
+  function startFakeSSE(){
+    setInterval(()=>{
+      const now = new Date().toLocaleTimeString();
+      const vL = 120 + (Math.random()-0.5)*4;
+      const vT = 26 + (Math.random()-0.5)*2;
+      const vS = 32 + (Math.random()-0.5)*1.5;
+
+      pushPoint(levelChart, now, vL);
+      pushPoint(tempChart, now, vT);
+      pushPoint(salChart, now, vS);
+
+      document.getElementById('stat-level').innerText = vL.toFixed(2);
+      document.getElementById('stat-temp').innerText = vT.toFixed(2);
+      document.getElementById('stat-sal').innerText = vS.toFixed(2);
+    },5000)
+  }
+
+  function pushPoint(chart,label,value){
+    chart.data.labels.push(label);
+    chart.data.datasets[0].data.push(+value.toFixed(2));
+    if(chart.data.labels.length>100){
+      chart.data.labels.shift();
+      chart.data.datasets[0].data.shift();
+    }
+    chart.update('none');
+  }
+
+  /* init */
+  reloadLevel();reloadTemp();reloadSal();startFakeSSE();
+  </script>
+</body>
+</html>
