@@ -87,7 +87,7 @@ To get a local copy up and running, follow these simple steps.
 ### Software Installation
 1.  **Clone the Repository:**
     ```bash
-    git clone [https://github.com/T4t4n32/M_A_N_G_O.git](https://github.com/T4t4n32/M_A_N_G_O.git)
+    git clone https://github.com/T4t4n32/M_A_N_G_O.git
     ```
     ```bash
     cd M_A_N_G_O
