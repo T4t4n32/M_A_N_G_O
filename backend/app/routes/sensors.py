@@ -1,15 +1,19 @@
-from flask import Blueprint, jsonify, session, request
-import random
+from flask import Blueprint, jsonify
+from app.services.data_ingestion import get_latest_turbidity, update_turbidity
 
-sensors_bp = Blueprint("sensors", __name__, url_prefix="/api")
+sensors_bp = Blueprint("sensors", __name__)
 
-@sensors_bp.route("/latest")
-def latest():
-    if "user" not in session:
-        return jsonify({"error": "unauthorized"}), 401
+# Endpoint para el dashboard
+@sensors_bp.route("/api/turbidity/latest", methods=["GET"])
+def turbidity_latest():
+    data = get_latest_turbidity()
+    if data["value"] is None:
+        return jsonify({"error": "no data yet"}), 404
+    return jsonify(data)
 
-    return jsonify({
-        "level": round(120 + random.uniform(-1, 1), 2),
-        "temperature": round(26 + random.uniform(-0.5, 0.5), 2),
-        "salinity": round(32 + random.uniform(-0.3, 0.3), 2)
-    })
+# Endpoint temporal para simular ingreso de datos
+# (luego se reemplaza por lectura serial real)
+@sensors_bp.route("/api/turbidity/mock/<float:value>", methods=["POST"])
+def turbidity_mock(value):
+    update_turbidity(value)
+    return jsonify({"status": "ok", "value": value})

@@ -1,130 +1,175 @@
 <!doctype html>
 <html lang="es">
 <head>
-<meta charset="utf-8">
-<title>M.A.N.G.O. — Dashboard</title>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>M.A.N.G.O. — Dashboard</title>
+  <meta name="description" content="M.A.N.G.O. — Visualización clara de datos oceánicos." />
 
-<style>
-body{
-  margin:0;
-  font-family:system-ui;
-  background:#061222;
-  color:#eef6fb;
-}
-.wrap{max-width:1100px;margin:auto;padding:20px}
-.card{
-  background:rgba(255,255,255,0.06);
-  padding:16px;
-  border-radius:12px;
-  margin-bottom:16px;
-}
-.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
-.stat{background:rgba(255,255,255,0.04);padding:12px;border-radius:10px}
-canvas{height:240px!important}
-button{padding:6px 12px;margin-left:6px}
-</style>
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    :root{
+      --bg-1:#061222;
+      --bg-2:#0a2f3a;
+      --accent:#ffc107;
+      --muted:#9fb0bf;
+      --glass:rgba(255,255,255,0.06);
+      --radius:14px;
+      --max:1200px;
+      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;min-height:100vh;color:#eaf3f9;
+      background:linear-gradient(135deg,var(--bg-1),var(--bg-2));
+      display:flex;justify-content:center
+    }
+    .wrap{width:100%;max-width:var(--max);padding:18px}
+
+    header{display:flex;align-items:center;justify-content:space-between;gap:12px}
+    header h1{margin:0;font-size:1.3rem;color:var(--accent)}
+    header .user{color:var(--muted);font-size:.95rem}
+
+    .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:14px;margin-top:14px}
+
+    .card{
+      grid-column:span 6;
+      background:var(--glass);
+      border-radius:var(--radius);
+      padding:16px
+    }
+    .card h3{margin:0 0 10px;color:var(--accent);font-size:1.05rem}
+    .card small{color:var(--muted)}
+
+    .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+    .stat{background:rgba(255,255,255,0.04);border-radius:12px;padding:14px}
+    .stat .v{font-size:1.4rem;font-weight:700}
+    .stat .k{color:var(--muted);font-size:.9rem}
+
+    canvas{width:100%!important;height:260px!important}
+
+    footer{margin-top:18px;color:var(--muted);font-size:.9rem;text-align:center}
+
+    @media(max-width:900px){.card{grid-column:span 12}}
+  </style>
 </head>
 
 <body>
-<div class="wrap">
+  <div class="wrap">
+    <header>
+      <h1>M.A.N.G.O. — Dashboard</h1>
+      <div class="user">
+        Usuario: <strong>admin</strong> ·
+        <a href="index.html" style="color:var(--accent);text-decoration:none">Salir</a>
+      </div>
+    </header>
 
-<h1>M.A.N.G.O. — Dashboard</h1>
+    <section class="grid">
+      <!-- Quick stats -->
+      <div class="card" style="grid-column:span 12">
+        <div class="stats">
+          <div class="stat">
+            <div class="v" id="stat-temp">—</div>
+            <div class="k">Temperatura (°C)</div>
+          </div>
+          <div class="stat">
+            <div class="v" id="stat-ph">—</div>
+            <div class="k">pH</div>
+          </div>
+          <div class="stat">
+            <div class="v" id="stat-turb">—</div>
+            <div class="k">Turbidez (V)</div>
+          </div>
+        </div>
+      </div>
 
-<div class="stats">
-  <div class="stat">🌡️ Temp: <strong id="temp">—</strong></div>
-  <div class="stat">🧪 pH: <strong id="ph">—</strong></div>
-  <div class="stat">🌫️ Turbidez: <strong id="turb">—</strong></div>
-</div>
+      <!-- Turbidity chart -->
+      <div class="card" style="grid-column:span 12">
+        <h3>Turbidez — Últimas lecturas</h3>
+        <canvas id="chartTurbidity"></canvas>
+        <small>Datos en tiempo casi real desde el backend</small>
+      </div>
+    </section>
 
-<div class="card">
-  <h3>Temperatura</h3>
-  <canvas id="cTemp"></canvas>
-</div>
+    <footer>
+      M.A.N.G.O. · Dashboard conectado a API
+    </footer>
+  </div>
 
-<div class="card">
-  <h3>pH</h3>
-  <canvas id="cPh"></canvas>
-</div>
+  <!-- =============================
+       JAVASCRIPT INTEGRADO
+  ==============================-->
+  <script>
+    const API_BASE = "http://localhost:5000";
 
-<div class="card">
-  <h3>Turbidez</h3>
-  <canvas id="cTurb"></canvas>
-</div>
+    // Chart setup
+    const turbidityChart = new Chart(
+      document.getElementById("chartTurbidity"),
+      {
+        type: "line",
+        data: {
+          labels: [],
+          datasets: [{
+            label: "Turbidez (V)",
+            data: [],
+            borderWidth: 2,
+            pointRadius: 2
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: true } },
+          scales: {
+            x: { ticks: { color: "#9fb0bf" } },
+            y: { ticks: { color: "#9fb0bf" } }
+          }
+        }
+      }
+    );
 
-</div>
+    async function fetchTurbidity() {
+      try {
+        const res = await fetch(`${API_BASE}/api/turbidity/latest`, {
+          credentials: "include"
+        });
+        if (!res.ok) return null;
+        return await res.json();
+      } catch {
+        return null;
+      }
+    }
 
-<script>
-const API = "http://localhost:5000/api";
+    function pushTurbidityPoint(label, value) {
+      turbidityChart.data.labels.push(label);
+      turbidityChart.data.datasets[0].data.push(value);
 
-/* ================= AUTH ================= */
-async function checkAuth(){
-  const r = await fetch(`${API}/health`,{ credentials:"include" });
-  if(!r.ok) location.href="index.html";
-}
-checkAuth();
+      if (turbidityChart.data.labels.length > 20) {
+        turbidityChart.data.labels.shift();
+        turbidityChart.data.datasets[0].data.shift();
+      }
+      turbidityChart.update("none");
+    }
 
-/* ================= CHARTS ================= */
-function makeChart(id){
-  return new Chart(document.getElementById(id),{
-    type:"line",
-    data:{labels:[],datasets:[{data:[],borderWidth:2,pointRadius:0}]},
-    options:{plugins:{legend:{display:false}}}
-  });
-}
+    async function updateDashboard() {
+      const data = await fetchTurbidity();
+      if (!data) return;
 
-const ct = makeChart("cTemp");
-const cp = makeChart("cPh");
-const cu = makeChart("cTurb");
+      // Update stat
+      document.getElementById("stat-turb").innerText =
+        data.value + " " + data.unit;
 
-/* ================= LOAD LATEST ================= */
-async function loadLatest(){
-  const r = await fetch(`${API}/latest`,{credentials:"include"});
-  const d = await r.json();
-  document.getElementById("temp").innerText = d.temperature;
-  document.getElementById("ph").innerText   = d.ph;
-  document.getElementById("turb").innerText = d.turbidity;
-}
-loadLatest();
+      // Push chart point
+      const timeLabel = new Date().toLocaleTimeString();
+      pushTurbidityPoint(timeLabel, data.value);
+    }
 
-/* ================= RANGE ================= */
-async function loadRange(type, chart){
-  const r = await fetch(`${API}/range/${type}?hours=24`,{credentials:"include"});
-  const d = await r.json();
-  chart.data.labels = d.map(x=>new Date(x.timestamp).toLocaleTimeString());
-  chart.data.datasets[0].data = d.map(x=>x.value);
-  chart.update();
-}
-
-loadRange("temperature",ct);
-loadRange("ph",cp);
-loadRange("turbidity",cu);
-
-/* ================= SSE ================= */
-const sse = new EventSource(`${API}/stream`,{withCredentials:true});
-sse.onmessage = e =>{
-  const d = JSON.parse(e.data);
-  const t = new Date(d.timestamp).toLocaleTimeString();
-
-  push(ct,t,d.temperature);
-  push(cp,t,d.ph);
-  push(cu,t,d.turbidity);
-
-  document.getElementById("temp").innerText=d.temperature;
-  document.getElementById("ph").innerText=d.ph;
-  document.getElementById("turb").innerText=d.turbidity;
-};
-
-function push(chart,l,v){
-  chart.data.labels.push(l);
-  chart.data.datasets[0].data.push(v);
-  if(chart.data.labels.length>100){
-    chart.data.labels.shift();
-    chart.data.datasets[0].data.shift();
-  }
-  chart.update("none");
-}
-</script>
-
+    // Init
+    updateDashboard();
+    setInterval(updateDashboard, 5000);
+  </script>
 </body>
 </html>
+
