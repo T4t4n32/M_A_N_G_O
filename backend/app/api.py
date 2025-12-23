@@ -6,6 +6,7 @@ from .routes.stream import stream_bp
 from .routes.temperature import temperature_bp
 from .routes.ph import ph_bp
 from .routes.turbidity import turbidity_bp
+from app.routes.sensors import sensors_bp
 
 
 def register_routes(app):
@@ -17,3 +18,4 @@ def register_routes(app):
     app.register_blueprint(temperature_bp, url_prefix="/api")
     app.register_blueprint(ph_bp, url_prefix="/api")
     app.register_blueprint(turbidity_bp, url_prefix="/api")
+    app.register_blueprint(sensors_bp)
