@@ -11,7 +11,7 @@ float b;
 
 void setup() {
   Serial.begin(9600);
-  Serial.println("M.A.N.G.O. - pH CALIBRATED V1.1.0");
+  Serial.println("M.A.N.G.O. - pH CALIBRATED");
 
   m = (4.0 - 7.0) / (V_PH4 - V_PH7);
   b = 7.0 - (m * V_PH7);
