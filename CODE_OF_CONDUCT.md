@@ -6,7 +6,7 @@ As contributors and collaborators of **M.A.N.G.O**, we commit to creating a resp
 This project is educational and scientific, and we expect all participants to act in ways that promote learning, teamwork, and positive communication.
 
 
-## 🌱 **Our Principles**
+## **Our Principles**
 
 We commit to:
 
@@ -34,7 +34,7 @@ We support a space where everyone feels included.
 
 
 
-## 🚫 **Unacceptable Behavior**
+## **Unacceptable Behavior**
 
 The following actions are not allowed:
 
@@ -47,7 +47,7 @@ The following actions are not allowed:
 - Harassment in any form (public or private)
 
 
-## 🛠️ **Expected Behavior When Collaborating**
+## **Expected Behavior When Collaborating**
 
 Participants should:
 
@@ -59,7 +59,7 @@ Participants should:
 - Help maintain an organized and safe environment
 
 
-## 📣 **Reporting Issues**
+## **Reporting Issues**
 
 If you experience or witness unacceptable behavior, please report it by:
 
@@ -74,7 +74,7 @@ Reports will be handled respectfully and privately.
 
 
 
-## ⚖️ **Consequences**
+## **Consequences**
 
 Depending on the severity, consequences may include:
 
@@ -86,7 +86,7 @@ These actions are taken to protect the community and the integrity of M.A.N.G.O.
 
 
 
-## 🌍 **Our Commitment**
+## **Our Commitment**
 
 By participating in this project, you agree to follow this Code of Conduct and help maintain a positive, inclusive, and collaborative environment for everyone.
 
