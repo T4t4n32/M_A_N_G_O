@@ -18,14 +18,14 @@
 
 </div>
 
-## 📢 Latest Release - [v1.0.0]
+## Latest Release - [v1.0.0]
 The most recent version introduces the following key features:
 * **New Sensor Integration:** Added turbidity and salinity sensors for more comprehensive data collection.
 * **Energy Consumption Optimization:** Firmware improvements on the **ESP32** to extend the buoy's battery life.
 * **Interactive Dashboard:** Updated web interface for more intuitive visualization and automatic report generation.
 [**View the Full Changelog (CHANGELOG)**](CHANGELOG.md) | [**View All Releases**](https://github.com/T4t4n32/M_A_N_G_O/releases)
 
-## 🧭 Table of Contents
+## Table of Contents
 **Anclajes Corregidos (Lowercase y guiones):**
 * [What is M.A.N.G.O.?](#what-is-mango)
 * [Key Features](#key-features)
