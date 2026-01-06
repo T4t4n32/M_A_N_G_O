@@ -1,19 +1,49 @@
-const int PH_PIN = A0;
+/*
+ * M.A.N.G.O - PH RAW READ
+ * File: PH_raw_read.ino
+ * Purpose:
+ *  - Read raw analog values from pH sensor
+ *  - Convert to voltage
+ *  - Output stable JSON-like data via Serial
+ *
+ * IMPORTANT:
+ *  - No calibration
+ *  - No pH conversion
+ *  - Experimental phase
+ */
+
+const int PH_PIN = A0;        // pH sensor analog output
+const float VREF = 5.0;       // ADC reference voltage
+const int ADC_RESOLUTION = 1023;
+
+unsigned long lastRead = 0;
+const unsigned long READ_INTERVAL = 2000; // ms
 
 void setup() {
   Serial.begin(9600);
-  Serial.println("PH RAW READ - DIAGNOSTIC MODE");
+  delay(1000);
+
+  Serial.println("{\"status\":\"PH RAW READ STARTED\"}");
 }
 
 void loop() {
-  int raw = analogRead(PH_PIN);
-  float voltage = raw * (5.0 / 1023.0);
+  if (millis() - lastRead >= READ_INTERVAL) {
+    lastRead = millis();
 
-  Serial.print("RAW: ");
-  Serial.print(raw);
-  Serial.print(" | Voltage: ");
-  Serial.print(voltage, 3);
-  Serial.println(" V");
+    int rawValue = analogRead(PH_PIN);
+    float voltage = (rawValue * VREF) / ADC_RESOLUTION;
 
-  delay(1000);
+    // JSON-like output (backend-friendly)
+    Serial.print("{");
+    Serial.print("\"sensor\":\"ph\",");
+    Serial.print("\"raw\":");
+    Serial.print(rawValue);
+    Serial.print(",");
+    Serial.print("\"voltage\":");
+    Serial.print(voltage, 3);
+    Serial.print(",");
+    Serial.print("\"timestamp\":");
+    Serial.print(millis());
+    Serial.println("}");
+  }
 }
