@@ -1,175 +1,90 @@
-<!doctype html>
-<html lang="es">
+<!DOCTYPE html>
+<html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>M.A.N.G.O. — Dashboard</title>
-  <meta name="description" content="M.A.N.G.O. — Visualización clara de datos oceánicos." />
-
-  <!-- Chart.js -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
+  <meta charset="UTF-8" />
+  <title>M.A.N.G.O — Sensor Dashboard</title>
   <style>
-    :root{
-      --bg-1:#061222;
-      --bg-2:#0a2f3a;
-      --accent:#ffc107;
-      --muted:#9fb0bf;
-      --glass:rgba(255,255,255,0.06);
-      --radius:14px;
-      --max:1200px;
-      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+    body {
+      font-family: Arial, sans-serif;
+      background: #0e1a1f;
+      color: #eaeaea;
+      margin: 0;
+      padding: 20px;
     }
-    *{box-sizing:border-box}
-    body{
-      margin:0;min-height:100vh;color:#eaf3f9;
-      background:linear-gradient(135deg,var(--bg-1),var(--bg-2));
-      display:flex;justify-content:center
+
+    h1 {
+      margin-bottom: 10px;
     }
-    .wrap{width:100%;max-width:var(--max);padding:18px}
 
-    header{display:flex;align-items:center;justify-content:space-between;gap:12px}
-    header h1{margin:0;font-size:1.3rem;color:var(--accent)}
-    header .user{color:var(--muted);font-size:.95rem}
-
-    .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:14px;margin-top:14px}
-
-    .card{
-      grid-column:span 6;
-      background:var(--glass);
-      border-radius:var(--radius);
-      padding:16px
+    .sensor-card {
+      background: #14262d;
+      border-radius: 8px;
+      padding: 15px;
+      margin-bottom: 15px;
+      width: 300px;
     }
-    .card h3{margin:0 0 10px;color:var(--accent);font-size:1.05rem}
-    .card small{color:var(--muted)}
 
-    .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
-    .stat{background:rgba(255,255,255,0.04);border-radius:12px;padding:14px}
-    .stat .v{font-size:1.4rem;font-weight:700}
-    .stat .k{color:var(--muted);font-size:.9rem}
+    .sensor-title {
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
 
-    canvas{width:100%!important;height:260px!important}
+    .sensor-value {
+      font-size: 1.4em;
+    }
 
-    footer{margin-top:18px;color:var(--muted);font-size:.9rem;text-align:center}
+    .status {
+      font-size: 0.85em;
+      opacity: 0.8;
+    }
 
-    @media(max-width:900px){.card{grid-column:span 12}}
+    button {
+      margin-top: 10px;
+      padding: 6px 10px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
   </style>
 </head>
 
 <body>
-  <div class="wrap">
-    <header>
-      <h1>M.A.N.G.O. — Dashboard</h1>
-      <div class="user">
-        Usuario: <strong>admin</strong> ·
-        <a href="index.html" style="color:var(--accent);text-decoration:none">Salir</a>
-      </div>
-    </header>
+  <h1>M.A.N.G.O — Live Sensors</h1>
+  <p>Raw data (non-calibrated)</p>
 
-    <section class="grid">
-      <!-- Quick stats -->
-      <div class="card" style="grid-column:span 12">
-        <div class="stats">
-          <div class="stat">
-            <div class="v" id="stat-temp">—</div>
-            <div class="k">Temperatura (°C)</div>
-          </div>
-          <div class="stat">
-            <div class="v" id="stat-ph">—</div>
-            <div class="k">pH</div>
-          </div>
-          <div class="stat">
-            <div class="v" id="stat-turb">—</div>
-            <div class="k">Turbidez (V)</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Turbidity chart -->
-      <div class="card" style="grid-column:span 12">
-        <h3>Turbidez — Últimas lecturas</h3>
-        <canvas id="chartTurbidity"></canvas>
-        <small>Datos en tiempo casi real desde el backend</small>
-      </div>
-    </section>
-
-    <footer>
-      M.A.N.G.O. · Dashboard conectado a API
-    </footer>
+  <!-- pH SENSOR -->
+  <div class="sensor-card">
+    <div class="sensor-title">pH Sensor</div>
+    <div id="ph-value" class="sensor-value">Loading...</div>
+    <div id="ph-status" class="status"></div>
+    <button disabled>History (soon)</button>
   </div>
 
-  <!-- =============================
-       JAVASCRIPT INTEGRADO
-  ==============================-->
   <script>
-    const API_BASE = "http://localhost:5000";
+    const API_BASE = "http://localhost:5000/api";
 
-    // Chart setup
-    const turbidityChart = new Chart(
-      document.getElementById("chartTurbidity"),
-      {
-        type: "line",
-        data: {
-          labels: [],
-          datasets: [{
-            label: "Turbidez (V)",
-            data: [],
-            borderWidth: 2,
-            pointRadius: 2
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: { legend: { display: true } },
-          scales: {
-            x: { ticks: { color: "#9fb0bf" } },
-            y: { ticks: { color: "#9fb0bf" } }
+    function updatePH() {
+      fetch(`${API_BASE}/ph/latest`)
+        .then(res => res.json())
+        .then(data => {
+          const valueEl = document.getElementById("ph-value");
+          const statusEl = document.getElementById("ph-status");
+
+          if (data.value === null) {
+            valueEl.innerText = "No data";
+            statusEl.innerText = "Waiting for serial input...";
+          } else {
+            valueEl.innerText = `${data.value.toFixed(3)} V`;
+            statusEl.innerText = `Status: ${data.status}`;
           }
-        }
-      }
-    );
-
-    async function fetchTurbidity() {
-      try {
-        const res = await fetch(`${API_BASE}/api/turbidity/latest`, {
-          credentials: "include"
+        })
+        .catch(() => {
+          document.getElementById("ph-value").innerText = "Backend offline";
         });
-        if (!res.ok) return null;
-        return await res.json();
-      } catch {
-        return null;
-      }
     }
 
-    function pushTurbidityPoint(label, value) {
-      turbidityChart.data.labels.push(label);
-      turbidityChart.data.datasets[0].data.push(value);
-
-      if (turbidityChart.data.labels.length > 20) {
-        turbidityChart.data.labels.shift();
-        turbidityChart.data.datasets[0].data.shift();
-      }
-      turbidityChart.update("none");
-    }
-
-    async function updateDashboard() {
-      const data = await fetchTurbidity();
-      if (!data) return;
-
-      // Update stat
-      document.getElementById("stat-turb").innerText =
-        data.value + " " + data.unit;
-
-      // Push chart point
-      const timeLabel = new Date().toLocaleTimeString();
-      pushTurbidityPoint(timeLabel, data.value);
-    }
-
-    // Init
-    updateDashboard();
-    setInterval(updateDashboard, 5000);
+    setInterval(updatePH, 2000);
+    updatePH();
   </script>
 </body>
 </html>
-
