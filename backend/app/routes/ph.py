@@ -1,17 +1,15 @@
+# app/routes/ph.py
+
 from flask import Blueprint, jsonify
+from app.services.sensor_store import get_latest
 
 ph_bp = Blueprint("ph", __name__)
 
-LATEST_PH = {
-    "raw_voltage": None,
-    "timestamp": None
-}
+@ph_bp.route("/ph/latest")
+def ph_latest():
+    data = get_latest("ph")
 
-@ph_bp.route("/ph/latest", methods=["GET"])
-def get_latest_ph():
-    return jsonify({
-        "sensor": "pH",
-        "value": LATEST_PH["raw_voltage"],
-        "unit": "V",
-        "status": "raw-unfiltered"
-    })
+    if data is None:
+        return jsonify({"status": "offline"}), 503
+
+    return jsonify(data)
