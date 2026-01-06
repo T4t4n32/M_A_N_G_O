@@ -1,21 +1,25 @@
-# app/services/data_ingestion.py
-
+import serial
 from datetime import datetime
+from app.routes.ph import LATEST_PH
 
-_latest_turbidity = {
-    "value": None,
-    "unit": "V",
-    "timestamp": None
-}
+SERIAL_PORT = "/dev/ttyACM0"  # cambia si es necesario
+BAUDRATE = 9600
 
-def update_turbidity(value: float):
-    global _latest_turbidity
-    _latest_turbidity = {
-        "value": round(value, 3),
-        "unit": "V",
-        "timestamp": datetime.utcnow().isoformat() + "Z"
-    }
+def read_ph_from_serial():
+    try:
+        ser = serial.Serial(SERIAL_PORT, BAUDRATE, timeout=1)
+    except Exception as e:
+        print("Serial error:", e)
+        return
 
-def get_latest_turbidity():
-    return _latest_turbidity
+    print("Serial listener started for pH")
 
+    while True:
+        try:
+            line = ser.readline().decode("utf-8").strip()
+            if "Voltage" in line:
+                voltage = float(line.split(":")[-1])
+                LATEST_PH["raw_voltage"] = voltage
+                LATEST_PH["timestamp"] = datetime.utcnow().isoformat()
+        except Exception:
+            pass
