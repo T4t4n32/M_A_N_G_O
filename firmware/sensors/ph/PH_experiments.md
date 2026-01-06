@@ -1,88 +1,163 @@
-# pH Sensor Experiments Log
+# pH Sensor – Experimental Log & Observations
 
-This document records experimental tests, observations, and technical decisions
-related to the pH sensing subsystem of the M.A.N.G.O. project.
+## Project
+**M.A.N.G.O. — Autonomous Monitoring of Oceanic Management Levels**
 
-The goal of this log is to ensure traceability, avoid repeated mistakes, and
-provide transparency on hardware validation steps.
+This document records the experimental behavior, limitations, and observations of the pH sensors used during the early development and testing phase of the project.
 
----
-
-## Experiment 01 — Black pH Electrode (Reference / Test Unit)
-
-### Context
-- pH electrode of unknown origin (black housing)
-- Previously stored dry for an unknown period
-- Connected to an incomplete pH interface module (missing filtering capacitor)
-- Used as an initial test unit ("sacrificial sensor") to validate electrical behavior
+The purpose of this file is **documentation and traceability**, not final calibration or validated results.
 
 ---
 
-### Test Setup
-- Microcontroller: Arduino UNO
+## 1. Context
+
+During the sensor integration phase, multiple pH sensors and modules of **uncertain origin** were tested in order to:
+
+- Understand baseline electrical behavior
+- Evaluate module stability
+- Identify calibration feasibility
+- Decide whether sensors are suitable for dashboard integration
+
+Two different pH sensors were involved:
+
+- **Black pH sensor** (unknown reference, used as test unit)
+- **Blue pH sensor** (new, complete module, not fully tested yet)
+
+---
+
+## 2. Hardware Overview
+
+### 2.1 pH Sensor (Black – Test Unit)
+
+- Reference: Unknown
+- Electrode condition at arrival: **Dry**
+- Module condition: **Incomplete**
+  - Missing capacitor (filter / stabilization component)
+- Purpose:
+  - Used as *experimental / sacrificial unit*
+  - Parts that remain functional may be reused as spare components
+
+### 2.2 pH Sensor (Blue – New Unit)
+
+- Reference: Chinese-manufactured module (manual translated)
+- Module condition: **Complete**
+- Storage solution provided by manufacturer:
+  - **3N KCl solution**
+- Status:
+  - Not yet fully tested
+  - Reserved for structured calibration once procedure is validated
+
+---
+
+## 3. Test Environment
+
+- Microcontroller: Arduino Uno
+- Power supply: 5V (Arduino)
 - Analog input: A0
-- ADC reference: 5.0 V
-- Firmware: `PH_raw_read.ino`
-- Measurement mode: raw ADC value + voltage
+- Liquids used:
+  - Deionized water
+  - Sensor storage solution (3N KCl)
+- Note:
+  - No official buffer solutions (pH 4.01 / 7.01 / 10.01) available at this stage
 
 ---
 
-### Observed Readings
-RAW: 1013-1014
-Voltage: 4.951-4.956 V
+## 4. Raw Voltage Observations
 
+### 4.1 Initial Measurements (Black Sensor)
 
----
+Repeated readings showed **near-saturation behavior**:
 
-### Behavior
-- ADC readings saturated near maximum value
-- Output voltage locked close to VCC (~5 V)
-- Temporary voltage fluctuations observed when changing liquids
-- Signal always returned to ~4.95 V after short transients
-- Potentiometer adjustments had no lasting effect
+RAW: 1013 | Voltage: 4.951 V
+RAW: 1014 | Voltage: 4.956 V
+RAW: 1015 | Voltage: 4.961 V
 
----
+Characteristics:
 
-### Technical Analysis
-- Persistent saturation indicates absence of a valid electrochemical signal
-- Likely causes:
-  - Degraded electrode due to dry storage
-  - Unstable reference junction
-  - Amplifier offset saturation
-  - Additional noise due to missing filtering capacitor on the module
-- Behavior is not consistent with a functional pH electrode response
+- Voltage remains close to 5V
+- Minimal response to liquid changes
+- Minor fluctuations but no stable trend
+- Adjusting potentiometers did **not** resolve saturation
 
 ---
 
-### Conclusion
-- The black pH electrode is **not suitable** for:
-  - Calibration
-  - Quantitative pH measurement
-  - Further algorithm development
-- Sensor behavior confirms hardware degradation rather than software or ADC issues
+### 4.2 Behavior After Electrode Hydration
+
+The electrode was rehydrated after being confirmed dry.
+
+Observed behavior:
+
+- Initial voltage drop (~3.x V)
+- Gradual drift back toward higher voltages (4.4 – 4.7 V)
+- Potentiometer adjustment allowed partial tuning
+- Lower voltage bound reached (~3.35 V), but could not be reduced further
+
+This suggests **partial recovery**, but not reliable operation.
 
 ---
 
-### Decision
-- The black electrode is **discarded for active pH sensing**
-- No further calibration or testing will be performed using this electrode
+## 5. Potentiometer Adjustment Notes
+
+- One potentiometer affects offset
+- Adjustment allows voltage to increase or decrease
+- Lower limit observed:
+  - Approximately **3.3 – 3.4 V**
+- Reconnecting the sensor does not reset this lower bound
+
+Interpretation:
+
+- Module design or missing capacitor may be limiting analog output range
+- Sensor output does not span the expected pH voltage range
 
 ---
 
-### Salvage and Reuse Policy
-- Any components of the black sensor assembly that remain functional
-  (e.g. cables, connectors, BNC interface, mechanical parts)
-  may be **reused as spare parts** for the new pH sensor units if compatible
-- The electrode itself will not be reused under any circumstances
+## 6. Key Findings
+
+- The black pH sensor **cannot be reliably calibrated**
+- Output voltage tends to saturate near supply voltage
+- Sensor response to different liquids is weak or inconsistent
+- Missing stabilization components likely affect signal integrity
+- Results are **not suitable for meaningful pH computation**
 
 ---
 
-### Next Steps
-- Proceed with validation using a new pH electrode (blue housing)
-- Use a complete pH interface module with proper filtering components
-- Repeat raw voltage validation before attempting calibration
-- Only introduce buffer solutions after stable electrical behavior is confirmed
+## 7. Project Decisions
+
+Based on current evidence:
+
+- ❌ The black sensor will **not** be used for production measurements
+- ✅ Remaining functional parts may be reused as spares
+- 🔄 Focus shifts to:
+  - Proper procedure
+  - Controlled calibration
+  - Testing with the new blue pH sensor
 
 ---
 
-**Status:** Closed — diagnostic complete, decision validated
+## 8. Next Steps (Planned)
+
+- Acquire or prepare proper buffer solutions:
+  - pH 4.01
+  - pH 7.01
+  - pH 10.01
+- Define a repeatable calibration procedure
+- Validate raw voltage ranges before computing pH
+- Only integrate pH data into the dashboard after stable calibration
+
+---
+
+## 9. Notes on Documentation Strategy
+
+This experiment is intentionally documented **before achieving success** to:
+
+- Preserve development transparency
+- Avoid false assumptions
+- Support future debugging and peer review
+
+Unstable or inconclusive results are part of the engineering process and are documented accordingly.
+
+---
+
+**Status:** Experimental / Not calibrated  
+**Reliability:** Low  
+**Dashboard integration:** Not recommended at this stage
