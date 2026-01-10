@@ -26,16 +26,31 @@
       box-sizing: border-box;
     }
 
+    html, body {
+      height: 100%;
+      min-height: 100vh;
+    }
+
     body {
       background: linear-gradient(135deg, #061222 0%, #0a1f35 100%);
       color: var(--text);
       font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      position: relative;
+      padding: 20px 0;
+      margin: 0;
+    }
+
+    .container {
       min-height: 100vh;
       display: flex;
+      flex-direction: column;
       justify-content: center;
       align-items: center;
-      position: relative;
-      overflow: hidden;
+      padding: 20px;
+      width: 100%;
+      max-width: 450px;
+      margin: 0 auto;
+      box-sizing: border-box;
     }
 
     body::before {
@@ -53,17 +68,6 @@
     @keyframes rotate {
       from { transform: rotate(0deg); }
       to { transform: rotate(360deg); }
-    }
-
-    .container {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-      width: 100%;
-      max-width: 450px;
-      z-index: 10;
     }
 
     .logo {
@@ -107,6 +111,7 @@
       width: 100%;
       box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
       transition: transform 0.3s ease, box-shadow 0.3s ease;
+      margin-bottom: 20px;
     }
 
     .card:hover {
@@ -352,9 +357,15 @@
     }
 
     @media (max-width: 480px) {
+      .container {
+        padding: 15px 10px;
+        min-height: auto;
+      }
+      
       .card {
         padding: 25px 20px;
         border-radius: 16px;
+        margin-bottom: 15px;
       }
       
       .logo-icon {
@@ -367,6 +378,11 @@
       
       .submit-btn {
         padding: 14px;
+      }
+      
+      .footer {
+        margin-top: 30px;
+        padding-bottom: 20px;
       }
     }
   </style>
@@ -528,11 +544,16 @@
 
     async function checkBackendStatus() {
       try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 3000);
+        
         const response = await fetch(`${API_BASE}/status`, {
           method: 'GET',
           mode: 'cors',
-          timeout: 3000
+          signal: controller.signal
         });
+        
+        clearTimeout(timeoutId);
         
         if (!response.ok) {
           throw new Error('Backend no responde');
@@ -554,6 +575,7 @@
           if (username === OFFLINE_CREDS.username && password === OFFLINE_CREDS.password) {
             // Guardar modo offline en localStorage
             localStorage.setItem('mango_offline_mode', 'true');
+            localStorage.setItem('mango_user', username);
             return true;
           } else {
             throw new Error('Credenciales inválidas en modo offline');
@@ -572,26 +594,26 @@
             password,
             remember: rememberCheckbox.checked
           }),
-          credentials: 'include'
+          credentials: 'include'  // ¡CRÍTICO PARA COOKIES!
         });
 
-        const data = await response.json();
-
-        if (response.ok) {
-          // Guardar preferencia de recordar sesión
-          if (rememberCheckbox.checked) {
-            localStorage.setItem('mango_remember', 'true');
-            localStorage.setItem('mango_username', username);
-          } else {
-            localStorage.removeItem('mango_remember');
-            localStorage.removeItem('mango_username');
-          }
-          
-          localStorage.setItem('mango_offline_mode', 'false');
-          return true;
-        } else {
-          throw new Error(data.message || 'Credenciales incorrectas');
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.message || `Error ${response.status}`);
         }
+
+        const data = await response.json();
+        
+        // Guardar preferencias
+        if (rememberCheckbox.checked) {
+          localStorage.setItem('mango_remember', 'true');
+          localStorage.setItem('mango_username', username);
+        }
+        
+        localStorage.setItem('mango_offline_mode', 'false');
+        localStorage.setItem('mango_user', username);
+        
+        return true;
       } catch (error) {
         attemptCount++;
         
@@ -603,7 +625,8 @@
         if (!isBackendOnline) {
           showError('Credenciales inválidas. Usuario: "Admin", Contraseña: "Admin"');
         } else {
-          showError(error.message || 'Error al conectar con el servidor');
+          showError(`Error: ${error.message}. Verifica consola para detalles.`);
+          console.error('Error detallado:', error);
         }
         return false;
       }
