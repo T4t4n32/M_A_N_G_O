@@ -2,7 +2,6 @@ from flask import Blueprint, jsonify
 from datetime import datetime
 from ..services.sensor_store import sensor_store
 
-# ✅ NOMBRE CONSISTENTE: temperature_bp
 temperature_bp = Blueprint('temperature', __name__, url_prefix='/api')
 
 @temperature_bp.route('/temperature/latest')
@@ -13,7 +12,7 @@ def get_latest_temperature():
     try:
         data = sensor_store.get_latest('temperature')
         
-        # Asegura que muestre valor calibrado
+        # ✅ CORREGIDO: Línea completa
         if 'value' not in data and 'raw' in data:
             data['value'] = round(data['raw'] * 0.1, 1)  # Ejemplo: 255 -> 25.5°C
         

@@ -6,37 +6,39 @@ def create_app():
     app = Flask(__name__)
     
     # Configuración de secret key
-    app.secret_key = 'mango_secret_key_2026'
+    app.secret_key = 'mango_secret_key_2026'  # ¡Cambiar en producción!
     
-    # Configuración de sesión
+    # Configuración de sesión - CORREGIDA
     app.config.update(
-        SESSION_COOKIE_SECURE=True,
-        SESSION_COOKIE_HTTPONLY=True,
+        SESSION_COOKIE_SECURE=False,  # False en desarrollo
+        SESSION_COOKIE_HTTPONLY=False,  # ¡DEBE SER False para frontend!
         SESSION_COOKIE_SAMESITE='Lax',
         PERMANENT_SESSION_LIFETIME=timedelta(hours=1)
     )
     
-    # Configuración robusta de CORS
+    # Configuración robusta de CORS - CORREGIDA
     CORS(app, resources={
         r"/api/*": {
             "origins": ["http://localhost:7000", "http://127.0.0.1:7000"],
             "methods": ["GET", "POST", "OPTIONS"],
             "allow_headers": ["Content-Type", "Authorization", "X-Requested-With"],
-            "supports_credentials": True
+            "supports_credentials": True,  # ¡CRÍTICO PARA COOKIES!
+            "expose_headers": ["Set-Cookie"],
+            "allow_credentials": True
         }
     })
     
-    # ✅ IMPORTACIONES CORRECTAS CON NOMBRES REALES
+    # Importar blueprints
     from .routes.auth import auth_bp
     from .routes.ph import ph_bp
-    from .routes.temperature import temperature_bp  # ✅ Nombre correcto
-    from .routes.turbidity import turbidity_bp      # ✅ Asegúrate que este también sea correcto
+    from .routes.temperature import temperature_bp
+    from .routes.turbidity import turbidity_bp
     
-    # ✅ REGISTRO DE BLUEPRINTS
+    # Registrar blueprints
     app.register_blueprint(auth_bp)
     app.register_blueprint(ph_bp)
-    app.register_blueprint(temperature_bp)  # ✅
-    app.register_blueprint(turbidity_bp)    # ✅
+    app.register_blueprint(temperature_bp)
+    app.register_blueprint(turbidity_bp)
     
     # Ruta de bienvenida
     @app.route('/')
@@ -49,8 +51,10 @@ def create_app():
                 'ph_latest': '/api/ph/latest',
                 'temperature_latest': '/api/temperature/latest',
                 'turbidity_latest': '/api/turbidity/latest',
-                'system_status': '/api/status'
-            }
+                'system_status': '/api/status',
+                'auth_status': '/api/auth/status'
+            },
+            'frontend_url': 'http://localhost:7000/login.html'
         })
 
     # Ruta de estado del sistema

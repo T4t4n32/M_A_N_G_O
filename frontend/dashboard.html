@@ -16,8 +16,8 @@
       --text: #eaeaea;
       --border-radius: 12px;
       --shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
-      --raw-color: #f39c12; /* Color para datos crudos */
-      --calibrated-color: #2ecc71; /* Color para datos calibrados */
+      --raw-color: #f39c12;
+      --calibrated-color: #2ecc71;
       --raw-bg: rgba(243, 156, 18, 0.1);
       --calibrated-bg: rgba(46, 204, 113, 0.1);
     }
@@ -35,6 +35,7 @@
       line-height: 1.6;
       padding: 20px;
       min-height: 100vh;
+      margin: 0;
     }
 
     header {
@@ -370,9 +371,49 @@
         font-size: 2rem;
       }
     }
+    
+    .offline-badge {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: rgba(255, 158, 109, 0.8);
+      color: white;
+      padding: 8px 15px;
+      border-radius: 20px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+      z-index: 1000;
+      animation: fade-in 0.5s;
+    }
+    
+    @keyframes fade-in {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .logout-btn {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      padding: 8px 15px;
+      background: rgba(231, 76, 60, 0.8);
+      color: white;
+      border: none;
+      border-radius: 20px;
+      cursor: pointer;
+      font-weight: 500;
+      z-index: 1000;
+      transition: all 0.3s ease;
+    }
+    
+    .logout-btn:hover {
+      background: rgba(231, 76, 60, 1);
+      transform: translateY(-2px);
+    }
   </style>
 </head>
 <body>
+  <button class="logout-btn" onclick="logout()">Cerrar Sesión</button>
+  
   <header>
     <h1>🌿 M.A.N.G.O SYSTEM</h1>
     <p class="subtitle">Monitoreo Acuícola en Tiempo Real</p>
@@ -526,138 +567,461 @@
     <div class="log-entry">[SYSTEM] Iniciando dashboard - Mostrando datos crudos para pH y turbidez</div>
   </div>
 
-  <!-- Agrega esta sección al inicio del <script> existente -->
   <script>
-  // =============== CONFIGURACIÓN ADICIONAL PARA MODO OFFLINE ===============
-  const OFFLINE_CREDENTIALS = {
-      username: "Admin",
-      password: "Admin"
-  };
+    // =============== CONFIGURACIÓN DEFINITIVA ===============
+    const CONFIG = {
+      BACKEND_PORT: 5000,   // Puerto del servidor Flask
+      FRONTEND_PORT: 7000,  // Puerto del servidor estático
+      UPDATE_INTERVAL: 2000 // 2 segundos
+    };
 
-  // Verificar modo offline al cargar
-  function checkOfflineMode() {
-      const offlineMode = localStorage.getItem('mango_offline_mode') === 'true';
-      const isAuthPage = window.location.pathname.includes('login.html');
-      
-      if (offlineMode && !isAuthPage) {
-          // Verificar si hay sesión guardada
-          const savedUser = localStorage.getItem('mango_username');
-          if (!savedUser) {
-              // Redirigir al login si no hay sesión
-              window.location.href = 'login.html';
-              return false;
+    const API_BASE = `http://localhost:${CONFIG.BACKEND_PORT}/api`;
+    const ORIGIN_ALLOWED = `http://localhost:${CONFIG.FRONTEND_PORT}`;
+
+    // Elementos del DOM
+    const systemStatusText = document.getElementById('system-status-text');
+    const connectionStatus = document.getElementById('connection-status');
+    const debugConsole = document.getElementById('debug-console');
+
+    // Mapeo de sensores con configuración específica para datos crudos
+    const SENSORS = {
+      ph: {
+        element: 'ph-value',
+        rawElement: 'ph-raw',
+        unitElement: 'ph-unit',
+        statusElement: 'ph-status',
+        timeElement: 'ph-time',
+        indicator: 'ph-indicator',
+        connectionStatus: 'ph-connection-status',
+        type: 'raw_voltage',
+        convertValue: (data) => {
+          if (data.voltage !== undefined) {
+            return data.voltage.toFixed(3);
           }
+          const raw = data.raw || 0;
+          return (raw * 5.0 / 1023).toFixed(3);
+        },
+        convertRaw: (data) => data.raw || '--',
+        unit: 'V',
+        warningMessage: 'Datos crudos sin calibrar - Solo para pruebas'
+      },
+      temperature: {
+        element: 'temp-value',
+        rawElement: 'temp-raw',
+        statusElement: 'temp-status',
+        timeElement: 'temp-time',
+        indicator: 'temp-indicator',
+        connectionStatus: 'temp-connection-status',
+        type: 'calibrated',
+        convertValue: (data) => {
+          if (data.value !== undefined) {
+            return data.value.toFixed(1);
+          }
+          const raw = data.raw || 0;
+          return (raw * 0.1).toFixed(1);
+        },
+        convertRaw: (data) => data.raw || '--',
+        unit: '°C',
+        optimalRange: { min: 24, max: 28 },
+        warningMessage: 'Temperatura fuera de rango óptimo'
+      },
+      turbidity: {
+        element: 'turb-value',
+        rawElement: 'turb-raw',
+        statusElement: 'turb-status',
+        timeElement: 'turb-time',
+        indicator: 'turb-indicator',
+        connectionStatus: 'turb-connection-status',
+        type: 'raw_adc',
+        convertValue: (data) => data.raw || '--',
+        convertRaw: (data) => data.raw || '--',
+        unit: 'ADC',
+        warningMessage: 'Datos crudos sin calibrar - Solo para pruebas'
       }
-      
-      return offlineMode;
-  }
+    };
 
-  // Cargar datos simulados en modo offline
-  function loadSimulatedData() {
+    // =============== FUNCIONES DE UTILIDAD ===============
+    function logToConsole(message, isError = false) {
+      const entry = document.createElement('div');
+      entry.className = `log-entry ${isError ? 'log-error' : ''}`;
+      entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+      debugConsole.appendChild(entry);
+      debugConsole.scrollTop = debugConsole.scrollHeight;
+      
+      if (isError) {
+        console.error(message);
+      } else {
+        console.log(message);
+      }
+    }
+
+    function formatTime(isoString) {
+      if (!isoString) return '--:--:--';
+      const date = new Date(isoString);
+      return date.toLocaleTimeString('es-ES', { 
+        hour: '2-digit', 
+        minute: '2-digit',
+        second: '2-digit'
+      });
+    }
+
+    // =============== FUNCIONES DE CONEXIÓN ===============
+    async function testBackendConnection() {
       try {
-          const simulatedData = JSON.parse(localStorage.getItem('mango_simulated_data') || '{}');
-          if (Object.keys(simulatedData).length === 0) {
-              // Generar nuevos datos simulados
-              const newData = {
-                  ph: {
-                      raw: 720 + Math.floor(Math.random() * 30),
-                      voltage: parseFloat((3.5 + Math.random() * 0.3).toFixed(3)),
-                      received_at: new Date().toISOString(),
-                      status: 'raw_unprocessed',
-                      calibration_status: 'uncalibrated'
-                  },
-                  temperature: {
-                      raw: 255 + Math.floor(Math.random() * 10),
-                      value: parseFloat((25.5 + Math.random() * 0.5).toFixed(1)),
-                      received_at: new Date().toISOString(),
-                      status: 'calibrated',
-                      calibration_status: 'calibrated'
-                  },
-                  turbidity: {
-                      raw: 300 + Math.floor(Math.random() * 200),
-                      received_at: new Date().toISOString(),
-                      status: 'raw_unprocessed',
-                      calibration_status: 'uncalibrated'
-                  }
-              };
-              localStorage.setItem('mango_simulated_data', JSON.stringify(newData));
-              return newData;
-          }
-          return simulatedData;
-      } catch (e) {
-          console.error('Error cargando datos simulados:', e);
-          return generateSimulatedData();
-      }
-  }
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 3000);
+        
+        const response = await fetch(`${API_BASE}/status`, {
+          method: 'GET',
+          mode: 'cors',
+          signal: controller.signal
+        });
+        
+        clearTimeout(timeoutId);
+        
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status} - ${response.statusText}`);
+        }
 
-  // Modificar la función testBackendConnection para modo offline
-  async function testBackendConnection() {
-      const offlineMode = checkOfflineMode();
-      
-      if (offlineMode) {
-          logToConsole('🔄 Modo offline activado - Usando datos simulados');
-          updateSystemStatus(true, '💻 Modo offline (datos simulados)');
-          showOfflineBadge();
-          return true;
+        const statusData = await response.json();
+        logToConsole(`✅ Backend conectado!`);
+        
+        return true;
+      } catch (error) {
+        logToConsole(`🌐 Backend offline: ${error.message}`, true);
+        return false;
       }
-      
-      // Resto del código existente para modo online...
-  }
+    }
 
-  // Mostrar badge de modo offline
-  function showOfflineBadge() {
+    function updateSystemStatus(isConnected, message) {
+      systemStatusText.textContent = message;
+      
+      if (isConnected) {
+        connectionStatus.className = 'connection-indicator connection-active';
+        document.body.style.background = 'linear-gradient(135deg, #0e1a1f 0%, #14262d 100%)';
+      } else {
+        connectionStatus.className = 'connection-indicator';
+        document.body.style.background = 'linear-gradient(135deg, #1a0e1f 0%, #2d1426 100%)';
+      }
+    }
+
+    function updateSensorConnection(sensorKey, isConnected, message) {
+      const sensor = SENSORS[sensorKey];
+      const indicator = document.getElementById(sensor.indicator);
+      const statusEl = document.getElementById(sensor.connectionStatus);
+      
+      if (isConnected) {
+        indicator.className = 'connection-indicator connection-active';
+        statusEl.textContent = '✅ Conectado';
+      } else {
+        indicator.className = 'connection-indicator';
+        statusEl.textContent = `❌ ${message}`;
+      }
+    }
+
+    // =============== SOPORTE OFFLINE ===============
+    function checkOfflineMode() {
+      return localStorage.getItem('mango_offline_mode') === 'true';
+    }
+
+    function showOfflineBadge() {
+      const existingBadge = document.querySelector('.offline-badge');
+      if (existingBadge) return;
+      
       const offlineBadge = document.createElement('div');
-      offlineBadge.className = 'status-badge raw-badge';
-      offlineBadge.style.position = 'fixed';
-      offlineBadge.style.top = '20px';
-      offlineBadge.style.right = '20px';
-      offlineBadge.style.zIndex = '1000';
-      offlineBadge.style.background = 'rgba(255, 158, 109, 0.8)';
-      offlineBadge.style.color = 'white';
-      offlineBadge.style.padding = '8px 15px';
-      offlineBadge.style.borderRadius = '20px';
-      offlineBadge.style.boxShadow = '0 4px 15px rgba(0,0,0,0.3)';
-      offlineBadge.innerHTML = '<span style="margin-right: 8px;">🌐</span> Modo Offline';
-      
+      offlineBadge.className = 'offline-badge';
+      offlineBadge.innerHTML = '<span style="margin-right: 8px;">🌐</span> Modo Offline - Datos Simulados';
       document.body.appendChild(offlineBadge);
       
       // Ocultar después de 5 segundos
       setTimeout(() => {
-          offlineBadge.style.opacity = '0';
-          offlineBadge.style.transform = 'translateY(-10px)';
-          setTimeout(() => {
-              offlineBadge.remove();
-          }, 300);
+        offlineBadge.style.opacity = '0';
+        offlineBadge.style.transform = 'translateY(-10px)';
+        setTimeout(() => {
+          offlineBadge.remove();
+        }, 300);
       }, 5000);
-  }
+    }
 
-  // Modificar fetchSensorData para modo offline
-  async function fetchSensorData(sensorKey) {
+    function loadSimulatedData() {
+      try {
+        const simulatedData = JSON.parse(localStorage.getItem('mango_simulated_data') || '{}');
+        if (Object.keys(simulatedData).length === 0) {
+          const newData = {
+            ph: {
+              raw: 720 + Math.floor(Math.random() * 30),
+              voltage: parseFloat((3.5 + Math.random() * 0.3).toFixed(3)),
+              received_at: new Date().toISOString(),
+              status: 'raw_unprocessed',
+              calibration_status: 'uncalibrated'
+            },
+            temperature: {
+              raw: 255 + Math.floor(Math.random() * 10),
+              value: parseFloat((25.5 + Math.random() * 0.5).toFixed(1)),
+              received_at: new Date().toISOString(),
+              status: 'calibrated',
+              calibration_status: 'calibrated'
+            },
+            turbidity: {
+              raw: 300 + Math.floor(Math.random() * 200),
+              received_at: new Date().toISOString(),
+              status: 'raw_unprocessed',
+              calibration_status: 'uncalibrated'
+            }
+          };
+          localStorage.setItem('mango_simulated_data', JSON.stringify(newData));
+          return newData;
+        }
+        return simulatedData;
+      } catch (e) {
+        console.error('Error cargando datos simulados:', e);
+        return generateSimulatedData();
+      }
+    }
+
+    function generateSimulatedData() {
+      const now = new Date().toISOString();
+      return {
+        ph: {
+          raw: 720 + Math.floor(Math.random() * 30),
+          voltage: parseFloat((3.5 + Math.random() * 0.3).toFixed(3)),
+          received_at: now,
+          status: 'raw_unprocessed',
+          calibration_status: 'uncalibrated'
+        },
+        temperature: {
+          raw: 255 + Math.floor(Math.random() * 10),
+          value: parseFloat((25.5 + Math.random() * 0.5).toFixed(1)),
+          received_at: now,
+          status: 'calibrated',
+          calibration_status: 'calibrated'
+        },
+        turbidity: {
+          raw: 300 + Math.floor(Math.random() * 200),
+          received_at: now,
+          status: 'raw_unprocessed',
+          calibration_status: 'uncalibrated'
+        }
+      };
+    }
+
+    // =============== FUNCIONES DE ACTUALIZACIÓN ===============
+    async function fetchSensorData(sensorKey) {
       const offlineMode = checkOfflineMode();
       
       if (offlineMode) {
-          const simulatedData = loadSimulatedData();
-          const sensorData = simulatedData[sensorKey] || {};
-          
-          // Simular delay para parecer real
-          await new Promise(resolve => setTimeout(resolve, 300));
-          
-          updateSensorUI(sensorKey, sensorData);
-          updateSensorConnection(sensorKey, true, 'Modo offline');
-          return true;
+        const simulatedData = loadSimulatedData();
+        const sensorData = simulatedData[sensorKey] || {};
+        
+        // Simular delay para parecer real
+        await new Promise(resolve => setTimeout(resolve, 300));
+        
+        updateSensorUI(sensorKey, sensorData);
+        updateSensorConnection(sensorKey, true, 'Modo offline');
+        return true;
       }
       
-      // Resto del código existente para modo online...
-  }
+      const sensor = SENSORS[sensorKey];
+      const endpoint = sensorKey === 'temperature' ? 
+        '/temperature/latest' : 
+        `/${sensorKey}/latest`;
+      
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000);
+        
+        const response = await fetch(`${API_BASE}${endpoint}`, {
+          method: 'GET',
+          mode: 'cors',
+          signal: controller.signal,
+          credentials: 'include'  // ¡CRÍTICO PARA SESIONES!
+        });
+        
+        clearTimeout(timeoutId);
+        
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
 
-  // Inicializar modo offline si es necesario
-  document.addEventListener('DOMContentLoaded', () => {
-      const offlineMode = checkOfflineMode();
-      if (offlineMode) {
-          logToConsole('🚀 Iniciando en modo offline');
-          document.body.style.background = 'linear-gradient(135deg, #1a2d35 0%, #2d4550 100%)';
+        const data = await response.json();
+        updateSensorUI(sensorKey, data);
+        updateSensorConnection(sensorKey, true, 'Conectado');
+        return true;
+      } catch (error) {
+        logToConsole(`⚠️ Error en sensor ${sensorKey}: ${error.message}`, true);
+        handleSensorError(sensorKey, error.message);
+        updateSensorConnection(sensorKey, false, 'Sin conexión');
+        return false;
       }
-  });
+    }
+
+    function updateSensorUI(sensorKey, data) {
+      const sensor = SENSORS[sensorKey];
+      const valueEl = document.getElementById(sensor.element);
+      const rawEl = document.getElementById(sensor.rawElement);
+      const statusEl = document.getElementById(sensor.statusElement);
+      const timeEl = document.getElementById(sensor.timeElement);
+      
+      if (sensor.unitElement) {
+        document.getElementById(sensor.unitElement).textContent = sensor.unit;
+      }
+
+      let displayValue, rawValue, statusText, statusClass;
+      
+      if (sensor.type === 'raw_voltage') {
+        displayValue = sensor.convertValue(data);
+        rawValue = sensor.convertRaw(data);
+        statusText = '⚡ VOLTAJE CRUDO (SIN CALIBRAR)';
+        statusClass = 'status-warning';
+      } 
+      else if (sensor.type === 'raw_adc') {
+        displayValue = sensor.convertValue(data);
+        rawValue = sensor.convertRaw(data);
+        statusText = '📊 DATO ADC CRUDO (SIN CALIBRAR)';
+        statusClass = 'status-warning';
+      } 
+      else if (sensor.type === 'calibrated') {
+        displayValue = sensor.convertValue(data);
+        rawValue = sensor.convertRaw(data);
+        
+        const numericValue = parseFloat(displayValue);
+        if (numericValue >= sensor.optimalRange.min && numericValue <= sensor.optimalRange.max) {
+          statusText = '✅ ÓPTIMO';
+          statusClass = 'status-success';
+        } else {
+          statusText = `⚠️ ${sensor.warningMessage}`;
+          statusClass = 'status-warning';
+        }
+      }
+
+      // Actualizar DOM
+      valueEl.textContent = displayValue;
+      rawEl.textContent = rawValue;
+      statusEl.textContent = statusText;
+      statusEl.className = statusClass;
+      timeEl.textContent = formatTime(data.received_at || data.timestamp);
+    }
+
+    function handleSensorError(sensorKey, errorMessage) {
+      const sensor = SENSORS[sensorKey];
+      const valueEl = document.getElementById(sensor.element);
+      const rawEl = document.getElementById(sensor.rawElement);
+      const statusEl = document.getElementById(sensor.statusElement);
+      const timeEl = document.getElementById(sensor.timeElement);
+      
+      valueEl.textContent = '---';
+      rawEl.textContent = '---';
+      statusEl.textContent = `❌ Error: ${errorMessage.substring(0, 30)}`;
+      statusEl.className = 'status-error';
+      timeEl.textContent = formatTime(new Date().toISOString());
+    }
+
+    async function updateAllSensors() {
+      logToConsole('🔄 Actualizando sensores...');
+      
+      const results = await Promise.all([
+        fetchSensorData('ph'),
+        fetchSensorData('temperature'),
+        fetchSensorData('turbidity')
+      ]);
+
+      const successful = results.filter(r => r).length;
+      logToConsole(`📊 Actualización completada: ${successful}/3 sensores`);
+      
+      if (successful === 0) {
+        updateSystemStatus(false, '❌ Todos los sensores sin conexión');
+      }
+    }
+
+    // =============== AUTENTICACIÓN ===============
+    function logout() {
+      localStorage.removeItem('mango_offline_mode');
+      localStorage.removeItem('mango_user');
+      localStorage.removeItem('mango_remember');
+      localStorage.removeItem('mango_username');
+      
+      // Intentar cerrar sesión en el backend
+      fetch(`${API_BASE}/auth/logout`, {
+        method: 'POST',
+        credentials: 'include'
+      }).finally(() => {
+        window.location.href = 'login.html';
+      });
+    }
+
+    async function checkSession() {
+      const offlineMode = localStorage.getItem('mango_offline_mode') === 'true';
+      const savedUser = localStorage.getItem('mango_user');
+      
+      // Si estamos en modo offline y hay usuario guardado, permitir acceso
+      if (offlineMode && savedUser) {
+        logToConsole('💻 Sesión offline válida para usuario: ' + savedUser);
+        initDashboard();
+        return;
+      }
+      
+      try {
+        const response = await fetch(`${API_BASE}/auth/status`, {
+          method: 'GET',
+          credentials: 'include',  // ¡CRÍTICO!
+          headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+          }
+        });
+        
+        const data = await response.json();
+        
+        if (data.authenticated) {
+          logToConsole(`✅ Sesión válida para usuario: ${data.user}`);
+          initDashboard();
+        } else {
+          logToConsole('❌ Sesión inválida, redirigiendo al login');
+          window.location.href = 'login.html';
+        }
+      } catch (error) {
+        console.warn('Error verificando sesión:', error);
+        
+        // Si hay usuario guardado, intentar modo offline
+        if (savedUser) {
+          logToConsole('🔄 Error de conexión, activando modo offline para usuario: ' + savedUser);
+          localStorage.setItem('mango_offline_mode', 'true');
+          showOfflineBadge();
+          initDashboard();
+        } else {
+          logToConsole('❌ Sin sesión y sin conexión, redirigiendo al login');
+          window.location.href = 'login.html';
+        }
+      }
+    }
+
+    // =============== INICIALIZACIÓN ===============
+    async function initDashboard() {
+      const offlineMode = checkOfflineMode();
+      
+      logToConsole('🚀 Iniciando M.A.N.G.O Dashboard');
+      logToConsole(`⚙️ Configuración:`);
+      logToConsole(`   Backend: ${API_BASE}`);
+      logToConsole(`   Frontend: ${ORIGIN_ALLOWED}`);
+      logToConsole(`ℹ️  pH y Turbidez mostrarán DATOS CRUDOS`);
+      logToConsole(`✅ Temperatura mostrará DATOS CALIBRADOS`);
+      
+      if (offlineMode) {
+        logToConsole('💻 Modo offline activado - Usando datos simulados');
+        updateSystemStatus(true, '💻 Modo offline (datos simulados)');
+        showOfflineBadge();
+      }
+      
+      await updateAllSensors();
+      setInterval(updateAllSensors, CONFIG.UPDATE_INTERVAL);
+      logToConsole(`⏱️ Actualización automática cada ${CONFIG.UPDATE_INTERVAL}ms`);
+    }
+
+    document.addEventListener('DOMContentLoaded', checkSession);
+
+    window.addEventListener('error', (event) => {
+      logToConsole(`🔥 Error global: ${event.message}`, true);
+      updateSystemStatus(false, '❌ Error crítico en el sistema');
+    });
   </script>
 </body>
 </html>
