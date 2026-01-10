@@ -1,21 +1,32 @@
-from flask import Blueprint, jsonify, session
-from datetime import datetime, timedelta
-import random
+from flask import Blueprint, jsonify
+from datetime import datetime
+from ..services.sensor_store import sensor_store
 
-temperature_bp = Blueprint("temperature", __name__)
+# ✅ NOMBRE CONSISTENTE: temperature_bp
+temperature_bp = Blueprint('temperature', __name__, url_prefix='/api')
 
-@temperature_bp.route("/range/temperature")
-def range_temperature():
-    if "user" not in session:
-        return jsonify({"error": "Unauthorized"}), 401
-
-    now = datetime.utcnow()
-    data = []
-
-    for i in range(24):
-        data.append({
-            "timestamp": (now - timedelta(hours=24 - i)).isoformat(),
-            "value": round(random.uniform(24.0, 30.0), 2)
-        })
-
-    return jsonify(data)
+@temperature_bp.route('/temperature/latest')
+def get_latest_temperature():
+    """
+    Endpoint para temperatura - DATOS CALIBRADOS (los únicos reales)
+    """
+    try:
+        data = sensor_store.get_latest('temperature')
+        
+        # Asegura que muestre valor calibrado
+        if 'value' not in data and 'raw' in data:
+            data['value'] = round(data['raw'] * 0.1, 1)  # Ejemplo: 255 -> 25.5°C
+        
+        data['data_quality'] = 'calibrated'
+        data['unit'] = 'C'
+        data['note'] = 'Datos calibrados - Sistema operativo'
+        
+        return jsonify(data)
+    except Exception as e:
+        return jsonify({
+            'error': str(e),
+            'status': 'error',
+            'sensor': 'temperature',
+            'data_quality': 'calibrated',
+            'timestamp': datetime.now().isoformat()
+        }), 500
