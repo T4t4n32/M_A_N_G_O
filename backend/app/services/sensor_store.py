@@ -107,6 +107,51 @@ class SensorStore:
             'last_updates': self.last_update,
             'timestamp': datetime.now().isoformat()
         }
+    
+        # Agregar estos métodos dentro de la clase SensorStore:
+
+    def get_historical_data(self, sensor_type, limit=10):
+        """
+        Obtiene datos históricos reales de un sensor (NO SIMULADOS)
+        """
+        try:
+            # En producción: aquí iría la consulta a la base de datos
+            # Por ahora, devolvemos datos vacíos (no hay registros reales)
+            return []
+        except Exception as e:
+            print(f"Error obteniendo datos históricos de {sensor_type}: {e}")
+            return []
+
+    def get_historical_count(self, sensor_type):
+        """
+        Cuenta cuántos registros históricos existen para un sensor
+        """
+        try:
+            # En producción: COUNT(*) desde la base de datos
+            return 0  # Por ahora no hay datos reales
+        except Exception as e:
+            print(f"Error contando datos históricos de {sensor_type}: {e}")
+            return 0
+
+    def get_last_historical_update(self, sensor_type):
+        """
+        Obtiene la última actualización de datos históricos
+        """
+        try:
+            # En producción: MAX(timestamp) desde la base de datos
+            return None
+        except Exception as e:
+            print(f"Error obteniendo última actualización de {sensor_type}: {e}")
+            return None
+
+    def clear_cache(self):
+        """
+        Limpia cachés para desarrollo
+        """
+        self._data = {}
+        self._raw_data = {}
+        self.last_update = {}
+        print("🧹 Caché del sensor_store limpiado")
 
 # Instancia global
 sensor_store = SensorStore()
