@@ -3,7 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>M.A.N.G.O — Dashboard con Datos Crudos</title>
+  <title>M.A.N.G.O — Monitoreo del Manglar</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     :root {
       --primary: #2d8c68;
@@ -14,12 +16,12 @@
       --warning: #f39c12;
       --success: #2ecc71;
       --text: #eaeaea;
-      --border-radius: 12px;
-      --shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
-      --raw-color: #f39c12;
-      --calibrated-color: #2ecc71;
-      --raw-bg: rgba(243, 156, 18, 0.1);
-      --calibrated-bg: rgba(46, 204, 113, 0.1);
+      --border-radius: 16px;
+      --shadow: 0 6px 25px rgba(0, 0, 0, 0.5);
+      --data-color: #4abdac;
+      --offline-color: #ff6b6b;
+      --online-color: #4abdac;
+      --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     * {
@@ -29,94 +31,124 @@
     }
 
     body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       background: var(--background);
+      background-image: 
+        radial-gradient(circle at 10% 20%, rgba(45, 140, 104, 0.05) 0%, transparent 20%),
+        radial-gradient(circle at 90% 80%, rgba(45, 140, 104, 0.03) 0%, transparent 25%);
       color: var(--text);
       line-height: 1.6;
       padding: 20px;
       min-height: 100vh;
       margin: 0;
+      transition: var(--transition);
+    }
+
+    body.offline-mode {
+      background-image: 
+        radial-gradient(circle at 10% 20%, rgba(231, 76, 60, 0.05) 0%, transparent 20%),
+        radial-gradient(circle at 90% 80%, rgba(231, 76, 60, 0.03) 0%, transparent 25%);
     }
 
     header {
       text-align: center;
       margin-bottom: 30px;
       padding: 20px 0;
-      border-bottom: 1px solid rgba(45, 140, 104, 0.3);
+      position: relative;
+    }
+
+    header::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 80%;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--primary), transparent);
     }
 
     h1 {
-      font-size: 2.4rem;
-      margin-bottom: 10px;
-      background: linear-gradient(90deg, var(--primary), #4abdac);
+      font-size: 2.6rem;
+      margin-bottom: 12px;
+      background: linear-gradient(90deg, var(--primary), var(--data-color));
       -webkit-background-clip: text;
       background-clip: text;
       color: transparent;
       letter-spacing: -0.5px;
+      font-weight: 700;
     }
 
     .subtitle {
       color: #a8d8c5;
-      font-size: 1.2rem;
-      margin-top: 5px;
+      font-size: 1.25rem;
+      margin-top: 8px;
+      font-weight: 300;
     }
 
-    .status-bar {
+    .connection-bar {
       display: flex;
       justify-content: center;
-      gap: 25px;
-      margin-top: 15px;
+      gap: 20px;
+      margin: 25px 0;
       flex-wrap: wrap;
     }
 
-    .status-badge {
+    .connection-status {
       display: flex;
       align-items: center;
-      gap: 8px;
-      padding: 8px 18px;
-      border-radius: 20px;
-      font-size: 0.95rem;
-      font-weight: 500;
-      background: rgba(45, 140, 104, 0.2);
-      color: #4abdac;
-      border: 1px solid rgba(45, 140, 104, 0.4);
+      gap: 10px;
+      padding: 10px 20px;
+      border-radius: 50px;
+      font-weight: 600;
+      font-size: 1.1rem;
+      transition: var(--transition);
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
     }
 
-    .status-error {
-      background: rgba(231, 76, 60, 0.2);
-      color: var(--error);
-      border-color: rgba(231, 76, 60, 0.5);
+    .connection-status.online {
+      background: rgba(74, 189, 172, 0.15);
+      border: 1px solid rgba(74, 189, 172, 0.3);
+      color: var(--online-color);
     }
 
-    .status-warning {
-      background: rgba(243, 156, 18, 0.2);
-      color: var(--warning);
-      border-color: rgba(243, 156, 18, 0.5);
+    .connection-status.offline {
+      background: rgba(231, 76, 60, 0.15);
+      border: 1px solid rgba(231, 76, 60, 0.3);
+      color: var(--offline-color);
     }
 
-    .status-success {
-      background: rgba(46, 204, 113, 0.2);
-      color: var(--success);
-      border-color: rgba(46, 204, 113, 0.5);
+    .status-indicator {
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--offline-color);
+      transition: var(--transition);
     }
-    
-    .raw-badge {
-      background: var(--raw-bg);
-      color: var(--raw-color);
-      border-color: rgba(243, 156, 18, 0.7);
+
+    .status-indicator.online {
+      background: var(--online-color);
+      box-shadow: 0 0 8px rgba(74, 189, 172, 0.5);
     }
-    
-    .calibrated-badge {
-      background: var(--calibrated-bg);
-      color: var(--calibrated-color);
-      border-color: rgba(46, 204, 113, 0.7);
+
+    .status-indicator.offline {
+      background: var(--offline-color);
+      box-shadow: 0 0 8px rgba(231, 76, 60, 0.5);
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+      0% { opacity: 1; }
+      50% { opacity: 0.6; }
+      100% { opacity: 1; }
     }
 
     .grid-container {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
-      gap: 28px;
-      max-width: 1400px;
+      grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+      gap: 30px;
+      max-width: 1600px;
       margin: 0 auto;
     }
 
@@ -125,23 +157,41 @@
       border-radius: var(--border-radius);
       padding: 25px;
       box-shadow: var(--shadow);
-      transition: all 0.3s ease;
-      border: 1px solid rgba(45, 140, 104, 0.15);
+      transition: var(--transition);
+      border: 1px solid rgba(74, 189, 172, 0.1);
+      position: relative;
+      overflow: hidden;
     }
-    
-    .sensor-card.raw-mode {
-      border: 2px solid var(--raw-color);
-      background: linear-gradient(145deg, var(--card-bg), #1a2d35);
-    }
-    
-    .sensor-card.calibrated-mode {
-      border: 2px solid var(--calibrated-color);
-      background: linear-gradient(145deg, var(--card-bg), #1a332d);
+
+    .sensor-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 4px;
+      background: linear-gradient(90deg, var(--primary), var(--data-color));
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 0.5s ease;
     }
 
     .sensor-card:hover {
-      transform: translateY(-6px);
-      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5);
+      transform: translateY(-8px);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+      border-color: rgba(74, 189, 172, 0.3);
+    }
+
+    .sensor-card:hover::before {
+      transform: scaleX(1);
+    }
+
+    .sensor-card.offline {
+      border-color: rgba(231, 76, 60, 0.3);
+    }
+
+    .sensor-card.offline::before {
+      background: linear-gradient(90deg, var(--error), #ff9e6d);
     }
 
     .sensor-header {
@@ -149,91 +199,75 @@
       justify-content: space-between;
       align-items: center;
       margin-bottom: 20px;
-      padding-bottom: 12px;
+      padding-bottom: 15px;
       border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     }
 
     .sensor-title {
-      font-size: 1.5rem;
+      font-size: 1.6rem;
       font-weight: 700;
+      color: var(--data-color);
       display: flex;
       align-items: center;
-      gap: 10px;
-    }
-    
-    .sensor-title.raw {
-      color: var(--raw-color);
-    }
-    
-    .sensor-title.calibrated {
-      color: var(--calibrated-color);
+      gap: 12px;
     }
 
     .sensor-icon {
-      font-size: 2rem;
+      font-size: 2.4rem;
+      background: rgba(74, 189, 172, 0.1);
+      width: 56px;
+      height: 56px;
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: var(--transition);
+    }
+
+    .sensor-card:hover .sensor-icon {
+      background: rgba(74, 189, 172, 0.2);
+      transform: scale(1.1);
     }
 
     .sensor-value-container {
       text-align: center;
-      margin: 20px 0;
+      margin: 25px 0;
     }
 
     .sensor-value {
-      font-size: 3.2rem;
+      font-size: 3.8rem;
       font-weight: 800;
-      line-height: 1.2;
+      color: white;
+      line-height: 1.1;
+      text-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+      transition: var(--transition);
     }
-    
-    .sensor-value.raw {
-      color: var(--raw-color);
-      text-shadow: 0 0 10px rgba(243, 156, 18, 0.5);
-    }
-    
-    .sensor-value.calibrated {
-      color: var(--calibrated-color);
-      text-shadow: 0 0 10px rgba(46, 204, 113, 0.5);
+
+    .sensor-card.offline .sensor-value {
+      color: var(--offline-color);
     }
 
     .sensor-unit {
-      font-size: 1.4rem;
+      font-size: 1.6rem;
       opacity: 0.9;
       margin-left: 8px;
-    }
-    
-    .note-badge {
-      display: inline-block;
-      margin: 8px auto;
-      padding: 4px 12px;
-      border-radius: 15px;
-      font-size: 0.85rem;
-      font-weight: 600;
-    }
-    
-    .note-raw {
-      background: rgba(243, 156, 18, 0.2);
-      color: var(--raw-color);
-      border: 1px solid var(--raw-color);
-    }
-    
-    .note-calibrated {
-      background: rgba(46, 204, 113, 0.2);
-      color: var(--calibrated-color);
-      border: 1px solid var(--calibrated-color);
+      color: #a8d8c5;
+      font-weight: 300;
     }
 
     .sensor-meta {
       display: flex;
       flex-direction: column;
-      gap: 12px;
-      margin-top: 18px;
-      padding-top: 15px;
-      border-top: 1px dashed rgba(255, 255, 255, 0.15);
+      gap: 15px;
+      margin-top: 20px;
+      padding-top: 20px;
+      border-top: 1px dashed rgba(255, 255, 255, 0.1);
     }
 
     .status-row {
       display: flex;
       justify-content: space-between;
-      font-size: 1.05rem;
+      font-size: 1.1rem;
     }
 
     .status-label {
@@ -243,784 +277,1003 @@
 
     .status-value {
       font-weight: 600;
+      color: var(--data-color);
     }
 
-    .raw-warning {
-      background: rgba(243, 156, 18, 0.1);
-      border: 1px dashed var(--raw-color);
-      padding: 12px;
-      border-radius: 8px;
-      margin-top: 15px;
-      font-size: 0.95rem;
+    .status-value.error {
+      color: var(--error);
+    }
+
+    .status-value.warning {
+      color: var(--warning);
     }
 
     .last-update {
       display: flex;
       align-items: center;
-      gap: 8px;
-      font-size: 0.95rem;
+      gap: 10px;
+      font-size: 1rem;
       color: #a8d8c5;
+      background: rgba(0, 0, 0, 0.2);
+      padding: 8px 15px;
+      border-radius: 12px;
+      margin-top: 10px;
     }
 
     .update-time {
       font-weight: 600;
-      color: #4abdac;
+      color: var(--data-color);
     }
 
-    .connection-status {
+    .chart-container {
+      height: 200px;
+      margin-top: 25px;
+      position: relative;
+    }
+
+    .no-data-message {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--warning);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+    }
+
+    .no-data-icon {
+      font-size: 4rem;
+      margin-bottom: 20px;
+      color: var(--warning);
+      opacity: 0.8;
+    }
+
+    .no-data-title {
+      font-size: 1.4rem;
+      font-weight: 600;
+      margin-bottom: 10px;
+      color: white;
+    }
+
+    .no-data-text {
+      font-size: 1.1rem;
+      max-width: 80%;
+      line-height: 1.5;
+    }
+
+    .exploration-status {
+      text-align: center;
+      margin: 25px 0;
+      padding: 20px;
+      background: rgba(231, 76, 60, 0.1);
+      border-radius: var(--border-radius);
+      border: 1px solid rgba(231, 76, 60, 0.3);
+      animation: fadeIn 0.5s ease;
+    }
+
+    .exploration-status.success {
+      background: rgba(74, 189, 172, 0.1);
+      border-color: rgba(74, 189, 172, 0.3);
+    }
+
+    .exploration-title {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin-bottom: 10px;
+      color: var(--warning);
+    }
+
+    .exploration-status.success .exploration-title {
+      color: var(--online-color);
+    }
+
+    .actions {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      margin: 30px 0;
+    }
+
+    .action-btn {
+      padding: 12px 28px;
+      border: none;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 1.1rem;
+      cursor: pointer;
+      transition: var(--transition);
       display: flex;
       align-items: center;
       gap: 8px;
-      padding: 10px;
-      border-radius: 8px;
-      margin-top: 15px;
-      font-weight: 500;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    }
+
+    .action-btn.primary {
+      background: linear-gradient(90deg, var(--primary), var(--data-color));
+      color: white;
+    }
+
+    .action-btn.primary:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 6px 20px rgba(45, 140, 104, 0.4);
+    }
+
+    .action-btn.secondary {
+      background: rgba(255, 255, 255, 0.1);
+      color: var(--text);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .action-btn.secondary:hover {
+      background: rgba(255, 255, 255, 0.15);
+      transform: translateY(-3px);
+    }
+
+    .action-btn.offline {
+      background: rgba(231, 76, 60, 0.2);
+      color: var(--offline-color);
+      border: 1px solid rgba(231, 76, 60, 0.4);
+      cursor: not-allowed;
+      opacity: 0.8;
+    }
+
+    .system-info {
+      text-align: center;
+      margin-top: 40px;
+      padding: 25px;
       background: rgba(0, 0, 0, 0.2);
+      border-radius: var(--border-radius);
       border: 1px solid rgba(255, 255, 255, 0.1);
     }
 
-    .connection-indicator {
-      display: inline-block;
-      width: 14px;
-      height: 14px;
-      border-radius: 50%;
-      background: var(--error);
-      flex-shrink: 0;
-    }
-
-    .connection-active {
-      background: var(--success);
-    }
-
-    .troubleshooting {
-      max-width: 1000px;
-      margin: 30px auto;
-      padding: 22px;
-      background: rgba(0, 0, 0, 0.25);
-      border-radius: var(--border-radius);
-      border: 1px solid rgba(45, 140, 104, 0.3);
-    }
-
-    .troubleshooting h3 {
-      color: var(--warning);
+    .system-title {
+      font-size: 1.4rem;
       margin-bottom: 15px;
+      color: var(--data-color);
+    }
+
+    .system-details {
+      display: flex;
+      justify-content: center;
+      gap: 30px;
+      flex-wrap: wrap;
+      font-size: 1.05rem;
+    }
+
+    .detail-item {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 8px;
     }
 
-    .troubleshooting ul {
-      padding-left: 25px;
-      line-height: 1.8;
+    .logout-btn {
+      position: fixed;
+      top: 25px;
+      right: 25px;
+      padding: 10px 20px;
+      background: rgba(231, 76, 60, 0.8);
+      color: white;
+      border: none;
+      border-radius: 15px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 1rem;
+      z-index: 1000;
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
     }
-
-    .troubleshooting li {
-      margin-bottom: 10px;
-      color: #e0f7f0;
+    
+    .logout-btn:hover {
+      background: rgba(231, 76, 60, 1);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(231, 76, 60, 0.5);
     }
-
-    .troubleshooting code {
-      background: rgba(0, 0, 0, 0.3);
-      padding: 2px 8px;
-      border-radius: 4px;
-      font-family: monospace;
-      color: #4abdac;
+    
+    .notification {
+      position: fixed;
+      top: 25px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 15px 30px;
+      border-radius: 15px;
+      font-weight: 600;
+      font-size: 1.1rem;
+      z-index: 2000;
+      box-shadow: 0 6px 25px rgba(0, 0, 0, 0.4);
+      animation: slideDown 0.5s ease, fadeOut 0.5s ease 4.5s;
+      text-align: center;
+      max-width: 90%;
     }
-
-    .ports-config {
-      background: rgba(45, 140, 104, 0.1);
-      padding: 15px;
-      border-radius: 8px;
-      margin-top: 15px;
-      border-left: 3px solid #4abdac;
+    
+    .notification.online {
+      background: rgba(74, 189, 172, 0.9);
+      color: white;
+      border: 1px solid rgba(74, 189, 172, 0.5);
     }
-
-    .debug-console {
-      margin-top: 30px;
-      padding: 15px;
-      background: rgba(0, 0, 0, 0.3);
-      border-radius: 8px;
-      font-family: monospace;
-      color: #a8d8c5;
-      max-height: 200px;
-      overflow-y: auto;
-      border: 1px solid rgba(255, 255, 255, 0.1);
+    
+    .notification.offline {
+      background: rgba(231, 76, 60, 0.9);
+      color: white;
+      border: 1px solid rgba(231, 76, 60, 0.5);
     }
-
-    .log-entry {
-      margin-bottom: 5px;
-      padding-left: 10px;
-      border-left: 2px solid #4abdac;
+    
+    @keyframes slideDown {
+      from { transform: translateX(-50%) translateY(-100%); opacity: 0; }
+      to { transform: translateX(-50%) translateY(0); opacity: 1; }
     }
-
-    .log-error {
-      border-left-color: var(--error);
-      color: var(--error);
+    
+    @keyframes fadeOut {
+      from { opacity: 1; }
+      to { opacity: 0; }
     }
-
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
     @media (max-width: 768px) {
       .grid-container {
         grid-template-columns: 1fr;
       }
       
       .sensor-value {
-        font-size: 2.5rem;
+        font-size: 2.8rem;
       }
       
       h1 {
-        font-size: 2rem;
+        font-size: 2.1rem;
       }
-    }
-    
-    .offline-badge {
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      background: rgba(255, 158, 109, 0.8);
-      color: white;
-      padding: 8px 15px;
-      border-radius: 20px;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-      z-index: 1000;
-      animation: fade-in 0.5s;
-    }
-    
-    @keyframes fade-in {
-      from { opacity: 0; transform: translateY(-10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    
-    .logout-btn {
-      position: fixed;
-      top: 20px;
-      left: 20px;
-      padding: 8px 15px;
-      background: rgba(231, 76, 60, 0.8);
-      color: white;
-      border: none;
-      border-radius: 20px;
-      cursor: pointer;
-      font-weight: 500;
-      z-index: 1000;
-      transition: all 0.3s ease;
-    }
-    
-    .logout-btn:hover {
-      background: rgba(231, 76, 60, 1);
-      transform: translateY(-2px);
+      
+      .connection-bar {
+        flex-direction: column;
+        align-items: center;
+        gap: 12px;
+      }
+      
+      .action-btn {
+        width: 100%;
+        justify-content: center;
+      }
+      
+      .system-details {
+        flex-direction: column;
+        gap: 10px;
+      }
     }
   </style>
 </head>
 <body>
-  <button class="logout-btn" onclick="logout()">Cerrar Sesión</button>
+  <button class="logout-btn" onclick="logout()">
+    <span>🚪</span> Cerrar Sesión
+  </button>
+  
+  <div id="notification-container"></div>
   
   <header>
     <h1>🌿 M.A.N.G.O SYSTEM</h1>
-    <p class="subtitle">Monitoreo Acuícola en Tiempo Real</p>
-    <div class="status-bar">
-      <div class="status-badge" id="system-status">
-        <span class="connection-indicator" id="connection-status"></span>
-        <span id="system-status-text">Conectando...</span>
+    <p class="subtitle">Monitoreo de Parámetros en Manglar</p>
+    <div class="connection-bar">
+      <div class="connection-status offline" id="main-connection-status">
+        <span class="status-indicator offline" id="main-status-indicator"></span>
+        <span id="main-status-text">Conexión con sensores: Offline</span>
       </div>
-      <div class="status-badge">
-        🌐 Backend: Puerto 5000
-      </div>
-      <div class="status-badge">
-        💻 Frontend: Puerto 7000
+      <div class="connection-status offline" id="database-connection-status">
+        <span class="status-indicator offline" id="database-status-indicator"></span>
+        <span id="database-status-text">Base de datos: Offline</span>
       </div>
     </div>
   </header>
 
-  <div class="grid-container">
-    <!-- pH SENSOR - DATOS CRUDOS (VOLTAJE) -->
-    <div class="sensor-card raw-mode">
-      <div class="sensor-header">
-        <div class="sensor-title raw">
-          <span class="sensor-icon">⚡</span>
-          pH Sensor (DATOS CRUDOS)
-        </div>
-      </div>
-      <div class="sensor-value-container">
-        <div class="sensor-value raw">
-          <span id="ph-value">--</span>
-          <span class="sensor-unit" id="ph-unit">V</span>
-        </div>
-        <div class="note-badge note-raw">
-          ⚠️ VOLTAJE SIN CALIBRAR
-        </div>
-      </div>
-      <div class="sensor-meta">
-        <div class="status-row">
-          <span class="status-label">Valor RAW:</span>
-          <span class="status-value" id="ph-raw">--</span>
-        </div>
-        <div class="status-row">
-          <span class="status-label">Estado:</span>
-          <span class="status-value" id="ph-status">Datos crudos sin calibrar</span>
-        </div>
-        <div class="last-update">
-          📅 Última actualización: <span class="update-time" id="ph-time">--:--:--</span>
-        </div>
-        <div class="connection-status">
-          <span class="connection-indicator" id="ph-indicator"></span>
-          <span id="ph-connection-status">Verificando conexión...</span>
-        </div>
-        <div class="raw-warning">
-          📌 Estos son datos <strong>NO CALIBRADOS</strong>. Solo muestran el voltaje crudo del sensor para pruebas de conexión.
-        </div>
-      </div>
-    </div>
-
-    <!-- TEMPERATURA - DATOS REALES/CALIBRADOS -->
-    <div class="sensor-card calibrated-mode">
-      <div class="sensor-header">
-        <div class="sensor-title calibrated">
-          <span class="sensor-icon">🌡️</span>
-          Temperatura (CALIBRADO)
-        </div>
-      </div>
-      <div class="sensor-value-container">
-        <div class="sensor-value calibrated">
-          <span id="temp-value">--</span>
-          <span class="sensor-unit">°C</span>
-        </div>
-        <div class="note-badge note-calibrated">
-          ✅ DATOS CALIBRADOS
-        </div>
-      </div>
-      <div class="sensor-meta">
-        <div class="status-row">
-          <span class="status-label">Valor RAW:</span>
-          <span class="status-value" id="temp-raw">--</span>
-        </div>
-        <div class="status-row">
-          <span class="status-label">Estado:</span>
-          <span class="status-value" id="temp-status">Óptimo</span>
-        </div>
-        <div class="last-update">
-          📅 Última actualización: <span class="update-time" id="temp-time">--:--:--</span>
-        </div>
-        <div class="connection-status">
-          <span class="connection-indicator" id="temp-indicator"></span>
-          <span id="temp-connection-status">Verificando conexión...</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- TURBIDEZ - DATOS CRUDOS -->
-    <div class="sensor-card raw-mode">
-      <div class="sensor-header">
-        <div class="sensor-title raw">
-          <span class="sensor-icon">📊</span>
-          Turbidez (DATOS CRUDOS)
-        </div>
-      </div>
-      <div class="sensor-value-container">
-        <div class="sensor-value raw">
-          <span id="turb-value">--</span>
-          <span class="sensor-unit">ADC</span>
-        </div>
-        <div class="note-badge note-raw">
-          ⚠️ SIN CALIBRAR
-        </div>
-      </div>
-      <div class="sensor-meta">
-        <div class="status-row">
-          <span class="status-label">Valor RAW:</span>
-          <span class="status-value" id="turb-raw">--</span>
-        </div>
-        <div class="status-row">
-          <span class="status-label">Estado:</span>
-          <span class="status-value" id="turb-status">Datos crudos sin procesar</span>
-        </div>
-        <div class="last-update">
-          📅 Última actualización: <span class="update-time" id="turb-time">--:--:--</span>
-        </div>
-        <div class="connection-status">
-          <span class="connection-indicator" id="turb-indicator"></span>
-          <span id="turb-connection-status">Verificando conexión...</span>
-        </div>
-        <div class="raw-warning">
-          📌 Estos son datos <strong>NO CALIBRADOS</strong>. Solo muestran el valor ADC crudo para pruebas de conexión.
-        </div>
-      </div>
-    </div>
+  <div class="exploration-status" id="exploration-status">
+    <div class="exploration-title">🔍 Estado de la Exploración</div>
+    <div id="exploration-text">Verificando conexión con sensores y base de datos...</div>
   </div>
 
-  <div class="troubleshooting">
-    <h3>🛠️ ESTADO DE LOS DATOS</h3>
-    <ul>
-      <li><strong>💧 pH Sensor:</strong> <span class="status-warning">Muestra VOLTAJE CRUDO (0-5V) - NO CALIBRADO</span></li>
-      <li><strong>🌡️ Temperatura:</strong> <span class="status-success">Muestra datos CALIBRADOS y funcionales</span></li>
-      <li><strong>🌫️ Turbidez:</strong> <span class="status-warning">Muestra valor ADC CRUDO (0-1023) - NO CALIBRADO</span></li>
-    </ul>
-    
-    <div class="ports-config">
-      <strong>Para calibrar sensores:</strong><br>
-      1. pH: Conecta buffer solutions de 4.0, 7.0 y 10.0 para calibración<br>
-      2. Turbidez: Usa estándares NTU para crear curva de calibración<br>
-      3. Temperatura: Ya está calibrado y funcionando correctamente
-    </div>
+  <div class="grid-container" id="sensors-container">
+    <!-- Los sensores se generarán dinámicamente -->
   </div>
 
-  <div class="debug-console" id="debug-console">
-    <div class="log-entry">[SYSTEM] Iniciando dashboard - Mostrando datos crudos para pH y turbidez</div>
+  <div class="actions">
+    <button class="action-btn primary" id="refresh-btn">
+      <span>🔄</span> Actualizar Datos
+    </button>
+    <button class="action-btn secondary" id="historical-btn">
+      <span>📊</span> Ver Datos Históricos
+    </button>
+  </div>
+
+  <div class="system-info">
+    <div class="system-title">📊 Información del Sistema</div>
+    <div class="system-details">
+      <div class="detail-item">
+        <span>📍</span> Ubicación: Manglar Costero
+      </div>
+      <div class="detail-item">
+        <span>🔌</span> Estado: <span id="system-state">Verificando...</span>
+      </div>
+      <div class="detail-item">
+        <span>⏱️</span> Última actualización: <span id="last-update-time">--:--:--</span>
+      </div>
+    </div>
   </div>
 
   <script>
-    // =============== CONFIGURACIÓN DEFINITIVA ===============
+    // =============== CONFIGURACIÓN ===============
     const CONFIG = {
-      BACKEND_PORT: 5000,   // Puerto del servidor Flask
-      FRONTEND_PORT: 7000,  // Puerto del servidor estático
-      UPDATE_INTERVAL: 2000 // 2 segundos
+      BACKEND_PORT: 5000,
+      FRONTEND_PORT: 7000,
+      UPDATE_INTERVAL: 5000, // 5 segundos
+      CHART_HISTORY_MINUTES: 30
     };
 
     const API_BASE = `http://localhost:${CONFIG.BACKEND_PORT}/api`;
-    const ORIGIN_ALLOWED = `http://localhost:${CONFIG.FRONTEND_PORT}`;
-
-    // Elementos del DOM
-    const systemStatusText = document.getElementById('system-status-text');
-    const connectionStatus = document.getElementById('connection-status');
-    const debugConsole = document.getElementById('debug-console');
-
-    // Mapeo de sensores con configuración específica para datos crudos
+    
+    // Configuración de sensores
     const SENSORS = {
       ph: {
-        element: 'ph-value',
-        rawElement: 'ph-raw',
-        unitElement: 'ph-unit',
-        statusElement: 'ph-status',
-        timeElement: 'ph-time',
-        indicator: 'ph-indicator',
-        connectionStatus: 'ph-connection-status',
-        type: 'raw_voltage',
-        convertValue: (data) => {
-          if (data.voltage !== undefined) {
-            return data.voltage.toFixed(3);
-          }
-          const raw = data.raw || 0;
-          return (raw * 5.0 / 1023).toFixed(3);
-        },
-        convertRaw: (data) => data.raw || '--',
-        unit: 'V',
-        warningMessage: 'Datos crudos sin calibrar - Solo para pruebas'
+        name: 'pH',
+        icon: '💧',
+        unit: 'pH',
+        description: 'Nivel de acidez/alkalinidad del agua',
+        optimalRange: { min: 6.5, max: 8.5 },
+        chartColor: '#4abdac',
+        lastData: null,
+        historicalData: []
       },
       temperature: {
-        element: 'temp-value',
-        rawElement: 'temp-raw',
-        statusElement: 'temp-status',
-        timeElement: 'temp-time',
-        indicator: 'temp-indicator',
-        connectionStatus: 'temp-connection-status',
-        type: 'calibrated',
-        convertValue: (data) => {
-          if (data.value !== undefined) {
-            return data.value.toFixed(1);
-          }
-          const raw = data.raw || 0;
-          return (raw * 0.1).toFixed(1);
-        },
-        convertRaw: (data) => data.raw || '--',
+        name: 'Temperatura',
+        icon: '🌡️',
         unit: '°C',
+        description: 'Temperatura del agua',
         optimalRange: { min: 24, max: 28 },
-        warningMessage: 'Temperatura fuera de rango óptimo'
+        chartColor: '#ffc107',
+        lastData: null,
+        historicalData: []
       },
       turbidity: {
-        element: 'turb-value',
-        rawElement: 'turb-raw',
-        statusElement: 'turb-status',
-        timeElement: 'turb-time',
-        indicator: 'turb-indicator',
-        connectionStatus: 'turb-connection-status',
-        type: 'raw_adc',
-        convertValue: (data) => data.raw || '--',
-        convertRaw: (data) => data.raw || '--',
-        unit: 'ADC',
-        warningMessage: 'Datos crudos sin calibrar - Solo para pruebas'
+        name: 'Turbidez',
+        icon: '🌫️',
+        unit: 'NTU',
+        description: 'Claridad del agua',
+        optimalRange: { min: 0, max: 5 },
+        chartColor: '#3498db',
+        lastData: null,
+        historicalData: []
       }
     };
 
+    // =============== ESTADO DEL SISTEMA ===============
+    let systemState = {
+      sensorsOnline: false,
+      databaseOnline: false,
+      explorationPerformed: false,
+      lastUpdate: null,
+      chartInstances: {}
+    };
+
+    // =============== ELEMENTOS DOM ===============
+    const mainConnectionStatus = document.getElementById('main-status-indicator');
+    const databaseConnectionStatus = document.getElementById('database-status-indicator');
+    const mainStatusText = document.getElementById('main-status-text');
+    const databaseStatusText = document.getElementById('database-status-text');
+    const explorationStatus = document.getElementById('exploration-text');
+    const sensorsContainer = document.getElementById('sensors-container');
+    const systemStateElement = document.getElementById('system-state');
+    const lastUpdateTimeElement = document.getElementById('last-update-time');
+    const refreshBtn = document.getElementById('refresh-btn');
+    const historicalBtn = document.getElementById('historical-btn');
+    const notificationContainer = document.getElementById('notification-container');
+
     // =============== FUNCIONES DE UTILIDAD ===============
-    function logToConsole(message, isError = false) {
-      const entry = document.createElement('div');
-      entry.className = `log-entry ${isError ? 'log-error' : ''}`;
-      entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
-      debugConsole.appendChild(entry);
-      debugConsole.scrollTop = debugConsole.scrollHeight;
-      
-      if (isError) {
-        console.error(message);
-      } else {
-        console.log(message);
-      }
+    function logSystem(message, isError = false) {
+      console[isError ? 'error' : 'log'](`[M.A.N.G.O] ${message}`);
     }
 
     function formatTime(isoString) {
       if (!isoString) return '--:--:--';
-      const date = new Date(isoString);
-      return date.toLocaleTimeString('es-ES', { 
-        hour: '2-digit', 
-        minute: '2-digit',
-        second: '2-digit'
-      });
-    }
-
-    // =============== FUNCIONES DE CONEXIÓN ===============
-    async function testBackendConnection() {
       try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 3000);
-        
-        const response = await fetch(`${API_BASE}/status`, {
-          method: 'GET',
-          mode: 'cors',
-          signal: controller.signal
+        const date = new Date(isoString);
+        return date.toLocaleTimeString('es-ES', { 
+          hour: '2-digit', 
+          minute: '2-digit',
+          second: '2-digit',
+          hour12: false
         });
-        
-        clearTimeout(timeoutId);
-        
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status} - ${response.statusText}`);
-        }
-
-        const statusData = await response.json();
-        logToConsole(`✅ Backend conectado!`);
-        
-        return true;
-      } catch (error) {
-        logToConsole(`🌐 Backend offline: ${error.message}`, true);
-        return false;
+      } catch (e) {
+        return '--:--:--';
       }
     }
 
-    function updateSystemStatus(isConnected, message) {
-      systemStatusText.textContent = message;
-      
-      if (isConnected) {
-        connectionStatus.className = 'connection-indicator connection-active';
-        document.body.style.background = 'linear-gradient(135deg, #0e1a1f 0%, #14262d 100%)';
-      } else {
-        connectionStatus.className = 'connection-indicator';
-        document.body.style.background = 'linear-gradient(135deg, #1a0e1f 0%, #2d1426 100%)';
+    function formatDateTime(isoString) {
+      if (!isoString) return 'No disponible';
+      try {
+        const date = new Date(isoString);
+        return date.toLocaleString('es-ES', { 
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: false
+        });
+      } catch (e) {
+        return 'Fecha inválida';
       }
     }
 
-    function updateSensorConnection(sensorKey, isConnected, message) {
-      const sensor = SENSORS[sensorKey];
-      const indicator = document.getElementById(sensor.indicator);
-      const statusEl = document.getElementById(sensor.connectionStatus);
+    function showNotification(message, type = 'online') {
+      const notification = document.createElement('div');
+      notification.className = `notification ${type}`;
+      notification.innerHTML = `
+        <span style="font-size: 1.5rem; margin-right: 10px;">${type === 'online' ? '✅' : '⚠️'}</span>
+        ${message}
+      `;
       
-      if (isConnected) {
-        indicator.className = 'connection-indicator connection-active';
-        statusEl.textContent = '✅ Conectado';
-      } else {
-        indicator.className = 'connection-indicator';
-        statusEl.textContent = `❌ ${message}`;
-      }
-    }
-
-    // =============== SOPORTE OFFLINE ===============
-    function checkOfflineMode() {
-      return localStorage.getItem('mango_offline_mode') === 'true';
-    }
-
-    function showOfflineBadge() {
-      const existingBadge = document.querySelector('.offline-badge');
-      if (existingBadge) return;
+      notificationContainer.appendChild(notification);
       
-      const offlineBadge = document.createElement('div');
-      offlineBadge.className = 'offline-badge';
-      offlineBadge.innerHTML = '<span style="margin-right: 8px;">🌐</span> Modo Offline - Datos Simulados';
-      document.body.appendChild(offlineBadge);
-      
-      // Ocultar después de 5 segundos
+      // Auto-eliminar después de 5 segundos
       setTimeout(() => {
-        offlineBadge.style.opacity = '0';
-        offlineBadge.style.transform = 'translateY(-10px)';
+        notification.style.opacity = '0';
+        notification.style.transform = 'translateX(-50%) translateY(-20px)';
         setTimeout(() => {
-          offlineBadge.remove();
+          notification.remove();
         }, 300);
       }, 5000);
     }
 
-    function loadSimulatedData() {
-      try {
-        const simulatedData = JSON.parse(localStorage.getItem('mango_simulated_data') || '{}');
-        if (Object.keys(simulatedData).length === 0) {
-          const newData = {
-            ph: {
-              raw: 720 + Math.floor(Math.random() * 30),
-              voltage: parseFloat((3.5 + Math.random() * 0.3).toFixed(3)),
-              received_at: new Date().toISOString(),
-              status: 'raw_unprocessed',
-              calibration_status: 'uncalibrated'
-            },
-            temperature: {
-              raw: 255 + Math.floor(Math.random() * 10),
-              value: parseFloat((25.5 + Math.random() * 0.5).toFixed(1)),
-              received_at: new Date().toISOString(),
-              status: 'calibrated',
-              calibration_status: 'calibrated'
-            },
-            turbidity: {
-              raw: 300 + Math.floor(Math.random() * 200),
-              received_at: new Date().toISOString(),
-              status: 'raw_unprocessed',
-              calibration_status: 'uncalibrated'
-            }
-          };
-          localStorage.setItem('mango_simulated_data', JSON.stringify(newData));
-          return newData;
-        }
-        return simulatedData;
-      } catch (e) {
-        console.error('Error cargando datos simulados:', e);
-        return generateSimulatedData();
-      }
-    }
-
-    function generateSimulatedData() {
-      const now = new Date().toISOString();
-      return {
-        ph: {
-          raw: 720 + Math.floor(Math.random() * 30),
-          voltage: parseFloat((3.5 + Math.random() * 0.3).toFixed(3)),
-          received_at: now,
-          status: 'raw_unprocessed',
-          calibration_status: 'uncalibrated'
-        },
-        temperature: {
-          raw: 255 + Math.floor(Math.random() * 10),
-          value: parseFloat((25.5 + Math.random() * 0.5).toFixed(1)),
-          received_at: now,
-          status: 'calibrated',
-          calibration_status: 'calibrated'
-        },
-        turbidity: {
-          raw: 300 + Math.floor(Math.random() * 200),
-          received_at: now,
-          status: 'raw_unprocessed',
-          calibration_status: 'uncalibrated'
-        }
-      };
-    }
-
-    // =============== FUNCIONES DE ACTUALIZACIÓN ===============
-    async function fetchSensorData(sensorKey) {
-      const offlineMode = checkOfflineMode();
-      
-      if (offlineMode) {
-        const simulatedData = loadSimulatedData();
-        const sensorData = simulatedData[sensorKey] || {};
-        
-        // Simular delay para parecer real
-        await new Promise(resolve => setTimeout(resolve, 300));
-        
-        updateSensorUI(sensorKey, sensorData);
-        updateSensorConnection(sensorKey, true, 'Modo offline');
-        return true;
-      }
-      
-      const sensor = SENSORS[sensorKey];
-      const endpoint = sensorKey === 'temperature' ? 
-        '/temperature/latest' : 
-        `/${sensorKey}/latest`;
+    // =============== CONEXIÓN Y ESTADO ===============
+    async function checkSystemConnections() {
+      let sensorsOnline = false;
+      let databaseOnline = false;
       
       try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 5000);
-        
-        const response = await fetch(`${API_BASE}${endpoint}`, {
+        // Verificar conexión con sensores
+        const sensorResponse = await fetch(`${API_BASE}/status`, {
           method: 'GET',
           mode: 'cors',
-          signal: controller.signal,
-          credentials: 'include'  // ¡CRÍTICO PARA SESIONES!
+          credentials: 'include',
+          signal: AbortSignal.timeout(3000)
         });
         
-        clearTimeout(timeoutId);
+        sensorsOnline = sensorResponse.ok;
+        logSystem(`Conexión con sensores: ${sensorsOnline ? 'EXITOSA' : 'FALLIDA'}`);
         
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}`);
+      } catch (error) {
+        logSystem(`Error verificando sensores: ${error.message}`, true);
+        sensorsOnline = false;
+      }
+      
+      try {
+        // Verificar conexión con base de datos (simulada por ahora)
+        const dbResponse = await fetch(`${API_BASE}/exploration/status`, {
+          method: 'GET',
+          mode: 'cors',
+          credentials: 'include',
+          signal: AbortSignal.timeout(3000)
+        });
+        
+        if (dbResponse.ok) {
+          const dbData = await dbResponse.json();
+          databaseOnline = dbData.status === 'performed';
+          systemState.explorationPerformed = databaseOnline;
+          
+          if (databaseOnline) {
+            explorationStatus.textContent = '✅ Exploración realizada - datos históricos disponibles';
+            explorationStatus.parentElement.className = 'exploration-status success';
+          } else {
+            explorationStatus.textContent = '❌ No hay mediciones previas - Exploración no realizada';
+            explorationStatus.parentElement.className = 'exploration-status';
+          }
         }
+        
+        logSystem(`Conexión con base de datos: ${databaseOnline ? 'DISPONIBLE' : 'NO DISPONIBLE'}`);
+        
+      } catch (error) {
+        logSystem(`Error verificando base de datos: ${error.message}`, true);
+        databaseOnline = false;
+        explorationStatus.textContent = '⚠️ Error al verificar estado de la base de datos';
+        explorationStatus.parentElement.className = 'exploration-status';
+      }
+      
+      // Actualizar estado del sistema
+      systemState.sensorsOnline = sensorsOnline;
+      systemState.databaseOnline = databaseOnline;
+      systemState.lastUpdate = new Date();
+      
+      updateConnectionStatus();
+      updateSystemInfo();
+      
+      return { sensorsOnline, databaseOnline };
+    }
 
-        const data = await response.json();
-        updateSensorUI(sensorKey, data);
-        updateSensorConnection(sensorKey, true, 'Conectado');
+    function updateConnectionStatus() {
+      // Actualizar estado de sensores
+      if (systemState.sensorsOnline) {
+        mainConnectionStatus.className = 'status-indicator online';
+        mainStatusText.textContent = 'Conexión con sensores: Online';
+        document.body.classList.remove('offline-mode');
+      } else {
+        mainConnectionStatus.className = 'status-indicator offline';
+        mainStatusText.textContent = 'Conexión con sensores: Offline';
+        document.body.classList.add('offline-mode');
+      }
+      
+      // Actualizar estado de base de datos
+      if (systemState.databaseOnline) {
+        databaseConnectionStatus.className = 'status-indicator online';
+        databaseStatusText.textContent = 'Base de datos: Online';
+      } else {
+        databaseConnectionStatus.className = 'status-indicator offline';
+        databaseStatusText.textContent = 'Base de datos: Offline';
+      }
+      
+      // Actualizar estado general
+      const isOnline = systemState.sensorsOnline || systemState.databaseOnline;
+      const statusText = isOnline ? 
+        (systemState.sensorsOnline ? 'Operativo - Datos en tiempo real' : 'Operativo - Datos históricos') :
+        'Sistema offline - Sin conexión a sensores ni base de datos';
+      
+      systemStateElement.textContent = statusText;
+      
+      // Mostrar notificación si cambia el estado
+      if (isOnline && !systemState.wasOnline) {
+        showNotification('¡Sistema conectado! Mostrando datos en tiempo real', 'online');
+      } else if (!isOnline && systemState.wasOnline) {
+        showNotification('Sistema offline. Mostrando últimos datos disponibles', 'offline');
+      }
+      
+      systemState.wasOnline = isOnline;
+      return isOnline;
+    }
+
+    function updateSystemInfo() {
+      lastUpdateTimeElement.textContent = systemState.lastUpdate ? 
+        formatDateTime(systemState.lastUpdate) : 
+        '--:--:--';
+    }
+
+    // =============== MANEJO DE DATOS ===============
+    async function fetchCurrentData() {
+      if (!systemState.sensorsOnline) return false;
+      
+      try {
+        const results = await Promise.all(
+          Object.keys(SENSORS).map(sensorKey => 
+            fetch(`${API_BASE}/${sensorKey}/latest`, {
+              method: 'GET',
+              mode: 'cors',
+              credentials: 'include',
+              signal: AbortSignal.timeout(4000)
+            })
+            .then(response => {
+              if (!response.ok) throw new Error(`HTTP ${response.status}`);
+              return response.json();
+            })
+            .then(data => {
+              // Procesar datos según el sensor
+              if (sensorKey === 'ph') {
+                data.value = (data.raw / 100).toFixed(1); // Ajuste para pH
+              } else if (sensorKey === 'temperature') {
+                data.value = data.value !== undefined ? data.value.toFixed(1) : (data.raw * 0.1).toFixed(1);
+              } else if (sensorKey === 'turbidity') {
+                data.value = data.raw;
+              }
+              
+              return { sensorKey, data, success: true };
+            })
+            .catch(error => {
+              logSystem(`Error en ${sensorKey}: ${error.message}`, true);
+              return { sensorKey, error: error.message, success: false };
+            })
+          )
+        );
+        
+        // Actualizar datos locales
+        results.filter(r => r.success).forEach(result => {
+          SENSORS[result.sensorKey].lastData = result.data;
+          
+          // Agregar a datos históricos para el gráfico
+          addToHistoricalData(result.sensorKey, result.data);
+        });
+        
         return true;
       } catch (error) {
-        logToConsole(`⚠️ Error en sensor ${sensorKey}: ${error.message}`, true);
-        handleSensorError(sensorKey, error.message);
-        updateSensorConnection(sensorKey, false, 'Sin conexión');
+        logSystem(`Error general al obtener datos: ${error.message}`, true);
         return false;
       }
     }
 
-    function updateSensorUI(sensorKey, data) {
+    function addToHistoricalData(sensorKey, data) {
       const sensor = SENSORS[sensorKey];
-      const valueEl = document.getElementById(sensor.element);
-      const rawEl = document.getElementById(sensor.rawElement);
-      const statusEl = document.getElementById(sensor.statusElement);
-      const timeEl = document.getElementById(sensor.timeElement);
+      const timestamp = new Date(data.timestamp || data.received_at || new Date());
       
-      if (sensor.unitElement) {
-        document.getElementById(sensor.unitElement).textContent = sensor.unit;
-      }
+      // Crear punto de datos para el gráfico
+      const chartPoint = {
+        x: timestamp,
+        y: parseFloat(data.value)
+      };
+      
+      // Agregar al array histórico
+      sensor.historicalData.push(chartPoint);
+      
+      // Mantener solo los últimos 30 minutos de datos
+      const thirtyMinutesAgo = new Date(Date.now() - CONFIG.CHART_HISTORY_MINUTES * 60000);
+      sensor.historicalData = sensor.historicalData.filter(point => point.x > thirtyMinutesAgo);
+    }
 
-      let displayValue, rawValue, statusText, statusClass;
+    // =============== GRÁFICOS ===============
+    function createSensorChart(sensorKey, chartContainer) {
+      const ctx = document.createElement('canvas');
+      chartContainer.appendChild(ctx);
       
-      if (sensor.type === 'raw_voltage') {
-        displayValue = sensor.convertValue(data);
-        rawValue = sensor.convertRaw(data);
-        statusText = '⚡ VOLTAJE CRUDO (SIN CALIBRAR)';
-        statusClass = 'status-warning';
-      } 
-      else if (sensor.type === 'raw_adc') {
-        displayValue = sensor.convertValue(data);
-        rawValue = sensor.convertRaw(data);
-        statusText = '📊 DATO ADC CRUDO (SIN CALIBRAR)';
-        statusClass = 'status-warning';
-      } 
-      else if (sensor.type === 'calibrated') {
-        displayValue = sensor.convertValue(data);
-        rawValue = sensor.convertRaw(data);
+      const sensor = SENSORS[sensorKey];
+      const chartData = {
+        datasets: [{
+          label: `${sensor.name} en tiempo real`,
+          data: sensor.historicalData,
+          borderColor: sensor.chartColor,
+          backgroundColor: `${sensor.chartColor}22`,
+          tension: 0.3,
+          fill: true,
+          pointRadius: 3,
+          pointBackgroundColor: sensor.chartColor,
+          borderWidth: 3
+        }]
+      };
+      
+      const chart = new Chart(ctx, {
+        type: 'line',
+        data: chartData,
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: false
+            },
+            tooltip: {
+              mode: 'index',
+              intersect: false,
+              backgroundColor: 'rgba(0, 0, 0, 0.8)',
+              titleFont: {
+                size: 14
+              },
+              bodyFont: {
+                size: 13
+              },
+              callbacks: {
+                label: function(context) {
+                  return `${sensor.name}: ${context.parsed.y}${sensor.unit}`;
+                }
+              }
+            }
+          },
+          scales: {
+            x: {
+              type: 'time',
+              time: {
+                unit: 'minute',
+                tooltipFormat: 'HH:mm:ss',
+                displayFormats: {
+                  minute: 'HH:mm'
+                }
+              },
+              grid: {
+                color: 'rgba(255, 255, 255, 0.1)'
+              },
+              ticks: {
+                color: '#a8d8c5'
+              }
+            },
+            y: {
+              beginAtZero: sensorKey === 'turbidity',
+              grid: {
+                color: 'rgba(255, 255, 255, 0.1)'
+              },
+              ticks: {
+                color: '#a8d8c5'
+              },
+              title: {
+                display: true,
+                text: sensor.unit,
+                color: sensor.chartColor,
+                font: {
+                  size: 12
+                }
+              }
+            }
+          },
+          interaction: {
+            intersect: false,
+            mode: 'nearest'
+          },
+          animation: {
+            duration: 0
+          }
+        }
+      });
+      
+      // Guardar instancia para actualizaciones futuras
+      systemState.chartInstances[sensorKey] = chart;
+      return chart;
+    }
+
+    function updateSensorChart(sensorKey) {
+      const chart = systemState.chartInstances[sensorKey];
+      if (chart) {
+        chart.data.datasets[0].data = SENSORS[sensorKey].historicalData;
+        chart.update('none'); // Sin animación para mejor rendimiento
+      }
+    }
+
+    // =============== RENDERIZADO DE LA INTERFAZ ===============
+    function renderSensorCard(sensorKey) {
+      const sensor = SENSORS[sensorKey];
+      const data = sensor.lastData;
+      const isOnline = systemState.sensorsOnline;
+      
+      const card = document.createElement('div');
+      card.className = `sensor-card ${!isOnline && !sensor.historicalData.length ? 'offline' : ''}`;
+      
+      // Si no hay datos y no estamos online, mostrar mensaje de exploración
+      if (!data && !isOnline && !systemState.explorationPerformed) {
+        card.innerHTML = `
+          <div class="sensor-header">
+            <div class="sensor-title">
+              <span class="sensor-icon">${sensor.icon}</span>
+              ${sensor.name}
+            </div>
+          </div>
+          <div class="no-data-message">
+            <div class="no-data-icon">🔍</div>
+            <div class="no-data-title">Exploración no realizada</div>
+            <p class="no-data-text">No se han registrado mediciones previas para este sensor en el manglar. Contacte al administrador para realizar la primera exploración.</p>
+          </div>
+        `;
+        return card;
+      }
+      
+      // Si no hay datos pero hay datos históricos
+      if (!data && sensor.historicalData.length > 0) {
+        const lastHistorical = sensor.historicalData[sensor.historicalData.length - 1];
+        card.innerHTML = `
+          <div class="sensor-header">
+            <div class="sensor-title">
+              <span class="sensor-icon">${sensor.icon}</span>
+              ${sensor.name} <span style="font-size: 0.8em; color: var(--warning);">(datos históricos)</span>
+            </div>
+          </div>
+          <div class="sensor-value-container">
+            <div class="sensor-value">
+              ${lastHistorical.y.toFixed(1)}
+              <span class="sensor-unit">${sensor.unit}</span>
+            </div>
+          </div>
+          <div class="sensor-meta">
+            <div class="status-row">
+              <span class="status-label">Estado:</span>
+              <span class="status-value warning">⚠️ Sensores offline</span>
+            </div>
+            <div class="status-row">
+              <span class="status-label">Descripción:</span>
+              <span class="status-value">${sensor.description}</span>
+            </div>
+            <div class="last-update">
+              📅 Última medición: <span class="update-time">${formatDateTime(lastHistorical.x)}</span>
+            </div>
+            <div class="chart-container" id="chart-${sensorKey}">
+              <!-- El gráfico se generará aquí -->
+            </div>
+          </div>
+        `;
+        return card;
+      }
+      
+      // Si hay datos actuales
+      let statusText = '✅ Óptimo';
+      let statusClass = '';
+      let statusColor = 'success';
+      
+      if (data) {
+        const value = parseFloat(data.value);
         
-        const numericValue = parseFloat(displayValue);
-        if (numericValue >= sensor.optimalRange.min && numericValue <= sensor.optimalRange.max) {
-          statusText = '✅ ÓPTIMO';
-          statusClass = 'status-success';
-        } else {
-          statusText = `⚠️ ${sensor.warningMessage}`;
-          statusClass = 'status-warning';
+        if (sensorKey === 'ph') {
+          if (value < sensor.optimalRange.min || value > sensor.optimalRange.max) {
+            statusText = '⚠️ Fuera de rango óptimo';
+            statusClass = 'warning';
+            statusColor = 'warning';
+          }
+        } else if (sensorKey === 'temperature') {
+          if (value < sensor.optimalRange.min || value > sensor.optimalRange.max) {
+            statusText = '⚠️ Temperatura crítica';
+            statusClass = 'warning';
+            statusColor = 'warning';
+            
+            if (value < 20 || value > 32) {
+              statusText = '🔥 ¡ALERTA CRÍTICA!';
+              statusClass = 'error';
+              statusColor = 'error';
+            }
+          }
+        } else if (sensorKey === 'turbidity') {
+          if (value > sensor.optimalRange.max) {
+            statusText = '⚠️ Alta turbidez';
+            statusClass = 'warning';
+            statusColor = 'warning';
+          }
         }
       }
 
-      // Actualizar DOM
-      valueEl.textContent = displayValue;
-      rawEl.textContent = rawValue;
-      statusEl.textContent = statusText;
-      statusEl.className = statusClass;
-      timeEl.textContent = formatTime(data.received_at || data.timestamp);
+      card.innerHTML = `
+        <div class="sensor-header">
+          <div class="sensor-title">
+            <span class="sensor-icon">${sensor.icon}</span>
+            ${sensor.name}
+          </div>
+        </div>
+        <div class="sensor-value-container">
+          <div class="sensor-value">
+            ${data ? parseFloat(data.value).toFixed(1) : '---'}
+            <span class="sensor-unit">${sensor.unit}</span>
+          </div>
+        </div>
+        <div class="sensor-meta">
+          <div class="status-row">
+            <span class="status-label">Estado:</span>
+            <span class="status-value ${statusClass}">${statusText}</span>
+          </div>
+          <div class="status-row">
+            <span class="status-label">Descripción:</span>
+            <span class="status-value">${sensor.description}</span>
+          </div>
+          <div class="last-update">
+            📅 Última medición: <span class="update-time">${data ? formatDateTime(data.timestamp || data.received_at) : '--/--/--'}</span>
+          </div>
+          <div class="last-update">
+            📶 Estado de conexión: <span class="status-value ${statusColor}">${isOnline ? 'Online - Tiempo real' : 'Offline - Datos históricos'}</span>
+          </div>
+          <div class="chart-container" id="chart-${sensorKey}">
+            <!-- El gráfico se generará aquí -->
+          </div>
+        </div>
+      `;
+      
+      return card;
     }
 
-    function handleSensorError(sensorKey, errorMessage) {
-      const sensor = SENSORS[sensorKey];
-      const valueEl = document.getElementById(sensor.element);
-      const rawEl = document.getElementById(sensor.rawElement);
-      const statusEl = document.getElementById(sensor.statusElement);
-      const timeEl = document.getElementById(sensor.timeElement);
+    function renderDashboard() {
+      sensorsContainer.innerHTML = '';
       
-      valueEl.textContent = '---';
-      rawEl.textContent = '---';
-      statusEl.textContent = `❌ Error: ${errorMessage.substring(0, 30)}`;
-      statusEl.className = 'status-error';
-      timeEl.textContent = formatTime(new Date().toISOString());
-    }
-
-    async function updateAllSensors() {
-      logToConsole('🔄 Actualizando sensores...');
+      // Renderizar tarjetas de sensores
+      Object.keys(SENSORS).forEach(sensorKey => {
+        const card = renderSensorCard(sensorKey);
+        sensorsContainer.appendChild(card);
+        
+        // Crear gráfico si el contenedor existe
+        const chartContainer = document.getElementById(`chart-${sensorKey}`);
+        if (chartContainer && !systemState.chartInstances[sensorKey]) {
+          createSensorChart(sensorKey, chartContainer);
+        }
+        
+        // Actualizar gráfico si existe
+        if (systemState.chartInstances[sensorKey]) {
+          updateSensorChart(sensorKey);
+        }
+      });
       
-      const results = await Promise.all([
-        fetchSensorData('ph'),
-        fetchSensorData('temperature'),
-        fetchSensorData('turbidity')
-      ]);
-
-      const successful = results.filter(r => r).length;
-      logToConsole(`📊 Actualización completada: ${successful}/3 sensores`);
+      // Habilitar/deshabilitar botones según estado
+      refreshBtn.disabled = !systemState.sensorsOnline;
+      refreshBtn.className = systemState.sensorsOnline ? 
+        'action-btn primary' : 'action-btn offline';
       
-      if (successful === 0) {
-        updateSystemStatus(false, '❌ Todos los sensores sin conexión');
-      }
+      historicalBtn.disabled = !systemState.databaseOnline;
+      historicalBtn.className = systemState.databaseOnline ? 
+        'action-btn secondary' : 'action-btn offline';
     }
 
     // =============== AUTENTICACIÓN ===============
     function logout() {
-      localStorage.removeItem('mango_offline_mode');
-      localStorage.removeItem('mango_user');
-      localStorage.removeItem('mango_remember');
-      localStorage.removeItem('mango_username');
-      
-      // Intentar cerrar sesión en el backend
       fetch(`${API_BASE}/auth/logout`, {
         method: 'POST',
         credentials: 'include'
       }).finally(() => {
+        localStorage.clear();
         window.location.href = 'login.html';
       });
     }
 
     async function checkSession() {
-      const offlineMode = localStorage.getItem('mango_offline_mode') === 'true';
-      const savedUser = localStorage.getItem('mango_user');
-      
-      // Si estamos en modo offline y hay usuario guardado, permitir acceso
-      if (offlineMode && savedUser) {
-        logToConsole('💻 Sesión offline válida para usuario: ' + savedUser);
-        initDashboard();
-        return;
-      }
-      
       try {
         const response = await fetch(`${API_BASE}/auth/status`, {
           method: 'GET',
-          credentials: 'include',  // ¡CRÍTICO!
-          headers: {
-            'X-Requested-With': 'XMLHttpRequest'
-          }
+          credentials: 'include',
+          signal: AbortSignal.timeout(3000)
         });
         
-        const data = await response.json();
-        
-        if (data.authenticated) {
-          logToConsole(`✅ Sesión válida para usuario: ${data.user}`);
-          initDashboard();
-        } else {
-          logToConsole('❌ Sesión inválida, redirigiendo al login');
+        if (!response.ok) {
           window.location.href = 'login.html';
+          return false;
         }
+        
+        return true;
       } catch (error) {
-        console.warn('Error verificando sesión:', error);
-        
-        // Si hay usuario guardado, intentar modo offline
-        if (savedUser) {
-          logToConsole('🔄 Error de conexión, activando modo offline para usuario: ' + savedUser);
-          localStorage.setItem('mango_offline_mode', 'true');
-          showOfflineBadge();
-          initDashboard();
-        } else {
-          logToConsole('❌ Sin sesión y sin conexión, redirigiendo al login');
-          window.location.href = 'login.html';
-        }
+        logSystem(`Error de sesión: ${error.message}`, true);
+        window.location.href = 'login.html';
+        return false;
       }
     }
+
+    // =============== ACTUALIZACIÓN AUTOMÁTICA ===============
+    async function updateDashboard() {
+      logSystem('🔄 Actualizando dashboard...');
+      
+      // Verificar conexiones
+      await checkSystemConnections();
+      
+      // Obtener datos si los sensores están online
+      if (systemState.sensorsOnline) {
+        await fetchCurrentData();
+      }
+      
+      // Renderizar dashboard actualizado
+      renderDashboard();
+      
+      logSystem(`✅ Dashboard actualizado - Sensores: ${systemState.sensorsOnline ? 'ONLINE' : 'OFFLINE'}, BD: ${systemState.databaseOnline ? 'ONLINE' : 'OFFLINE'}`);
+    }
+
+    // =============== EVENT LISTENERS ===============
+    refreshBtn.addEventListener('click', async () => {
+      refreshBtn.disabled = true;
+      refreshBtn.innerHTML = '<span>🔄</span> Actualizando...';
+      
+      await updateDashboard();
+      
+      refreshBtn.disabled = false;
+      refreshBtn.innerHTML = '<span>🔄</span> Actualizar Datos';
+    });
+
+    historicalBtn.addEventListener('click', () => {
+      if (!systemState.databaseOnline) {
+        showNotification('Base de datos offline. No se pueden mostrar datos históricos', 'offline');
+        return;
+      }
+      
+      // En futuras implementaciones, esto abrirá una vista de datos históricos
+      showNotification('Vista de datos históricos próximamente disponible', 'online');
+    });
 
     // =============== INICIALIZACIÓN ===============
     async function initDashboard() {
-      const offlineMode = checkOfflineMode();
+      logSystem('🚀 Iniciando dashboard de M.A.N.G.O...');
       
-      logToConsole('🚀 Iniciando M.A.N.G.O Dashboard');
-      logToConsole(`⚙️ Configuración:`);
-      logToConsole(`   Backend: ${API_BASE}`);
-      logToConsole(`   Frontend: ${ORIGIN_ALLOWED}`);
-      logToConsole(`ℹ️  pH y Turbidez mostrarán DATOS CRUDOS`);
-      logToConsole(`✅ Temperatura mostrará DATOS CALIBRADOS`);
+      // Ocultar botones inicialmente
+      refreshBtn.disabled = true;
+      historicalBtn.disabled = true;
       
-      if (offlineMode) {
-        logToConsole('💻 Modo offline activado - Usando datos simulados');
-        updateSystemStatus(true, '💻 Modo offline (datos simulados)');
-        showOfflineBadge();
-      }
+      // Verificar sesión primero
+      const sessionValid = await checkSession();
+      if (!sessionValid) return;
       
-      await updateAllSensors();
-      setInterval(updateAllSensors, CONFIG.UPDATE_INTERVAL);
-      logToConsole(`⏱️ Actualización automática cada ${CONFIG.UPDATE_INTERVAL}ms`);
+      // Primera actualización completa
+      await updateDashboard();
+      
+      // Configurar actualización periódica
+      setInterval(updateDashboard, CONFIG.UPDATE_INTERVAL);
+      
+      logSystem(`✅ Dashboard inicializado. Actualización cada ${CONFIG.UPDATE_INTERVAL/1000} segundos.`);
     }
 
-    document.addEventListener('DOMContentLoaded', checkSession);
+    // Ejecutar al cargar la página
+    document.addEventListener('DOMContentLoaded', initDashboard);
 
+    // Manejo de errores globales
     window.addEventListener('error', (event) => {
-      logToConsole(`🔥 Error global: ${event.message}`, true);
-      updateSystemStatus(false, '❌ Error crítico en el sistema');
+      logSystem(`🔥 Error global: ${event.message}`, true);
     });
   </script>
 </body>
