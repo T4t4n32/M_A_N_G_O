@@ -166,6 +166,182 @@ The dashboard converts database values into **easy-to-understand visuals**, idea
 
 ---
 
+# 🧱 ARCHITECTURE — M.A.N.G.O.
+
+**Project:** M.A.N.G.O — Autonomous Monitoring of Oceanic Management Levels  
+**Type:** Modular Sensor Monitoring System  
+**Backend:** Python + Flask  
+**Data Source:** Serial (Microcontroller)
+
+---
+
+## 🎯 Architectural Goals
+
+- Separation of concerns
+- Single responsibility per module
+- No tight coupling between layers
+- Hardware-agnostic API
+- Easy to debug and extend
+
+---
+
+## 🧩 High-Level Overview
+
+┌──────────────┐
+│ Sensors HW │
+│ (pH, Temp…) │
+└──────┬───────┘
+│ Serial (JSON)
+▼
+┌──────────────────────┐
+│ Serial Manager │
+│ (services layer) │
+└─────────┬────────────┘
+▼
+┌──────────────────────┐
+│ Sensor Store │
+│ In-memory cache │
+└─────────┬────────────┘
+▼
+┌──────────────────────┐
+│ Flask API │
+│ /api/*/latest │
+└─────────┬────────────┘
+▼
+┌──────────────────────┐
+│ Frontend Dashboard │
+│ (HTML + JS) │
+└──────────────────────┘
+---
+
+## 🧠 Core Architectural Decisions
+
+### 1. API-First Design
+- Backend **does not serve HTML**
+- Frontend consumes API via HTTP
+- Enables future clients (mobile, cloud)
+
+---
+
+### 2. Single Serial Access Rule
+- Only **one** component opens `serial.Serial`
+- Prevents port conflicts
+- Centralized error handling
+
+**Implemented in:**  
+`services/serial_manager.py`
+
+---
+
+### 3. In-Memory Sensor Store
+- Latest sensor value cached
+- No database dependency (yet)
+- Ultra-fast access for dashboard
+
+**Implemented in:**  
+`services/sensor_store.py`
+
+---
+
+### 4. Modular Sensor Routes
+Each sensor has its own endpoint:
+- `/api/ph/latest`
+- `/api/temperature/latest`
+- `/api/turbidity/latest`
+
+**Benefits:**
+- Clear ownership
+- Easy expansion
+- Independent testing
+
+---
+
+## 🗂 Folder Responsibilities
+
+### `/backend`
+| File | Responsibility |
+|----|----|
+| `main.py` | App entry point |
+| `requirements.txt` | Dependencies |
+| `README.md` | Project overview |
+
+---
+
+### `/app`
+| Folder | Role |
+|------|------|
+| `routes/` | API endpoints |
+| `services/` | Logic & hardware |
+| `models/` | Future data models |
+| `config.py` | Configuration |
+| `api.py` | Route registration |
+| `__init__.py` | App factory |
+
+---
+
+### `/app/services`
+
+| File | Responsibility |
+|----|----|
+| `serial_manager.py` | Serial connection & parsing |
+| `sensor_store.py` | Last-value storage |
+
+---
+
+### `/app/routes`
+
+| File | Responsibility |
+|----|----|
+| `health.py` | System health |
+| `ph.py` | pH sensor endpoint |
+| `temperature.py` | Temperature endpoint |
+| `turbidity.py` | Turbidity endpoint |
+
+---
+
+## 🔄 Data Flow (Step-by-Step)
+
+1. Microcontroller sends JSON via Serial
+2. `SerialManager` reads and parses data
+3. Parsed values stored in `SensorStore`
+4. API route reads from `SensorStore`
+5. Frontend fetches data via HTTP
+
+---
+
+## ⚠️ Known Limitations
+
+- No persistence (data lost on restart)
+- No authentication
+- No concurrency handling beyond serial
+- Dashboard is read-only
+
+---
+
+## 🔮 Planned Extensions
+
+- Database layer
+- Sensor calibration module
+- Cloud publishing
+- Multi-node sensor support
+
+---
+
+## 🧠 Design Philosophy
+
+> “Simple systems fail less.”
+
+Every architectural decision prioritizes:
+- Stability
+- Clarity
+- Debuggability
+
+Over:
+- Premature optimization
+- Overengineering
+- Trend-driven tech
+
+---
 # 👤 **Maintainer**
 
 **Sebastián Sánchez**  
