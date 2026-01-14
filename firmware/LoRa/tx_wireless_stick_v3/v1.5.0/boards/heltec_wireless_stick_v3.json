@@ -1,0 +1,40 @@
+{
+  "name": "Heltec Wireless Stick V3 (ESP32-S3)",
+  "vendor": "Heltec",
+  "url": "https://heltec.org/project/wireless-stick-v3/",
+  "platform": "espressif32",
+  "frameworks": ["arduino"],
+  "mcu": "esp32s3",
+  "variant": "esp32s3",
+  "cpu_freq": "240000000L",
+  "f_flash": "40000000L",
+
+  "connectivity": ["wifi", "bluetooth", "lora"],
+
+  "upload": {
+    "protocol": "esptool",
+    "speed": 460800,
+    "maximum_size": 4194304
+  },
+
+  "memory": {
+    "ram": 327680,
+    "flash": 4194304
+  },
+
+  "build": {
+    "core": "esp32",
+    "mcu": "esp32s3",
+    "variant": "esp32s3",
+    "f_cpu": "240000000L",
+    "f_flash": "40000000L",
+    "flash_mode": "dio",
+    "extra_flags": [
+      "-DARDUINO_USB_CDC_ON_BOOT=1"
+    ]
+  },
+
+  "debug": {
+    "default_tools": ["esp-builtin"]
+  }
+}
