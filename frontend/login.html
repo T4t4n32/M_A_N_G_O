@@ -1,752 +1,152 @@
+<!-- =========================
+     login.html — M.A.N.G.O
+     ========================= -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>M.A.N.G.O. — Acceso al Sistema</title>
-  <meta name="description" content="Sistema de monitoreo autónomo - Acceso seguro">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>M.A.N.G.O — Acceso al Sistema</title>
+  <meta name="description" content="Acceso seguro al sistema M.A.N.G.O" />
+
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌊</text></svg>">
-  <style>
-    :root {
-      --primary: #2d8c68;
-      --secondary: #1a3a32;
-      --accent: #ffc107;
-      --error: #ff6b6b;
-      --success: #4abdac;
-      --offline: #ff9e6d;
-      --glass-bg: rgba(26, 58, 50, 0.6);
-      --glass-border: rgba(45, 140, 104, 0.3);
-      --text: #eef6fb;
-      --text-secondary: #a8d8c5;
-    }
 
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
-    html, body {
-      height: 100%;
-      min-height: 100vh;
-    }
-
-    body {
-      background: linear-gradient(135deg, #061222 0%, #0a1f35 100%);
-      color: var(--text);
-      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-      position: relative;
-      padding: 20px 0;
-      margin: 0;
-    }
-
-    .container {
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      padding: 20px;
-      width: 100%;
-      max-width: 450px;
-      margin: 0 auto;
-      box-sizing: border-box;
-    }
-
-    body::before {
-      content: "";
-      position: absolute;
-      top: -50%;
-      left: -50%;
-      width: 200%;
-      height: 200%;
-      background: radial-gradient(circle, rgba(45, 140, 104, 0.1) 0%, transparent 70%);
-      z-index: -1;
-      animation: rotate 25s linear infinite;
-    }
-
-    @keyframes rotate {
-      from { transform: rotate(0deg); }
-      to { transform: rotate(360deg); }
-    }
-
-    .logo {
-      text-align: center;
-      margin-bottom: 25px;
-    }
-
-    .logo-icon {
-      font-size: 3.5rem;
-      margin-bottom: 10px;
-      background: linear-gradient(90deg, var(--primary), var(--accent));
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-    }
-
-    .logo-title {
-      font-size: 2.2rem;
-      font-weight: 800;
-      letter-spacing: -0.5px;
-      background: linear-gradient(90deg, var(--accent), var(--success));
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-    }
-
-    .logo-subtitle {
-      color: var(--text-secondary);
-      font-size: 1.1rem;
-      margin-top: 5px;
-      opacity: 0.9;
-    }
-
-    .card {
-      background: var(--glass-bg);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      border: 1px solid var(--glass-border);
-      border-radius: 20px;
-      padding: 32px;
-      width: 100%;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
-      margin-bottom: 20px;
-    }
-
-    .card:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
-    }
-
-    .card-header {
-      text-align: center;
-      margin-bottom: 25px;
-    }
-
-    .card-title {
-      font-size: 1.8rem;
-      font-weight: 700;
-      margin-bottom: 8px;
-      color: var(--accent);
-    }
-
-    .card-subtitle {
-      color: var(--text-secondary);
-      font-size: 1rem;
-    }
-
-    .form-group {
-      margin-bottom: 20px;
-      position: relative;
-    }
-
-    .form-label {
-      display: block;
-      margin-bottom: 8px;
-      font-weight: 500;
-      color: var(--text);
-      font-size: 0.95rem;
-    }
-
-    .form-input {
-      width: 100%;
-      padding: 14px;
-      padding-right: 45px;
-      border-radius: 12px;
-      border: 1px solid rgba(255, 255, 255, 0.15);
-      background: rgba(0, 0, 0, 0.2);
-      color: var(--text);
-      font-size: 1.05rem;
-      transition: all 0.3s ease;
-    }
-
-    .form-input:focus {
-      outline: none;
-      border-color: var(--primary);
-      box-shadow: 0 0 0 3px rgba(45, 140, 104, 0.3);
-    }
-
-    .form-input::placeholder {
-      color: rgba(238, 246, 251, 0.5);
-    }
-
-    .toggle-password {
-      position: absolute;
-      right: 15px;
-      top: 42px;
-      background: none;
-      border: none;
-      color: var(--text-secondary);
-      cursor: pointer;
-      font-size: 1.1rem;
-      z-index: 10;
-      opacity: 0.8;
-      transition: opacity 0.3s;
-    }
-
-    .toggle-password:hover {
-      opacity: 1;
-    }
-
-    .remember-me {
-      display: flex;
-      align-items: center;
-      margin-bottom: 20px;
-      gap: 8px;
-    }
-
-    .remember-checkbox {
-      width: 18px;
-      height: 18px;
-      accent-color: var(--primary);
-    }
-
-    .remember-label {
-      color: var(--text-secondary);
-      font-size: 0.95rem;
-    }
-
-    .submit-btn {
-      width: 100%;
-      padding: 16px;
-      background: linear-gradient(90deg, var(--primary), var(--accent));
-      border: none;
-      border-radius: 12px;
-      color: white;
-      font-size: 1.1rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .submit-btn::after {
-      content: "";
-      position: absolute;
-      top: -50%;
-      left: -60%;
-      width: 20px;
-      height: 200%;
-      background: rgba(255, 255, 255, 0.3);
-      transform: rotate(30deg);
-      transition: all 0.6s;
-    }
-
-    .submit-btn:hover::after {
-      left: 120%;
-    }
-
-    .submit-btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 5px 15px rgba(45, 140, 104, 0.4);
-    }
-
-    .submit-btn:active {
-      transform: translateY(0);
-    }
-
-    .submit-btn.loading {
-      background: linear-gradient(90deg, #1a3a32, #d39e00);
-      cursor: not-allowed;
-    }
-
-    .submit-btn.loading::after {
-      display: none;
-    }
-
-    .offline-mode {
-      background: linear-gradient(90deg, #1a3a32, #ff9e6d);
-    }
-
-    .error-message {
-      color: var(--error);
-      background: rgba(255, 107, 107, 0.1);
-      border: 1px solid rgba(255, 107, 107, 0.3);
-      padding: 12px 15px;
-      border-radius: 10px;
-      margin-top: 10px;
-      font-size: 0.95rem;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      animation: shake 0.5s;
-    }
-
-    .warning-message {
-      color: var(--offline);
-      background: rgba(255, 158, 109, 0.1);
-      border: 1px solid rgba(255, 158, 109, 0.3);
-      padding: 12px 15px;
-      border-radius: 10px;
-      margin-top: 10px;
-      font-size: 0.95rem;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    @keyframes shake {
-      0%, 100% { transform: translateX(0); }
-      25% { transform: translateX(-5px); }
-      75% { transform: translateX(5px); }
-    }
-
-    .system-status {
-      text-align: center;
-      margin-top: 25px;
-      padding: 12px;
-      border-radius: 10px;
-      background: rgba(0, 0, 0, 0.2);
-      border: 1px solid var(--glass-border);
-      font-size: 0.9rem;
-    }
-
-    .status-online {
-      color: var(--success);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-    }
-
-    .status-offline {
-      color: var(--offline);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-    }
-
-    .status-indicator {
-      display: inline-block;
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: var(--success);
-      animation: pulse 1.5s infinite;
-    }
-
-    .status-indicator.offline {
-      background: var(--offline);
-      animation: none;
-    }
-
-    @keyframes pulse {
-      0% { opacity: 1; }
-      50% { opacity: 0.6; }
-      100% { opacity: 1; }
-    }
-
-    .footer {
-      text-align: center;
-      margin-top: 20px;
-      color: var(--text-secondary);
-      font-size: 0.9rem;
-    }
-
-    .footer a {
-      color: var(--accent);
-      text-decoration: none;
-      font-weight: 500;
-    }
-
-    .footer a:hover {
-      text-decoration: underline;
-    }
-
-    @media (max-width: 480px) {
-      .container {
-        padding: 15px 10px;
-        min-height: auto;
-      }
-      
-      .card {
-        padding: 25px 20px;
-        border-radius: 16px;
-        margin-bottom: 15px;
-      }
-      
-      .logo-icon {
-        font-size: 2.8rem;
-      }
-      
-      .logo-title {
-        font-size: 1.9rem;
-      }
-      
-      .submit-btn {
-        padding: 14px;
-      }
-      
-      .footer {
-        margin-top: 30px;
-        padding-bottom: 20px;
-      }
-    }
-  </style>
+  <!-- CSS -->
+  <link rel="stylesheet" href="assets/css/login.css" />
 </head>
+
 <body>
+
   <div class="container">
+
+    <!-- =========================
+         LOGO
+         ========================= -->
     <div class="logo">
       <div class="logo-icon">🌊</div>
-      <h1 class="logo-title">M.A.N.G.O.</h1>
-      <p class="logo-subtitle">Monitoreo Autonomo de Niveles y Gestion Oceanica</p>
+      <h1 class="logo-title">M.A.N.G.O</h1>
+      <p class="logo-subtitle">
+        Monitoreo Autónomo de Niveles y Gestión Oceánica
+      </p>
     </div>
 
+    <!-- =========================
+         CARD
+         ========================= -->
     <div class="card">
+
       <div class="card-header">
         <h2 class="card-title">Acceso al Sistema</h2>
         <p class="card-subtitle">Ingrese sus credenciales</p>
       </div>
 
-      <form id="login-form">
+      <form id="login-form" novalidate>
+
         <div class="form-group">
           <label for="user" class="form-label">Usuario</label>
-          <input 
-            type="text" 
-            id="user" 
-            class="form-input" 
-            placeholder="ej: Admin" 
+          <input
+            type="text"
+            id="user"
+            class="form-input"
+            placeholder="ej: admin"
             autocomplete="username"
             required
-          >
+          />
         </div>
 
         <div class="form-group">
           <label for="pass" class="form-label">Contraseña</label>
-          <input 
-            type="password" 
-            id="pass" 
-            class="form-input" 
-            placeholder="••••••••" 
+          <input
+            type="password"
+            id="pass"
+            class="form-input"
+            placeholder="••••••••"
             autocomplete="current-password"
             required
+          />
+          <button
+            type="button"
+            id="toggle-password"
+            class="toggle-password"
+            aria-label="Mostrar u ocultar contraseña"
           >
-          <button type="button" id="toggle-password" class="toggle-password">👁️</button>
+            👁️
+          </button>
         </div>
 
         <div class="remember-me">
-          <input type="checkbox" id="remember" class="remember-checkbox" checked>
-          <label for="remember" class="remember-label">Recordar sesión en este dispositivo</label>
+          <input
+            type="checkbox"
+            id="remember"
+            class="remember-checkbox"
+            checked
+          />
+          <label for="remember" class="remember-label">
+            Recordar sesión en este dispositivo
+          </label>
         </div>
 
-        <div id="error-container" style="display: none;">
+        <!-- ERROR -->
+        <div id="error-container" style="display:none;">
           <div class="error-message">
-            <span>⚠️</span>
-            <span id="error-text">Credenciales inválidas. Intente nuevamente.</span>
+            <span>⚠</span>
+            <span id="error-text">
+              Credenciales inválidas.
+            </span>
           </div>
         </div>
 
-        <div id="offline-warning" style="display: none;">
+        <!-- OFFLINE -->
+        <div id="offline-warning" style="display:none;">
           <div class="warning-message">
             <span>🌐</span>
-            <span>Conexión al backend no disponible. Iniciando en modo offline.</span>
+            <span>
+              Backend no disponible. Intentando conexión.
+            </span>
           </div>
         </div>
 
         <button type="submit" id="submit-btn" class="submit-btn">
           <span id="btn-text">Ingresar al dashboard</span>
         </button>
+
       </form>
 
+      <!-- =========================
+           STATUS
+           ========================= -->
       <div class="system-status">
         <div class="status-online" id="status-indicator">
           <span class="status-indicator" id="connection-indicator"></span>
           <span id="connection-status">Verificando conexión...</span>
         </div>
       </div>
+
     </div>
 
+    <!-- =========================
+         FOOTER
+         ========================= -->
     <div class="footer">
-      <p>Proyecto open-source para acuicultura sostenible • <a href="https://github.com/t4t4n32/M_A_N_G_O" target="_blank">Ver código en GitHub</a></p>
+      <p>
+        Proyecto open-source para monitoreo oceánico •
+        <a
+          href="https://github.com/t4t4n32/M_A_N_G_O"
+          target="_blank"
+        >
+          GitHub
+        </a>
+      </p>
     </div>
+
   </div>
 
-  <script>
-    // =============== CONFIGURACIÓN ===============
-    const API_BASE = "http://localhost:5000/api";
-    const MAX_ATTEMPTS = 3;
-    let attemptCount = 0;
-    let lockoutTimer = null;
-    let isBackendOnline = true;
+  <!-- =========================
+       JS
+       ========================= -->
+  <script type="module" src="assets/js/api.service.js"></script>
+  <script type="module" src="assets/js/auth.js"></script>
 
-    // Credenciales fijas para modo offline
-    const OFFLINE_CREDS = {
-      username: "Admin",
-      password: "Admin"
-    };
-
-    // =============== ELEMENTOS DOM ===============
-    const form = document.getElementById('login-form');
-    const userField = document.getElementById('user');
-    const passField = document.getElementById('pass');
-    const togglePasswordBtn = document.getElementById('toggle-password');
-    const submitBtn = document.getElementById('submit-btn');
-    const btnText = document.getElementById('btn-text');
-    const errorContainer = document.getElementById('error-container');
-    const errorText = document.getElementById('error-text');
-    const offlineWarning = document.getElementById('offline-warning');
-    const connectionIndicator = document.getElementById('connection-indicator');
-    const connectionStatus = document.getElementById('connection-status');
-    const statusIndicator = document.getElementById('status-indicator');
-    const rememberCheckbox = document.getElementById('remember');
-
-    // =============== FUNCIONES ===============
-    function showError(message) {
-      errorText.textContent = message;
-      errorContainer.style.display = 'block';
-      
-      // Auto-ocultar después de 10 segundos
-      setTimeout(() => {
-        if (errorContainer.style.display === 'block') {
-          errorContainer.style.display = 'none';
-        }
-      }, 10000);
-    }
-
-    function showOfflineMode() {
-      isBackendOnline = false;
-      offlineWarning.style.display = 'block';
-      statusIndicator.className = 'status-offline';
-      connectionIndicator.className = 'status-indicator offline';
-      connectionStatus.textContent = 'Modo offline (datos simulados)';
-      submitBtn.classList.add('offline-mode');
-    }
-
-    function showOnlineMode() {
-      isBackendOnline = true;
-      offlineWarning.style.display = 'none';
-      statusIndicator.className = 'status-online';
-      connectionIndicator.className = 'status-indicator';
-      connectionStatus.textContent = 'Conexión estable al backend';
-      submitBtn.classList.remove('offline-mode');
-    }
-
-    function showLoading(state) {
-      if (state) {
-        btnText.textContent = 'Verificando credenciales...';
-        submitBtn.classList.add('loading');
-        submitBtn.disabled = true;
-      } else {
-        btnText.textContent = 'Ingresar al dashboard';
-        submitBtn.classList.remove('loading');
-        submitBtn.disabled = false;
-      }
-    }
-
-    function togglePasswordVisibility() {
-      const isPasswordVisible = passField.type === 'text';
-      passField.type = isPasswordVisible ? 'password' : 'text';
-      togglePasswordBtn.textContent = isPasswordVisible ? '👁️' : '🙈';
-    }
-
-    async function checkBackendStatus() {
-      try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 3000);
-        
-        const response = await fetch(`${API_BASE}/status`, {
-          method: 'GET',
-          mode: 'cors',
-          signal: controller.signal
-        });
-        
-        clearTimeout(timeoutId);
-        
-        if (!response.ok) {
-          throw new Error('Backend no responde');
-        }
-        
-        showOnlineMode();
-        return true;
-      } catch (error) {
-        console.warn('Backend offline:', error.message);
-        showOfflineMode();
-        return false;
-      }
-    }
-
-    async function loginUser(username, password) {
-      try {
-        // Si estamos offline, usar credenciales fijas
-        if (!isBackendOnline) {
-          if (username === OFFLINE_CREDS.username && password === OFFLINE_CREDS.password) {
-            // Guardar modo offline en localStorage
-            localStorage.setItem('mango_offline_mode', 'true');
-            localStorage.setItem('mango_user', username);
-            return true;
-          } else {
-            throw new Error('Credenciales inválidas en modo offline');
-          }
-        }
-
-        // Si estamos online, intentar autenticación real
-        const response = await fetch(`${API_BASE}/auth/login`, {
-          method: 'POST',
-          headers: { 
-            'Content-Type': 'application/json',
-            'X-Requested-With': 'XMLHttpRequest'
-          },
-          body: JSON.stringify({ 
-            username, 
-            password,
-            remember: rememberCheckbox.checked
-          }),
-          credentials: 'include'  // ¡CRÍTICO PARA COOKIES!
-        });
-
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
-          throw new Error(errorData.message || `Error ${response.status}`);
-        }
-
-        const data = await response.json();
-        
-        // Guardar preferencias
-        if (rememberCheckbox.checked) {
-          localStorage.setItem('mango_remember', 'true');
-          localStorage.setItem('mango_username', username);
-        }
-        
-        localStorage.setItem('mango_offline_mode', 'false');
-        localStorage.setItem('mango_user', username);
-        
-        return true;
-      } catch (error) {
-        attemptCount++;
-        
-        if (attemptCount >= MAX_ATTEMPTS) {
-          handleLockout();
-        }
-        
-        // Si es modo offline y falla, mostrar mensaje específico
-        if (!isBackendOnline) {
-          showError('Credenciales inválidas. Usuario: "Admin", Contraseña: "Admin"');
-        } else {
-          showError(`Error: ${error.message}. Verifica consola para detalles.`);
-          console.error('Error detallado:', error);
-        }
-        return false;
-      }
-    }
-
-    function handleLockout() {
-      showError(`Demasiados intentos fallidos. Espere 30 segundos.`);
-      submitBtn.disabled = true;
-      
-      // Temporizador de bloqueo
-      let remaining = 30;
-      const timer = setInterval(() => {
-        if (remaining <= 0) {
-          clearInterval(timer);
-          submitBtn.disabled = false;
-          attemptCount = 0;
-          errorContainer.style.display = 'none';
-        } else {
-          btnText.textContent = `Esperando ${remaining}s...`;
-          remaining--;
-        }
-      }, 1000);
-    }
-
-    function generateSimulatedData() {
-      const now = new Date().toISOString();
-      return {
-        ph: {
-          raw: 720 + Math.floor(Math.random() * 30),  // 720-750
-          voltage: parseFloat((3.5 + Math.random() * 0.3).toFixed(3)),  // 3.5-3.8V
-          received_at: now,
-          status: 'raw_unprocessed',
-          calibration_status: 'uncalibrated'
-        },
-        temperature: {
-          raw: 255 + Math.floor(Math.random() * 10),  // 255-265
-          value: parseFloat((25.5 + Math.random() * 0.5).toFixed(1)),  // 25.5-26.0°C
-          received_at: now,
-          status: 'calibrated',
-          calibration_status: 'calibrated'
-        },
-        turbidity: {
-          raw: 300 + Math.floor(Math.random() * 200),  // 300-500
-          received_at: now,
-          status: 'raw_unprocessed',
-          calibration_status: 'uncalibrated'
-        }
-      };
-    }
-
-    // =============== EVENT LISTENERS ===============
-    togglePasswordBtn.addEventListener('click', togglePasswordVisibility);
-
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      
-      // Validación básica
-      const username = userField.value.trim();
-      const password = passField.value.trim();
-      
-      if (!username || !password) {
-        showError('Por favor ingrese usuario y contraseña');
-        return;
-      }
-      
-      // Mostrar estado de carga
-      showLoading(true);
-      
-      // Intentar login
-      const success = await loginUser(username, password);
-      
-      if (success) {
-        // Redirigir al dashboard
-        window.location.href = 'dashboard.html';
-      }
-      
-      // Ocultar estado de carga
-      showLoading(false);
-    });
-
-    // Soporte para tecla Enter
-    [userField, passField].forEach(field => {
-      field.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-          form.requestSubmit();
-        }
-      });
-    });
-
-    // =============== INICIALIZACIÓN ===============
-    async function initPage() {
-      // Cargar preferencias guardadas
-      if (localStorage.getItem('mango_remember') === 'true') {
-        const savedUser = localStorage.getItem('mango_username');
-        if (savedUser) {
-          userField.value = savedUser;
-          rememberCheckbox.checked = true;
-        }
-      }
-      
-      // Rellenar credenciales por defecto
-      if (!userField.value) {
-        userField.value = 'Admin';
-        passField.value = 'Admin';
-      }
-      
-      // Auto-focus en campo de contraseña
-      passField.focus();
-      
-      // Diagnóstico de conexión al cargar
-      await checkBackendStatus();
-      
-      // Inicializar datos simulados para modo offline
-      if (!localStorage.getItem('mango_simulated_data')) {
-        localStorage.setItem('mango_simulated_data', JSON.stringify(generateSimulatedData()));
-      }
-    }
-
-    // Ejecutar al cargar la página
-    document.addEventListener('DOMContentLoaded', initPage);
-  </script>
 </body>
 </html>

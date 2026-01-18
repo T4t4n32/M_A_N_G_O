@@ -1,0 +1,132 @@
+<!-- =========================
+     index.html — M.A.N.G.O
+     ========================= -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>M.A.N.G.O — Plataforma de Monitoreo Oceánico</title>
+  <meta name="description" content="M.A.N.G.O — Monitoreo Autónomo de Niveles y Gestión Oceánica" />
+
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌊</text></svg>">
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="assets/css/styles.css" />
+</head>
+
+<body>
+
+  <!-- =========================
+       HEADER
+       ========================= -->
+  <header class="main-header">
+    <div class="header-left">
+      <span class="logo-icon">🌊</span>
+      <h1 class="logo-text">M.A.N.G.O</h1>
+    </div>
+
+    <nav class="header-nav">
+      <a href="#about">Proyecto</a>
+      <a href="#sensors">Sensores</a>
+      <a href="#status">Estado</a>
+      <a href="login.html" class="login-btn">Acceder</a>
+    </nav>
+  </header>
+
+  <!-- =========================
+       HERO
+       ========================= -->
+  <section class="hero">
+    <div class="hero-content">
+      <h2>
+        Monitoreo Autónomo de Niveles<br />
+        y Gestión Oceánica
+      </h2>
+      <p>
+        Plataforma abierta para la observación ambiental en ecosistemas marinos
+        y manglares de Colombia.
+      </p>
+      <div class="hero-actions">
+        <a href="login.html" class="primary-btn">Ir al Dashboard</a>
+        <a href="#about" class="secondary-btn">Conocer el Proyecto</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- =========================
+       ABOUT
+       ========================= -->
+  <section id="about" class="section">
+    <h3>¿Qué es M.A.N.G.O?</h3>
+    <p>
+      M.A.N.G.O es un sistema de monitoreo ambiental diseñado para recopilar,
+      visualizar y analizar datos reales provenientes de sensores desplegados
+      en ecosistemas oceánicos y costeros.
+    </p>
+    <p>
+      El proyecto prioriza la transparencia: si no existen datos disponibles,
+      el sistema lo indicará explícitamente.
+    </p>
+  </section>
+
+  <!-- =========================
+       SENSORS
+       ========================= -->
+  <section id="sensors" class="section sensors">
+    <h3>Sensores del Sistema</h3>
+
+    <div class="sensor-grid">
+
+      <div class="sensor-card">
+        <h4>Sensor 1</h4>
+        <p class="sensor-desc">Parámetro ambiental primario</p>
+        <p class="sensor-status no-data">Sin datos disponibles</p>
+      </div>
+
+      <div class="sensor-card">
+        <h4>Sensor 2</h4>
+        <p class="sensor-desc">Parámetro ambiental secundario</p>
+        <p class="sensor-status no-data">Sin datos disponibles</p>
+      </div>
+
+      <div class="sensor-card">
+        <h4>Sensor 3</h4>
+        <p class="sensor-desc">Parámetro ambiental terciario</p>
+        <p class="sensor-status no-data">Sin datos disponibles</p>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- =========================
+       STATUS
+       ========================= -->
+  <section id="status" class="section status-section">
+    <h3>Estado del Sistema</h3>
+
+    <div class="status-box">
+      <span class="status-indicator offline"></span>
+      <span class="status-text">
+        Backend no conectado — esperando datos reales
+      </span>
+    </div>
+  </section>
+
+  <!-- =========================
+       FOOTER
+       ========================= -->
+  <footer class="main-footer">
+    <p>
+      © 2026 — M.A.N.G.O • Proyecto open-source
+    </p>
+    <p>
+      <a href="https://github.com/t4t4n32/M_A_N_G_O" target="_blank">
+        Repositorio en GitHub
+      </a>
+    </p>
+  </footer>
+
+</body>
+</html>
