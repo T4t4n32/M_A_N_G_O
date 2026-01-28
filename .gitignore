@@ -1,2 +1,12 @@
-.aider*
-backend/.env
+# Entornos virtuales
+backend/venv/
+venv/
+ENV/
+
+# Python cache
+**/__pycache__/
+*.py[cod]
+*$py.class
+
+# Variables de entorno
+.env
