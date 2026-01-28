@@ -1,104 +1,180 @@
+<!-- frontend/dashboard.html -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
-  <title>M.A.N.G.O — Dashboard de Monitoreo</title>
-
-  <meta name="description"
-    content="Dashboard de monitoreo en tiempo real de variables oceánicas — Proyecto M.A.N.G.O" />
-
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌊</text></svg>">
-
-  <!-- Estilos -->
-  <link rel="stylesheet" href="assets/css/dashboard.css" />
-
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>M.A.N.G.O - Dashboard de Monitoreo</title>
+  <meta name="description" content="Dashboard de monitoreo en tiempo real de variables oceánicas">
+  
+  <!-- Favicon -->
+  <link rel="icon" href="image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌊</text></svg>">
+  
+  <!-- CSS -->
+  <link rel="stylesheet" href="assets/css/dashboard.css">
+  
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
   <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/luxon@3/build/global/luxon.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon"></script>
+  <script src="https://cdn.jsdelivr.net/npm/luxon@3.4.3/build/global/luxon.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon@1.3.1"></script>
 </head>
-
 <body>
-
-  <!-- HEADER -->
+  <!-- Header -->
   <header class="dashboard-header">
-    <div class="header-left">
-      <h1>M.A.N.G.O</h1>
-      <span class="subtitle">Monitoreo Autónomo de Niveles y Gestión Oceánica</span>
-    </div>
-
-    <div class="header-right">
-      <div class="connection-status">
-        <span id="main-status-indicator" class="status-indicator offline"></span>
-        <span id="main-status-text">Sensores: Desconectados</span>
+    <div class="container">
+      <div class="header-content">
+        <div class="logo">
+          <span class="wave-icon">🌊</span>
+          <h1>M.A.N.G.O</h1>
+          <p class="subtitle">Dashboard de Monitoreo en Tiempo Real</p>
+        </div>
+        <div class="header-actions">
+          <div class="connection-status" id="connection-status">
+            <span class="status-indicator" id="status-indicator"></span>
+            <span id="status-text">Verificando conexión...</span>
+          </div>
+          <button id="refresh-btn" class="btn refresh-btn" title="Actualizar datos">
+            <i class="fas fa-sync"></i>
+          </button>
+          <button id="logout-btn" class="btn logout-btn" title="Cerrar sesión">
+            <i class="fas fa-sign-out-alt"></i>
+          </button>
+        </div>
       </div>
-
-      <div class="connection-status">
-        <span id="database-status-indicator" class="status-indicator offline"></span>
-        <span id="database-status-text">Base de datos: No configurada</span>
-      </div>
-
-      <button class="logout-btn" title="Cerrar sesión">Salir</button>
     </div>
   </header>
 
-  <!-- ALERTAS DEL SISTEMA -->
-  <section class="alerts-container">
-    <!-- Se generan dinámicamente -->
-  </section>
-
-  <!-- INFO GENERAL -->
-  <section class="system-info">
-    <div class="info-card">
-      <span class="label">Estado del sistema</span>
-      <span id="system-state" class="offline">Inicializando…</span>
-    </div>
-
-    <div class="info-card">
-      <span class="label">Última actualización</span>
-      <span id="last-update-time">—</span>
-    </div>
-
-    <div class="info-card">
-      <span class="label">Exploración</span>
-      <span id="exploration-text">Modo monitoreo en tiempo real</span>
-    </div>
-
-    <div class="info-card actions">
-      <button id="refresh-btn" class="action-btn primary">
-        🔄 Verificar estado
-      </button>
-      <button id="historical-btn" class="action-btn offline">
-        📊 Historial
-      </button>
+  <!-- Hero Section -->
+  <section class="hero dashboard-hero">
+    <div class="container">
+      <h2>📊 Dashboard de Monitoreo Ambiental</h2>
+      <p class="hero-text">Datos en tiempo real de los sensores desplegados en manglares colombianos</p>
     </div>
   </section>
 
-  <!-- SENSORES -->
-  <main class="sensors-section">
-    <h2>Variables monitoreadas</h2>
+  <!-- Alertas del Sistema -->
+  <section class="alerts-container" id="alerts-container">
+    <!-- Alertas se generarán dinámicamente -->
+  </section>
 
-    <div id="sensors-container" class="sensors-grid">
-      <!-- Las 3 tarjetas se renderizan siempre desde dashboard.js -->
+  <!-- Resumen del Sistema -->
+  <section class="section dashboard-section">
+    <div class="container">
+      <div class="system-summary">
+        <div class="summary-card">
+          <div class="summary-icon temp">
+            <i class="fas fa-thermometer-half"></i>
+          </div>
+          <div class="summary-content">
+            <span class="summary-label">Temperatura Actual</span>
+            <span class="summary-value" id="temp-value">--</span>
+            <span class="summary-unit">°C</span>
+            <span class="summary-trend" id="temp-trend"></span>
+          </div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-icon ph">
+            <i class="fas fa-tint"></i>
+          </div>
+          <div class="summary-content">
+            <span class="summary-label">pH Actual</span>
+            <span class="summary-value" id="ph-value">--</span>
+            <span class="summary-unit"></span>
+            <span class="summary-trend" id="ph-trend"></span>
+          </div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-icon turbidity">
+            <i class="fas fa-water"></i>
+          </div>
+          <div class="summary-content">
+            <span class="summary-label">Turbidez Actual</span>
+            <span class="summary-value" id="turbidity-value">--</span>
+            <span class="summary-unit">NTU</span>
+            <span class="summary-trend" id="turbidity-trend"></span>
+          </div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-icon time">
+            <i class="fas fa-clock"></i>
+          </div>
+          <div class="summary-content">
+            <span class="summary-label">Última Actualización</span>
+            <span class="summary-value" id="last-update">--:--</span>
+            <span class="summary-unit"></span>
+            <span class="summary-trend" id="update-trend"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Gráficos -->
+      <div class="charts-container">
+        <div class="chart-card">
+          <h3 class="chart-title">
+            <i class="fas fa-thermometer-half"></i> Temperatura del Agua
+          </h3>
+          <div class="chart-wrapper">
+            <canvas id="temp-chart"></canvas>
+          </div>
+        </div>
+        <div class="chart-card">
+          <h3 class="chart-title">
+            <i class="fas fa-tint"></i> Nivel de pH
+          </h3>
+          <div class="chart-wrapper">
+            <canvas id="ph-chart"></canvas>
+          </div>
+        </div>
+        <div class="chart-card">
+          <h3 class="chart-title">
+            <i class="fas fa-water"></i> Turbidez
+          </h3>
+          <div class="chart-wrapper">
+            <canvas id="turbidity-chart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Información Adicional -->
+      <div class="info-section">
+        <div class="info-card">
+          <h3><i class="fas fa-info-circle"></i> Información del Sistema</h3>
+          <p><strong>Estado:</strong> <span id="system-state">Inicializando...</span></p>
+          <p><strong>Modo:</strong> <span id="system-mode">Monitoreo en tiempo real</span></p>
+          <p><strong>Sensores Activos:</strong> <span id="active-sensors">0/3</span></p>
+          <p><strong>Último Mantenimiento:</strong> <span id="last-maintenance">2026-01-15</span></p>
+        </div>
+        <div class="info-card">
+          <h3><i class="fas fa-exclamation-triangle"></i> Notas Importantes</h3>
+          <ul>
+            <li>Los datos mostrados son 100% reales, no hay simulaciones</li>
+            <li>Si los sensores están offline, se muestran los últimos datos históricos</li>
+            <li>El sistema se actualiza cada 30 segundos</li>
+            <li>Los datos se almacenan para análisis histórico</li>
+          </ul>
+        </div>
+      </div>
     </div>
-  </main>
+  </section>
 
-  <!-- NOTIFICACIONES -->
-  <div id="notification-container"></div>
-
-  <!-- FOOTER -->
-  <footer class="dashboard-footer">
-    <p>
-      M.A.N.G.O — Datos reales • Sin simulaciones • Proyecto open-source
-    </p>
+  <!-- Footer -->
+  <footer class="main-footer">
+    <div class="container">
+      <p>© 2026 M.A.N.G.O - Dashboard Público</p>
+      <p>Datos reales • Sin simulaciones • Total transparencia</p>
+      <p>
+        <a href="index.html"><i class="fas fa-home"></i> Página Principal</a> • 
+        <a href="gallery.html"><i class="fas fa-images"></i> Galería</a> • 
+        <a href="https://github.com/T4t4n32/M_A_N_G_O" target="_blank"><i class="fab fa-github"></i> GitHub</a>
+      </p>
+    </div>
   </footer>
 
-  <!-- JS -->
-  <script src="assets/js/utils.js"></script>
-  <script src="assets/js/api.service.js"></script>
+  <!-- JavaScript -->
+  <script src="assets/js/api.js"></script>
   <script src="assets/js/dashboard.js"></script>
-
 </body>
 </html>
