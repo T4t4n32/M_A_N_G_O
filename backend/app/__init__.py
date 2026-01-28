@@ -1,190 +1,164 @@
-from flask import Flask, session, jsonify
+# backend/app/__init__.py
+"""
+M.A.N.G.O - Monitoreo Autónomo de Niveles y Gestión Oceánica
+Backend API Flask
+"""
+from flask import Flask, jsonify
 from flask_cors import CORS
-from datetime import datetime, timedelta
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
+from flask_sqlalchemy import SQLAlchemy
+from flask_migrate import Migrate
+import logging
+from logging.handlers import RotatingFileHandler
+import os
+from datetime import datetime
 
-def create_app():
+# Inicializar extensiones
+db = SQLAlchemy()
+migrate = Migrate()
+limiter = None
+
+def create_app(config_name='default'):
+    """Factory pattern para crear la aplicación Flask"""
     app = Flask(__name__)
     
-    # Configuración de secret key
-    app.secret_key = 'mango_secret_key_2026'  # ¡Cambiar en producción!
+    # Cargar configuración
+    from .config import config
+    app.config.from_object(config[config_name])
     
-    # Configuración de sesión - OPTIMIZADA
-    app.config.update(
-        SESSION_COOKIE_SECURE=False,  # False en desarrollo
-        SESSION_COOKIE_HTTPONLY=False,  # False para frontend
-        SESSION_COOKIE_SAMESITE='Lax',
-        PERMANENT_SESSION_LIFETIME=timedelta(days=30)  # Sesiones más persistentes
+    # Inicializar extensiones
+    db.init_app(app)
+    migrate.init_app(app, db)
+    
+    # Configurar CORS
+    if app.config['CORS_ENABLED']:
+        CORS(app, resources={
+            r"/api/*": {
+                "origins": app.config['ALLOWED_ORIGINS'],
+                "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+                "allow_headers": ["Content-Type", "Authorization"],
+                "supports_credentials": True
+            }
+        })
+    
+    # Configurar Rate Limiting
+    global limiter
+    limiter = Limiter(
+        app=app,
+        key_func=get_remote_address,
+        default_limits=[app.config['API_RATE_LIMIT']],
+        storage_uri=app.config['RATELIMIT_STORAGE_URI']
     )
     
-    # Configuración robusta de CORS - MEJORADA
-    CORS(app, resources={
-        r"/api/*": {
-            "origins": [
-                "http://localhost:7000", 
-                "http://127.0.0.1:7000",
-                "http://localhost:7001",  # Para posibles futuros puertos
-                "http://127.0.0.1:7001"
-            ],
-            "methods": ["GET", "POST", "OPTIONS", "PUT", "DELETE"],
-            "allow_headers": [
-                "Content-Type", 
-                "Authorization", 
-                "X-Requested-With",
-                "Accept"
-            ],
-            "supports_credentials": True,
-            "expose_headers": ["Set-Cookie", "Authorization"],
-            "max_age": 86400  # 24 horas de caché para preflight
-        }
-    })
+    # Configurar logging
+    configure_logging(app)
     
-    # Importar blueprints - ¡AGREGADO HISTORICAL!
-    from .routes.auth import auth_bp
-    from .routes.ph import ph_bp
-    from .routes.temperature import temperature_bp
-    from .routes.turbidity import turbidity_bp
-    from .routes.historical import historical_bp  # ¡NUEVO BLUEPRINT!
-    from .routes.health import health_bp  # Para monitoreo de salud
+    # Registrar blueprints
+    register_blueprints(app)
     
-    # Registrar blueprints - ¡REGISTRAR HISTORICAL!
-    app.register_blueprint(auth_bp)
-    app.register_blueprint(ph_bp)
-    app.register_blueprint(temperature_bp)
-    app.register_blueprint(turbidity_bp)
-    app.register_blueprint(historical_bp)  # ¡REGISTRADO!
-    app.register_blueprint(health_bp)
+    # Registrar manejadores de errores
+    register_error_handlers(app)
     
-    # Ruta de bienvenida - MEJORADA
-    @app.route('/')
-    def welcome():
-        return jsonify({
-            'message': '🌿 M.A.N.G.O Backend API - Monitoreo de Manglares',
-            'status': 'online',
-            'version': '1.1.0',
-            'endpoints': {
-                'authentication': {
-                    'login': '/api/auth/login',
-                    'logout': '/api/auth/logout',
-                    'status': '/api/auth/status'
-                },
-                'sensors': {
-                    'ph_latest': '/api/ph/latest',
-                    'temperature_latest': '/api/temperature/latest',
-                    'turbidity_latest': '/api/turbidity/latest'
-                },
-                'historical': {
-                    'latest': '/api/historical/latest',
-                    'range': '/api/historical/range'  # Para futuro
-                },
-                'system': {
-                    'status': '/api/status',
-                    'health': '/api/health'
-                }
-            },
-            'frontend': {
-                'login': 'http://localhost:7000/login.html',
-                'dashboard': 'http://localhost:7000/dashboard.html'
-            },
-            'documentation': 'https://github.com/t4t4n32/M_A_N_G_O/docs'
-        })
+    # Crear tablas en la base de datos
+    with app.app_context():
+        db.create_all()
+    
+    return app
 
-    # Ruta de estado del sistema - MEJORADA
-    @app.route('/api/status')
-    def system_status():
-        return jsonify({
-            'backend': 'online',
-            'version': '1.1.0',
-            'timestamp': datetime.now().isoformat(),
-            'server_time': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-            'environment': 'development',
-            'components': {
-                'sensors': {
-                    'status': 'operational',
-                    'available': ['ph', 'temperature', 'turbidity'],
-                    'last_update': datetime.now().isoformat()
-                },
-                'database': {
-                    'status': 'operational',
-                    'type': 'simulated',  # Para producción: 'sqlite' o 'postgresql'
-                    'historical_data': 'available'
-                },
-                'authentication': {
-                    'status': 'enabled',
-                    'method': 'session_cookies'
-                }
-            },
-            'uptime': '00:00:00'  # Para implementar en producción
-        })
+def configure_logging(app):
+    """Configurar sistema de logging"""
+    # Crear directorio de logs si no existe
+    log_dir = os.path.dirname(app.config['LOG_FILE'])
+    if not os.path.exists(log_dir):
+        os.makedirs(log_dir)
     
-    # Ruta de exploración - ¡NUEVA!
-    @app.route('/api/exploration/status')
-    def exploration_status():
-        """Verifica si hay datos históricos disponibles (exploración realizada)"""
-        try:
-            # Importar aquí para evitar importación circular
-            from .services.sensor_store import sensor_store
-            
-            has_data = False
-            # Verificar si hay datos históricos en cualquier sensor
-            for sensor_type in ['ph', 'temperature', 'turbidity']:
-                if sensor_store.get_historical_count(sensor_type) > 0:
-                    has_data = True
-                    break
-            
-            status = "performed" if has_data else "not_performed"
-            message = "Exploración realizada - datos históricos disponibles" if has_data else "No hay mediciones previas - Exploración no realizada"
-            
-            return jsonify({
-                'status': status,
-                'message': message,
-                'has_historical_data': has_data,
-                'timestamp': datetime.now().isoformat()
-            })
-        except Exception as e:
-            return jsonify({
-                'status': 'error',
-                'message': f'Error verificando estado de exploración: {str(e)}',
-                'has_historical_data': False,
-                'timestamp': datetime.now().isoformat()
-            }), 500
+    # Configurar handler de archivo
+    file_handler = RotatingFileHandler(
+        app.config['LOG_FILE'],
+        maxBytes=10*1024*1024,  # 10 MB
+        backupCount=10
+    )
+    file_handler.setLevel(getattr(logging, app.config['LOG_LEVEL']))
+    file_formatter = logging.Formatter(
+        '%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]'
+    )
+    file_handler.setFormatter(file_formatter)
     
-    # Manejador de errores global - ¡NUEVO!
+    # Configurar handler de consola
+    console_handler = logging.StreamHandler()
+    console_handler.setLevel(logging.INFO)
+    console_formatter = logging.Formatter('%(levelname)s: %(message)s')
+    console_handler.setFormatter(console_formatter)
+    
+    # Agregar handlers a la app
+    app.logger.addHandler(file_handler)
+    app.logger.addHandler(console_handler)
+    app.logger.setLevel(getattr(logging, app.config['LOG_LEVEL']))
+    
+    app.logger.info('M.A.N.G.O Backend logging configurado')
+
+def register_blueprints(app):
+    """Registrar todos los blueprints de la aplicación"""
+    # Importar blueprints
+    from .routes.auth import auth_bp
+    from .routes.sensors import sensors_bp
+    from .routes.historical import historical_bp
+    from .routes.health import health_bp
+    
+    # Registrar blueprints con prefijo
+    app.register_blueprint(auth_bp, url_prefix='/api/auth')
+    app.register_blueprint(sensors_bp, url_prefix='/api/sensors')
+    app.register_blueprint(historical_bp, url_prefix='/api/historical')
+    app.register_blueprint(health_bp, url_prefix='/api')
+
+def register_error_handlers(app):
+    """Registrar manejadores de errores globales"""
+    
     @app.errorhandler(404)
     def not_found_error(error):
+        """Error 404 - Recurso no encontrado"""
+        app.logger.warning(f'404 Error: {request.path}')
         return jsonify({
-            'error': 'Resource not found',
-            'message': 'El endpoint solicitado no existe',
-            'timestamp': datetime.now().isoformat(),
-            'documentation': 'https://github.com/t4t4n32/M_A_N_G_O/docs/api'
+            'error': 'Recurso no encontrado',
+            'message': f'La ruta {request.path} no existe',
+            'timestamp': datetime.now().isoformat()
         }), 404
+    
+    @app.errorhandler(401)
+    def unauthorized_error(error):
+        """Error 401 - No autorizado"""
+        return jsonify({
+            'error': 'No autorizado',
+            'message': 'Debe iniciar sesión para acceder a este recurso',
+            'timestamp': datetime.now().isoformat()
+        }), 401
+    
+    @app.errorhandler(403)
+    def forbidden_error(error):
+        """Error 403 - Acceso denegado"""
+        return jsonify({
+            'error': 'Acceso denegado',
+            'message': 'No tiene permisos suficientes para esta acción',
+            'timestamp': datetime.now().isoformat()
+        }), 403
+    
+    @app.errorhandler(429)
+    def rate_limit_error(error):
+        """Error 429 - Límite de peticiones excedido"""
+        return jsonify({
+            'error': 'Límite de peticiones excedido',
+            'message': 'Demasiadas solicitudes. Por favor, espere antes de intentar nuevamente',
+            'retry_after': 60,
+            'timestamp': datetime.now().isoformat()
+        }), 429
     
     @app.errorhandler(500)
     def internal_error(error):
+        """Error 500 - Error interno del servidor"""
+        app.logger.error(f'500 Error: {str(error)}')
         return jsonify({
-            'error': 'Internal server error',
-            'message': 'Error interno del servidor',
-            'timestamp': datetime.now().isoformat(),
-            'contact_admin': True
+            'error': 'Error interno del servidor',
+            'message': 'Ocurrió un error inesperado. Por favor, intente nuevamente más tarde',
+            'timestamp': datetime.now().isoformat()
         }), 500
-    
-    # Ruta de limpieza de caché - Para desarrollo
-    @app.route('/api/clear-cache')
-    def clear_cache():
-        """Limpia cachés para desarrollo"""
-        try:
-            # Limpiar caché de sensor_store
-            from .services.sensor_store import sensor_store
-            sensor_store.clear_cache()
-            
-            return jsonify({
-                'message': 'Caché limpiado exitosamente',
-                'timestamp': datetime.now().isoformat()
-            })
-        except Exception as e:
-            return jsonify({
-                'error': str(e),
-                'message': 'Error limpiando caché',
-                'timestamp': datetime.now().isoformat()
-            }), 500
-    
-    return app

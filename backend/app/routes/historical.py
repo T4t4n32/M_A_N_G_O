@@ -1,101 +1,133 @@
-from flask import Blueprint, jsonify
-from datetime import datetime
-from ..services.sensor_store import sensor_store
+# backend/app/routes/historical.py
+"""
+Rutas para datos históricos
+"""
+from flask import Blueprint, jsonify, request
+from datetime import datetime, timedelta
+from ..services.historical_data import HistoricalDataService
 
-historical_bp = Blueprint('historical', __name__, url_prefix='/api/historical')
+historical_bp = Blueprint('historical', __name__)
 
-@historical_bp.route('/latest')
-def get_latest_historical_data():
+@historical_bp.route('/latest', methods=['GET'])
+def get_latest_historical():
     """
-    Endpoint para obtener los últimos datos históricos de todos los sensores
-    NO genera datos simulados - devuelve error 404 si no hay datos reales
+    Obtener los últimos datos históricos de todos los sensores
     """
     try:
-        result = {}
-        has_any_data = False
+        limit = request.args.get('limit', 10, type=int)
+        sensor_type = request.args.get('sensor_type', 'all')
         
-        # Verificar datos históricos para cada sensor
-        for sensor_type in ['ph', 'temperature', 'turbidity']:
-            # Obtener datos históricos reales (no simulados)
-            historical_data = sensor_store.get_historical_data(sensor_type, limit=1)
-            
-            if historical_data and len(historical_data) > 0:
-                has_any_data = True
-                last_record = historical_data[0]
-                
-                # Formatear datos para el frontend
-                formatted_data = {
-                    'value': last_record.get('value', last_record.get('raw', 0)),
-                    'timestamp': last_record.get('timestamp', last_record.get('received_at')),
-                    'source': 'historical_database',
-                    'quality': last_record.get('data_quality', 'historical'),
-                    'raw_value': last_record.get('raw', None),
-                    'notes': last_record.get('notes', 'Dato histórico real')
-                }
-                result[sensor_type] = formatted_data
-        
-        # Si no hay ningún dato histórico
-        if not has_any_data:
+        if sensor_type == 'all':
+            # Obtener datos de todos los sensores
+            results = {}
+            for st in ['ph', 'temperature', 'turbidity']:
+                data = HistoricalDataService.get_latest_readings(st, limit=limit)
+                results[st] = data
             return jsonify({
-                'message': 'No hay mediciones históricas disponibles',
-                'exploration_status': 'not_performed',
-                'reason': 'No se han realizado mediciones en el manglar',
-                'recommendation': 'Contacte al administrador para realizar la primera exploración',
+                'data': results,
+                'count': sum(len(v) for v in results.values()),
                 'timestamp': datetime.now().isoformat()
-            }), 404
-        
-        # Si hay datos, devolverlos con metadatos
-        result['exploration_status'] = 'performed'
-        result['data_count'] = len(result) - 1  # -1 porque exploration_status no cuenta
-        result['timestamp'] = datetime.now().isoformat()
-        result['message'] = 'Datos históricos recuperados exitosamente'
-        
-        return jsonify(result)
-        
+            }), 200
+        else:
+            if sensor_type not in ['ph', 'temperature', 'turbidity']:
+                return jsonify({
+                    'error': 'Sensor no válido',
+                    'message': 'Tipo de sensor debe ser: ph, temperature, turbidity o all',
+                    'timestamp': datetime.now().isoformat()
+                }), 400
+            
+            data = HistoricalDataService.get_latest_readings(sensor_type, limit=limit)
+            return jsonify({
+                'sensor_type': sensor_type,
+                'data': data,
+                'count': len(data),
+                'timestamp': datetime.now().isoformat()
+            }), 200
+            
     except Exception as e:
-        error_message = f"Error obteniendo datos históricos: {str(e)}"
-        print(f"🔥 {error_message}")  # Log en servidor
         return jsonify({
-            'error': str(e),
-            'exploration_status': 'error',
-            'message': error_message,
+            'error': 'Error interno del servidor',
+            'message': str(e),
             'timestamp': datetime.now().isoformat()
         }), 500
 
-@historical_bp.route('/status')
-def historical_status():
+@historical_bp.route('/range', methods=['GET'])
+def get_historical_range():
     """
-    Verifica si hay datos históricos disponibles sin devolver los datos mismos
+    Obtener datos históricos en un rango de tiempo
+    Query params: start_time, end_time, sensor_type
     """
     try:
-        has_data = False
-        sensors_with_data = []
+        start_time_str = request.args.get('start_time')
+        end_time_str = request.args.get('end_time')
+        sensor_type = request.args.get('sensor_type', 'all')
         
-        for sensor_type in ['ph', 'temperature', 'turbidity']:
-            count = sensor_store.get_historical_count(sensor_type)
-            if count > 0:
-                has_data = True
-                sensors_with_data.append({
-                    'sensor': sensor_type,
-                    'count': count,
-                    'last_update': sensor_store.get_last_historical_update(sensor_type)
-                })
+        if not start_time_str or not end_time_str:
+            return jsonify({
+                'error': 'Parámetros incompletos',
+                'message': 'Se requieren start_time y end_time en formato ISO 8601',
+                'timestamp': datetime.now().isoformat()
+            }), 400
         
-        status = "performed" if has_data else "not_performed"
-        message = "Exploración realizada - datos históricos disponibles" if has_data else "No hay mediciones previas - Exploración no realizada"
+        # Parsear fechas
+        start_time = datetime.fromisoformat(start_time_str.replace('Z', '+00:00'))
+        end_time = datetime.fromisoformat(end_time_str.replace('Z', '+00:00'))
         
-        return jsonify({
-            'status': status,
-            'message': message,
-            'has_historical_data': has_data,
-            'sensors_with_data': sensors_with_data,
-            'total_sensors': len(sensors_with_data),
-            'timestamp': datetime.now().isoformat()
-        })
+        # Validar rango
+        if end_time <= start_time:
+            return jsonify({
+                'error': 'Rango de tiempo inválido',
+                'message': 'end_time debe ser posterior a start_time',
+                'timestamp': datetime.now().isoformat()
+            }), 400
+        
+        # Limitar rango máximo a 30 días
+        if (end_time - start_time).days > 30:
+            return jsonify({
+                'error': 'Rango demasiado grande',
+                'message': 'El rango máximo permitido es de 30 días',
+                'timestamp': datetime.now().isoformat()
+            }), 400
+        
+        if sensor_type == 'all':
+            results = {}
+            for st in ['ph', 'temperature', 'turbidity']:
+                data = HistoricalDataService.get_readings_by_range(st, start_time, end_time)
+                results[st] = data
+            return jsonify({
+                'data': results,
+                'range': {
+                    'start': start_time.isoformat(),
+                    'end': end_time.isoformat(),
+                    'duration_hours': (end_time - start_time).total_seconds() / 3600
+                },
+                'count': sum(len(v) for v in results.values()),
+                'timestamp': datetime.now().isoformat()
+            }), 200
+        else:
+            if sensor_type not in ['ph', 'temperature', 'turbidity']:
+                return jsonify({
+                    'error': 'Sensor no válido',
+                    'message': 'Tipo de sensor debe ser: ph, temperature, turbidity o all',
+                    'timestamp': datetime.now().isoformat()
+                }), 400
+            
+            data = HistoricalDataService.get_readings_by_range(sensor_type, start_time, end_time)
+            return jsonify({
+                'sensor_type': sensor_type,
+                'data': data,
+                'range': {
+                    'start': start_time.isoformat(),
+                    'end': end_time.isoformat(),
+                    'duration_hours': (end_time - start_time).total_seconds() / 3600
+                },
+                'count': len(data),
+                'timestamp': datetime.now().isoformat()
+            }), 200
+            
     except Exception as e:
         return jsonify({
-            'status': 'error',
-            'message': f'Error verificando estado histórico: {str(e)}',
-            'has_historical_data': False,
+            'error': 'Error interno del servidor',
+            'message': str(e),
             'timestamp': datetime.now().isoformat()
         }), 500

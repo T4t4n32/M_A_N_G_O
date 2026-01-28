@@ -1,186 +1,105 @@
-import time
-import random
-from datetime import datetime
+# backend/app/services/sensor_store.py
+"""
+Almacenamiento en memoria de datos de sensores
+"""
+import threading
+from datetime import datetime, timedelta
+from collections import deque
 
 class SensorStore:
-    _instance = None
+    """Almacena datos de sensores en memoria con caché persistente"""
     
-    def __new__(cls):
-        if cls._instance is None:
-            cls._instance = super(SensorStore, cls).__new__(cls)
-            cls._instance._data = {}
-            cls._instance._raw_data = {}  # Almacena datos crudos del hardware
-            cls._instance.simulation_mode = False  # False para datos reales
-            cls._instance.last_update = {}
-        return cls._instance
-    
-    def update(self, sensor_type, data):
-        """Actualiza los datos del sensor con datos procesados"""
-        self._data[sensor_type] = data
-        self.last_update[sensor_type] = datetime.now().isoformat()
-    
-    def update_raw(self, sensor_type, raw_value):
-        """Actualiza los datos CRUDOS directamente desde el hardware"""
-        timestamp = datetime.now().isoformat()
-        
-        # ✅ CÁLCULO DE VOLTAJE PARA pH (5V sistema, 1023 para 10-bit ADC)
-        voltage = (raw_value * 5.0 / 1023) if sensor_type == 'ph' else 0
-        
-        raw_data = {
-            'raw': raw_value,
-            'received_at': timestamp,
-            'sensor': sensor_type,
-            'voltage': round(voltage, 3) if sensor_type == 'ph' else 0,  # Solo para pH
-            'status': 'raw_unprocessed',
-            'source': 'hardware',
-            'calibration_status': 'uncalibrated'  # Indica que no está calibrado
+    def __init__(self):
+        self._lock = threading.Lock()
+        self._data = {
+            'ph': deque(maxlen=1000),
+            'temperature': deque(maxlen=1000),
+            'turbidity': deque(maxlen=1000)
         }
-        
-        self._raw_data[sensor_type] = raw_data
-        self.last_update[sensor_type] = timestamp
-        print(f"💾 {sensor_type.upper()} crudo actualizado: {raw_value} (V: {voltage:.3f})")
-        return raw_data
+        self._last_update = {
+            'ph': None,
+            'temperature': None,
+            'turbidity': None
+        }
+        self._connection_status = {
+            'ph': 'offline',
+            'temperature': 'offline',
+            'turbidity': 'offline'
+        }
+    
+    def update_sensor(self, sensor_type, value, raw_value=None, location=None):
+        """Actualiza datos de un sensor"""
+        with self._lock:
+            if sensor_type not in self._data:
+                raise ValueError(f'Sensor type {sensor_type} not supported')
+            
+            timestamp = datetime.now().isoformat()
+            reading = {
+                'value': value,
+                'raw_value': raw_value,
+                'timestamp': timestamp,
+                'location': location,
+                'received_at': timestamp,
+                'data_quality': 'good' if raw_value is not None else 'questionable'
+            }
+            
+            self._data[sensor_type].append(reading)
+            self._last_update[sensor_type] = datetime.now()
+            self._connection_status[sensor_type] = 'online'
+            
+            # Limpiar datos antiguos (más de 1 hora)
+            self._cleanup_old_data(sensor_type)
+    
+    def _cleanup_old_data(self, sensor_type, max_age=timedelta(hours=1)):
+        """Elimina datos antiguos para mantener el rendimiento"""
+        now = datetime.now()
+        while self._data[sensor_type] and now - datetime.fromisoformat(self._data[sensor_type][0]['timestamp']) > max_age:
+            self._data[sensor_type].popleft()
     
     def get_latest(self, sensor_type):
-        """Obtiene los últimos datos disponibles"""
-        # 1. Para temperatura: intenta datos procesados primero
-        if sensor_type == 'temperature' and sensor_type in self._data:
-            return self._data[sensor_type]
-        
-        # 2. Para pH y turbidez: usa SIEMPRE datos crudos
-        if sensor_type in ['ph', 'turbidity'] and sensor_type in self._raw_data:
-            return self._raw_data[sensor_type]
-        
-        # 3. Si no hay datos crudos, usa datos procesados o simulados
-        if sensor_type in self._data and self._data[sensor_type]:
-            return self._data[sensor_type]
-        
-        return self._get_simulated_data(sensor_type)
+        """Obtiene el último dato de un sensor"""
+        with self._lock:
+            if sensor_type not in self._data or not self._data[sensor_type]:
+                return None
+            
+            return self._data[sensor_type][-1]
     
-    def _get_simulated_data(self, sensor_type):
-        """Genera datos simulados para desarrollo"""
-        timestamp = datetime.now().isoformat()
-        base_time = int(time.time())
-        
-        simulated = {
-            'ph': {
-                'raw': 700 + (base_time % 50),  # Valor ADC simulado
-                'received_at': timestamp,
-                'sensor': 'ph',
-                'voltage': round(3.4 + (base_time % 20) * 0.01, 3),  # Voltaje simulado
-                'status': 'simulation_raw',
-                'source': 'simulated',
-                'calibration_status': 'uncalibrated'
-            },
-            'temperature': {
-                'raw': 250 + (base_time % 15),  # Valor crudo
-                'value': 25.0 + (base_time % 5) * 0.1,  # Valor calibrado
-                'received_at': timestamp,
-                'sensor': 'temperature',
-                'status': 'simulation_calibrated',
-                'source': 'simulated',
-                'calibration_status': 'calibrated'
-            },
-            'turbidity': {
-                'raw': 200 + (base_time % 300),  # Valor ADC simulado
-                'received_at': timestamp,
-                'sensor': 'turbidity',
-                'voltage': 0.0,
-                'status': 'simulation_raw',
-                'source': 'simulated',
-                'calibration_status': 'uncalibrated'
+    def get_all_latest(self):
+        """Obtiene los últimos datos de todos los sensores"""
+        result = {}
+        for sensor_type in self._data:
+            latest = self.get_latest(sensor_type)
+            result[sensor_type] = latest if latest else {
+                'value': None,
+                'status': 'no_data',
+                'message': 'Sin datos disponibles'
             }
-        }
+        return result
+    
+    def get_connection_status(self):
+        """Verifica el estado de conexión de los sensores"""
+        now = datetime.now()
+        status = {}
         
-        return simulated.get(sensor_type, {
-            'status': 'no_data',
-            'received_at': timestamp,
-            'sensor': sensor_type
-        })
-
+        for sensor_type, last_update in self._last_update.items():
+            if last_update is None:
+                status[sensor_type] = 'offline'
+            elif now - last_update > timedelta(minutes=5):
+                status[sensor_type] = 'disconnected'
+                self._connection_status[sensor_type] = 'offline'
+            else:
+                status[sensor_type] = 'online'
+        
+        return status
+    
     def get_system_status(self):
         """Devuelve el estado del sistema para diagnóstico"""
         return {
-            'simulation_mode': self.simulation_mode,
-            'has_processed_data': bool(self._data),
-            'has_raw_data': bool(self._raw_data),
-            'last_updates': self.last_update,
+            'has_data': bool(any(self._data.values())),
+            'last_updates': {k: v.isoformat() if v else None for k, v in self._last_update.items()},
+            'connection_status': self._connection_status,
             'timestamp': datetime.now().isoformat()
         }
-    
-        # Agregar estos métodos dentro de la clase SensorStore:
 
-    def get_historical_data(self, sensor_type, limit=10):
-        """
-        Obtiene datos históricos reales de un sensor (NO SIMULADOS)
-        """
-        try:
-            # En producción: aquí iría la consulta a la base de datos
-            # Por ahora, devolvemos datos vacíos (no hay registros reales)
-            return []
-        except Exception as e:
-            print(f"Error obteniendo datos históricos de {sensor_type}: {e}")
-            return []
-
-    def get_historical_count(self, sensor_type):
-        """
-        Cuenta cuántos registros históricos existen para un sensor
-        """
-        try:
-            # En producción: COUNT(*) desde la base de datos
-            return 0  # Por ahora no hay datos reales
-        except Exception as e:
-            print(f"Error contando datos históricos de {sensor_type}: {e}")
-            return 0
-
-    def get_last_historical_update(self, sensor_type):
-        """
-        Obtiene la última actualización de datos históricos
-        """
-        try:
-            # En producción: MAX(timestamp) desde la base de datos
-            return None
-        except Exception as e:
-            print(f"Error obteniendo última actualización de {sensor_type}: {e}")
-            return None
-
-    def clear_cache(self):
-        """
-        Limpia cachés para desarrollo
-        """
-        self._data = {}
-        self._raw_data = {}
-        self.last_update = {}
-        print("🧹 Caché del sensor_store limpiado")
-
-# Instancia global
+# Instancia singleton
 sensor_store = SensorStore()
-
-# ¡¡¡INYECCIÓN AUTOMÁTICA DE DATOS CRUDOS PARA DEMOSTRACIÓN!!! (¡CORREGIDO!)
-if not sensor_store.simulation_mode and not sensor_store._raw_data:  # ¡AQUÍ ESTABA EL ERROR! _raw_ -> _raw_data
-    import threading
-    
-    def inject_demo_data():
-        """Inyecta datos de demostración periódicamente"""
-        print("🎭 Iniciando inyección de datos crudos de demostración...")
-        while True:
-            # Simula datos crudos como si vinieran del hardware
-            sensor_store.update_raw('ph', 720 + (int(time.time()) % 30))  # Valor ADC
-            
-            # Temperatura especial - datos calibrados (NO va en _raw_data)
-            temp_data = {
-                'raw': 255 + (int(time.time()) % 10),
-                'value': 25.5 + (int(time.time()) % 5) * 0.1,  # Valor calibrado
-                'received_at': datetime.now().isoformat(),
-                'sensor': 'temperature',
-                'status': 'calibrated',
-                'source': 'hardware',
-                'calibration_status': 'calibrated'
-            }
-            sensor_store._data['temperature'] = temp_data  # ¡IMPORTANTE! Va en _data, no en _raw_data
-            
-            sensor_store.update_raw('turbidity', 300 + (int(time.time()) % 200))  # Valor ADC
-            time.sleep(2)
-    
-    demo_thread = threading.Thread(target=inject_demo_data, daemon=True)
-    demo_thread.start()

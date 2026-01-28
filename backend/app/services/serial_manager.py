@@ -1,107 +1,167 @@
+# backend/app/services/serial_manager.py
+"""
+Gestor de comunicación serial con dispositivos
+"""
 import serial
 import threading
 import time
 from datetime import datetime
-from .sensor_store import sensor_store  # Importa la instancia global
+from ..services.sensor_store import sensor_store
 
 class SerialManager:
-    def __init__(self, port='/dev/ttyUSB0', baudrate=9600):
+    """Gestor robusto de comunicación serial con reconexión automática"""
+    
+    def __init__(self, port='/dev/ttyUSB0', baudrate=9600, timeout=1):
         self.port = port
         self.baudrate = baudrate
+        self.timeout = timeout
         self.serial = None
         self.running = False
         self.thread = None
+        self.last_error = None
+        self.reconnect_attempts = 0
+        self.max_reconnect_attempts = 5
     
     def connect(self):
-        """Intenta conectar al puerto serial"""
-        try:
-            print(f"🔌 Intentando conectar a {self.port}...")
-            self.serial = serial.Serial(
-                port=self.port,
-                baudrate=self.baudrate,
-                timeout=1,
-                write_timeout=1
-            )
-            print(f"✅ Conexión exitosa a {self.port}")
-            return True
-        except Exception as e:
-            print(f"❌ Error al conectar: {str(e)}")
-            print("💡 Consejos:")
-            print("   - Verifica que el dispositivo esté conectado")
-            print("   - Ejecuta: ls /dev/ttyUSB* o ls /dev/ttyACM*")
-            print("   - Permisos: sudo usermod -a -G dialout $USER")
-            return False
+        """Intenta conectar con reintento automático"""
+        while self.reconnect_attempts < self.max_reconnect_attempts:
+            try:
+                print(f"🔌 Intentando conectar a {self.port}...")
+                self.serial = serial.Serial(
+                    port=self.port,
+                    baudrate=self.baudrate,
+                    timeout=self.timeout,
+                    write_timeout=self.timeout
+                )
+                self.reconnect_attempts = 0  # Resetear contador
+                print(f"✅ Conexión exitosa a {self.port}")
+                return True
+            except Exception as e:
+                self.reconnect_attempts += 1
+                self.last_error = str(e)
+                print(f"❌ Error al conectar ({self.reconnect_attempts}/{self.max_reconnect_attempts}): {e}")
+                time.sleep(2 ** self.reconnect_attempts)  # Backoff exponencial
+        
+        print("🚨 Máximo de intentos de conexión alcanzado")
+        return False
     
     def read_data(self):
-        """Lee datos del puerto serial en bucle"""
+        """Lee datos con manejo de errores robusto"""
+        buffer = ""
+        
         while self.running and self.serial and self.serial.is_open:
             try:
-                if self.serial.in_waiting > 0:
-                    line = self.serial.readline().decode('utf-8', errors='ignore').strip()
-                    if line:
-                        print(f"📡 Datos recibidos: {line}")
-                        self.process_line(line)
+                if self.serial.in_waiting:
+                    # Leer datos del puerto serial
+                    raw_data = self.serial.read(self.serial.in_waiting).decode('utf-8', errors='ignore')
+                    buffer += raw_data
+                    
+                    # Procesar líneas completas
+                    while '\n' in buffer:
+                        line, buffer = buffer.split('\n', 1)
+                        line = line.strip()
+                        if line:
+                            self.process_line(line)
+            except serial.SerialException as e:
+                print(f"⚠️ Error de puerto serial: {e}")
+                self.handle_serial_error(e)
             except Exception as e:
-                print(f"⚠️ Error leyendo serial: {str(e)}")
-                time.sleep(1)
+                print(f"🔥 Error inesperado leyendo serial: {e}")
+                self.handle_serial_error(e)
+            
+            time.sleep(0.1)  # Pequeño delay para no saturar CPU
     
     def process_line(self, line):
-        """Procesa una línea de datos del serial"""
-        line_lower = line.lower()
-        
-        # Detecta formato: "ph:720" o "temp:255" o "turb:3"
-        if ':' in line_lower:
-            try:
-                sensor_type, value = line_lower.split(':', 1)
-                sensor_type = sensor_type.strip()
-                raw_value = int(''.join(filter(str.isdigit, value)))
+        """Procesa línea de datos del serial"""
+        try:
+            # Formato esperado: "sensor:value" o "sensor_raw:value"
+            if ':' in line:
+                sensor_type, value = line.split(':', 1)
+                sensor_type = sensor_type.strip().lower()
+                value = value.strip()
                 
-                # Mapea tipos de sensores a claves internas
-                sensor_map = {
-                    'ph': 'ph',
-                    'p': 'ph',
-                    'temp': 'temperature',
-                    'temperature': 'temperature',
-                    't': 'temperature',
-                    'turb': 'turbidity',
-                    'turbidity': 'turbidity',
-                    'ntu': 'turbidity'
-                }
-                
-                internal_type = sensor_map.get(sensor_type, None)
-                if internal_type:
-                    # Actualiza datos crudos en el store
-                    sensor_store.update_raw(internal_type, raw_value)
-                    print(f"✅ {internal_type.upper()} procesado: {raw_value}")
+                # Validar valor numérico
+                try:
+                    raw_value = float(''.join(filter(lambda x: x.isdigit() or x in ['.', '-'], value)))
+                    
+                    # Determinar tipo de sensor y procesar
+                    sensor_map = {
+                        'ph': 'ph',
+                        'p': 'ph',
+                        'temp': 'temperature',
+                        'temperature': 'temperature',
+                        'turb': 'turbidity',
+                        'turbidity': 'turbidity',
+                        'ntu': 'turbidity'
+                    }
+                    
+                    internal_type = sensor_map.get(sensor_type)
+                    if internal_type:
+                        if '_raw' in sensor_type:
+                            # Datos crudos
+                            sensor_store.update_sensor(internal_type, raw_value, raw_value=raw_value)
+                            print(f"✅ {internal_type.upper()} crudo actualizado: {raw_value}")
+                        else:
+                            # Datos procesados/calibrados
+                            sensor_store.update_sensor(internal_type, raw_value)
+                            print(f"✅ {internal_type.upper()} calibrado actualizado: {raw_value}")
+                        return
+                except ValueError:
+                    print(f"⚠️ Valor no numérico en línea: {line}")
             
-            except Exception as e:
-                print(f"❌ Error procesando línea '{line}': {str(e)}")
+            print(f"🔍 Línea ignorada (formato incorrecto): {line}")
+        except Exception as e:
+            print(f"❌ Error procesando línea '{line}': {e}")
+    
+    def handle_serial_error(self, error):
+        """Maneja errores de comunicación serial"""
+        print("🔄 Intentando reconectar...")
+        if self.serial and self.serial.is_open:
+            try:
+                self.serial.close()
+            except:
+                pass
+        
+        # Esperar antes de reconectar
+        time.sleep(2)
+        success = self.connect()
+        
+        if success:
+            print("✨ Reconexión exitosa")
+        else:
+            print("❌ Falló la reconexión automática")
     
     def start(self):
-        """Inicia el hilo de lectura serial"""
+        """Inicia el gestor serial en hilo separado"""
         if not self.connect():
-            print("🚨 No se pudo iniciar el serial manager")
+            print("❌ No se pudo iniciar el gestor serial")
             return False
         
         self.running = True
         self.thread = threading.Thread(target=self.read_data, daemon=True)
         self.thread.start()
-        print("▶️ Serial manager iniciado")
+        print("▶️ Gestor serial iniciado en segundo plano")
         return True
     
     def stop(self):
-        """Detiene el serial manager"""
+        """Detiene el gestor serial de forma segura"""
         self.running = False
-        if self.serial and self.serial.is_open:
-            self.serial.close()
         if self.thread:
-            self.thread.join(timeout=2.0)
-        print("⏹️ Serial manager detenido")
+            self.thread.join(timeout=5.0)
+        
+        if self.serial and self.serial.is_open:
+            try:
+                self.serial.close()
+                print("⏹️ Puerto serial cerrado correctamente")
+            except Exception as e:
+                print(f"❌ Error cerrando puerto serial: {e}")
+        
+        print("🛑 Gestor serial detenido")
 
-# Instancia global para usar en toda la aplicación
+# Instancia global
 serial_manager = SerialManager()
 
-# Inicia el serial manager automáticamente al importar el módulo
+# Iniciar el gestor serial automáticamente al importar el módulo
 def init_serial_manager():
     """Inicializa el serial manager en segundo plano"""
     def start_manager():
