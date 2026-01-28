@@ -1,0 +1,144 @@
+<!-- frontend/gallery.html -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Galería - M.A.N.G.O</title>
+  <meta name="description" content="Galería de fotos y videos del proyecto M.A.N.G.O - Monitoreo de Manglares">
+  
+  <!-- Favicon -->
+  <link rel="icon" href="image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌊</text></svg>">
+  
+  <!-- CSS -->
+  <link rel="stylesheet" href="assets/css/styles.css">
+  <link rel="stylesheet" href="assets/css/gallery.css">
+  
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+  <!-- Header -->
+  <header class="main-header">
+    <div class="container">
+      <div class="logo">
+        <span class="wave-icon">🌊</span>
+        <h1>M.A.N.G.O</h1>
+        <p class="subtitle">Galería del Proyecto</p>
+      </div>
+      <nav class="main-nav">
+        <a href="index.html">Inicio</a>
+        <a href="dashboard.html">Dashboard</a>
+        <a href="about.html">Sobre</a>
+        <a href="index.html#contact">Contacto</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="hero gallery-hero">
+    <div class="container">
+      <h2>📸 Galería del Proyecto M.A.N.G.O</h2>
+      <p class="hero-text">Documentación visual del desarrollo, implementación y resultados del sistema de monitoreo</p>
+    </div>
+  </section>
+
+  <!-- Gallery Section -->
+  <section class="section gallery-section">
+    <div class="container">
+      <!-- Filtros -->
+      <div class="gallery-filters">
+        <button data-filter="all" class="active">
+          <i class="fas fa-filter"></i> Todos
+        </button>
+        <button data-filter="field">
+          <i class="fas fa-tree"></i> Campo
+        </button>
+        <button data-filter="hardware">
+          <i class="fas fa-microchip"></i> Hardware
+        </button>
+        <button data-filter="dashboard">
+          <i class="fas fa-chart-line"></i> Dashboard
+        </button>
+        <button data-filter="community">
+          <i class="fas fa-users"></i> Comunidad
+        </button>
+        <button data-filter="documentation">
+          <i class="fas fa-file-alt"></i> Documentación
+        </button>
+      </div>
+
+      <!-- Grid de Galería -->
+      <div class="gallery-grid" id="gallery-grid">
+        <!-- Las imágenes se cargarán dinámicamente -->
+      </div>
+
+      <!-- Lightbox -->
+      <div class="lightbox" id="lightbox">
+        <div class="lightbox-content">
+          <span class="close-lightbox" id="close-lightbox">&times;</span>
+          <img src="" alt="" id="lightbox-img">
+          <div class="lightbox-caption" id="lightbox-caption"></div>
+          <div class="lightbox-nav">
+            <button class="prev" id="lightbox-prev">
+              <i class="fas fa-arrow-left"></i>
+            </button>
+            <button class="next" id="lightbox-next">
+              <i class="fas fa-arrow-right"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Creator Section -->
+  <section class="section creator-section">
+    <div class="container">
+      <h2 class="section-title">👤 El Creador</h2>
+      <div class="creator-container">
+        <div class="creator-image">
+          <img src="assets/images/sebastian-sanchez.jpg" alt="Sebastián Sánchez">
+        </div>
+        <div class="creator-content">
+          <h3>Sebastián Sánchez Chacón</h3>
+          <p class="creator-title">Creador y Desarrollador Principal</p>
+          <p class="creator-description">
+            Ingeniero ambiental apasionado por la conservación de ecosistemas costeros.
+            Fundador de M.A.N.G.O desde su etapa como proyecto académico,
+            comprometido con la protección de los manglares colombianos
+            a través de tecnología accesible.
+          </p>
+          <div class="creator-credentials">
+            <span>🎓 Proyecto iniciado en el SENA</span>
+            <span>🌊 3+ años monitoreando manglares</span>
+            <span>💡 100% código abierto en GitHub</span>
+          </div>
+          <div class="creator-quote">
+            <blockquote>
+              "La tecnología debe servir para proteger la vida, no para destruirla. 
+              Cada manglar salvo es un futuro más seguro para nuestras comunidades costeras."
+            </blockquote>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="main-footer">
+    <div class="container">
+      <p>© 2026 M.A.N.G.O - Galería del Proyecto</p>
+      <p>Todas las fotos y videos son propiedad del proyecto M.A.N.G.O</p>
+      <p>
+        <a href="https://github.com/T4t4n32/M_A_N_G_O" target="_blank">
+          <i class="fab fa-github"></i> Repositorio GitHub
+        </a>
+      </p>
+    </div>
+  </footer>
+
+  <!-- JavaScript -->
+  <script src="assets/js/gallery.js"></script>
+</body>
+</html>

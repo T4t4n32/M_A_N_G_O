@@ -1,28 +1,24 @@
-<!-- =========================
-     login.html — M.A.N.G.O
-     ========================= -->
+<!-- frontend/login.html -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
-  <title>M.A.N.G.O — Acceso al Sistema</title>
-  <meta name="description" content="Acceso seguro al sistema M.A.N.G.O" />
-
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌊</text></svg>">
-
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>M.A.N.G.O - Acceso al Sistema</title>
+  <meta name="description" content="Acceso seguro al sistema M.A.N.G.O">
+  
+  <!-- Favicon -->
+  <link rel="icon" href="image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌊</text></svg>">
+  
   <!-- CSS -->
-  <link rel="stylesheet" href="assets/css/login.css" />
+  <link rel="stylesheet" href="assets/css/login.css">
+  
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
-
 <body>
-
   <div class="container">
-
-    <!-- =========================
-         LOGO
-         ========================= -->
+    <!-- Logo -->
     <div class="logo">
       <div class="logo-icon">🌊</div>
       <h1 class="logo-title">M.A.N.G.O</h1>
@@ -31,23 +27,19 @@
       </p>
     </div>
 
-    <!-- =========================
-         CARD
-         ========================= -->
+    <!-- Card de Login -->
     <div class="card">
-
       <div class="card-header">
         <h2 class="card-title">Acceso al Sistema</h2>
         <p class="card-subtitle">Ingrese sus credenciales</p>
       </div>
 
       <form id="login-form" novalidate>
-
         <div class="form-group">
-          <label for="user" class="form-label">Usuario</label>
+          <label for="username" class="form-label">Usuario</label>
           <input
             type="text"
-            id="user"
+            id="username"
             class="form-input"
             placeholder="ej: admin"
             autocomplete="username"
@@ -56,10 +48,10 @@
         </div>
 
         <div class="form-group">
-          <label for="pass" class="form-label">Contraseña</label>
+          <label for="password" class="form-label">Contraseña</label>
           <input
             type="password"
-            id="pass"
+            id="password"
             class="form-input"
             placeholder="••••••••"
             autocomplete="current-password"
@@ -87,22 +79,22 @@
           </label>
         </div>
 
-        <!-- ERROR -->
+        <!-- Mensaje de Error -->
         <div id="error-container" style="display:none;">
           <div class="error-message">
-            <span>⚠</span>
+            <span>⚠️</span>
             <span id="error-text">
               Credenciales inválidas.
             </span>
           </div>
         </div>
 
-        <!-- OFFLINE -->
+        <!-- Advertencia Offline -->
         <div id="offline-warning" style="display:none;">
           <div class="warning-message">
             <span>🌐</span>
             <span>
-              Backend no disponible. Intentando conexión.
+              Backend no disponible. Intentando conexión...
             </span>
           </div>
         </div>
@@ -110,12 +102,9 @@
         <button type="submit" id="submit-btn" class="submit-btn">
           <span id="btn-text">Ingresar al dashboard</span>
         </button>
-
       </form>
 
-      <!-- =========================
-           STATUS
-           ========================= -->
+      <!-- Estado del Sistema -->
       <div class="system-status">
         <div class="status-online" id="status-indicator">
           <span class="status-indicator" id="connection-indicator"></span>
@@ -123,30 +112,30 @@
         </div>
       </div>
 
+      <!-- Enlace a página principal -->
+      <div class="back-link">
+        <a href="index.html">
+          <i class="fas fa-arrow-left"></i> Volver a la página principal
+        </a>
+      </div>
     </div>
 
-    <!-- =========================
-         FOOTER
-         ========================= -->
+    <!-- Footer -->
     <div class="footer">
       <p>
         Proyecto open-source para monitoreo oceánico •
         <a
-          href="https://github.com/t4t4n32/M_A_N_G_O"
+          href="https://github.com/T4t4n32/M_A_N_G_O"
           target="_blank"
         >
           GitHub
         </a>
       </p>
     </div>
-
   </div>
 
-  <!-- =========================
-       JS
-       ========================= -->
-  <script type="module" src="assets/js/api.service.js"></script>
-  <script type="module" src="assets/js/auth.js"></script>
-
+  <!-- JavaScript -->
+  <script src="assets/js/api.js"></script>
+  <script src="assets/js/auth.js"></script>
 </body>
 </html>
