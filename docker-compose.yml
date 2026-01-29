@@ -1,4 +1,4 @@
-version: '3.8'
+version: '29.2.0'
 services:
   backend:
     build:
