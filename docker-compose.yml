@@ -2,25 +2,17 @@ services:
   backend:
     image: python:3.11-slim
     ports:
-      - "5000:5000"
+      - "127.0.0.1:5000:5000"  # Solo accesible desde localhost (seguro)
     working_dir: /app
     environment:
       - FLASK_ENV=production
       - FLASK_APP=main.py
-      - SECRET_KEY=tu_clave_secreta_aqui_2026
+      - SECRET_KEY=tu_clave_super_secreta_2026
       - OFFLINE_MODE=True
+      - DATABASE_URL=sqlite:///:memory:
     volumes:
       - ./backend:/app
     command: >
       sh -c "pip install -r requirements.txt &&
              flask run --host=0.0.0.0 --port=5000"
-    restart: unless-stopped
-
-  frontend:
-    image: nginx:alpine
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./frontend:/usr/share/nginx/html:ro
     restart: unless-stopped
