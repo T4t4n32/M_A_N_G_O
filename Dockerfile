@@ -1,6 +1,6 @@
 FROM python:3.11-slim
 
-WORKDIR /app
+WORKDIR /backend
 
 # Instalar dependencias
 COPY requirements.txt .

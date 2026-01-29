@@ -1,18 +1,19 @@
-version: '29.2.0'
 services:
   backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
+    image: python:3.11-slim
     ports:
       - "5000:5000"
+    working_dir: /app
     environment:
       - FLASK_ENV=production
       - FLASK_APP=main.py
-      - SECRET_KEY=Lucky  # ¡CAMBIAR EN PRODUCCIÓN!
-      - OFFLINE_MODE=True  # Sin base de datos por ahora
+      - SECRET_KEY=tu_clave_secreta_aqui_2026
+      - OFFLINE_MODE=True
     volumes:
       - ./backend:/app
+    command: >
+      sh -c "pip install -r requirements.txt &&
+             flask run --host=0.0.0.0 --port=5000"
     restart: unless-stopped
 
   frontend:
@@ -22,7 +23,4 @@ services:
       - "443:443"
     volumes:
       - ./frontend:/usr/share/nginx/html:ro
-      - ./nginx.conf:/etc/nginx/nginx.conf:ro
-    depends_on:
-      - backend
     restart: unless-stopped
