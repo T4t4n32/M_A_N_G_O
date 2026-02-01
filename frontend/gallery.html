@@ -1,224 +1,21 @@
+<!-- frontend/gallery.html -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>M.A.N.G.O - Galería de Imágenes</title>
-  <meta name="description" content="Galería de imágenes del proyecto M.A.N.G.O: hardware, campo, comunidad y documentación">
+  <title>Galería - M.A.N.G.O</title>
+  <meta name="description" content="Galería de fotos y videos del proyecto M.A.N.G.O - Monitoreo de Manglares">
   
   <!-- Favicon -->
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌊</text></svg>">
+  <link rel="icon" href="image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌊</text></svg>">
   
   <!-- CSS -->
   <link rel="stylesheet" href="assets/css/styles.css">
-  <style>
-    /* Estilos específicos para la galería */
-    .gallery-hero {
-      background: linear-gradient(135deg, #1a3a32 0%, #0e1a1f 100%);
-      padding: 80px 20px;
-      text-align: center;
-      color: white;
-    }
-    
-    .gallery-hero h2 {
-      font-size: 3.5rem;
-      margin-bottom: 20px;
-      background: linear-gradient(90deg, #4abdac, #2d8c68);
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-      text-shadow: 0 2px 10px rgba(0,0,0,0.2);
-    }
-    
-    .gallery-hero p {
-      font-size: 1.4rem;
-      color: #a8d8c5;
-      max-width: 700px;
-      margin: 0 auto;
-    }
-    
-    .gallery-categories {
-      display: flex;
-      justify-content: center;
-      gap: 15px;
-      margin: 40px auto;
-      flex-wrap: wrap;
-    }
-    
-    .category-btn {
-      padding: 10px 25px;
-      background: rgba(45, 140, 104, 0.15);
-      border: 2px solid #2d8c68;
-      color: #4abdac;
-      border-radius: 30px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      font-size: 1.1rem;
-    }
-    
-    .category-btn:hover, .category-btn.active {
-      background: #2d8c68;
-      color: white;
-      transform: translateY(-2px);
-      box-shadow: 0 4px 15px rgba(45, 140, 104, 0.4);
-    }
-    
-    .gallery-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-      gap: 25px;
-      max-width: 1400px;
-      margin: 0 auto 60px;
-      padding: 0 20px;
-    }
-    
-    .gallery-item {
-      background: rgba(26, 58, 50, 0.7);
-      border-radius: 15px;
-      overflow: hidden;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
-      position: relative;
-    }
-    
-    .gallery-item:hover {
-      transform: translateY(-10px);
-      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
-    }
-    
-    .gallery-img-container {
-      width: 100%;
-      height: 250px;
-      overflow: hidden;
-      background: linear-gradient(45deg, #1a3a32, #0e1a1f);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    
-    .gallery-img-container img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      transition: transform 0.5s ease;
-    }
-    
-    .gallery-item:hover .gallery-img-container img {
-      transform: scale(1.1);
-    }
-    
-    .gallery-item .placeholder-img {
-      width: 80%;
-      height: 80%;
-      background: linear-gradient(45deg, #2d8c68, #4abdac);
-      border-radius: 10px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: white;
-      font-weight: bold;
-      font-size: 1.2rem;
-      text-align: center;
-      padding: 15px;
-    }
-    
-    .gallery-caption {
-      padding: 20px;
-      text-align: center;
-    }
-    
-    .gallery-caption h3 {
-      color: #4abdac;
-      margin-bottom: 8px;
-      font-size: 1.4rem;
-    }
-    
-    .gallery-caption p {
-      color: #a8d8c5;
-      line-height: 1.6;
-      font-size: 1.05rem;
-    }
-    
-    .category-title {
-      text-align: center;
-      margin: 60px 0 30px;
-      color: #4abdac;
-      font-size: 2.2rem;
-      position: relative;
-      display: inline-block;
-      left: 50%;
-      transform: translateX(-50%);
-    }
-    
-    .category-title::after {
-      content: '';
-      position: absolute;
-      bottom: -10px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 80px;
-      height: 4px;
-      background: #2d8c68;
-      border-radius: 2px;
-    }
-    
-    .no-images {
-      grid-column: 1 / -1;
-      text-align: center;
-      padding: 60px 20px;
-      background: rgba(26, 58, 50, 0.5);
-      border-radius: 15px;
-      margin: 20px;
-    }
-    
-    .no-images p {
-      color: #a8d8c5;
-      font-size: 1.3rem;
-      max-width: 600px;
-      margin: 0 auto;
-    }
-    
-    .upload-instructions {
-      background: rgba(45, 140, 104, 0.15);
-      border-left: 4px solid #2d8c68;
-      padding: 20px;
-      margin: 30px auto;
-      max-width: 800px;
-      border-radius: 0 8px 8px 0;
-    }
-    
-    .upload-instructions h3 {
-      color: #4abdac;
-      margin-top: 0;
-    }
-    
-    .upload-instructions ul {
-      color: #a8d8c5;
-      margin-left: 20px;
-      margin-top: 10px;
-    }
-    
-    .upload-instructions li {
-      margin-bottom: 8px;
-      line-height: 1.5;
-    }
-    
-    @media (max-width: 768px) {
-      .gallery-hero h2 {
-        font-size: 2.5rem;
-      }
-      
-      .gallery-grid {
-        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-      }
-      
-      .category-btn {
-        padding: 8px 20px;
-        font-size: 1rem;
-      }
-    }
-  </style>
+  <link rel="stylesheet" href="assets/css/gallery.css">
+  
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
   <!-- Header -->
@@ -227,251 +24,121 @@
       <div class="logo">
         <span class="wave-icon">🌊</span>
         <h1>M.A.N.G.O</h1>
-        <p class="subtitle">Galería de Imágenes</p>
+        <p class="subtitle">Galería del Proyecto</p>
       </div>
       <nav class="main-nav">
         <a href="index.html">Inicio</a>
+        <a href="dashboard.html">Dashboard</a>
         <a href="about.html">Sobre</a>
-        <a href="login.html" class="login-btn">Dashboard</a>
         <a href="index.html#contact">Contacto</a>
       </nav>
     </div>
   </header>
 
   <!-- Hero Section -->
-  <section class="gallery-hero">
+  <section class="hero gallery-hero">
     <div class="container">
-      <h2>📸 Galería del Proyecto</h2>
-      <p>Documentación visual del desarrollo, implementación y resultados del sistema M.A.N.G.O en ecosistemas de manglar colombianos</p>
+      <h2>📸 Galería del Proyecto M.A.N.G.O</h2>
+      <p class="hero-text">Documentación visual del desarrollo, implementación y resultados del sistema de monitoreo</p>
     </div>
   </section>
 
-  <!-- Categorías -->
-  <div class="gallery-categories">
-    <button class="category-btn active" data-category="all">Todo</button>
-    <button class="category-btn" data-category="hardware">Hardware</button>
-    <button class="category-btn" data-category="field">Campo</button>
-    <button class="category-btn" data-category="community">Comunidad</button>
-    <button class="category-btn" data-category="documentation">Documentación</button>
-  </div>
+  <!-- Gallery Section -->
+  <section class="section gallery-section">
+    <div class="container">
+      <!-- Filtros -->
+      <div class="gallery-filters">
+        <button data-filter="all" class="active">
+          <i class="fas fa-filter"></i> Todos
+        </button>
+        <button data-filter="field">
+          <i class="fas fa-tree"></i> Campo
+        </button>
+        <button data-filter="hardware">
+          <i class="fas fa-microchip"></i> Hardware
+        </button>
+        <button data-filter="dashboard">
+          <i class="fas fa-chart-line"></i> Dashboard
+        </button>
+        <button data-filter="community">
+          <i class="fas fa-users"></i> Comunidad
+        </button>
+        <button data-filter="documentation">
+          <i class="fas fa-file-alt"></i> Documentación
+        </button>
+      </div>
 
-  <!-- Instrucciones para subir imágenes -->
-  <div class="upload-instructions">
-    <h3>🖼️ ¿Cómo agregar tus imágenes?</h3>
-    <p>Coloca tus fotos en la carpeta correspondiente con este formato:</p>
-    <ul>
-      <li><strong>Hardware:</strong> <code>frontend/assets/images/gallery/hardware/hardware-01.jpg</code></li>
-      <li><strong>Campo:</strong> <code>frontend/assets/images/gallery/field/field-01.jpg</code></li>
-      <li><strong>Comunidad:</strong> <code>frontend/assets/images/gallery/community/community-01.jpg</code></li>
-      <li><strong>Documentación:</strong> <code>frontend/assets/images/gallery/documentation/doc-01.jpg</code></li>
-    </ul>
-    <p>¡Las imágenes aparecerán automáticamente al recargar la página!</p>
-  </div>
+      <!-- Grid de Galería -->
+      <div class="gallery-grid" id="gallery-grid">
+        <!-- Las imágenes se cargarán dinámicamente -->
+      </div>
 
-  <!-- Galería - Hardware (Categoría Principal por Ahora) -->
-  <h2 class="category-title">Componentes de Hardware</h2>
-  <section class="gallery-grid" id="hardware-gallery">
-    <!-- Las imágenes se cargarán automáticamente desde la carpeta -->
-    <div class="gallery-item">
-      <div class="gallery-img-container">
-        <div class="placeholder-img">hardware-01.jpg<br>(Pendiente)</div>
-      </div>
-      <div class="gallery-caption">
-        <h3>Prototipo Electrónico</h3>
-        <p>Ensamblaje inicial de sensores y microcontrolador Jetson TK1</p>
-      </div>
-    </div>
-    
-    <div class="gallery-item">
-      <div class="gallery-img-container">
-        <div class="placeholder-img">hardware-02.jpg<br>(Pendiente)</div>
-      </div>
-      <div class="gallery-caption">
-        <h3>Módulo LoRa SX1262</h3>
-        <p>Configuración del módulo de comunicación de largo alcance</p>
-      </div>
-    </div>
-    
-    <div class="gallery-item">
-      <div class="gallery-img-container">
-        <div class="placeholder-img">hardware-03.jpg<br>(Pendiente)</div>
-      </div>
-      <div class="gallery-caption">
-        <h3>Sensores Ambientales</h3>
-        <p>Calibración de sensores de pH, temperatura y turbidez</p>
-      </div>
-    </div>
-    
-    <div class="gallery-item">
-      <div class="gallery-img-container">
-        <div class="placeholder-img">hardware-04.jpg<br>(Pendiente)</div>
-      </div>
-      <div class="gallery-caption">
-        <h3>Carcaza Protectora</h3>
-        <p>Diseño 3D e impresión de la carcasa resistente al agua</p>
-      </div>
-    </div>
-    
-    <div class="gallery-item">
-      <div class="gallery-img-container">
-        <div class="placeholder-img">hardware-05.jpg<br>(Pendiente)</div>
-      </div>
-      <div class="gallery-caption">
-        <h3>Conexiones Eléctricas</h3>
-        <p>Diagrama de cableado y conexiones de sensores</p>
-      </div>
-    </div>
-    
-    <div class="gallery-item">
-      <div class="gallery-img-container">
-        <div class="placeholder-img">hardware-06.jpg<br>(Pendiente)</div>
-      </div>
-      <div class="gallery-caption">
-        <h3>Raspberry Pi 4</h3>
-        <p>Configuración para pruebas terrestres y algoritmos de IA</p>
-      </div>
-    </div>
-    
-    <div class="gallery-item">
-      <div class="gallery-img-container">
-        <div class="placeholder-img">hardware-07.jpg<br>(Pendiente)</div>
-      </div>
-      <div class="gallery-caption">
-        <h3>Intel NCS2</h3>
-        <p>Integración del Neural Compute Stick para procesamiento de IA</p>
-      </div>
-    </div>
-    
-    <div class="gallery-item">
-      <div class="gallery-img-container">
-        <div class="placeholder-img">hardware-08.jpg<br>(Pendiente)</div>
-      </div>
-      <div class="gallery-caption">
-        <h3>Batería y Energía</h3>
-        <p>Sistema de alimentación y gestión de energía para campo</p>
+      <!-- Lightbox -->
+      <div class="lightbox" id="lightbox">
+        <div class="lightbox-content">
+          <span class="close-lightbox" id="close-lightbox">&times;</span>
+          <img src="" alt="" id="lightbox-img">
+          <div class="lightbox-caption" id="lightbox-caption"></div>
+          <div class="lightbox-nav">
+            <button class="prev" id="lightbox-prev">
+              <i class="fas fa-arrow-left"></i>
+            </button>
+            <button class="next" id="lightbox-next">
+              <i class="fas fa-arrow-right"></i>
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   </section>
 
-  <!-- Sección para otras categorías (vacías por ahora) -->
-  <div id="field-gallery" class="gallery-grid" style="display:none;">
-    <div class="no-images">
-      <p>📸 Próximamente: Fotos de implementación en campo en manglares del Pacífico colombiano</p>
+  <!-- Creator Section -->
+  <section class="section creator-section">
+    <div class="container">
+      <h2 class="section-title">👤 El Creador</h2>
+      <div class="creator-container">
+        <div class="creator-image">
+          <img src="assets/images/sebastian-sanchez.jpg" alt="Sebastián Sánchez">
+        </div>
+        <div class="creator-content">
+          <h3>Sebastián Sánchez Chacón</h3>
+          <p class="creator-title">Creador y Desarrollador Principal</p>
+          <p class="creator-description">
+            Ingeniero ambiental apasionado por la conservación de ecosistemas costeros.
+            Fundador de M.A.N.G.O desde su etapa como proyecto académico,
+            comprometido con la protección de los manglares colombianos
+            a través de tecnología accesible.
+          </p>
+          <div class="creator-credentials">
+            <span>🎓 Proyecto iniciado en el SENA</span>
+            <span>🌊 3+ años monitoreando manglares</span>
+            <span>💡 100% código abierto en GitHub</span>
+          </div>
+          <div class="creator-quote">
+            <blockquote>
+              "La tecnología debe servir para proteger la vida, no para destruirla. 
+              Cada manglar salvo es un futuro más seguro para nuestras comunidades costeras."
+            </blockquote>
+          </div>
+        </div>
+      </div>
     </div>
-  </div>
-  
-  <div id="community-gallery" class="gallery-grid" style="display:none;">
-    <div class="no-images">
-      <p>🤝 Próximamente: Trabajo con comunidades locales y capacitaciones</p>
-    </div>
-  </div>
-  
-  <div id="documentation-gallery" class="gallery-grid" style="display:none;">
-    <div class="no-images">
-      <p>📄 Próximamente: Diagramas, esquemáticos y documentación técnica</p>
-    </div>
-  </div>
+  </section>
 
   <!-- Footer -->
   <footer class="main-footer">
     <div class="container">
-      <div class="footer-content">
-        <div class="footer-logo">
-          <span class="wave-icon">🌊</span>
-          <h3>M.A.N.G.O</h3>
-          <p>Tecnología protegiendo la vida — un manglar a la vez</p>
-        </div>
-        <div class="footer-links">
-          <h4>Enlaces Rápidos</h4>
-          <a href="index.html">Inicio</a>
-          <a href="about.html">Sobre el Proyecto</a>
-          <a href="gallery.html">Galería</a>
-          <a href="login.html">Dashboard</a>
-        </div>
-        <div class="footer-contact">
-          <h4>Contacto</h4>
-          <p><i class="fas fa-envelope"></i> ssch200913@gmail.com</p>
-          <p><i class="fas fa-map-marker-alt"></i> Colombia, Pacífico</p>
-        </div>
-      </div>
-      <div class="footer-bottom">
-        <p>&copy; 2026 M.A.N.G.O - Monitoreo Autónomo de Niveles y Gestión Oceánica. Todos los derechos reservados.</p>
-        <p>Proyecto educativo y científico para la conservación de manglares colombianos</p>
-      </div>
+      <p>© 2026 M.A.N.G.O - Galería del Proyecto</p>
+      <p>Todas las fotos y videos son propiedad del proyecto M.A.N.G.O</p>
+      <p>
+        <a href="https://github.com/T4t4n32/M_A_N_G_O" target="_blank">
+          <i class="fab fa-github"></i> Repositorio GitHub
+        </a>
+      </p>
     </div>
   </footer>
 
-  <!-- Scripts para filtrar galería -->
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      // Filtrar categorías
-      const categoryBtns = document.querySelectorAll('.category-btn');
-      const galleries = {
-        all: document.querySelector('#hardware-gallery'),
-        hardware: document.querySelector('#hardware-gallery'),
-        field: document.querySelector('#field-gallery'),
-        community: document.querySelector('#community-gallery'),
-        documentation: document.querySelector('#documentation-gallery')
-      };
-      
-      categoryBtns.forEach(btn => {
-        btn.addEventListener('click', () => {
-          // Remover clase active de todos
-          categoryBtns.forEach(b => b.classList.remove('active'));
-          // Agregar clase active al botón clickeado
-          btn.classList.add('active');
-          
-          // Ocultar todas las galerías
-          Object.values(galleries).forEach(gallery => {
-            if (gallery) gallery.style.display = 'none';
-          });
-          
-          // Mostrar galería seleccionada
-          const category = btn.dataset.category;
-          if (galleries[category]) {
-            galleries[category].style.display = 'grid';
-          }
-          
-          // Si es "all", mostrar hardware por defecto
-          if (category === 'all') {
-            galleries.hardware.style.display = 'grid';
-          }
-        });
-      });
-      
-      // Cargar imágenes reales si existen (para cuando agregues tus fotos)
-      const loadRealImages = () => {
-        const imagesPath = 'assets/images/gallery/';
-        const categories = ['hardware', 'field', 'community', 'documentation'];
-        
-        categories.forEach(category => {
-          // Buscar elementos con placeholder en esta categoría
-          const items = document.querySelectorAll(`#${category}-gallery .placeholder-img`);
-          
-          items.forEach((item, index) => {
-            const imgNum = String(index + 1).padStart(2, '0');
-            const imgPath = `${imagesPath}${category}/${category}-${imgNum}.jpg`;
-            
-            // Verificar si la imagen existe (método simple)
-            const img = new Image();
-            img.onload = () => {
-              // Reemplazar placeholder con imagen real
-              const container = item.parentElement;
-              container.innerHTML = `<img src="${imgPath}" alt="${category} ${imgNum}">`;
-              container.style.background = 'none';
-            };
-            img.onerror = () => {
-              // Mantener placeholder si no existe
-              item.innerHTML = `${category}-${imgNum}.jpg<br>(Pendiente)`;
-            };
-            img.src = imgPath;
-          });
-        });
-      };
-      
-      // Cargar imágenes al inicio
-      loadRealImages();
-    });
-  </script>
+  <!-- JavaScript -->
+  <script src="assets/js/gallery.js"></script>
 </body>
 </html>

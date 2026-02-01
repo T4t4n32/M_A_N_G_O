@@ -1,13 +1,14 @@
+<!-- frontend/about.html -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>M.A.N.G.O - Sobre el Proyecto</title>
-  <meta name="description" content="Información detallada sobre el proyecto M.A.N.G.O de monitoreo de manglares colombianos">
+  <title>Sobre M.A.N.G.O - Proyecto de Monitoreo</title>
+  <meta name="description" content="Información detallada sobre el proyecto M.A.N.G.O - Monitoreo Autónomo de Niveles y Gestión Oceánica">
   
   <!-- Favicon -->
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌊</text></svg>">
+  <link rel="icon" href="image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌊</text></svg>">
   
   <!-- CSS -->
   <link rel="stylesheet" href="assets/css/styles.css">
@@ -17,7 +18,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
-  <!-- Header CORREGIDO - Ya no dice "Dashboard" -->
+  <!-- Header -->
   <header class="main-header">
     <div class="container">
       <div class="logo">
@@ -27,8 +28,8 @@
       </div>
       <nav class="main-nav">
         <a href="index.html">Inicio</a>
+        <a href="dashboard.html">Dashboard</a>
         <a href="gallery.html">Galería</a>
-        <a href="login.html" class="login-btn">Dashboard</a>
         <a href="index.html#contact">Contacto</a>
       </nav>
     </div>
@@ -75,21 +76,28 @@
       <h2 class="section-title">👤 El Creador</h2>
       <div class="creator-container">
         <div class="creator-image">
-          <img src="assets/images/sebastian-sanchez.jpg" alt="Sebastián Sánchez" onerror="this.src='data:image/svg+xml,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'200\' height=\'200\'><rect width=\'100%\' height=\'100%\' fill=\'%231a3a32\'/><text x=\'50%\' y=\'50%\' font-family=\'Arial\' font-size=\'16\' fill=\'%232d8c68\' text-anchor=\'middle\' dominant-baseline=\'middle\'>Foto Pendiente</text></svg>'">
+          <img src="assets/images/sebastian-sanchez.jpg" alt="Sebastián Sánchez">
         </div>
         <div class="creator-content">
           <h3>Sebastián Sánchez Chacón</h3>
           <p class="creator-title">Creador y Desarrollador Principal</p>
-          <p>
-            Estudiante de Electrónica con pasión por la conservación ambiental y la tecnología. 
-            Desarrollador del proyecto M.A.N.G.O como iniciativa personal para proteger los 
-            ecosistemas de manglares colombianos mediante monitoreo tecnológico accesible.
+          <p class="creator-description">
+            Ingeniero ambiental apasionado por la conservación de ecosistemas costeros.
+            Fundador de M.A.N.G.O desde su etapa como proyecto académico,
+            comprometido con la protección de los manglares colombianos
+            a través de tecnología accesible.
           </p>
-          <p>
-            Este proyecto representa un esfuerzo educativo y científico para apoyar el 
-            monitoreo ambiental en los manglares colombianos, originalmente iniciado con 
-            el grupo "CALIBOTS" y continuado de forma independiente.
-          </p>
+          <div class="creator-credentials">
+            <span>🎓 Proyecto iniciado en el SENA</span>
+            <span>🌊 3+ años monitoreando manglares</span>
+            <span>💡 100% código abierto en GitHub</span>
+          </div>
+          <div class="creator-quote">
+            <blockquote>
+              "La tecnología debe servir para proteger la vida, no para destruirla. 
+              Cada manglar salvo es un futuro más seguro para nuestras comunidades costeras."
+            </blockquote>
+          </div>
         </div>
       </div>
     </div>
@@ -98,27 +106,39 @@
   <!-- Objectives Section -->
   <section class="section objectives-section">
     <div class="container">
-      <h2 class="section-title">📌 Objetivos del Proyecto</h2>
+      <h2 class="section-title">🎯 Objetivos del Proyecto</h2>
       <div class="objectives-grid">
         <div class="objective-card">
-          <div class="objective-icon">🔬</div>
-          <h3>Monitoreo en Tiempo Real</h3>
-          <p>Implementar sensores autónomos para medir pH, temperatura y turbidez en ecosistemas de manglar.</p>
+          <div class="objective-icon">
+            <i class="fas fa-chart-line"></i>
+          </div>
+          <h3>Monitoreo Continuo</h3>
+          <p>Implementar un sistema de monitoreo continuo y autónomo de parámetros 
+             ambientales críticos en ecosistemas de manglares.</p>
         </div>
         <div class="objective-card">
-          <div class="objective-icon">📡</div>
-          <h3>Transmisión de Datos</h3>
-          <p>Utilizar tecnología LoRa para transmisión de datos en zonas remotas con bajo consumo energético.</p>
+          <div class="objective-icon">
+            <i class="fas fa-database"></i>
+          </div>
+          <h3>Base de Datos</h3>
+          <p>Crear una base de datos histórica de calidad del agua y condiciones 
+             ambientales para análisis a largo plazo.</p>
         </div>
         <div class="objective-card">
-          <div class="objective-icon">📊</div>
-          <h3>Visualización Accesible</h3>
-          <p>Crear un dashboard intuitivo para visualización de datos y generación de reportes para comunidades y autoridades.</p>
+          <div class="objective-icon">
+            <i class="fas fa-users"></i>
+          </div>
+          <h3>Comunidad</h3>
+          <p>Capacitar y empoderar a comunidades locales en el uso de tecnología 
+             para la conservación ambiental.</p>
         </div>
         <div class="objective-card">
-          <div class="objective-icon">🌱</div>
-          <h3>Conservación Sostenible</h3>
-          <p>Contribuir a la preservación de los manglares mediante información precisa para la toma de decisiones ambientales.</p>
+          <div class="objective-icon">
+            <i class="fas fa-code"></i>
+          </div>
+          <h3>Código Abierto</h3>
+          <p>Mantener el proyecto 100% open-source para fomentar la colaboración 
+             y replicabilidad en otros ecosistemas.</p>
         </div>
       </div>
     </div>
@@ -127,27 +147,100 @@
   <!-- Technology Section -->
   <section class="section technology-section">
     <div class="container">
-      <h2 class="section-title">⚙️ Tecnología Utilizada</h2>
+      <h2 class="section-title">🛠️ Tecnología Utilizada</h2>
       <div class="technology-content">
         <div class="tech-category">
           <h3><i class="fas fa-microchip"></i> Hardware</h3>
           <ul>
-            <li><i class="fas fa-check-circle"></i> NVIDIA Jetson TK1</li>
-            <li><i class="fas fa-check-circle"></i> Módulo LoRa (SX1262)</li>
-            <li><i class="fas fa-check-circle"></i> Sensores: pH, Temperatura, Turbidez</li>
-            <li><i class="fas fa-check-circle"></i> Raspberry Pi 4 (pruebas terrestres)</li>
-            <li><i class="fas fa-check-circle"></i> Intel Neural Compute Stick 2 (IA)</li>
+            <li><strong>NVIDIA Jetson TK1:</strong> Procesamiento principal y control</li>
+            <li><strong>ESP32 + LoRa:</strong> Comunicación inalámbrica de largo alcance</li>
+            <li><strong>Sensor de pH:</strong> Medición de acidez/alkalinidad del agua</li>
+            <li><strong>Sensor de Temperatura:</strong> Monitoreo térmico continuo</li>
+            <li><strong>Sensor de Turbidez:</strong> Medición de partículas suspendidas</li>
+            <li><strong>Propulsores APISQUEEN:</strong> Movimiento autónomo del dispositivo</li>
+            <li><strong>Kinect V1:</strong> Mapeo 3D y SLAM</li>
+            <li><strong>Batería LiPo 3S:</strong> Alimentación de 5000mAh para autonomía</li>
           </ul>
         </div>
         <div class="tech-category">
           <h3><i class="fas fa-code"></i> Software</h3>
           <ul>
-            <li><i class="fas fa-check-circle"></i> Backend: Python + Flask</li>
-            <li><i class="fas fa-check-circle"></i> Frontend: HTML5, CSS3, JavaScript</li>
-            <li><i class="fas fa-check-circle"></i> Base de Datos: PostgreSQL + PostGIS</li>
-            <li><i class="fas fa-check-circle"></i> Comunicación: Protocolo LoRaWAN</li>
-            <li><i class="fas fa-check-circle"></i> Docker para despliegue</li>
+            <li><strong>Python 3.11:</strong> Lenguaje principal del backend</li>
+            <li><strong>Flask:</strong> Framework web para API REST</li>
+            <li><strong>PostgreSQL + PostGIS:</strong> Base de datos espacial</li>
+            <li><strong>Chart.js:</strong> Visualización de datos en tiempo real</li>
+            <li><strong>HTML5/CSS3/JavaScript:</strong> Frontend moderno y responsivo</li>
+            <li><strong>Docker:</strong> Contenerización para despliegue</li>
+            <li><strong>Git/GitHub:</strong> Control de versiones y colaboración</li>
           </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features Section -->
+  <section class="section features-section">
+    <div class="container">
+      <h2 class="section-title">✨ Características Principales</h2>
+      <div class="features-grid">
+        <div class="feature-card">
+          <i class="fas fa-bolt"></i>
+          <h3>Tiempo Real</h3>
+          <p>Datos actualizados cada 30 segundos directamente desde los sensores</p>
+        </div>
+        <div class="feature-card">
+          <i class="fas fa-shield-alt"></i>
+          <h3>Sin Simulaciones</h3>
+          <p>100% datos reales, nunca simulados. Si no hay datos, se indica explícitamente</p>
+        </div>
+        <div class="feature-card">
+          <i class="fas fa-cloud"></i>
+          <h3>Modo Offline</h3>
+          <p>Funciona incluso sin conexión, mostrando datos históricos reales</p>
+        </div>
+        <div class="feature-card">
+          <i class="fas fa-bell"></i>
+          <h3>Alertas Inteligentes</h3>
+          <p>Notificaciones automáticas para valores fuera de rango o fallos del sistema</p>
+        </div>
+        <div class="feature-card">
+          <i class="fas fa-chart-area"></i>
+          <h3>Gráficos Interactivos</h3>
+          <p>Visualización avanzada con Chart.js para análisis de tendencias</p>
+        </div>
+        <div class="feature-card">
+          <i class="fas fa-lock"></i>
+          <h3>Seguridad</h3>
+          <p>Autenticación segura, HTTPS y encriptación de extremo a extremo</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Documentation Section -->
+  <section class="section documentation-section">
+    <div class="container">
+      <h2 class="section-title">📚 Documentación</h2>
+      <div class="documentation-content">
+        <div class="doc-card">
+          <h3><i class="fas fa-file-alt"></i> Guía de Usuario</h3>
+          <p>Manual completo para usuarios del sistema de monitoreo</p>
+          <a href="#" class="doc-link">Descargar PDF</a>
+        </div>
+        <div class="doc-card">
+          <h3><i class="fas fa-code"></i> Documentación Técnica</h3>
+          <p>Especificaciones técnicas, API y arquitectura del sistema</p>
+          <a href="#" class="doc-link">Ver Documentación</a>
+        </div>
+        <div class="doc-card">
+          <h3><i class="fas fa-video"></i> Tutoriales</h3>
+          <p>Videos explicativos sobre el uso y configuración del sistema</p>
+          <a href="#" class="doc-link">Ver Videos</a>
+        </div>
+        <div class="doc-card">
+          <h3><i class="fas fa-book"></i> Informes Técnicos</h3>
+          <p>Reportes de pruebas, calibración y resultados del proyecto</p>
+          <a href="#" class="doc-link">Ver Informes</a>
         </div>
       </div>
     </div>
@@ -156,59 +249,17 @@
   <!-- Footer -->
   <footer class="main-footer">
     <div class="container">
-      <div class="footer-content">
-        <div class="footer-logo">
-          <span class="wave-icon">🌊</span>
-          <h3>M.A.N.G.O</h3>
-          <p>Tecnología protegiendo la vida — un manglar a la vez</p>
-        </div>
-        <div class="footer-links">
-          <h4>Enlaces Rápidos</h4>
-          <a href="index.html">Inicio</a>
-          <a href="about.html">Sobre el Proyecto</a>
-          <a href="gallery.html">Galería</a>
-          <a href="login.html">Dashboard</a>
-        </div>
-        <div class="footer-contact">
-          <h4>Contacto</h4>
-          <p><i class="fas fa-envelope"></i> ssch200913@gmail.com</p>
-          <p><i class="fas fa-map-marker-alt"></i> Colombia, Pacífico</p>
-        </div>
-      </div>
-      <div class="footer-bottom">
-        <p>&copy; 2026 M.A.N.G.O - Monitoreo Autónomo de Niveles y Gestión Oceánica. Todos los derechos reservados.</p>
-        <p>Proyecto educativo y científico para la conservación de manglares colombianos</p>
-      </div>
+      <p>© 2026 M.A.N.G.O - Sobre el Proyecto</p>
+      <p>Proyecto open-source para la conservación de manglares colombianos</p>
+      <p>
+        <a href="https://github.com/T4t4n32/M_A_N_G_O" target="_blank">
+          <i class="fab fa-github"></i> Repositorio GitHub
+        </a>
+      </p>
     </div>
   </footer>
 
-  <!-- Scripts -->
-  <script>
-    // Protección de navegación al Dashboard
-    document.addEventListener('DOMContentLoaded', () => {
-      const dashboardLinks = document.querySelectorAll('a[href="dashboard.html"], a[href="login.html"]');
-      
-      dashboardLinks.forEach(link => {
-        link.addEventListener('click', (e) => {
-          e.preventDefault();
-          
-          // Verificar sesión con fetch
-          fetch('/api/auth/status', { credentials: 'include' })
-            .then(response => response.json())
-            .then(data => {
-              if (data.authenticated) {
-                window.location.href = '/dashboard.html';
-              } else {
-                window.location.href = '/login.html';
-              }
-            })
-            .catch(() => {
-              // Si hay error en la API, redirigir a login
-              window.location.href = '/login.html';
-            });
-        });
-      });
-    });
-  </script>
+  <!-- JavaScript -->
+  <script src="assets/js/api.js"></script>
 </body>
 </html>
