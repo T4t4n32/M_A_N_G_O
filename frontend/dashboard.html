@@ -1,180 +1,436 @@
-<!-- frontend/dashboard.html -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>M.A.N.G.O - Dashboard de Monitoreo</title>
-  <meta name="description" content="Dashboard de monitoreo en tiempo real de variables oceánicas">
+  <title>M.A.N.G.O - Dashboard</title>
+  <meta name="description" content="Dashboard de monitoreo en tiempo real para el sistema M.A.N.G.O">
   
   <!-- Favicon -->
-  <link rel="icon" href="image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌊</text></svg>">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌊</text></svg>">
   
   <!-- CSS -->
+  <link rel="stylesheet" href="assets/css/styles.css">
   <link rel="stylesheet" href="assets/css/dashboard.css">
   
   <!-- Font Awesome -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  
-  <!-- Chart.js -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/luxon@3.4.3/build/global/luxon.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon@1.3.1"></script>
 </head>
 <body>
+  <!-- Botón de Cerrar Sesión (SIEMPRE VISIBLE) -->
+  <button class="logout-btn" onclick="logout()">
+    <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
+  </button>
+
   <!-- Header -->
-  <header class="dashboard-header">
+  <header class="main-header">
     <div class="container">
-      <div class="header-content">
-        <div class="logo">
-          <span class="wave-icon">🌊</span>
-          <h1>M.A.N.G.O</h1>
-          <p class="subtitle">Dashboard de Monitoreo en Tiempo Real</p>
-        </div>
-        <div class="header-actions">
-          <div class="connection-status" id="connection-status">
-            <span class="status-indicator" id="status-indicator"></span>
-            <span id="status-text">Verificando conexión...</span>
-          </div>
-          <button id="refresh-btn" class="btn refresh-btn" title="Actualizar datos">
-            <i class="fas fa-sync"></i>
-          </button>
-          <button id="logout-btn" class="btn logout-btn" title="Cerrar sesión">
-            <i class="fas fa-sign-out-alt"></i>
-          </button>
-        </div>
+      <div class="logo">
+        <span class="wave-icon">🌊</span>
+        <h1>M.A.N.G.O</h1>
+        <p class="subtitle">Dashboard de Monitoreo en Tiempo Real</p>
       </div>
+      <nav class="main-nav">
+        <a href="index.html">Inicio</a>
+        <a href="about.html">Sobre</a>
+        <a href="gallery.html">Galería</a>
+        <a href="index.html#contact">Contacto</a>
+      </nav>
     </div>
   </header>
 
-  <!-- Hero Section -->
-  <section class="hero dashboard-hero">
-    <div class="container">
-      <h2>📊 Dashboard de Monitoreo Ambiental</h2>
-      <p class="hero-text">Datos en tiempo real de los sensores desplegados en manglares colombianos</p>
+  <!-- Status Bar -->
+  <div class="status-bar">
+    <div class="status-badge" id="system-status">
+      <span class="connection-indicator" id="connection-status"></span>
+      <span id="system-status-text">Conectando...</span>
     </div>
-  </section>
+    <div class="status-badge">
+      <i class="fas fa-tachometer-alt"></i> Puerto API: 5000
+    </div>
+    <div class="status-badge">
+      <i class="fas fa-user"></i> <span id="user-display">Usuario</span>
+    </div>
+  </div>
 
-  <!-- Alertas del Sistema -->
-  <section class="alerts-container" id="alerts-container">
-    <!-- Alertas se generarán dinámicamente -->
-  </section>
-
-  <!-- Resumen del Sistema -->
-  <section class="section dashboard-section">
-    <div class="container">
-      <div class="system-summary">
-        <div class="summary-card">
-          <div class="summary-icon temp">
-            <i class="fas fa-thermometer-half"></i>
-          </div>
-          <div class="summary-content">
-            <span class="summary-label">Temperatura Actual</span>
-            <span class="summary-value" id="temp-value">--</span>
-            <span class="summary-unit">°C</span>
-            <span class="summary-trend" id="temp-trend"></span>
+  <!-- Main Content -->
+  <main class="dashboard-container">
+    <!-- Tarjetas de Sensores -->
+    <div class="sensor-grid">
+      <!-- pH Sensor - DATOS CRUDOS -->
+      <div class="sensor-card raw-mode">
+        <div class="sensor-header">
+          <div class="sensor-title raw">
+            <i class="fas fa-bolt"></i> pH Sensor (DATOS CRUDOS)
           </div>
         </div>
-        <div class="summary-card">
-          <div class="summary-icon ph">
-            <i class="fas fa-tint"></i>
-          </div>
-          <div class="summary-content">
-            <span class="summary-label">pH Actual</span>
-            <span class="summary-value" id="ph-value">--</span>
-            <span class="summary-unit"></span>
-            <span class="summary-trend" id="ph-trend"></span>
+        <div class="sensor-value-container">
+          <div class="sensor-value raw" id="ph-value">--</div>
+          <div class="sensor-unit">V</div>
+          <div class="note-badge note-raw">
+            ⚠️ VOLTAJE SIN CALIBRAR
           </div>
         </div>
-        <div class="summary-card">
-          <div class="summary-icon turbidity">
-            <i class="fas fa-water"></i>
+        <div class="sensor-meta">
+          <div class="status-row">
+            <span class="status-label">Valor RAW:</span>
+            <span class="status-value" id="ph-raw">--</span>
           </div>
-          <div class="summary-content">
-            <span class="summary-label">Turbidez Actual</span>
-            <span class="summary-value" id="turbidity-value">--</span>
-            <span class="summary-unit">NTU</span>
-            <span class="summary-trend" id="turbidity-trend"></span>
+          <div class="status-row">
+            <span class="status-label">Estado:</span>
+            <span class="status-value" id="ph-status">Datos crudos sin calibrar</span>
           </div>
-        </div>
-        <div class="summary-card">
-          <div class="summary-icon time">
-            <i class="fas fa-clock"></i>
+          <div class="last-update">
+            📅 Última actualización: <span class="update-time" id="ph-time">--:--:--</span>
           </div>
-          <div class="summary-content">
-            <span class="summary-label">Última Actualización</span>
-            <span class="summary-value" id="last-update">--:--</span>
-            <span class="summary-unit"></span>
-            <span class="summary-trend" id="update-trend"></span>
+          <div class="connection-status">
+            <span class="connection-indicator" id="ph-indicator"></span>
+            <span id="ph-connection-status">Verificando conexión...</span>
+          </div>
+          <div class="raw-warning">
+            📌 Estos son datos <strong>NO CALIBRADOS</strong>. Solo muestran el voltaje crudo del sensor para pruebas de conexión.
           </div>
         </div>
       </div>
-
-      <!-- Gráficos -->
-      <div class="charts-container">
-        <div class="chart-card">
-          <h3 class="chart-title">
-            <i class="fas fa-thermometer-half"></i> Temperatura del Agua
-          </h3>
-          <div class="chart-wrapper">
-            <canvas id="temp-chart"></canvas>
+      
+      <!-- Temperatura - DATOS CALIBRADOS -->
+      <div class="sensor-card calibrated-mode">
+        <div class="sensor-header">
+          <div class="sensor-title calibrated">
+            <i class="fas fa-thermometer-half"></i> Temperatura (CALIBRADO)
           </div>
         </div>
-        <div class="chart-card">
-          <h3 class="chart-title">
-            <i class="fas fa-tint"></i> Nivel de pH
-          </h3>
-          <div class="chart-wrapper">
-            <canvas id="ph-chart"></canvas>
+        <div class="sensor-value-container">
+          <div class="sensor-value calibrated" id="temp-value">--</div>
+          <div class="sensor-unit">°C</div>
+          <div class="note-badge note-calibrated">
+            ✅ DATOS CALIBRADOS
           </div>
         </div>
-        <div class="chart-card">
-          <h3 class="chart-title">
-            <i class="fas fa-water"></i> Turbidez
-          </h3>
-          <div class="chart-wrapper">
-            <canvas id="turbidity-chart"></canvas>
+        <div class="sensor-meta">
+          <div class="status-row">
+            <span class="status-label">Valor RAW:</span>
+            <span class="status-value" id="temp-raw">--</span>
+          </div>
+          <div class="status-row">
+            <span class="status-label">Estado:</span>
+            <span class="status-value" id="temp-status">Óptimo</span>
+          </div>
+          <div class="last-update">
+            📅 Última actualización: <span class="update-time" id="temp-time">--:--:--</span>
+          </div>
+          <div class="connection-status">
+            <span class="connection-indicator" id="temp-indicator"></span>
+            <span id="temp-connection-status">Verificando conexión...</span>
           </div>
         </div>
       </div>
-
-      <!-- Información Adicional -->
-      <div class="info-section">
-        <div class="info-card">
-          <h3><i class="fas fa-info-circle"></i> Información del Sistema</h3>
-          <p><strong>Estado:</strong> <span id="system-state">Inicializando...</span></p>
-          <p><strong>Modo:</strong> <span id="system-mode">Monitoreo en tiempo real</span></p>
-          <p><strong>Sensores Activos:</strong> <span id="active-sensors">0/3</span></p>
-          <p><strong>Último Mantenimiento:</strong> <span id="last-maintenance">2026-01-15</span></p>
+      
+      <!-- Turbidez - DATOS CRUDOS -->
+      <div class="sensor-card raw-mode">
+        <div class="sensor-header">
+          <div class="sensor-title raw">
+            <i class="fas fa-tint"></i> Turbidez (DATOS CRUDOS)
+          </div>
         </div>
-        <div class="info-card">
-          <h3><i class="fas fa-exclamation-triangle"></i> Notas Importantes</h3>
-          <ul>
-            <li>Los datos mostrados son 100% reales, no hay simulaciones</li>
-            <li>Si los sensores están offline, se muestran los últimos datos históricos</li>
-            <li>El sistema se actualiza cada 30 segundos</li>
-            <li>Los datos se almacenan para análisis histórico</li>
-          </ul>
+        <div class="sensor-value-container">
+          <div class="sensor-value raw" id="turb-value">--</div>
+          <div class="sensor-unit">ADC</div>
+          <div class="note-badge note-raw">
+            ⚠️ SIN CALIBRAR
+          </div>
+        </div>
+        <div class="sensor-meta">
+          <div class="status-row">
+            <span class="status-label">Valor RAW:</span>
+            <span class="status-value" id="turb-raw">--</span>
+          </div>
+          <div class="status-row">
+            <span class="status-label">Estado:</span>
+            <span class="status-value" id="turb-status">Datos crudos sin procesar</span>
+          </div>
+          <div class="last-update">
+            📅 Última actualización: <span class="update-time" id="turb-time">--:--:--</span>
+          </div>
+          <div class="connection-status">
+            <span class="connection-indicator" id="turb-indicator"></span>
+            <span id="turb-connection-status">Verificando conexión...</span>
+          </div>
+          <div class="raw-warning">
+            📌 Estos son datos <strong>NO CALIBRADOS</strong>. Solo muestran el valor ADC crudo para pruebas de conexión.
+          </div>
         </div>
       </div>
     </div>
-  </section>
+    
+    <!-- Sección de Estado -->
+    <div class="status-section">
+      <h2><i class="fas fa-info-circle"></i> Estado del Sistema</h2>
+      <div class="status-grid">
+        <div class="status-item">
+          <h3>Conexión Sensores</h3>
+          <p id="sensors-connected">Verificando...</p>
+        </div>
+        <div class="status-item">
+          <h3>Modo de Operación</h3>
+          <p id="operation-mode">Online</p>
+        </div>
+        <div class="status-item">
+          <h3>Última Sincronización</h3>
+          <p id="last-sync">--:--:--</p>
+        </div>
+      </div>
+    </div>
+  </main>
 
   <!-- Footer -->
   <footer class="main-footer">
     <div class="container">
-      <p>© 2026 M.A.N.G.O - Dashboard Público</p>
-      <p>Datos reales • Sin simulaciones • Total transparencia</p>
-      <p>
-        <a href="index.html"><i class="fas fa-home"></i> Página Principal</a> • 
-        <a href="gallery.html"><i class="fas fa-images"></i> Galería</a> • 
-        <a href="https://github.com/T4t4n32/M_A_N_G_O" target="_blank"><i class="fab fa-github"></i> GitHub</a>
-      </p>
+      <p>&copy; 2026 M.A.N.G.O - Sistema de Monitoreo Ambiental. Todos los derechos reservados.</p>
+      <p>Datos en tiempo real de ecosistemas de manglar colombianos</p>
     </div>
   </footer>
 
-  <!-- JavaScript -->
-  <script src="assets/js/api.js"></script>
-  <script src="assets/js/dashboard.js"></script>
+  <!-- Scripts -->
+  <script>
+    // ================= CONFIGURACIÓN =================
+    const CONFIG = {
+      API_BASE: '/api',
+      UPDATE_INTERVAL: 2000, // 2 segundos
+      OFFLINE_MODE: localStorage.getItem('mango_offline_mode') === 'true'
+    };
+    
+    // ================= VARIABLES GLOBALES =================
+    let userData = null;
+    
+    // ================= FUNCIONES DE UTILIDAD =================
+    function formatTime(isoString) {
+      if (!isoString) return '--:--:--';
+      const date = new Date(isoString);
+      return date.toLocaleTimeString('es-ES', {
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+      });
+    }
+    
+    function log(message, isError = false) {
+      const prefix = isError ? '❌ ERROR:' : '✅';
+      console.log(`${prefix} ${message}`);
+    }
+    
+    // ================= AUTENTICACIÓN =================
+    function logout() {
+      fetch(`${CONFIG.API_BASE}/auth/logout`, {
+        method: 'POST',
+        credentials: 'include'
+      })
+      .then(() => {
+        localStorage.removeItem('mango_offline_mode');
+        localStorage.removeItem('mango_user');
+        window.location.href = 'login.html';
+      })
+      .catch(() => {
+        // Si falla la llamada, igual redirigir
+        window.location.href = 'login.html';
+      });
+    }
+    
+    async function checkAuth() {
+      try {
+        const response = await fetch(`${CONFIG.API_BASE}/auth/status`, {
+          credentials: 'include'
+        });
+        
+        if (!response.ok) {
+          window.location.href = 'login.html';
+          return false;
+        }
+        
+        const data = await response.json();
+        if (!data.authenticated) {
+          window.location.href = 'login.html';
+          return false;
+        }
+        
+        // Guardar datos del usuario
+        userData = data.user;
+        document.getElementById('user-display').textContent = userData.full_name || userData.username;
+        log(`Sesión válida para: ${userData.full_name || userData.username}`);
+        return true;
+      } catch (error) {
+        log('Error verificando autenticación: ' + error.message, true);
+        window.location.href = 'login.html';
+        return false;
+      }
+    }
+    
+    // ================= ACTUALIZACIÓN DE DATOS =================
+    async function fetchSensorData(sensorKey) {
+      const sensorMap = {
+        'ph': 'ph',
+        'temp': 'temperature',
+        'turb': 'turbidity'
+      };
+      
+      const endpoint = `${CONFIG.API_BASE}/${sensorMap[sensorKey]}/latest`;
+      
+      try {
+        const response = await fetch(endpoint, {
+          credentials: 'include'
+        });
+        
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+        
+        const data = await response.json();
+        updateSensorUI(sensorKey, data);
+        return true;
+      } catch (error) {
+        log(`Error en sensor ${sensorKey}: ${error.message}`, true);
+        handleSensorError(sensorKey, error.message);
+        return false;
+      }
+    }
+    
+    function updateSensorUI(sensorKey, data) {
+      const elements = {
+        'ph': {
+          value: 'ph-value',
+          raw: 'ph-raw',
+          status: 'ph-status',
+          time: 'ph-time',
+          indicator: 'ph-indicator',
+          connection: 'ph-connection-status'
+        },
+        'temp': {
+          value: 'temp-value',
+          raw: 'temp-raw',
+          status: 'temp-status',
+          time: 'temp-time',
+          indicator: 'temp-indicator',
+          connection: 'temp-connection-status'
+        },
+        'turb': {
+          value: 'turb-value',
+          raw: 'turb-raw',
+          status: 'turb-status',
+          time: 'turb-time',
+          indicator: 'turb-indicator',
+          connection: 'turb-connection-status'
+        }
+      };
+      
+      const el = elements[sensorKey];
+      const valueEl = document.getElementById(el.value);
+      const rawEl = document.getElementById(el.raw);
+      const statusEl = document.getElementById(el.status);
+      const timeEl = document.getElementById(el.time);
+      const indicatorEl = document.getElementById(el.indicator);
+      const connectionEl = document.getElementById(el.connection);
+      
+      // Actualizar valores
+      if (sensorKey === 'ph') {
+        // Mostrar voltaje para pH
+        const voltage = data.voltage !== undefined ? data.voltage : (data.raw * 5.0 / 1023).toFixed(3);
+        valueEl.textContent = voltage;
+        rawEl.textContent = data.raw || '--';
+        statusEl.textContent = '⚡ VOLTAJE CRUDO (SIN CALIBRAR)';
+        statusEl.className = 'status-value status-warning';
+      } 
+      else if (sensorKey === 'temp') {
+        // Mostrar temperatura calibrada
+        const temp = data.value !== undefined ? data.value : (data.raw * 0.1).toFixed(1);
+        valueEl.textContent = temp;
+        rawEl.textContent = data.raw || '--';
+        
+        // Verificar rango óptimo
+        const tempNum = parseFloat(temp);
+        if (tempNum >= 24 && tempNum <= 28) {
+          statusEl.textContent = '✅ ÓPTIMO';
+          statusEl.className = 'status-value status-success';
+        } else {
+          statusEl.textContent = '⚠️ Fuera de rango óptimo';
+          statusEl.className = 'status-value status-warning';
+        }
+      }
+      else if (sensorKey === 'turb') {
+        // Mostrar valor ADC para turbidez
+        valueEl.textContent = data.raw || '--';
+        rawEl.textContent = data.raw || '--';
+        statusEl.textContent = '📊 DATO ADC CRUDO (SIN CALIBRAR)';
+        statusEl.className = 'status-value status-warning';
+      }
+      
+      // Actualizar tiempo y estado de conexión
+      timeEl.textContent = formatTime(data.received_at || data.timestamp);
+      indicatorEl.className = 'connection-indicator connection-active';
+      connectionEl.textContent = '✅ Conectado';
+      
+      // Actualizar estado general
+      document.getElementById('system-status-text').textContent = '✅ Sistema Operativo';
+      document.getElementById('connection-status').className = 'connection-indicator connection-active';
+    }
+    
+    function handleSensorError(sensorKey, errorMessage) {
+      const elements = {
+        'ph': { value: 'ph-value', raw: 'ph-raw', status: 'ph-status', time: 'ph-time', indicator: 'ph-indicator', connection: 'ph-connection-status' },
+        'temp': { value: 'temp-value', raw: 'temp-raw', status: 'temp-status', time: 'temp-time', indicator: 'temp-indicator', connection: 'temp-connection-status' },
+        'turb': { value: 'turb-value', raw: 'turb-raw', status: 'turb-status', time: 'turb-time', indicator: 'turb-indicator', connection: 'turb-connection-status' }
+      };
+      
+      const el = elements[sensorKey];
+      document.getElementById(el.value).textContent = '---';
+      document.getElementById(el.raw).textContent = '---';
+      document.getElementById(el.status).textContent = `❌ Error: ${errorMessage.substring(0, 30)}`;
+      document.getElementById(el.status).className = 'status-value status-error';
+      document.getElementById(el.time).textContent = formatTime(new Date().toISOString());
+      document.getElementById(el.indicator).className = 'connection-indicator';
+      document.getElementById(el.connection).textContent = '❌ Sin conexión';
+    }
+    
+    async function updateAllSensors() {
+      await Promise.all([
+        fetchSensorData('ph'),
+        fetchSensorData('temp'),
+        fetchSensorData('turb')
+      ]);
+      
+      // Actualizar estado del sistema
+      document.getElementById('last-sync').textContent = new Date().toLocaleTimeString('es-ES');
+      document.getElementById('sensors-connected').textContent = '3/3 Sensores Conectados';
+      document.getElementById('operation-mode').textContent = CONFIG.OFFLINE_MODE ? 'Modo Offline (Simulado)' : 'Modo Online';
+    }
+    
+    // ================= INICIALIZACIÓN =================
+    document.addEventListener('DOMContentLoaded', async () => {
+      log('Iniciando Dashboard M.A.N.G.O');
+      
+      // Verificar autenticación primero
+      const isAuthenticated = await checkAuth();
+      if (!isAuthenticated) return;
+      
+      // Inicializar sistema
+      log(`✅ Usuario: ${userData.full_name || userData.username}`);
+      log(`📡 API Base: ${CONFIG.API_BASE}`);
+      log(`⏱️ Intervalo de actualización: ${CONFIG.UPDATE_INTERVAL}ms`);
+      
+      // Primera actualización
+      await updateAllSensors();
+      
+      // Configurar actualización automática
+      setInterval(updateAllSensors, CONFIG.UPDATE_INTERVAL);
+      
+      log('Dashboard iniciado correctamente');
+    });
+    
+    // Manejar errores globales
+    window.addEventListener('error', (event) => {
+      log(`🔥 Error global: ${event.message}`, true);
+      document.getElementById('system-status-text').textContent = '❌ Error en el sistema';
+      document.getElementById('connection-status').className = 'connection-indicator';
+    });
+  </script>
 </body>
 </html>
