@@ -10,3 +10,21 @@ ENV/
 
 # Variables de entorno
 .env
+
+# Archivos temporales y logs
+logs/
+backup_*
+*.log
+*.tmp
+*.swp
+*.swn
+*.bak
+*.pid
+*.cache
+*.DS_Store
+
+# Directorios de entorno virtual
+venv/
+.env
+.env.local
+.env.production
