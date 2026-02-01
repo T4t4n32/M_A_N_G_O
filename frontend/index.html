@@ -1,19 +1,18 @@
-<!-- frontend/index.html -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>M.A.N.G.O - Monitoreo de Manglares Colombianos</title>
-  <meta name="description" content="Sistema de monitoreo ambiental en tiempo real para ecosistemas de manglares colombianos">
+  <meta name="description" content="Sistema de monitoreo ambiental en tiempo real para la protección de ecosistemas de manglares en Colombia">
   
-  <!-- Favicon con emoji de ola -->
+  <!-- Favicon -->
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌊</text></svg>">
   
   <!-- CSS -->
   <link rel="stylesheet" href="assets/css/styles.css">
   
-  <!-- Font Awesome para iconos -->
+  <!-- Font Awesome -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
@@ -26,10 +25,10 @@
         <p class="subtitle">Monitoreo Autónomo de Niveles y Gestión Oceánica</p>
       </div>
       <nav class="main-nav">
-        <a href="#about">Proyecto</a>
-        <a href="gallery.html">Galería</a>
+        <a href="index.html" class="active">Inicio</a>
         <a href="about.html">Sobre</a>
-        <a href="login.html" class="login-btn">Acceder</a>
+        <a href="gallery.html">Galería</a>
+        <a href="login.html" class="login-btn">Dashboard</a>
       </nav>
     </div>
   </header>
@@ -37,100 +36,130 @@
   <!-- Hero Section -->
   <section class="hero">
     <div class="container">
-      <h2>Protegiendo los manglares colombianos con tecnología de punta</h2>
+      <h1>🌿 Protegiendo los Manglares Colombianos</h1>
       <p class="hero-text">Sistema de monitoreo ambiental en tiempo real para la conservación de ecosistemas costeros</p>
       <div class="hero-buttons">
-        <a href="login.html" class="btn primary">Ver Dashboard</a>
-        <a href="gallery.html" class="btn secondary">Ver Galería</a>
+        <a href="about.html" class="btn-primary">Conoce el Proyecto</a>
+        <a href="login.html" class="btn-secondary">Acceder al Dashboard</a>
       </div>
-    </div>
-  </section>
-
-  <!-- About Section -->
-  <section id="about" class="section">
-    <div class="container">
-      <h2 class="section-title">🌿 Sobre el Proyecto</h2>
-      <div class="about-content">
-        <div class="about-text">
-          <p>M.A.N.G.O es un sistema de monitoreo ambiental diseñado para recopilar, visualizar y analizar datos en tiempo real provenientes de sensores desplegados en ecosistemas de manglares colombianos.</p>
-          <p>Nuestro objetivo es proporcionar información precisa y oportuna para apoyar la conservación, investigación y toma de decisiones en la protección de estos ecosistemas vitales.</p>
-          <p>El proyecto prioriza la transparencia: si no existen datos disponibles, el sistema lo indicará explícitamente.</p>
+      <div class="hero-stats">
+        <div class="stat-item">
+          <div class="stat-number">200K+</div>
+          <div class="stat-label">Familias Beneficiadas</div>
         </div>
-        <div class="about-image">
-          <img src="assets/images/mangrove-ecosystem.jpg" alt="Ecosistema de manglar colombiano" loading="lazy">
+        <div class="stat-item">
+          <div class="stat-number">380K</div>
+          <div class="stat-label">Hectáreas de Manglar</div>
         </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Sensors Section -->
-  <section class="section sensors-section">
-    <div class="container">
-      <h2 class="section-title">📊 Sensores del Sistema</h2>
-      <div class="sensors-grid">
-        <div class="sensor-card">
-          <i class="fas fa-thermometer-half sensor-icon temp"></i>
-          <h3>Temperatura</h3>
-          <p class="sensor-desc">Monitoreo continuo de temperatura del agua</p>
-          <p class="sensor-status">Rango: 20-35°C</p>
-        </div>
-        <div class="sensor-card">
-          <i class="fas fa-tint sensor-icon ph"></i>
-          <h3>pH</h3>
-          <p class="sensor-desc">Medición de acidez/alkalinidad del agua</p>
-          <p class="sensor-status">Rango: 5.0-9.0 pH</p>
-        </div>
-        <div class="sensor-card">
-          <i class="fas fa-water sensor-icon turbidity"></i>
-          <h3>Turbidez</h3>
-          <p class="sensor-desc">Medición de partículas suspendidas</p>
-          <p class="sensor-status">Rango: 0-200 NTU</p>
+        <div class="stat-item">
+          <div class="stat-number">SDG 14</div>
+          <div class="stat-label">Vida Submarina</div>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- Creator Section -->
-  <section class="section creator-section">
+  <!-- Features Section -->
+  <section class="section features-section">
     <div class="container">
-      <h2 class="section-title">👤 El Creador</h2>
-      <div class="creator-container">
-        <div class="creator-image">
-          <img src="assets/images/sebastian-sanchez.jpg" alt="Sebastián Sánchez" loading="lazy">
+      <h2 class="section-title">✨ Características del Sistema</h2>
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon">📊</div>
+          <h3>Monitoreo en Tiempo Real</h3>
+          <p>Medición continua de parámetros ambientales críticos: pH, temperatura y turbidez del agua en ecosistemas de manglar.</p>
         </div>
-        <div class="creator-content">
-          <h3>Sebastián Sánchez Chacón</h3>
-          <p class="creator-title">Creador y Desarrollador Principal</p>
-          <p class="creator-description">
-            Ingeniero ambiental apasionado por la conservación de ecosistemas costeros.
-            Fundador de M.A.N.G.O desde su etapa como proyecto académico,
-            comprometido con la protección de los manglares colombianos
-            a través de tecnología accesible.
-          </p>
-          <div class="creator-credentials">
-            <span>🎓 Proyecto iniciado en el SENA</span>
-            <span>🌊 3+ años monitoreando manglares</span>
-            <span>💡 100% código abierto en GitHub</span>
+        <div class="feature-card">
+          <div class="feature-icon">📡</div>
+          <h3>Transmisión LoRa</h3>
+          <p>Tecnología de largo alcance y bajo consumo para zonas remotas sin infraestructura de red convencional.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🌍</div>
+          <h3>Acceso Global</h3>
+          <p>Dashboard accesible desde cualquier dispositivo con conexión a internet para visualización de datos y alertas.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🔋</div>
+          <h3>Energía Sostenible</h3>
+          <p>Diseño de bajo consumo con opciones de alimentación solar para operación continua en campo.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Impact Section -->
+  <section class="section impact-section">
+    <div class="container">
+      <div class="impact-content">
+        <div class="impact-text">
+          <h2 class="section-title">🌱 Impacto Ambiental</h2>
+          <p>Los manglares colombianos son ecosistemas críticos que:</p>
+          <ul class="impact-list">
+            <li><i class="fas fa-check-circle"></i> Protegen 200,000+ familias costeras de tormentas y tsunamis</li>
+            <li><i class="fas fa-check-circle"></i> Almacenan hasta 10x más carbono que bosques terrestres</li>
+            <li><i class="fas fa-check-circle"></i> Sustentan el 80% de la pesca artesanal local</li>
+            <li><i class="fas fa-check-circle"></i> Filtran contaminantes y mejoran la calidad del agua</li>
+          </ul>
+          <p>Nuestro sistema proporciona datos precisos para la toma de decisiones que protegen estos ecosistemas vitales.</p>
+          <a href="about.html" class="btn-primary">Más sobre nuestro impacto</a>
+        </div>
+        <div class="impact-image">
+          <div class="image-placeholder">
+            <i class="fas fa-tree"></i>
+            <p>Imagen: Ecosistema de Manglar</p>
           </div>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- Contact Section -->
-  <section class="section contact-section">
+  <!-- Call to Action -->
+  <section class="cta-section">
     <div class="container">
-      <h2 class="section-title">📫 Contacto</h2>
+      <h2>¿Listo para Contribuir a la Conservación?</h2>
+      <p>Únete a nuestra misión de proteger los manglares colombianos mediante tecnología y ciencia ciudadana</p>
+      <div class="cta-buttons">
+        <a href="about.html" class="btn-primary">Conoce el Proyecto</a>
+        <a href="#contact" class="btn-secondary">Contáctanos</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Contact Section -->
+  <section id="contact" class="section contact-section">
+    <div class="container">
+      <h2 class="section-title">📬 Contacto</h2>
       <div class="contact-content">
         <div class="contact-info">
-          <p><i class="fas fa-envelope"></i> contacto@mango-monitoring.org</p>
-          <p><i class="fas fa-globe"></i> Bogotá, Colombia</p>
-          <p><i class="fas fa-code-branch"></i> <a href="https://github.com/T4t4n32/M_A_N_G_O" target="_blank">Repositorio GitHub</a></p>
+          <div class="contact-item">
+            <i class="fas fa-envelope"></i>
+            <div>
+              <h3>Correo Electrónico</h3>
+              <p>ssch200913@gmail.com</p>
+            </div>
+          </div>
+          <div class="contact-item">
+            <i class="fas fa-map-marker-alt"></i>
+            <div>
+              <h3>Ubicación</h3>
+              <p>Pacífico Colombiano</p>
+            </div>
+          </div>
+          <div class="contact-item">
+            <i class="fas fa-flask"></i>
+            <div>
+              <h3>Proyecto</h3>
+              <p>Iniciativa Educativa y Científica</p>
+            </div>
+          </div>
         </div>
-        <div class="github-badge">
-          <a href="https://github.com/T4t4n32/M_A_N_G_O" target="_blank">
-            <i class="fab fa-github"></i> M_A_N_G_O
-          </a>
+        <div class="contact-form">
+          <p>📧 Para consultas técnicas o colaboraciones, contáctanos por correo electrónico.</p>
+          <div class="form-note">
+            <i class="fas fa-info-circle"></i>
+            <p>Este es un proyecto educativo desarrollado por Sebastián Sánchez Chacón para la conservación de manglares colombianos.</p>
+          </div>
         </div>
       </div>
     </div>
@@ -139,13 +168,59 @@
   <!-- Footer -->
   <footer class="main-footer">
     <div class="container">
-      <p>© 2026 M.A.N.G.O - Monitoreo Autónomo de Niveles y Gestión Oceánica</p>
-      <p>Proyecto open-source para la conservación de manglares colombianos</p>
-      <p>Datos reales • Sin simulaciones • Total transparencia</p>
+      <div class="footer-content">
+        <div class="footer-logo">
+          <span class="wave-icon">🌊</span>
+          <h3>M.A.N.G.O</h3>
+          <p>Tecnología protegiendo la vida — un manglar a la vez</p>
+        </div>
+        <div class="footer-links">
+          <h4>Enlaces Rápidos</h4>
+          <a href="index.html">Inicio</a>
+          <a href="about.html">Sobre el Proyecto</a>
+          <a href="gallery.html">Galería</a>
+          <a href="login.html">Dashboard</a>
+        </div>
+        <div class="footer-contact">
+          <h4>Contacto</h4>
+          <p><i class="fas fa-envelope"></i> ssch200913@gmail.com</p>
+          <p><i class="fas fa-map-marker-alt"></i> Colombia, Pacífico</p>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2026 M.A.N.G.O - Monitoreo Autónomo de Niveles y Gestión Oceánica. Todos los derechos reservados.</p>
+        <p>Proyecto educativo y científico para la conservación de manglares colombianos</p>
+      </div>
     </div>
   </footer>
 
-  <!-- JavaScript -->
-  <script src="assets/js/api.js"></script>
+  <!-- Scripts -->
+  <script>
+    // Smooth scrolling para enlaces de anclaje
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function(e) {
+        e.preventDefault();
+        const target = document.querySelector(this.getAttribute('href'));
+        if (target) {
+          target.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start'
+          });
+        }
+      });
+    });
+    
+    // Efecto de scroll para header
+    window.addEventListener('scroll', () => {
+      const header = document.querySelector('.main-header');
+      if (window.scrollY > 100) {
+        header.style.boxShadow = '0 4px 20px rgba(0, 0, 0, 0.3)';
+        header.style.background = 'rgba(14, 26, 31, 0.95)';
+      } else {
+        header.style.boxShadow = 'none';
+        header.style.background = 'transparent';
+      }
+    });
+  </script>
 </body>
 </html>
