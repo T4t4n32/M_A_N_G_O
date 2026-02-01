@@ -1,265 +1,268 @@
-<!-- frontend/about.html -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sobre M.A.N.G.O - Proyecto de Monitoreo</title>
-  <meta name="description" content="Información detallada sobre el proyecto M.A.N.G.O - Monitoreo Autónomo de Niveles y Gestión Oceánica">
-  
-  <!-- Favicon -->
-  <link rel="icon" href="image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌊</text></svg>">
-  
-  <!-- CSS -->
-  <link rel="stylesheet" href="assets/css/styles.css">
-  <link rel="stylesheet" href="assets/css/about.css">
-  
-  <!-- Font Awesome -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sobre M.A.N.G.O - Monitoreo Ambiental</title>
+    
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="assets/css/styles.css">
+    <link rel="stylesheet" href="assets/css/about.css">
 </head>
 <body>
-  <!-- Header -->
-  <header class="main-header">
-    <div class="container">
-      <div class="logo">
-        <span class="wave-icon">🌊</span>
-        <h1>M.A.N.G.O</h1>
-        <p class="subtitle">Sobre el Proyecto</p>
-      </div>
-      <nav class="main-nav">
-        <a href="index.html">Inicio</a>
-        <a href="dashboard.html">Dashboard</a>
-        <a href="gallery.html">Galería</a>
-        <a href="index.html#contact">Contacto</a>
-      </nav>
-    </div>
-  </header>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+        <div class="container">
+            <a class="navbar-brand" href="index.html">
+                <img src="assets/images/logo.svg" alt="M.A.N.G.O" class="logo-img">
+                <span class="brand-text">M.A.N.G.O</span>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="index.html">Inicio</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="about.html">Sobre el Proyecto</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="gallery.html">Galería</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link btn btn-outline-light" href="login.html">
+                            <i class="fas fa-user"></i> Iniciar Sesión
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
 
-  <!-- Hero Section -->
-  <section class="hero about-hero">
-    <div class="container">
-      <h2>🌿 Sobre M.A.N.G.O</h2>
-      <p class="hero-text">Monitoreo Autónomo de Niveles y Gestión Oceánica</p>
-    </div>
-  </section>
+    <!-- Hero Section -->
+    <header class="hero-section">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-8 mx-auto text-center">
+                    <h1 class="display-4 fw-bold text-white mb-3">Sobre M.A.N.G.O</h1>
+                    <p class="lead text-light">
+                        Monitoreo Autónomo de Niveles y Gestión Oceánica
+                    </p>
+                </div>
+            </div>
+        </div>
+    </header>
 
-  <!-- Mission Section -->
-  <section class="section mission-section">
-    <div class="container">
-      <h2 class="section-title">🎯 Misión y Visión</h2>
-      <div class="mission-content">
-        <div class="mission-card">
-          <h3><i class="fas fa-bullseye"></i> Misión</h3>
-          <p>
-            Desarrollar y desplegar un sistema de monitoreo ambiental autónomo 
-            para la protección y conservación de ecosistemas de manglares colombianos, 
-            proporcionando datos precisos y en tiempo real para la toma de decisiones 
-            informadas en la gestión ambiental.
-          </p>
+    <!-- Mission Section -->
+    <section class="py-5">
+        <div class="container">
+            <h2 class="text-center mb-5">Misión y Visión</h2>
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body">
+                            <h3 class="card-title mb-3">
+                                <i class="fas fa-bullseye text-primary me-2"></i>
+                                Misión
+                            </h3>
+                            <p class="card-text">
+                                Desarrollar y desplegar un sistema de monitoreo ambiental autónomo 
+                                para la protección y conservación de ecosistemas de manglares 
+                                colombianos, proporcionando datos precisos y en tiempo real para 
+                                la toma de decisiones informadas en la gestión ambiental.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body">
+                            <h3 class="card-title mb-3">
+                                <i class="fas fa-eye text-success me-2"></i>
+                                Visión
+                            </h3>
+                            <p class="card-text">
+                                Ser el sistema de referencia para el monitoreo de ecosistemas 
+                                costeros en Colombia, contribuyendo a la preservación de los 
+                                manglares como ecosistemas vitales para la biodiversidad y las 
+                                comunidades costeras, mediante tecnología accesible y sostenible.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-        <div class="mission-card">
-          <h3><i class="fas fa-eye"></i> Visión</h3>
-          <p>
-            Ser el sistema de referencia para el monitoreo de ecosistemas costeros 
-            en Colombia, contribuyendo a la preservación de los manglares como 
-            ecosistemas vitales para la biodiversidad y las comunidades costeras, 
-            mediante tecnología accesible y sostenible.
-          </p>
-        </div>
-      </div>
-    </div>
-  </section>
+    </section>
 
-  <!-- Creator Section -->
-  <section class="section creator-section">
-    <div class="container">
-      <h2 class="section-title">👤 El Creador</h2>
-      <div class="creator-container">
-        <div class="creator-image">
-          <img src="assets/images/sebastian-sanchez.jpg" alt="Sebastián Sánchez">
+    <!-- Creator Section -->
+    <section class="py-5 bg-light">
+        <div class="container">
+            <h2 class="text-center mb-5">El Creador</h2>
+            <div class="row align-items-center">
+                <div class="col-lg-4">
+                    <div class="creator-image">
+                        <img src="assets/images/sebastian-sanchez.jpg" alt="Sebastián Sánchez" class="img-fluid rounded">
+                    </div>
+                </div>
+                <div class="col-lg-8">
+                    <h3>Sebastián Sánchez Chacón</h3>
+                    <p class="lead">Creador y Desarrollador Principal</p>
+                    <p>
+                        Estudiante de Electrónica con pasión por la conservación ambiental 
+                        y la tecnología. Desarrollador del proyecto M.A.N.G.O como iniciativa 
+                        personal para proteger los ecosistemas de manglares colombianos 
+                        mediante monitoreo tecnológico accesible.
+                    </p>
+                    <p>
+                        Este proyecto representa un esfuerzo educativo y científico para 
+                        apoyar el monitoreo ambiental en los manglares colombianos, 
+                        originalmente iniciado con el grupo "CALIBOTS" y continuado de 
+                        forma independiente.
+                    </p>
+                </div>
+            </div>
         </div>
-        <div class="creator-content">
-          <h3>Sebastián Sánchez Chacón</h3>
-          <p class="creator-title">Creador y Desarrollador Principal</p>
-          <p class="creator-description">
-            Ingeniero ambiental apasionado por la conservación de ecosistemas costeros.
-            Fundador de M.A.N.G.O desde su etapa como proyecto académico,
-            comprometido con la protección de los manglares colombianos
-            a través de tecnología accesible.
-          </p>
-          <div class="creator-credentials">
-            <span>🎓 Proyecto iniciado en el SENA</span>
-            <span>🌊 3+ años monitoreando manglares</span>
-            <span>💡 100% código abierto en GitHub</span>
-          </div>
-          <div class="creator-quote">
-            <blockquote>
-              "La tecnología debe servir para proteger la vida, no para destruirla. 
-              Cada manglar salvo es un futuro más seguro para nuestras comunidades costeras."
-            </blockquote>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
+    </section>
 
-  <!-- Objectives Section -->
-  <section class="section objectives-section">
-    <div class="container">
-      <h2 class="section-title">🎯 Objetivos del Proyecto</h2>
-      <div class="objectives-grid">
-        <div class="objective-card">
-          <div class="objective-icon">
-            <i class="fas fa-chart-line"></i>
-          </div>
-          <h3>Monitoreo Continuo</h3>
-          <p>Implementar un sistema de monitoreo continuo y autónomo de parámetros 
-             ambientales críticos en ecosistemas de manglares.</p>
+    <!-- Objectives Section -->
+    <section class="py-5">
+        <div class="container">
+            <h2 class="text-center mb-5">Objetivos del Proyecto</h2>
+            <div class="row g-4">
+                <div class="col-md-6 col-lg-3">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body text-center">
+                            <div class="objective-icon mb-3">
+                                <i class="fas fa-microchip fa-2x text-primary"></i>
+                            </div>
+                            <h5 class="card-title">Monitoreo en Tiempo Real</h5>
+                            <p class="card-text">
+                                Implementar sensores autónomos para medir pH, temperatura y 
+                                turbidez en ecosistemas de manglar.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body text-center">
+                            <div class="objective-icon mb-3">
+                                <i class="fas fa-satellite fa-2x text-success"></i>
+                            </div>
+                            <h5 class="card-title">Transmisión de Datos</h5>
+                            <p class="card-text">
+                                Utilizar tecnología LoRa para transmisión de datos en zonas 
+                                remotas con bajo consumo energético.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body text-center">
+                            <div class="objective-icon mb-3">
+                                <i class="fas fa-chart-bar fa-2x text-info"></i>
+                            </div>
+                            <h5 class="card-title">Visualización Accesible</h5>
+                            <p class="card-text">
+                                Crear un dashboard intuitivo para visualización de datos y 
+                                generación de reportes para comunidades y autoridades.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body text-center">
+                            <div class="objective-icon mb-3">
+                                <i class="fas fa-leaf fa-2x text-warning"></i>
+                            </div>
+                            <h5 class="card-title">Conservación Sostenible</h5>
+                            <p class="card-text">
+                                Contribuir a la preservación de los manglares mediante 
+                                información precisa para la toma de decisiones ambientales.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-        <div class="objective-card">
-          <div class="objective-icon">
-            <i class="fas fa-database"></i>
-          </div>
-          <h3>Base de Datos</h3>
-          <p>Crear una base de datos histórica de calidad del agua y condiciones 
-             ambientales para análisis a largo plazo.</p>
-        </div>
-        <div class="objective-card">
-          <div class="objective-icon">
-            <i class="fas fa-users"></i>
-          </div>
-          <h3>Comunidad</h3>
-          <p>Capacitar y empoderar a comunidades locales en el uso de tecnología 
-             para la conservación ambiental.</p>
-        </div>
-        <div class="objective-card">
-          <div class="objective-icon">
-            <i class="fas fa-code"></i>
-          </div>
-          <h3>Código Abierto</h3>
-          <p>Mantener el proyecto 100% open-source para fomentar la colaboración 
-             y replicabilidad en otros ecosistemas.</p>
-        </div>
-      </div>
-    </div>
-  </section>
+    </section>
 
-  <!-- Technology Section -->
-  <section class="section technology-section">
-    <div class="container">
-      <h2 class="section-title">🛠️ Tecnología Utilizada</h2>
-      <div class="technology-content">
-        <div class="tech-category">
-          <h3><i class="fas fa-microchip"></i> Hardware</h3>
-          <ul>
-            <li><strong>NVIDIA Jetson TK1:</strong> Procesamiento principal y control</li>
-            <li><strong>ESP32 + LoRa:</strong> Comunicación inalámbrica de largo alcance</li>
-            <li><strong>Sensor de pH:</strong> Medición de acidez/alkalinidad del agua</li>
-            <li><strong>Sensor de Temperatura:</strong> Monitoreo térmico continuo</li>
-            <li><strong>Sensor de Turbidez:</strong> Medición de partículas suspendidas</li>
-            <li><strong>Propulsores APISQUEEN:</strong> Movimiento autónomo del dispositivo</li>
-            <li><strong>Kinect V1:</strong> Mapeo 3D y SLAM</li>
-            <li><strong>Batería LiPo 3S:</strong> Alimentación de 5000mAh para autonomía</li>
-          </ul>
+    <!-- Technology Section -->
+    <section class="py-5 bg-light">
+        <div class="container">
+            <h2 class="text-center mb-5">Tecnología Utilizada</h2>
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <h4><i class="fas fa-microchip text-primary me-2"></i> Hardware</h4>
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item"><i class="fas fa-check-circle text-success me-2"></i> NVIDIA Jetson TK1</li>
+                        <li class="list-group-item"><i class="fas fa-check-circle text-success me-2"></i> Módulo LoRa (SX1262)</li>
+                        <li class="list-group-item"><i class="fas fa-check-circle text-success me-2"></i> Sensores: pH, Temperatura, Turbidez</li>
+                        <li class="list-group-item"><i class="fas fa-check-circle text-success me-2"></i> Raspberry Pi 4 (pruebas terrestres)</li>
+                        <li class="list-group-item"><i class="fas fa-check-circle text-success me-2"></i> Intel Neural Compute Stick 2 (IA)</li>
+                    </ul>
+                </div>
+                <div class="col-md-6">
+                    <h4><i class="fas fa-code text-success me-2"></i> Software</h4>
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item"><i class="fas fa-check-circle text-success me-2"></i> Backend: Python + Flask</li>
+                        <li class="list-group-item"><i class="fas fa-check-circle text-success me-2"></i> Frontend: HTML5, CSS3, JavaScript</li>
+                        <li class="list-group-item"><i class="fas fa-check-circle text-success me-2"></i> Base de Datos: PostgreSQL + PostGIS</li>
+                        <li class="list-group-item"><i class="fas fa-check-circle text-success me-2"></i> Comunicación: Protocolo LoRaWAN</li>
+                        <li class="list-group-item"><i class="fas fa-check-circle text-success me-2"></i> Docker para despliegue</li>
+                    </ul>
+                </div>
+            </div>
         </div>
-        <div class="tech-category">
-          <h3><i class="fas fa-code"></i> Software</h3>
-          <ul>
-            <li><strong>Python 3.11:</strong> Lenguaje principal del backend</li>
-            <li><strong>Flask:</strong> Framework web para API REST</li>
-            <li><strong>PostgreSQL + PostGIS:</strong> Base de datos espacial</li>
-            <li><strong>Chart.js:</strong> Visualización de datos en tiempo real</li>
-            <li><strong>HTML5/CSS3/JavaScript:</strong> Frontend moderno y responsivo</li>
-            <li><strong>Docker:</strong> Contenerización para despliegue</li>
-            <li><strong>Git/GitHub:</strong> Control de versiones y colaboración</li>
-          </ul>
-        </div>
-      </div>
-    </div>
-  </section>
+    </section>
 
-  <!-- Features Section -->
-  <section class="section features-section">
-    <div class="container">
-      <h2 class="section-title">✨ Características Principales</h2>
-      <div class="features-grid">
-        <div class="feature-card">
-          <i class="fas fa-bolt"></i>
-          <h3>Tiempo Real</h3>
-          <p>Datos actualizados cada 30 segundos directamente desde los sensores</p>
+    <!-- Footer -->
+    <footer class="bg-dark text-white py-4">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <h5>M.A.N.G.O</h5>
+                    <p class="small">
+                        Monitoreo Autónomo de Niveles y Gestión Oceánica<br>
+                        Tecnología protegiendo la vida — un manglar a la vez
+                    </p>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <h5>Enlaces Rápidos</h5>
+                    <ul class="list-unstyled small">
+                        <li><a href="index.html" class="text-white text-decoration-none">Inicio</a></li>
+                        <li><a href="about.html" class="text-white text-decoration-none">Sobre el Proyecto</a></li>
+                        <li><a href="gallery.html" class="text-white text-decoration-none">Galería</a></li>
+                        <li><a href="login.html" class="text-white text-decoration-none">Dashboard</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <h5>Contacto</h5>
+                    <ul class="list-unstyled small">
+                        <li><i class="fas fa-envelope me-2"></i> ssch200913@gmail.com</li>
+                        <li><i class="fas fa-map-marker-alt me-2"></i> Cali, Valle del Cauca</li>
+                        <li><i class="fas fa-flask me-2"></i> Proyecto Educativo</li>
+                    </ul>
+                </div>
+            </div>
+            <hr class="bg-secondary">
+            <div class="text-center small">
+                <p class="mb-0">&copy; 2026 M.A.N.G.O - Monitoreo Autónomo de Niveles y Gestión Oceánica</p>
+                <p class="mb-0">Proyecto educativo y científico para la conservación de manglares colombianos</p>
+            </div>
         </div>
-        <div class="feature-card">
-          <i class="fas fa-shield-alt"></i>
-          <h3>Sin Simulaciones</h3>
-          <p>100% datos reales, nunca simulados. Si no hay datos, se indica explícitamente</p>
-        </div>
-        <div class="feature-card">
-          <i class="fas fa-cloud"></i>
-          <h3>Modo Offline</h3>
-          <p>Funciona incluso sin conexión, mostrando datos históricos reales</p>
-        </div>
-        <div class="feature-card">
-          <i class="fas fa-bell"></i>
-          <h3>Alertas Inteligentes</h3>
-          <p>Notificaciones automáticas para valores fuera de rango o fallos del sistema</p>
-        </div>
-        <div class="feature-card">
-          <i class="fas fa-chart-area"></i>
-          <h3>Gráficos Interactivos</h3>
-          <p>Visualización avanzada con Chart.js para análisis de tendencias</p>
-        </div>
-        <div class="feature-card">
-          <i class="fas fa-lock"></i>
-          <h3>Seguridad</h3>
-          <p>Autenticación segura, HTTPS y encriptación de extremo a extremo</p>
-        </div>
-      </div>
-    </div>
-  </section>
+    </footer>
 
-  <!-- Documentation Section -->
-  <section class="section documentation-section">
-    <div class="container">
-      <h2 class="section-title">📚 Documentación</h2>
-      <div class="documentation-content">
-        <div class="doc-card">
-          <h3><i class="fas fa-file-alt"></i> Guía de Usuario</h3>
-          <p>Manual completo para usuarios del sistema de monitoreo</p>
-          <a href="#" class="doc-link">Descargar PDF</a>
-        </div>
-        <div class="doc-card">
-          <h3><i class="fas fa-code"></i> Documentación Técnica</h3>
-          <p>Especificaciones técnicas, API y arquitectura del sistema</p>
-          <a href="#" class="doc-link">Ver Documentación</a>
-        </div>
-        <div class="doc-card">
-          <h3><i class="fas fa-video"></i> Tutoriales</h3>
-          <p>Videos explicativos sobre el uso y configuración del sistema</p>
-          <a href="#" class="doc-link">Ver Videos</a>
-        </div>
-        <div class="doc-card">
-          <h3><i class="fas fa-book"></i> Informes Técnicos</h3>
-          <p>Reportes de pruebas, calibración y resultados del proyecto</p>
-          <a href="#" class="doc-link">Ver Informes</a>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Footer -->
-  <footer class="main-footer">
-    <div class="container">
-      <p>© 2026 M.A.N.G.O - Sobre el Proyecto</p>
-      <p>Proyecto open-source para la conservación de manglares colombianos</p>
-      <p>
-        <a href="https://github.com/T4t4n32/M_A_N_G_O" target="_blank">
-          <i class="fab fa-github"></i> Repositorio GitHub
-        </a>
-      </p>
-    </div>
-  </footer>
-
-  <!-- JavaScript -->
-  <script src="assets/js/api.js"></script>
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="assets/js/main.js"></script>
 </body>
 </html>

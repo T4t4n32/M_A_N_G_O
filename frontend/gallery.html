@@ -1,144 +1,222 @@
-<!-- frontend/gallery.html -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Galería - M.A.N.G.O</title>
-  <meta name="description" content="Galería de fotos y videos del proyecto M.A.N.G.O - Monitoreo de Manglares">
-  
-  <!-- Favicon -->
-  <link rel="icon" href="image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌊</text></svg>">
-  
-  <!-- CSS -->
-  <link rel="stylesheet" href="assets/css/styles.css">
-  <link rel="stylesheet" href="assets/css/gallery.css">
-  
-  <!-- Font Awesome -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Galería - M.A.N.G.O</title>
+    
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="assets/css/styles.css">
+    <link rel="stylesheet" href="assets/css/gallery.css">
 </head>
 <body>
-  <!-- Header -->
-  <header class="main-header">
-    <div class="container">
-      <div class="logo">
-        <span class="wave-icon">🌊</span>
-        <h1>M.A.N.G.O</h1>
-        <p class="subtitle">Galería del Proyecto</p>
-      </div>
-      <nav class="main-nav">
-        <a href="index.html">Inicio</a>
-        <a href="dashboard.html">Dashboard</a>
-        <a href="about.html">Sobre</a>
-        <a href="index.html#contact">Contacto</a>
-      </nav>
-    </div>
-  </header>
-
-  <!-- Hero Section -->
-  <section class="hero gallery-hero">
-    <div class="container">
-      <h2>📸 Galería del Proyecto M.A.N.G.O</h2>
-      <p class="hero-text">Documentación visual del desarrollo, implementación y resultados del sistema de monitoreo</p>
-    </div>
-  </section>
-
-  <!-- Gallery Section -->
-  <section class="section gallery-section">
-    <div class="container">
-      <!-- Filtros -->
-      <div class="gallery-filters">
-        <button data-filter="all" class="active">
-          <i class="fas fa-filter"></i> Todos
-        </button>
-        <button data-filter="field">
-          <i class="fas fa-tree"></i> Campo
-        </button>
-        <button data-filter="hardware">
-          <i class="fas fa-microchip"></i> Hardware
-        </button>
-        <button data-filter="dashboard">
-          <i class="fas fa-chart-line"></i> Dashboard
-        </button>
-        <button data-filter="community">
-          <i class="fas fa-users"></i> Comunidad
-        </button>
-        <button data-filter="documentation">
-          <i class="fas fa-file-alt"></i> Documentación
-        </button>
-      </div>
-
-      <!-- Grid de Galería -->
-      <div class="gallery-grid" id="gallery-grid">
-        <!-- Las imágenes se cargarán dinámicamente -->
-      </div>
-
-      <!-- Lightbox -->
-      <div class="lightbox" id="lightbox">
-        <div class="lightbox-content">
-          <span class="close-lightbox" id="close-lightbox">&times;</span>
-          <img src="" alt="" id="lightbox-img">
-          <div class="lightbox-caption" id="lightbox-caption"></div>
-          <div class="lightbox-nav">
-            <button class="prev" id="lightbox-prev">
-              <i class="fas fa-arrow-left"></i>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+        <div class="container">
+            <a class="navbar-brand" href="index.html">
+                <img src="assets/images/logo.svg" alt="M.A.N.G.O" class="logo-img">
+                <span class="brand-text">M.A.N.G.O</span>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
             </button>
-            <button class="next" id="lightbox-next">
-              <i class="fas fa-arrow-right"></i>
-            </button>
-          </div>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="index.html">Inicio</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="about.html">Sobre el Proyecto</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="gallery.html">Galería</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link btn btn-outline-light" href="login.html">
+                            <i class="fas fa-user"></i> Iniciar Sesión
+                        </a>
+                    </li>
+                </ul>
+            </div>
         </div>
-      </div>
-    </div>
-  </section>
+    </nav>
 
-  <!-- Creator Section -->
-  <section class="section creator-section">
-    <div class="container">
-      <h2 class="section-title">👤 El Creador</h2>
-      <div class="creator-container">
-        <div class="creator-image">
-          <img src="assets/images/sebastian-sanchez.jpg" alt="Sebastián Sánchez">
+    <!-- Hero Section -->
+    <header class="hero-section">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-8 mx-auto text-center">
+                    <h1 class="display-4 fw-bold text-white mb-3">Galería del Proyecto</h1>
+                    <p class="lead text-light">
+                        Documentación visual del desarrollo, implementación y resultados del 
+                        sistema M.A.N.G.O en ecosistemas de manglar colombianos
+                    </p>
+                </div>
+            </div>
         </div>
-        <div class="creator-content">
-          <h3>Sebastián Sánchez Chacón</h3>
-          <p class="creator-title">Creador y Desarrollador Principal</p>
-          <p class="creator-description">
-            Ingeniero ambiental apasionado por la conservación de ecosistemas costeros.
-            Fundador de M.A.N.G.O desde su etapa como proyecto académico,
-            comprometido con la protección de los manglares colombianos
-            a través de tecnología accesible.
-          </p>
-          <div class="creator-credentials">
-            <span>🎓 Proyecto iniciado en el SENA</span>
-            <span>🌊 3+ años monitoreando manglares</span>
-            <span>💡 100% código abierto en GitHub</span>
-          </div>
-          <div class="creator-quote">
-            <blockquote>
-              "La tecnología debe servir para proteger la vida, no para destruirla. 
-              Cada manglar salvo es un futuro más seguro para nuestras comunidades costeras."
-            </blockquote>
-          </div>
+    </header>
+
+    <!-- Categories Section -->
+    <section class="py-5">
+        <div class="container">
+            <div class="text-center mb-5">
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-outline-primary active" data-category="all">Todo</button>
+                    <button type="button" class="btn btn-outline-primary" data-category="hardware">Hardware</button>
+                    <button type="button" class="btn btn-outline-primary" data-category="field">Campo</button>
+                    <button type="button" class="btn btn-outline-primary" data-category="community">Comunidad</button>
+                    <button type="button" class="btn btn-outline-primary" data-category="documentation">Documentación</button>
+                </div>
+            </div>
+
+            <!-- Gallery Grid - Hardware Category -->
+            <div class="gallery-grid" id="hardware-gallery">
+                <!-- Image 1 -->
+                <div class="gallery-item" data-category="hardware">
+                    <div class="gallery-img-container">
+                        <img src="assets/images/gallery/hardware/hardware-01.jpg" alt="Prototipo Electrónico" class="gallery-img">
+                    </div>
+                    <div class="gallery-caption">
+                        <h5>Prototipo Electrónico</h5>
+                        <p>Ensamblaje inicial de sensores y microcontrolador Jetson TK1</p>
+                    </div>
+                </div>
+
+                <!-- Image 2 -->
+                <div class="gallery-item" data-category="hardware">
+                    <div class="gallery-img-container">
+                        <img src="assets/images/gallery/hardware/hardware-02.jpg" alt="Módulo LoRa SX1262" class="gallery-img">
+                    </div>
+                    <div class="gallery-caption">
+                        <h5>Módulo LoRa SX1262</h5>
+                        <p>Configuración del módulo de comunicación de largo alcance</p>
+                    </div>
+                </div>
+
+                <!-- Image 3 -->
+                <div class="gallery-item" data-category="hardware">
+                    <div class="gallery-img-container">
+                        <img src="assets/images/gallery/hardware/hardware-03.jpg" alt="Sensores Ambientales" class="gallery-img">
+                    </div>
+                    <div class="gallery-caption">
+                        <h5>Sensores Ambientales</h5>
+                        <p>Calibración de sensores de pH, temperatura y turbidez</p>
+                    </div>
+                </div>
+
+                <!-- Image 4 -->
+                <div class="gallery-item" data-category="hardware">
+                    <div class="gallery-img-container">
+                        <img src="assets/images/gallery/hardware/hardware-04.jpg" alt="Circuito Integrado" class="gallery-img">
+                    </div>
+                    <div class="gallery-caption">
+                        <h5>Circuito Integrado</h5>
+                        <p>Diagrama de conexiones y ensamblaje de componentes</p>
+                    </div>
+                </div>
+
+                <!-- Image 5 -->
+                <div class="gallery-item" data-category="hardware">
+                    <div class="gallery-img-container">
+                        <img src="assets/images/gallery/hardware/hardware-05.jpg" alt="Pruebas de Campo" class="gallery-img">
+                    </div>
+                    <div class="gallery-caption">
+                        <h5>Pruebas de Campo</h5>
+                        <p>Pruebas de funcionamiento del sistema en condiciones reales</p>
+                    </div>
+                </div>
+
+                <!-- Add more images following the same pattern... -->
+                <!-- Total: 134 imágenes de hardware -->
+            </div>
+
+            <!-- No Images Message -->
+            <div class="no-images text-center py-5" id="no-images-message" style="display: none;">
+                <i class="fas fa-images fa-4x text-muted mb-3"></i>
+                <h4 class="text-muted">No hay imágenes en esta categoría</h4>
+                <p class="text-muted">Próximamente se agregarán más imágenes de este tipo</p>
+            </div>
         </div>
-      </div>
-    </div>
-  </section>
+    </section>
 
-  <!-- Footer -->
-  <footer class="main-footer">
-    <div class="container">
-      <p>© 2026 M.A.N.G.O - Galería del Proyecto</p>
-      <p>Todas las fotos y videos son propiedad del proyecto M.A.N.G.O</p>
-      <p>
-        <a href="https://github.com/T4t4n32/M_A_N_G_O" target="_blank">
-          <i class="fab fa-github"></i> Repositorio GitHub
-        </a>
-      </p>
-    </div>
-  </footer>
+    <!-- Upload Instructions -->
+    <section class="py-5 bg-light">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-lg-8">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body">
+                            <h4 class="card-title mb-3">
+                                <i class="fas fa-info-circle text-primary me-2"></i>
+                                Instrucciones para Subir Imágenes
+                            </h4>
+                            <p class="card-text">
+                                Para agregar tus imágenes a la galería, colócalas en la carpeta correspondiente 
+                                con este formato:
+                            </p>
+                            <ul class="list-group list-group-flush">
+                                <li class="list-group-item">
+                                    <strong>Hardware:</strong> <code>assets/images/gallery/hardware/HELTEC 2.jpg</code>
+                                </li>
+                                <li class="list-group-item">
+                                    <strong>Campo:</strong> <code>assets/images/gallery/field/field-01.jpg</code>
+                                </li>
+                                <li class="list-group-item">
+                                    <strong>Comunidad:</strong> <code>assets/images/gallery/community/community-01.jpg</code>
+                                </li>
+                                <li class="list-group-item">
+                                    <strong>Documentación:</strong> <code>assets/images/gallery/documentation/doc-01.jpg</code>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
 
-  <!-- JavaScript -->
-  <script src="assets/js/gallery.js"></script>
+    <!-- Footer -->
+    <footer class="bg-dark text-white py-4">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <h5>M.A.N.G.O</h5>
+                    <p class="small">
+                        Monitoreo Autónomo de Niveles y Gestión Oceánica<br>
+                        Tecnología protegiendo la vida — un manglar a la vez
+                    </p>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <h5>Enlaces Rápidos</h5>
+                    <ul class="list-unstyled small">
+                        <li><a href="index.html" class="text-white text-decoration-none">Inicio</a></li>
+                        <li><a href="about.html" class="text-white text-decoration-none">Sobre el Proyecto</a></li>
+                        <li><a href="gallery.html" class="text-white text-decoration-none">Galería</a></li>
+                        <li><a href="login.html" class="text-white text-decoration-none">Dashboard</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <h5>Contacto</h5>
+                    <ul class="list-unstyled small">
+                        <li><i class="fas fa-envelope me-2"></i> ssch200913@gmail.com</li>
+                        <li><i class="fas fa-map-marker-alt me-2"></i> Cali, Valle del Cauca</li>
+                    </ul>
+                </div>
+            </div>
+            <hr class="bg-secondary">
+            <div class="text-center small">
+                <p class="mb-0">&copy; 2026 M.A.N.G.O</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="assets/js/main.js"></script>
+    <script src="assets/js/gallery.js"></script>
 </body>
 </html>

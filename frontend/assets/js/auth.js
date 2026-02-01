@@ -1,152 +1,100 @@
-// frontend/assets/js/auth.js
-document.addEventListener('DOMContentLoaded', () => {
-  const loginForm = document.getElementById('login-form');
-  const togglePasswordBtn = document.getElementById('toggle-password');
-  const passwordInput = document.getElementById('password');
-  const submitBtn = document.getElementById('submit-btn');
-  const errorContainer = document.getElementById('error-container');
-  const errorText = document.getElementById('error-text');
-  const offlineWarning = document.getElementById('offline-warning');
-  const connectionIndicator = document.getElementById('connection-indicator');
-  const connectionStatus = document.getElementById('connection-status');
+// M.A.N.G.O - Sistema de Autenticación
 
-  // Verificar estado de conexión al cargar
-  checkBackendConnection();
-
-  // Alternar visibilidad de contraseña
-  if (togglePasswordBtn && passwordInput) {
-    togglePasswordBtn.addEventListener('click', () => {
-      const isPassword = passwordInput.type === 'password';
-      passwordInput.type = isPassword ? 'text' : 'password';
-      togglePasswordBtn.textContent = isPassword ? '🙈' : '👁️';
-    });
-  }
-
-  // Manejar envío del formulario
-  if (loginForm) {
-    loginForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      
-      const username = document.getElementById('username')?.value.trim();
-      const password = document.getElementById('password')?.value;
-      const remember = document.getElementById('remember')?.checked || false;
-
-      if (!username || !password) {
-        showError('Por favor ingrese usuario y contraseña');
-        return;
-      }
-
-      // Deshabilitar botón durante el proceso
-      if (submitBtn) {
-        submitBtn.disabled = true;
-        const originalText = submitBtn.querySelector('#btn-text')?.textContent || 'Ingresar';
-        if (submitBtn.querySelector('#btn-text')) {
-          submitBtn.querySelector('#btn-text').textContent = 'Iniciando sesión...';
-        }
-
-        try {
-          // Intentar login usando mangoAPI
-          const response = await mangoAPI.login(username, password);
-          
-          if (response.success) {
-            // Guardar preferencia de recordar sesión
-            if (remember) {
-              localStorage.setItem('mango_remember_me', 'true');
-            }
+document.addEventListener('DOMContentLoaded', function() {
+    const loginForm = document.getElementById('login-form');
+    const logoutBtn = document.getElementById('logout-btn');
+    
+    // Manejar login
+    if (loginForm) {
+        loginForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
             
-            // Redirigir al dashboard
-            window.location.href = 'dashboard.html';
-          } else {
-            showError(response.error || 'Error en el inicio de sesión');
-          }
-        } catch (error) {
-          console.error('Error en login:', error);
-          if (error.message === 'No autorizado') {
-            showError('Credenciales inválidas. Verifique usuario y contraseña.');
-          } else if (error.message.includes('Failed to fetch')) {
-            showError('No se pudo conectar con el servidor. Verifique su conexión.');
-            showOfflineWarning();
-          } else {
-            showError('Error del servidor. Intente nuevamente.');
-          }
-        } finally {
-          // Re-enable button
-          submitBtn.disabled = false;
-          if (submitBtn.querySelector('#btn-text')) {
-            submitBtn.querySelector('#btn-text').textContent = 'Ingresar al dashboard';
-          }
-        }
-      }
-    });
-  }
-
-  // Verificar conexión periódicamente
-  setInterval(checkBackendConnection, 30000);
-
-  // Funciones auxiliares
-  function showError(message) {
-    if (errorContainer && errorText) {
-      errorText.textContent = message;
-      errorContainer.style.display = 'block';
-      
-      // Ocultar error después de 5 segundos
-      setTimeout(() => {
-        if (errorContainer) {
-          errorContainer.style.display = 'none';
-        }
-      }, 5000);
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const remember = document.getElementById('remember').checked;
+            
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        username: username,
+                        password: password,
+                        remember: remember
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    // Guardar información del usuario
+                    localStorage.setItem('mango_user', username);
+                    localStorage.setItem('mango_remember', remember.toString());
+                    
+                    // Redirigir al dashboard
+                    window.location.href = 'dashboard.html';
+                } else {
+                    alert('Credenciales incorrectas. Por favor, intenta de nuevo.');
+                }
+            } catch (error) {
+                console.error('Error en login:', error);
+                alert('Error al conectar con el servidor. Por favor, intenta de nuevo.');
+            }
+        });
     }
-  }
-
-  function showOfflineWarning() {
-    if (offlineWarning && connectionIndicator && connectionStatus) {
-      offlineWarning.style.display = 'block';
-      connectionIndicator.className = 'status-indicator offline';
-      connectionStatus.textContent = 'Backend: Offline';
-      connectionStatus.style.color = '#dc3545';
+    
+    // Manejar logout
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', async function(e) {
+            e.preventDefault();
+            
+            try {
+                await fetch('/api/auth/logout', {
+                    method: 'POST',
+                    credentials: 'include'
+                });
+                
+                // Limpiar almacenamiento local
+                localStorage.removeItem('mango_user');
+                localStorage.removeItem('mango_remember');
+                
+                // Redirigir al login
+                window.location.href = 'login.html';
+            } catch (error) {
+                console.error('Error en logout:', error);
+                window.location.href = 'login.html';
+            }
+        });
     }
-  }
-
-  async function checkBackendConnection() {
-    try {
-      const response = await fetch('/health', {
-        method: 'GET',
-        credentials: 'include'
-      });
-      
-      if (response.ok) {
-        if (connectionIndicator && connectionStatus) {
-          connectionIndicator.className = 'status-indicator online';
-          connectionStatus.textContent = 'Backend: Conectado';
-          connectionStatus.style.color = '';
-        }
-        if (offlineWarning) {
-          offlineWarning.style.display = 'none';
-        }
-        return true;
-      } else {
-        showOfflineWarning();
-        return false;
-      }
-    } catch (error) {
-      console.error('Error checking backend connection:', error);
-      showOfflineWarning();
-      return false;
+    
+    // Verificar sesión al cargar dashboard
+    if (window.location.pathname.includes('dashboard.html')) {
+        checkSession();
     }
-  }
-
-  // Verificar si hay sesión activa
-  checkAuthStatus();
 });
 
-async function checkAuthStatus() {
-  try {
-    const response = await mangoAPI.checkAuthStatus();
-    if (response.authenticated) {
-      // Si ya está autenticado, redirigir al dashboard
-      window.location.href = 'dashboard.html';
+// Verificar sesión
+async function checkSession() {
+    try {
+        const response = await fetch('/api/auth/status', {
+            credentials: 'include'
+        });
+        
+        const data = await response.json();
+        
+        if (!data.authenticated) {
+            window.location.href = 'login.html';
+        } else {
+            // Mostrar nombre de usuario
+            const userDisplay = document.getElementById('user-display');
+            if (userDisplay) {
+                userDisplay.textContent = data.user.full_name || data.user.username;
+            }
+        }
+    } catch (error) {
+        console.error('Error verificando sesión:', error);
+        window.location.href = 'login.html';
     }
-  } catch (error) {
-    // No autenticado, mostrar formulario de login
-  }
 }
