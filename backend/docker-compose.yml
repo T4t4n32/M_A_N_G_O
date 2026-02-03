@@ -1,0 +1,47 @@
+# docker-compose.yml
+version: '3.8'
+
+services:
+  # 1. PostgreSQL LOCAL
+  postgres:
+    image: postgres:15-alpine
+    container_name: mango_postgres_local
+    environment:
+      POSTGRES_DB: mango_local
+      POSTGRES_USER: mango_user
+      POSTGRES_PASSWORD: local_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mango_user"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # 2. Redis LOCAL
+  redis:
+    image: redis:7-alpine
+    container_name: mango_redis_local
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+  # 3. PgAdmin (Opcional - para ver la base de datos)
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: mango_pgadmin_local
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@local.com
+      PGADMIN_DEFAULT_PASSWORD: admin123
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgres
+
+volumes:
+  postgres_data:
+  redis_data:
