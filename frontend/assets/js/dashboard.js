@@ -1,8 +1,26 @@
-function updateData() {
-  document.getElementById("temp").innerText = (20 + Math.random() * 5).toFixed(2) + " °C";
-  document.getElementById("ph").innerText = (7 + Math.random()).toFixed(2);
-  document.getElementById("turb").innerText = (10 + Math.random() * 3).toFixed(2) + " NTU";
-}
+document.addEventListener("DOMContentLoaded", () => {
 
-setInterval(updateData, 2000);
-updateData();
+    /* Loader */
+    setTimeout(() => {
+        document.querySelector(".dashboard-loader").style.display = "none";
+    }, 1200);
+
+    /* Animaciones */
+    const animated = document.querySelectorAll(".fade-up, .fade-left, .fade-right");
+
+    animated.forEach(el => {
+        setTimeout(() => el.classList.add("active"), 400);
+    });
+
+    /* Simulación de datos (reemplazable por API real) */
+    function random(min, max) {
+        return (Math.random() * (max - min) + min).toFixed(2);
+    }
+
+    setInterval(() => {
+        document.getElementById("temp").textContent = random(18, 26);
+        document.getElementById("turb").textContent = random(2, 7);
+        document.getElementById("ph").textContent = random(7.6, 8.3);
+    }, 3000);
+
+});
