@@ -1,9 +1,9 @@
-# backend/requirements.txt
-Flask==2.3.3
-Flask-SQLAlchemy==3.0.5
-Flask-Migrate==4.0.5
-Flask-CORS==4.0.0
+fastapi==0.115.0
+uvicorn==0.30.6
+SQLAlchemy==2.0.34
 psycopg2-binary==2.9.9
-python-dotenv==1.0.0
-alembic==1.12.1
-Werkzeug==2.3.8
+pydantic-settings==2.5.2
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+python-multipart==0.0.9
+python-dotenv==1.0.1
