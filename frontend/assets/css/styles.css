@@ -1,183 +1,163 @@
-/* RESET IMPORTANTE */
-html, body {
-    margin: 0;
-    padding: 0;
-    width: 100%;
+/* ================= RESET ================= */
+* {
+    box-sizing: border-box;
+}
+
+html {
     scroll-behavior: smooth;
 }
 
-/* NAVBAR */
-.mango-navbar {
-    background: rgba(5, 20, 35, 0.95);
-    backdrop-filter: blur(6px);
-    border-bottom: none;   /* 🔥 elimina línea blanca */
+body {
+    font-family: 'Inter', system-ui, sans-serif;
+    background: radial-gradient(circle at top, #061c2d, #020b14);
+    color: #eaf6ff;
+    overflow-x: hidden;
 }
 
-/* HERO */
+/* ================= COLORES BASE ================= */
+:root {
+    --mango-gold: #f6b01e;
+    --mango-green: #00c08b;
+    --mango-purple: #b44cff;
+    --mango-dark: #020b14;
+    --mango-glass: rgba(255,255,255,0.06);
+    --mango-border: rgba(255,255,255,0.12);
+}
+
+/* ================= NAVBAR ================= */
+.navbar {
+    padding: 1rem 0;
+    transition: background 0.3s ease, box-shadow 0.3s ease;
+}
+
+.navbar.bg-black {
+    background: rgba(2,11,20,0.9) !important;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+}
+
+.nav-link {
+    font-weight: 500;
+}
+
+/* ================= HERO ================= */
 .hero-section {
     min-height: 100vh;
-    background: linear-gradient(
-        rgba(5, 20, 35, 0.85),
-        rgba(5, 20, 35, 0.85)
-    ),
-    url("../img/hero-ocean.jpg"); /* IMAGEN: océano futurista */
-    background-size: cover;
-    background-position: center;
-
-    /* 🔥 CLAVE PARA EL BUG */
-    margin-top: 0;
-    padding-top: 80px; /* espacio para navbar fijo */
-}
-
-.hero-title {
-    font-size: 4rem;
-    font-weight: 700;
-}
-
-.hero-subtitle {
-    font-size: 1.4rem;
-    margin-top: 1rem;
-}
-
-/* SECCIONES */
-.section-dark {
-    background-color: #051423;
-    color: white;
-    padding: 80px 0;
-}
-
-.section-light {
-    background-color: #f4f7fa;
-    color: #111;
-    padding: 80px 0;
-}
-
-.section-title {
-    text-align: center;
-    margin-bottom: 40px;
-}
-
-.section-title.dark {
-    color: #111;
-}
-
-.section-text {
-    max-width: 900px;
-    margin: auto;
-    font-size: 1.1rem;
-}
-
-.section-text.dark {
-    color: #333;
-}
-
-/* FEATURES */
-.feature-card {
-    background: rgba(255,255,255,0.05);
-    padding: 30px;
-    border-radius: 12px;
-    text-align: center;
-    height: 100%;
-}
-
-.feature-icon {
-    font-size: 2.5rem;
-    margin-bottom: 15px;
-    color: #0d6efd;
-}
-
-/* TEC */
-.tech-list {
-    list-style: none;
-    max-width: 600px;
-    margin: auto;
-    font-size: 1.1rem;
-}
-
-.tech-list li::before {
-    content: "✔ ";
-    color: #0d6efd;
-}
-
-/* FOOTER */
-.footer {
-    background: #020b14;
-    color: #aaa;
-    text-align: center;
-    padding: 20px 0;
-}
-
-/* ================= PALETA MANGO ================= */
-:root {
-    --mango-gold: #f5b301;
-    --mango-green: #1fa37a;
-    --mango-purple: #b13cff;
-    --mango-dark: #051423;
-}
-
-/* ================= HERO MEJORADO ================= */
-.hero-section {
+    padding-top: 120px;
+    padding-bottom: 80px;
     background:
-        radial-gradient(circle at top,
-            rgba(245,179,1,0.15),
-            transparent 60%),
-        linear-gradient(
-            rgba(5,20,35,0.92),
-            rgba(5,20,35,0.95)
-        ),
-        url("../img/hero-ocean.jpg");
+        radial-gradient(circle at 50% 0%, rgba(246,176,30,0.12), transparent 60%),
+        linear-gradient(180deg, #020b14, #041727);
 }
 
-/* ================= TITULOS ================= */
 .hero-title {
-    background: linear-gradient(
-        90deg,
-        var(--mango-gold),
-        var(--mango-purple)
-    );
+    max-width: 900px;
+    margin: 0 auto;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    background: linear-gradient(90deg, var(--mango-gold), var(--mango-green));
     -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
+    color: transparent;
 }
 
-/* ================= BOTONES ================= */
-.btn-primary {
-    background: linear-gradient(
-        90deg,
-        var(--mango-gold),
-        var(--mango-purple)
-    );
-    border: none;
+.hero-section p {
+    max-width: 700px;
+    margin: 0 auto;
+    opacity: 0.9;
 }
 
-.btn-primary:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 10px 25px rgba(245,179,1,0.4);
-}
-
-/* ================= TARJETAS ================= */
-.feature-card {
-    border: 1px solid rgba(245,179,1,0.15);
-    transition: transform 0.3s ease;
-}
-
-.feature-card:hover {
-    transform: translateY(-8px);
-}
-
-/* ================= SEPARADOR OLA ================= */
+/* ================= WAVE ================= */
 .wave-divider {
-    position: relative;
-    height: 80px;
-    overflow: hidden;
+    line-height: 0;
+    margin-top: -1px; /* elimina línea blanca */
 }
 
 .wave-divider svg {
-    position: absolute;
-    bottom: 0;
+    display: block;
+}
+
+/* ================= SECCIONES ================= */
+.section-padding {
+    padding: 90px 0;
+}
+
+.section-title {
+    font-weight: 700;
+    letter-spacing: -0.4px;
+    margin-bottom: 20px;
+}
+
+.section-text {
+    max-width: 800px;
+    font-size: 1.05rem;
+    opacity: 0.9;
+}
+
+/* ================= CARDS ================= */
+.feature-card {
+    background: var(--mango-glass);
+    border: 1px solid var(--mango-border);
+    border-radius: 20px;
+    padding: 30px;
+    height: 100%;
+    transition: transform 0.4s ease, box-shadow 0.4s ease;
+    opacity: 0;
+    transform: translateY(40px);
+}
+
+.feature-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+}
+
+.feature-card h5 {
+    color: var(--mango-gold);
+    margin-bottom: 12px;
 }
 
 /* ================= CREADOR ================= */
 .creator-highlight {
-    border-left: 4px solid var(--mango-purple);
-    padding-left: 20px;
+    background: linear-gradient(
+        135deg,
+        rgba(180,76,255,0.15),
+        rgba(0,192,139,0.12)
+    );
+    border: 1px solid var(--mango-border);
+    border-radius: 24px;
+    padding: 40px;
+    max-width: 900px;
+}
+
+/* ================= ANIMACIONES ================= */
+.show {
+    opacity: 1 !important;
+    transform: translateY(0) !important;
+    transition: all 0.9s ease;
+}
+
+/* ================= FOOTER ================= */
+footer {
+    border-top: 1px solid var(--mango-border);
+}
+
+/* ================= EFECTOS ================= */
+.floating {
+    animation: float 5s ease-in-out infinite;
+}
+
+@keyframes float {
+    0% { transform: translateY(0); }
+    50% { transform: translateY(-12px); }
+    100% { transform: translateY(0); }
+}
+
+/* ================= RESPONSIVE ================= */
+@media (max-width: 768px) {
+    .hero-title {
+        font-size: 2.3rem;
+    }
+
+    .section-padding {
+        padding: 60px 20px;
+    }
 }
