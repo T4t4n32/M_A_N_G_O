@@ -3,161 +3,153 @@
 <head>
     <meta charset="UTF-8">
     <title>M.A.N.G.O. | Monitoreo Ambiental Oceánico</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 
     <!-- Bootstrap -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 
-    <!-- Estilos propios -->
-    <link rel="stylesheet" href="assets/css/styles.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
 
-    <!-- Iconos -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- CSS propio -->
+    <link rel="stylesheet" href="assets/css/styles.css">
 </head>
-<body>
+
+<body class="bg-dark text-light">
 
 <!-- ================= NAVBAR ================= -->
-<nav class="navbar navbar-expand-lg fixed-top mango-navbar">
+<nav class="navbar navbar-expand-lg navbar-dark fixed-top bg-transparent">
     <div class="container">
-        <a class="navbar-brand" href="#">M.A.N.G.O.</a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mangoNav">
+        <a class="navbar-brand fw-bold" href="#">
+            M.A.N.G.O.
+        </a>
+        <button class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#nav">
             <span class="navbar-toggler-icon"></span>
         </button>
-        <div class="collapse navbar-collapse" id="mangoNav">
+        <div id="nav" class="collapse navbar-collapse">
             <ul class="navbar-nav ms-auto">
-                <li class="nav-item"><a class="nav-link" href="#que-es">Proyecto</a></li>
-                <li class="nav-item"><a class="nav-link" href="#tecnologias">Tecnologías</a></li>
-                <li class="nav-item"><a class="nav-link" href="#impacto">Impacto</a></li>
-                <li class="nav-item"><a class="nav-link" href="about.html">Documentación</a></li>
-                <li class="nav-item">
-                    <a class="btn btn-outline-light ms-2" href="login.html">Acceso</a>
-                </li>
+                <li class="nav-item"><a class="nav-link" href="#about">Proyecto</a></li>
+                <li class="nav-item"><a class="nav-link" href="#tech">Tecnología</a></li>
+                <li class="nav-item"><a class="nav-link" href="#impact">Impacto</a></li>
+                <li class="nav-item"><a class="nav-link btn btn-outline-warning ms-3" href="login.html">Acceder</a></li>
             </ul>
         </div>
     </div>
 </nav>
 
 <!-- ================= HERO ================= -->
-<header class="hero-section d-flex align-items-center">
-    <div class="container text-center hero-content">
-        <h1 class="hero-title">M.A.N.G.O.</h1>
-        <p class="hero-subtitle">
-            Sistema de Monitoreo Ambiental para Ecosistemas Marinos y Costeros
+<header class="hero-section d-flex align-items-center text-center">
+    <div class="container">
+        <img src="assets/images/LOGO.png" alt="MANGO Logo" width="120" class="mb-4 floating">
+        <h1 class="hero-title display-4 fw-bold">
+            Monitoreo Ambiental Oceánico Inteligente
+        </h1>
+        <p class="lead mt-3">
+            Tecnología real para medir, comprender y proteger los ecosistemas marinos.
         </p>
-        <a href="#que-es" class="btn btn-primary btn-lg mt-4">
-            Explorar el proyecto
-        </a>
+
+        <div class="mt-4">
+            <a href="#about" class="btn btn-primary btn-lg me-2">Conocer el proyecto</a>
+            <a href="request-access.html" class="btn btn-outline-light btn-lg">Solicitar acceso</a>
+        </div>
     </div>
 </header>
 
-<!-- ================= QUE ES ================= -->
-<section id="que-es" class="section-dark">
+<!-- Ola -->
+<div class="wave-divider">
+    <svg viewBox="0 0 1440 100" preserveAspectRatio="none">
+        <path d="M0,50 C150,100 300,0 450,20 600,40 750,80 900,50 1050,20 1200,40 1440,20 L1440,0 L0,0 Z"
+              fill="#051423"></path>
+    </svg>
+</div>
+
+<!-- ================= SOBRE EL PROYECTO ================= -->
+<section id="about" class="section-padding bg-dark">
     <div class="container">
-        <h2 class="section-title">¿Qué es M.A.N.G.O.?</h2>
-        <p class="section-text">
-            M.A.N.G.O. es un sistema tecnológico diseñado para el monitoreo ambiental
-            de ecosistemas marinos y costeros. Integra sensores físicos reales,
-            procesamiento local y visualización de datos en tiempo real mediante
-            una plataforma web.
+        <h2 class="section-title text-center mb-5">¿Qué es M.A.N.G.O.?</h2>
+
+        <p class="section-text text-center mx-auto">
+            M.A.N.G.O. es una plataforma de monitoreo ambiental oceánico que integra
+            sensores físicos, procesamiento local y visualización web para
+            recolectar datos reales sobre el estado del entorno marino.
         </p>
 
         <div class="row mt-5">
             <div class="col-md-4">
                 <div class="feature-card">
-                    <i class="bi bi-cpu feature-icon"></i>
-                    <h5>Procesamiento Local</h5>
-                    <p>
-                        Los datos se procesan localmente sin simulaciones,
-                        garantizando información real y verificable.
-                    </p>
+                    <h5>Datos reales</h5>
+                    <p>Sin simulaciones. Información obtenida directamente desde sensores físicos.</p>
                 </div>
             </div>
             <div class="col-md-4">
                 <div class="feature-card">
-                    <i class="bi bi-wifi feature-icon"></i>
-                    <h5>Comunicación IoT</h5>
-                    <p>
-                        Integración de sensores mediante protocolos de comunicación
-                        eficientes y escalables.
-                    </p>
+                    <h5>Arquitectura escalable</h5>
+                    <p>Diseñado para crecer desde un prototipo hasta una red de estaciones.</p>
                 </div>
             </div>
             <div class="col-md-4">
                 <div class="feature-card">
-                    <i class="bi bi-graph-up feature-icon"></i>
-                    <h5>Visualización Clara</h5>
-                    <p>
-                        Dashboard web para análisis de variables ambientales
-                        en tiempo real.
-                    </p>
+                    <h5>Acceso controlado</h5>
+                    <p>Plataforma segura con visualización diferenciada por roles.</p>
                 </div>
             </div>
         </div>
     </div>
 </section>
 
-<!-- ================= TECNOLOGIAS ================= -->
-<section id="tecnologias" class="section-light">
+<!-- ================= CREADOR ================= -->
+<section class="section-padding bg-black">
     <div class="container">
-        <h2 class="section-title dark">Tecnologías Implementadas</h2>
+        <h2 class="section-title mb-4">Sobre el creador</h2>
 
-        <ul class="tech-list">
-            <li>Jetson (procesamiento local)</li>
-            <li>Sensores ambientales reales</li>
-            <li>Python + Flask (backend)</li>
-            <li>HTML, CSS, JavaScript y Bootstrap</li>
-            <li>Arquitectura modular y escalable</li>
-        </ul>
+        <div class="creator-highlight">
+            <p class="section-text">
+                Soy <strong>Sebastián</strong>, creador de M.A.N.G.O.
+                Este proyecto nace de la necesidad de unir tecnología,
+                ingeniería y conciencia ambiental en un sistema funcional.
+                M.A.N.G.O. no es solo una idea: es una plataforma pensada
+                para operar, medir y evolucionar.
+            </p>
+        </div>
+    </div>
+</section>
 
-        <!-- AQUÍ VA UNA IMAGEN -->
-        <!-- Imagen sugerida: render 3D de una plataforma oceánica con sensores -->
+<!-- ================= TECNOLOGÍA ================= -->
+<section id="tech" class="section-padding bg-dark">
+    <div class="container">
+        <h2 class="section-title text-center mb-5">Tecnologías implementadas</h2>
+
+        <div class="row text-center">
+            <div class="col-md-3">ESP32 + Sensores</div>
+            <div class="col-md-3">Jetson (Edge Computing)</div>
+            <div class="col-md-3">Flask + API</div>
+            <div class="col-md-3">Dashboard Web</div>
+        </div>
     </div>
 </section>
 
 <!-- ================= IMPACTO ================= -->
-<section id="impacto" class="section-dark">
-    <div class="container">
-        <h2 class="section-title">Impacto Ambiental</h2>
-        <p class="section-text">
-            M.A.N.G.O. busca contribuir a la protección de ecosistemas como manglares,
-            arrecifes y zonas costeras, proporcionando datos que faciliten la toma
-            de decisiones basadas en evidencia científica.
+<section id="impact" class="section-padding bg-black">
+    <div class="container text-center">
+        <h2 class="section-title mb-4">Impacto ambiental</h2>
+        <p class="section-text mx-auto">
+            M.A.N.G.O. permite tomar decisiones basadas en datos,
+            mejorar la gestión ambiental y apoyar procesos educativos,
+            científicos e institucionales.
         </p>
-    </div>
-</section>
-
-<!-- ================= CREADOR ================= -->
-<section class="section-light">
-    <div class="container">
-        <h2 class="section-title dark">Sobre el Creador</h2>
-        <p class="section-text dark">
-            Mi nombre es <strong>Sebastián</strong>, creador de M.A.N.G.O.
-            Este proyecto nace de la combinación entre tecnología, ciencia
-            y la necesidad de generar soluciones reales para el monitoreo ambiental.
-            M.A.N.G.O. no es una idea conceptual: es un sistema funcional,
-            escalable y en constante evolución.
-        </p>
-
-        <!-- Imagen sugerida: retrato técnico o silueta + circuito -->
     </div>
 </section>
 
 <!-- ================= CONTACTO ================= -->
-<section class="section-dark">
-    <div class="container text-center">
-        <h2 class="section-title">Contacto y Contribución</h2>
-        <p class="section-text">
-            ¿Deseas contribuir, investigar o implementar M.A.N.G.O.?
-        </p>
-        <a href="request-access.html" class="btn btn-outline-light btn-lg">
-            Solicitar acceso
-        </a>
-    </div>
-</section>
-
-<footer class="footer">
-    <p>© 2026 M.A.N.G.O. | Proyecto de monitoreo ambiental</p>
+<footer class="section-padding bg-dark text-center">
+    <h3>¿Quieres contribuir o conocer más?</h3>
+    <p>Únete al desarrollo de tecnología con impacto real.</p>
+    <a href="request-access.html" class="btn btn-primary btn-lg mt-3">
+        Contactar / Contribuir
+    </a>
 </footer>
 
+<!-- JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script src="assets/js/main.js"></script>
 </body>
