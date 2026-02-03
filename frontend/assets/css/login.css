@@ -1,42 +1,29 @@
-/* M.A.N.G.O - Estilos Login */
-
-.login-bg {
-    background: linear-gradient(135deg, var(--secondary) 0%, var(--background) 100%);
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
+body {
+  background: #0d1b2a;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  color: white;
 }
 
-.login-card {
-    background: var(--card-bg);
-    border-radius: var(--border-radius);
-    padding: 40px;
-    box-shadow: var(--shadow);
-    border: 1px solid rgba(45, 140, 104, 0.3);
+.login-container {
+  background: #1b263b;
+  padding: 30px;
+  border-radius: 10px;
+  width: 300px;
 }
 
-.login-logo {
-    width: 80px;
-    height: 80px;
-    margin: 0 auto;
-    display: block;
+.login-container input {
+  width: 100%;
+  margin-bottom: 10px;
+  padding: 10px;
 }
 
-.login-header h3 {
-    color: var(--accent);
-    margin-bottom: 10px;
-}
-
-.login-footer {
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
-    padding-top: 20px;
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-    .login-card {
-        padding: 30px 20px;
-    }
+.login-container button {
+  width: 100%;
+  padding: 10px;
+  background: #00b4d8;
+  border: none;
+  color: black;
 }

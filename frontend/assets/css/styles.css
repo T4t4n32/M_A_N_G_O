@@ -1,190 +1,183 @@
-/* M.A.N.G.O - Estilos Base */
-
-:root {
-    --primary: #2d8c68;
-    --secondary: #1a3a32;
-    --accent: #4abdac;
-    --background: #0e1a1f;
-    --card-bg: #14262d;
-    --text: #eaeaea;
-    --border-radius: 12px;
-    --shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
-    --transition: all 0.3s ease;
-}
-
-* {
+/* RESET IMPORTANTE */
+html, body {
     margin: 0;
     padding: 0;
-    box-sizing: border-box;
-}
-
-body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: var(--background);
-    color: var(--text);
-    line-height: 1.6;
-}
-
-/* Navigation */
-.navbar {
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
-}
-
-.navbar-brand {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-weight: 700;
-    font-size: 1.5rem;
-}
-
-.logo-img {
-    width: 40px;
-    height: 40px;
-}
-
-.brand-text {
-    color: white;
-    text-decoration: none;
-}
-
-/* Hero Section */
-.hero-section {
-    background: linear-gradient(135deg, var(--secondary) 0%, var(--background) 100%);
-    padding: 120px 0 80px;
-    text-align: center;
-}
-
-.hero-image {
-    margin-top: 40px;
-}
-
-.image-placeholder {
-    background: rgba(45, 140, 104, 0.1);
-    border: 2px dashed var(--accent);
-    border-radius: var(--border-radius);
-    padding: 40px;
-    color: var(--accent);
-}
-
-/* Features */
-.feature-icon {
-    background: rgba(45, 140, 104, 0.1);
-    width: 80px;
-    height: 80px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto;
-}
-
-/* Stats */
-.stats-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 20px;
-}
-
-.stat-item {
-    text-align: center;
-    padding: 20px;
-    background: rgba(45, 140, 104, 0.1);
-    border-radius: var(--border-radius);
-    border: 1px solid rgba(45, 140, 104, 0.3);
-}
-
-.stat-number {
-    font-size: 2rem;
-    font-weight: 700;
-    color: var(--accent);
-    margin-bottom: 5px;
-}
-
-.stat-label {
-    font-size: 0.9rem;
-    color: var(--text);
-    opacity: 0.8;
-}
-
-/* Footer */
-footer {
-    margin-top: 60px;
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-    .hero-section {
-        padding: 80px 0 40px;
-    }
-    
-    .stats-grid {
-        grid-template-columns: 1fr;
-    }
-    
-    .navbar-brand {
-        font-size: 1.2rem;
-    }
-    
-    .logo-img {
-        width: 30px;
-        height: 30px;
-    }
-}
-
-/* Utilities */
-.shadow-sm {
-    box-shadow: var(--shadow) !important;
-}
-
-.rounded {
-    border-radius: var(--border-radius) !important;
-}
-
-.btn-primary {
-    background: var(--primary);
-    border-color: var(--primary);
-    transition: var(--transition);
-}
-
-.btn-primary:hover {
-    background: var(--accent);
-    border-color: var(--accent);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 15px rgba(74, 189, 172, 0.3);
-}
-
-.btn-outline-light {
-    border-color: white;
-    color: white;
-    transition: var(--transition);
-}
-
-.btn-outline-light:hover {
-    background: white;
-    color: var(--primary);
-    transform: translateY(-2px);
-}
-
-/* Smooth Scroll */
-html {
+    width: 100%;
     scroll-behavior: smooth;
 }
 
-/* Custom Scrollbar */
-::-webkit-scrollbar {
-    width: 10px;
+/* NAVBAR */
+.mango-navbar {
+    background: rgba(5, 20, 35, 0.95);
+    backdrop-filter: blur(6px);
+    border-bottom: none;   /* 🔥 elimina línea blanca */
 }
 
-::-webkit-scrollbar-track {
-    background: var(--background);
+/* HERO */
+.hero-section {
+    min-height: 100vh;
+    background: linear-gradient(
+        rgba(5, 20, 35, 0.85),
+        rgba(5, 20, 35, 0.85)
+    ),
+    url("../img/hero-ocean.jpg"); /* IMAGEN: océano futurista */
+    background-size: cover;
+    background-position: center;
+
+    /* 🔥 CLAVE PARA EL BUG */
+    margin-top: 0;
+    padding-top: 80px; /* espacio para navbar fijo */
 }
 
-::-webkit-scrollbar-thumb {
-    background: var(--primary);
-    border-radius: 5px;
+.hero-title {
+    font-size: 4rem;
+    font-weight: 700;
 }
 
-::-webkit-scrollbar-thumb:hover {
-    background: var(--accent);
+.hero-subtitle {
+    font-size: 1.4rem;
+    margin-top: 1rem;
+}
+
+/* SECCIONES */
+.section-dark {
+    background-color: #051423;
+    color: white;
+    padding: 80px 0;
+}
+
+.section-light {
+    background-color: #f4f7fa;
+    color: #111;
+    padding: 80px 0;
+}
+
+.section-title {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.section-title.dark {
+    color: #111;
+}
+
+.section-text {
+    max-width: 900px;
+    margin: auto;
+    font-size: 1.1rem;
+}
+
+.section-text.dark {
+    color: #333;
+}
+
+/* FEATURES */
+.feature-card {
+    background: rgba(255,255,255,0.05);
+    padding: 30px;
+    border-radius: 12px;
+    text-align: center;
+    height: 100%;
+}
+
+.feature-icon {
+    font-size: 2.5rem;
+    margin-bottom: 15px;
+    color: #0d6efd;
+}
+
+/* TEC */
+.tech-list {
+    list-style: none;
+    max-width: 600px;
+    margin: auto;
+    font-size: 1.1rem;
+}
+
+.tech-list li::before {
+    content: "✔ ";
+    color: #0d6efd;
+}
+
+/* FOOTER */
+.footer {
+    background: #020b14;
+    color: #aaa;
+    text-align: center;
+    padding: 20px 0;
+}
+
+/* ================= PALETA MANGO ================= */
+:root {
+    --mango-gold: #f5b301;
+    --mango-green: #1fa37a;
+    --mango-purple: #b13cff;
+    --mango-dark: #051423;
+}
+
+/* ================= HERO MEJORADO ================= */
+.hero-section {
+    background:
+        radial-gradient(circle at top,
+            rgba(245,179,1,0.15),
+            transparent 60%),
+        linear-gradient(
+            rgba(5,20,35,0.92),
+            rgba(5,20,35,0.95)
+        ),
+        url("../img/hero-ocean.jpg");
+}
+
+/* ================= TITULOS ================= */
+.hero-title {
+    background: linear-gradient(
+        90deg,
+        var(--mango-gold),
+        var(--mango-purple)
+    );
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+/* ================= BOTONES ================= */
+.btn-primary {
+    background: linear-gradient(
+        90deg,
+        var(--mango-gold),
+        var(--mango-purple)
+    );
+    border: none;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(245,179,1,0.4);
+}
+
+/* ================= TARJETAS ================= */
+.feature-card {
+    border: 1px solid rgba(245,179,1,0.15);
+    transition: transform 0.3s ease;
+}
+
+.feature-card:hover {
+    transform: translateY(-8px);
+}
+
+/* ================= SEPARADOR OLA ================= */
+.wave-divider {
+    position: relative;
+    height: 80px;
+    overflow: hidden;
+}
+
+.wave-divider svg {
+    position: absolute;
+    bottom: 0;
+}
+
+/* ================= CREADOR ================= */
+.creator-highlight {
+    border-left: 4px solid var(--mango-purple);
+    padding-left: 20px;
 }
