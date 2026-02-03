@@ -1,18 +1,108 @@
+# NUEVO docker-compose.yml PROFESIONAL
+version: '3.8'
+
 services:
-  backend:
-    image: python:3.11-slim
+  # 1. Reverse Proxy con SSL
+  nginx:
+    image: nginx:alpine
+    container_name: mango_nginx
     ports:
-      - "127.0.0.1:5000:5000"  # Solo accesible desde localhost (seguro)
-    working_dir: /app
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/sites-available:/etc/nginx/sites-available:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+      - ./frontend:/usr/share/nginx/html:ro
+      - ./backend/static:/usr/share/nginx/static:ro
+    depends_on:
+      - backend
+    networks:
+      - mango_network
+    restart: unless-stopped
+
+  # 2. Backend Flask PRODUCCIÓN
+  backend:
+    build: ./backend
+    container_name: mango_backend
+    expose:
+      - "8000"  # Gunicorn, no Flask dev server
     environment:
+      - DATABASE_URL=postgresql://mango_user:${DB_PASSWORD}@postgres:5432/mango_db
+      - REDIS_URL=redis://redis:6379/0
+      - SECRET_KEY=${SECRET_KEY}
       - FLASK_ENV=production
-      - FLASK_APP=main.py
-      - SECRET_KEY=tu_clave_super_secreta_2026
-      - OFFLINE_MODE=True
-      - DATABASE_URL=sqlite:///:memory:
+      - JWT_SECRET_KEY=${JWT_SECRET}
     volumes:
       - ./backend:/app
+      - gunicorn_logs:/var/log/gunicorn
+    depends_on:
+      - postgres
+      - redis
     command: >
-      sh -c "pip install -r requirements.txt &&
-             flask run --host=0.0.0.0 --port=5000"
+      sh -c "alembic upgrade head &&
+             gunicorn --bind 0.0.0.0:8000 \
+                      --workers 4 \
+                      --threads 2 \
+                      --access-logfile - \
+                      --error-logfile - \
+                      'app:create_app()'"
+    networks:
+      - mango_network
     restart: unless-stopped
+
+  # 3. Base de datos PROFESIONAL (TimescaleDB)
+  postgres:
+    image: timescale/timescaledb:latest-pg15
+    container_name: mango_postgres
+    environment:
+      POSTGRES_DB: mango_db
+      POSTGRES_USER: mango_user
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=C"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/backups:/backups
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - mango_network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mango_user"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # 4. Redis para cache y sesiones
+  redis:
+    image: redis:7-alpine
+    container_name: mango_redis
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
+    volumes:
+      - redis_data:/data
+    networks:
+      - mango_network
+    restart: unless-stopped
+
+  # 5. Certbot para SSL automático (GRATIS)
+  certbot:
+    image: certbot/certbot
+    container_name: mango_certbot
+    volumes:
+      - ./nginx/ssl:/etc/letsencrypt
+      - ./nginx/sites-available:/etc/nginx/sites-available
+    depends_on:
+      - nginx
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
+    networks:
+      - mango_network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  redis_data:
+  gunicorn_logs:
+
+networks:
+  mango_network:
+    driver: bridge
