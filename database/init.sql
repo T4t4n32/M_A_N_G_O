@@ -1,69 +1,76 @@
--- Habilitar TimescaleDB
-CREATE EXTENSION IF NOT EXISTS timescaledb;
+-- database/init.sql
+-- Script SQL para inicializar la base de datos local
 
--- Crear esquema para series temporales
-CREATE SCHEMA IF NOT EXISTS timeseries;
-
--- Crear hypertable para datos de sensores
-CREATE TABLE IF NOT EXISTS timeseries.sensor_data (
-    id BIGSERIAL PRIMARY KEY,
-    sensor_id INTEGER NOT NULL REFERENCES public.sensors(id),
-    timestamp TIMESTAMPTZ NOT NULL,
-    value DOUBLE PRECISION NOT NULL,
-    raw_value DOUBLE PRECISION,
-    quality_flag INTEGER DEFAULT 0,
-    metadata JSONB
+-- Crear tablas básicas (si no existen)
+CREATE TABLE IF NOT EXISTS institutions (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(200) UNIQUE NOT NULL,
+    domain VARCHAR(100) NOT NULL,
+    created_at TIMESTAMP DEFAULT NOW()
 );
 
--- Convertir a hypertable
-SELECT create_hypertable(
-    'timeseries.sensor_data',
-    'timestamp',
-    chunk_time_interval => INTERVAL '7 days',
-    if_not_exists => TRUE
+CREATE TABLE IF NOT EXISTS users (
+    id SERIAL PRIMARY KEY,
+    email VARCHAR(120) UNIQUE NOT NULL,
+    password_hash VARCHAR(256),
+    first_name VARCHAR(50),
+    last_name VARCHAR(50),
+    role VARCHAR(50) DEFAULT 'viewer',
+    institution_id INTEGER REFERENCES institutions(id),
+    is_active BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT NOW()
 );
 
--- Crear índices compuestos para consultas eficientes
-CREATE INDEX IF NOT EXISTS idx_sensor_data_sensor_timestamp 
-ON timeseries.sensor_data (sensor_id, timestamp DESC);
-
-CREATE INDEX IF NOT EXISTS idx_sensor_data_quality 
-ON timeseries.sensor_data (timestamp, quality_flag) 
-WHERE quality_flag > 0;
-
--- Crear políticas de retención (ejemplo: mantener 2 años)
-SELECT add_retention_policy(
-    'timeseries.sensor_data',
-    INTERVAL '2 years'
+CREATE TABLE IF NOT EXISTS sensor_stations (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    description TEXT,
+    latitude DECIMAL(10, 8),
+    longitude DECIMAL(11, 8),
+    institution_id INTEGER REFERENCES institutions(id),
+    is_public BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT NOW()
 );
 
--- Crear compresión para datos antiguos
-ALTER TABLE timeseries.sensor_data SET (
-    timescaledb.compress,
-    timescaledb.compress_segmentby = 'sensor_id'
+CREATE TABLE IF NOT EXISTS sensors (
+    id SERIAL PRIMARY KEY,
+    device_id VARCHAR(100) UNIQUE NOT NULL,
+    name VARCHAR(100),
+    sensor_type VARCHAR(50),
+    station_id INTEGER REFERENCES sensor_stations(id),
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT NOW()
 );
 
-SELECT add_compression_policy(
-    'timeseries.sensor_data',
-    INTERVAL '30 days'
-);
+-- Insertar datos de prueba
+INSERT INTO institutions (name, domain) 
+VALUES ('INTEGRAMOS OE', 'integramosoe.com')
+ON CONFLICT (name) DO NOTHING;
 
--- Crear vistas materializadas para agregaciones rápidas
-CREATE MATERIALIZED VIEW IF NOT EXISTS timeseries.daily_aggregates
-WITH (timescaledb.continuous) AS
-SELECT
-    sensor_id,
-    time_bucket(INTERVAL '1 day', timestamp) as bucket,
-    AVG(value) as avg_value,
-    MIN(value) as min_value,
-    MAX(value) as max_value,
-    COUNT(*) as reading_count
-FROM timeseries.sensor_data
-GROUP BY sensor_id, time_bucket(INTERVAL '1 day', timestamp);
+INSERT INTO users (email, first_name, last_name, role, institution_id, is_active)
+VALUES 
+    ('admin@local.com', 'Admin', 'Local', 'admin', 1, TRUE),
+    ('investigador@local.com', 'Investigador', 'Prueba', 'researcher', 1, TRUE)
+ON CONFLICT (email) DO NOTHING;
 
--- Crear política de actualización automática
-SELECT add_continuous_aggregate_policy('timeseries.daily_aggregates',
-    start_offset => INTERVAL '3 days',
-    end_offset => INTERVAL '1 hour',
-    schedule_interval => INTERVAL '1 hour'
-);
+INSERT INTO sensor_stations (name, latitude, longitude, institution_id, is_public)
+VALUES 
+    ('Estación Río Local', 4.6097, -74.0817, 1, TRUE),
+    ('Estación Lago Prueba', 4.7100, -74.1000, 1, FALSE)
+ON CONFLICT DO NOTHING;
+
+INSERT INTO sensors (device_id, name, sensor_type, station_id)
+VALUES 
+    ('sensor_temp_001', 'Sensor Temperatura 1', 'temperature', 1),
+    ('sensor_ph_001', 'Sensor pH 1', 'ph', 1),
+    ('sensor_turb_001', 'Sensor Turbidez 1', 'turbidity', 2)
+ON CONFLICT (device_id) DO NOTHING;
+
+-- Mensaje de éxito
+DO $$
+BEGIN
+    RAISE NOTICE '✅ Base de datos M.A.N.G.O. LOCAL inicializada';
+    RAISE NOTICE '✅ Institución: INTEGRAMOS OE';
+    RAISE NOTICE '✅ Usuarios: admin@local.com, investigador@local.com';
+    RAISE NOTICE '✅ Sensores de prueba creados';
+END $$;

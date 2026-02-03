@@ -1,64 +1,75 @@
-# backend/app/config.py
-"""
-Configuración del sistema M.A.N.G.O
-"""
+# app/config.py
 import os
 from datetime import timedelta
 
 class Config:
     """Configuración base"""
-    SECRET_KEY = os.environ.get('SECRET_KEY', 'mango_dev_key_fallback_2026')
-    DEBUG = os.environ.get('DEBUG', 'False').lower() == 'true'
-    ENVIRONMENT = os.environ.get('ENVIRONMENT', 'development')
-    
-    # Configuración de Sesiones
-    SESSION_COOKIE_SECURE = os.environ.get('SESSION_COOKIE_SECURE', 'False').lower() == 'true'
-    SESSION_COOKIE_HTTPONLY = True
-    SESSION_COOKIE_SAMESITE = 'Lax'
-    PERMANENT_SESSION_LIFETIME = timedelta(seconds=int(os.environ.get('PERMANENT_SESSION_LIFETIME', 2592000)))
-    
-    # Configuración de Base de Datos
-    SQLALCHEMY_DATABASE_URI = os.environ.get(
-        'DATABASE_URL',
-        'postgresql://mango_user:mango_pass@localhost:5432/mango_db'
-    )
+    SECRET_KEY = os.environ.get('SECRET_KEY', 'dev-key-change-in-production')
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL')
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    SQLALCHEMY_ECHO = False  # Cambiar a True en desarrollo para ver queries
     
-    # Configuración CORS
-    CORS_ENABLED = os.environ.get('CORS_ENABLED', 'True').lower() == 'true'
-    ALLOWED_ORIGINS = os.environ.get('ALLOWED_ORIGINS', 'http://localhost:7000').split(',')
+    # JWT Configuration
+    JWT_SECRET_KEY = os.environ.get('JWT_SECRET_KEY', SECRET_KEY)
+    JWT_ACCESS_TOKEN_EXPIRES = timedelta(hours=1)
+    JWT_REFRESH_TOKEN_EXPIRES = timedelta(days=30)
+    JWT_TOKEN_LOCATION = ['headers']
+    JWT_HEADER_NAME = 'Authorization'
+    JWT_HEADER_TYPE = 'Bearer'
+    
+    # CORS
+    CORS_ORIGINS = os.environ.get('CORS_ORIGINS', '*').split(',')
     
     # Rate Limiting
-    API_RATE_LIMIT = os.environ.get('API_RATE_LIMIT', '100/hour')
-    RATELIMIT_STORAGE_URI = os.environ.get('RATELIMIT_STORAGE_URI', 'memory://')
+    RATELIMIT_DEFAULT = "1000 per hour"
+    RATELIMIT_STORAGE_URL = os.environ.get('REDIS_URL', 'redis://localhost:6379/0')
     
-    # Modo Offline
-    OFFLINE_MODE = os.environ.get('OFFLINE_MODE', 'False').lower() == 'true'
+    # Redis
+    REDIS_URL = os.environ.get('REDIS_URL')
+    
+    # Email
+    MAIL_SERVER = os.environ.get('MAIL_SERVER', 'smtp.gmail.com')
+    MAIL_PORT = int(os.environ.get('MAIL_PORT', 587))
+    MAIL_USE_TLS = os.environ.get('MAIL_USE_TLS', 'true').lower() == 'true'
+    MAIL_USERNAME = os.environ.get('MAIL_USERNAME')
+    MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD')
+    
+    # File Uploads
+    MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16MB
+    UPLOAD_FOLDER = '/app/uploads'
     
     # Logging
     LOG_LEVEL = os.environ.get('LOG_LEVEL', 'INFO')
-    LOG_FILE = os.environ.get('LOG_FILE', '/var/log/mango/backend.log')
+    LOG_FORMAT = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    
+    # API
+    API_PREFIX = '/api/v1'
+    API_TITLE = 'M.A.N.G.O. API'
+    API_VERSION = '1.0.0'
+    OPENAPI_VERSION = '3.0.2'
 
 class DevelopmentConfig(Config):
-    """Configuración para desarrollo"""
     DEBUG = True
-    ENVIRONMENT = 'development'
-    SESSION_COOKIE_SECURE = False
-    SQLALCHEMY_ECHO = True
-    LOG_LEVEL = 'DEBUG'
+    SQLALCHEMY_ECHO = False
+    JWT_ACCESS_TOKEN_EXPIRES = timedelta(hours=24)  # Más largo en dev
+
+class TestingConfig(Config):
+    TESTING = True
+    SQLALCHEMY_DATABASE_URI = os.environ.get('TEST_DATABASE_URL', 'sqlite:///:memory:')
 
 class ProductionConfig(Config):
-    """Configuración para producción"""
     DEBUG = False
-    ENVIRONMENT = 'production'
-    SESSION_COOKIE_SECURE = True
-    SQLALCHEMY_ECHO = False
-    LOG_LEVEL = 'INFO'
+    # Forzar HTTPS en producción
+    PREFERRED_URL_SCHEME = 'https'
+    # Configuración más estricta
+    JWT_COOKIE_SECURE = True
+    JWT_COOKIE_HTTPONLY = True
+    JWT_COOKIE_SAMESITE = 'Strict'
+    # Rate limiting más estricto
+    RATELIMIT_DEFAULT = "100 per minute, 1000 per hour"
 
-# Configuración por defecto
 config = {
     'development': DevelopmentConfig,
+    'testing': TestingConfig,
     'production': ProductionConfig,
     'default': DevelopmentConfig
 }

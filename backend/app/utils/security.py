@@ -1,79 +1,82 @@
-import re
-import ipaddress
+# app/utils/security.py
+import bcrypt
+import jwt
+from datetime import datetime, timedelta
+from flask import current_app
 from functools import wraps
-from flask import request, jsonify
-from flask_jwt_extended import get_jwt_identity, verify_jwt_in_request
-from app.models import User
+from flask_jwt_extended import verify_jwt_in_request, get_jwt
 
-def validate_institutional_email(email):
-    """Validar que el email sea de una institución reconocida"""
-    institutional_domains = [
-        r'.+\.edu$',
-        r'.+\.gov$',
-        r'.+\.gob$',
-        r'.+\.org$',
-        r'.+\.mil$',
-        r'.+\.ac\..+$',  # Dominios académicos
-        r'.+\.univ\..+$',
-    ]
+class SecurityManager:
+    @staticmethod
+    def hash_password(password: str) -> str:
+        """Hash seguro de contraseña con bcrypt"""
+        salt = bcrypt.gensalt(rounds=12)
+        hashed = bcrypt.hashpw(password.encode('utf-8'), salt)
+        return hashed.decode('utf-8')
     
-    for pattern in institutional_domains:
-        if re.match(pattern, email.split('@')[1], re.IGNORECASE):
-            return True
-    return False
+    @staticmethod
+    def verify_password(password: str, hashed: str) -> bool:
+        """Verificar contraseña contra hash"""
+        return bcrypt.checkpw(
+            password.encode('utf-8'), 
+            hashed.encode('utf-8')
+        )
+    
+    @staticmethod
+    def generate_jwt(payload: dict, expires_in: int = 3600) -> str:
+        """Generar token JWT"""
+        payload.update({
+            'iat': datetime.utcnow(),
+            'exp': datetime.utcnow() + timedelta(seconds=expires_in)
+        })
+        return jwt.encode(
+            payload,
+            current_app.config['JWT_SECRET_KEY'],
+            algorithm='HS256'
+        )
+    
+    @staticmethod
+    def verify_jwt(token: str) -> dict:
+        """Verificar y decodificar token JWT"""
+        try:
+            payload = jwt.decode(
+                token,
+                current_app.config['JWT_SECRET_KEY'],
+                algorithms=['HS256']
+            )
+            return payload
+        except jwt.ExpiredSignatureError:
+            raise Exception('Token expirado')
+        except jwt.InvalidTokenError:
+            raise Exception('Token inválido')
 
 def role_required(*roles):
-    """Decorator para requerir roles específicos"""
+    """Decorador para requerir roles específicos"""
     def wrapper(fn):
         @wraps(fn)
         def decorator(*args, **kwargs):
             verify_jwt_in_request()
-            user_id = get_jwt_identity()
-            user = User.query.get(user_id)
+            claims = get_jwt()
             
-            if not user or user.role.value not in roles:
-                return jsonify({'error': 'Insufficient permissions'}), 403
+            if 'role' not in claims:
+                return {'error': 'Token no contiene rol'}, 403
+            
+            if claims['role'] not in roles:
+                return {'error': 'Permisos insuficientes'}, 403
             
             return fn(*args, **kwargs)
         return decorator
     return wrapper
 
 def institution_required(fn):
-    """Decorator para requerir que el usuario pertenezca a una institución"""
+    """Decorador para requerir institución"""
     @wraps(fn)
     def decorator(*args, **kwargs):
         verify_jwt_in_request()
-        user_id = get_jwt_identity()
-        user = User.query.get(user_id)
+        claims = get_jwt()
         
-        if not user or not user.institution_id:
-            return jsonify({'error': 'User not associated with an institution'}), 403
+        if 'institution_id' not in claims:
+            return {'error': 'Usuario no asociado a institución'}, 403
         
         return fn(*args, **kwargs)
     return decorator
-
-def rate_limit_key():
-    """Clave para rate limiting basada en IP o usuario"""
-    if hasattr(request, 'user_id'):
-        return request.user_id
-    return get_remote_address()
-
-def sanitize_input(data):
-    """Sanitizar entrada de usuario"""
-    if isinstance(data, str):
-        # Eliminar caracteres peligrosos
-        data = re.sub(r'[<>"\']', '', data)
-        data = data.strip()
-    elif isinstance(data, dict):
-        return {k: sanitize_input(v) for k, v in data.items()}
-    elif isinstance(data, list):
-        return [sanitize_input(item) for item in data]
-    return data
-
-def validate_ip(ip_str):
-    """Validar dirección IP"""
-    try:
-        ipaddress.ip_address(ip_str)
-        return True
-    except ValueError:
-        return False
