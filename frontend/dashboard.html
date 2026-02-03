@@ -1,37 +1,110 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <title>M.A.N.G.O. | Dashboard</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="UTF-8">
+    <title>M.A.N.G.O. | Dashboard</title>
 
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="assets/css/dashboard.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="assets/css/dashboard.css">
 </head>
+
 <body>
 
-<nav class="navbar navbar-dark bg-dark px-3">
-  <span class="navbar-brand">M.A.N.G.O. Dashboard</span>
-</nav>
-
-<div class="container mt-4">
-  <h3>Live Sensor Data</h3>
-
-  <div class="row">
-    <div class="col-md-4 card-box">
-      <h5>Temperature</h5>
-      <p id="temp">-- °C</p>
-    </div>
-    <div class="col-md-4 card-box">
-      <h5>pH</h5>
-      <p id="ph">--</p>
-    </div>
-    <div class="col-md-4 card-box">
-      <h5>Turbidity</h5>
-      <p id="turb">-- NTU</p>
-    </div>
-  </div>
+<!-- LOADER -->
+<div class="dashboard-loader">
+    <div class="pulse-circle"></div>
 </div>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+    <div class="sidebar-brand">
+        <span>M.A.N.G.O.</span>
+        <small>Ocean Monitoring</small>
+    </div>
+
+    <nav class="sidebar-menu">
+        <a class="active"><i class="bi bi-speedometer2"></i> Dashboard</a>
+        <a><i class="bi bi-bar-chart"></i> Sensores</a>
+        <a><i class="bi bi-globe"></i> Estaciones</a>
+        <a><i class="bi bi-graph-up"></i> Análisis</a>
+        <a><i class="bi bi-archive"></i> Historial</a>
+        <a><i class="bi bi-gear"></i> Configuración</a>
+    </nav>
+</aside>
+
+<!-- MAIN -->
+<main class="main-content">
+
+    <!-- HEADER -->
+    <header class="dashboard-header">
+        <h1>Centro de Monitoreo</h1>
+        <div class="user-box">
+            <span>Sebastián</span>
+            <i class="bi bi-person-circle"></i>
+        </div>
+    </header>
+
+    <!-- METRICS -->
+    <section class="metrics-grid">
+
+        <div class="metric-card fade-up">
+            <h6>Temperatura</h6>
+            <div class="metric-value"><span id="temp">--</span> °C</div>
+            <small>Sensor activo</small>
+        </div>
+
+        <div class="metric-card fade-up">
+            <h6>Turbidez</h6>
+            <div class="metric-value"><span id="turb">--</span> NTU</div>
+            <small>Agua superficial</small>
+        </div>
+
+        <div class="metric-card fade-up">
+            <h6>pH</h6>
+            <div class="metric-value"><span id="ph">--</span></div>
+            <small>Estado químico</small>
+        </div>
+
+        <div class="metric-card fade-up">
+            <h6>Estado estación</h6>
+            <div class="status online">ONLINE</div>
+            <small>Última señal: ahora</small>
+        </div>
+
+    </section>
+
+    <!-- VISUAL -->
+    <section class="visual-section">
+
+        <div class="visual-card fade-left">
+            <h5>Actividad reciente</h5>
+            <ul class="activity-list">
+                <li>📡 Sensor temperatura actualizado</li>
+                <li>🌊 Turbidez estable</li>
+                <li>🟢 Estación operativa</li>
+                <li>📊 Datos enviados al sistema</li>
+            </ul>
+        </div>
+
+        <div class="visual-card fade-right">
+            <h5>Vista conceptual</h5>
+            <div class="ocean-visual">
+                <!-- Aquí luego puedes poner Three.js / imagen 3D -->
+                <span>Modelo oceánico</span>
+            </div>
+        </div>
+
+    </section>
+
+</main>
 
 <script src="assets/js/dashboard.js"></script>
 </body>
