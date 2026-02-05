@@ -1,8 +1,6 @@
-# docker-compose.yml
-version: '3.8'
+version: "3.8"
 
 services:
-  # 1. PostgreSQL LOCAL
   postgres:
     image: postgres:15-alpine
     container_name: mango_postgres_local
@@ -14,14 +12,14 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      # Si NO tienes este archivo, comenta la línea de abajo:
       - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U mango_user"]
+      test: ["CMD-SHELL", "pg_isready -U mango_user -d mango_local"]
       interval: 10s
       timeout: 5s
-      retries: 5
+      retries: 8
 
-  # 2. Redis LOCAL
   redis:
     image: redis:7-alpine
     container_name: mango_redis_local
@@ -29,8 +27,51 @@ services:
       - "6379:6379"
     volumes:
       - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 8
 
-  # 3. PgAdmin (Opcional - para ver la base de datos)
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: mango_backend_local
+    env_file:
+      - .env.docker
+    ports:
+      - "5000:5000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      # Ajusta si tu endpoint cambia.
+      test: ["CMD-SHELL", "curl -fsS http://localhost:5000/api/latest || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+
+  celery_worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: mango_celery_worker_local
+    env_file:
+      - .env.docker
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      backend:
+        condition: service_healthy
+    command: ["celery", "-A", "celery_app.celery", "worker", "-l", "info"]
+    restart: unless-stopped
+
   pgadmin:
     image: dpage/pgadmin4
     container_name: mango_pgadmin_local
@@ -40,7 +81,8 @@ services:
     ports:
       - "5050:80"
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
 
 volumes:
   postgres_data:
