@@ -1,95 +1,64 @@
-"""
-Celery app (tareas async) integrada con Flask (application factory).
-
-Uso (Linux/Docker):
-  celery -A celery_app.celery worker -l info
-
-Uso (Windows) recomendado:
-  celery -A celery_app.celery worker -l info -P solo
-"""
-
-from __future__ import annotations
-
-from pathlib import Path
 import os
-
-from dotenv import load_dotenv
 from celery import Celery
 
-BASE_DIR = Path(__file__).resolve().parent
-
-def _load_env_files() -> None:
-    for filename in (".env.local", ".env"):
-        p = BASE_DIR / filename
-        if p.exists():
-            load_dotenv(p, override=False)
-            break
-
-_load_env_files()
-
-from app import create_app  # noqa: E402
+from app import create_app
 
 
-def make_celery(flask_app) -> Celery:
+def _env(key: str, default: str) -> str:
+    val = os.getenv(key)
+    return val if val not in (None, "") else default
+
+
+def make_celery() -> tuple[Celery, object]:
     """
-    Crea instancia Celery atada al contexto de Flask.
-    Todas las tareas corren dentro de app.app_context().
+    Crea una instancia de Celery integrada con el app factory de Flask,
+    para que las tareas tengan app_context (DB, config, etc).
     """
-    broker_url = (
-        os.getenv("CELERY_BROKER_URL")
-        or os.getenv("REDIS_URL")
-        or "redis://localhost:6379/0"
-    )
+    flask_app = create_app()
 
-    result_backend = (
-        os.getenv("CELERY_RESULT_BACKEND")
-        or os.getenv("REDIS_URL")
-        or broker_url
-    )
+    broker_url = _env("CELERY_BROKER_URL", _env("REDIS_URL", "redis://redis:6379/0"))
+    result_backend = _env("CELERY_RESULT_BACKEND", _env("REDIS_URL", "redis://redis:6379/0"))
 
     celery = Celery(
         flask_app.import_name,
         broker=broker_url,
         backend=result_backend,
+        include=["app.tasks"],  # si existe app/tasks
     )
 
+    # Config base de Celery (pro pero simple)
     celery.conf.update(
-        timezone=os.getenv("CELERY_TIMEZONE", "UTC"),
+        timezone=_env("CELERY_TIMEZONE", "UTC"),
         enable_utc=True,
-
         task_serializer="json",
         accept_content=["json"],
         result_serializer="json",
-
         task_track_started=True,
-        broker_connection_retry_on_startup=True,
-
         worker_prefetch_multiplier=1,
         task_acks_late=True,
-
-        result_expires=int(os.getenv("CELERY_RESULT_EXPIRES", "3600")),
     )
 
+    # Tareas con contexto Flask
     class ContextTask(celery.Task):
         def __call__(self, *args, **kwargs):
             with flask_app.app_context():
-                return super().__call__(*args, **kwargs)
+                return self.run(*args, **kwargs)
 
     celery.Task = ContextTask
-    return celery
+
+    # Autodescubrimiento (si tu estructura real lo tiene)
+    try:
+        celery.autodiscover_tasks(["app.tasks"])
+    except Exception:
+        # No forzamos a que exista app/tasks todavía
+        pass
+
+    return celery, flask_app
 
 
-# Creamos Flask app una sola vez (factory)
-flask_app = create_app()
-
-# Celery global para el comando:
-# celery -A celery_app.celery worker -l info
-celery = make_celery(flask_app)
+celery, flask_app = make_celery()
 
 
-@celery.task(name="mango.health.ping")
+@celery.task(name="mango.ping")
 def ping():
-    """
-    Tarea simple para verificar que Celery está vivo.
-    """
-    return {"ok": True}
+    return {"ok": True, "message": "pong"}

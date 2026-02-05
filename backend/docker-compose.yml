@@ -1,82 +1,87 @@
-version: "3.8"
-
 services:
   postgres:
     image: postgres:15-alpine
     container_name: mango_postgres_local
     environment:
-      POSTGRES_DB: mango_local
-      POSTGRES_USER: mango_user
-      POSTGRES_PASSWORD: local_password
+      POSTGRES_DB: ${POSTGRES_DB:-mango_local}
+      POSTGRES_USER: ${POSTGRES_USER:-mango_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-local_password}
     ports:
-      - "5432:5432"
+      - "5433:5432"   # evita choque con Postgres local de Windows
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      # Si NO tienes este archivo, comenta la línea de abajo:
-      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U mango_user -d mango_local"]
-      interval: 10s
-      timeout: 5s
-      retries: 8
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
 
   redis:
     image: redis:7-alpine
     container_name: mango_redis_local
     ports:
-      - "6379:6379"
+      - "6380:6379"   # evita choque si ya tienes Redis local
     volumes:
       - redis_data:/data
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 8
+      interval: 5s
+      timeout: 3s
+      retries: 20
 
   backend:
     build:
       context: .
       dockerfile: Dockerfile
     container_name: mango_backend_local
-    env_file:
-      - .env.docker
-    ports:
-      - "5000:5000"
+    environment:
+      API_HOST: 0.0.0.0
+      API_PORT: 5000
+
+      # OJO: dentro de Docker el host NO es localhost, es el nombre del servicio
+      DATABASE_URL: postgresql://mango_user:local_password@postgres:5432/mango_local
+      REDIS_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/0
+
+      FLASK_ENV: development
+      DEBUG: "True"
+      SECRET_KEY: ${SECRET_KEY:-local-dev-secret-key-change-in-production}
+
+      # Ajusta si tu frontend está aparte
+      FRONTEND_URL: http://localhost:8000
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
-    restart: unless-stopped
-    healthcheck:
-      # Ajusta si tu endpoint cambia.
-      test: ["CMD-SHELL", "curl -fsS http://localhost:5000/api/latest || exit 1"]
-      interval: 15s
-      timeout: 5s
-      retries: 10
+    ports:
+      - "5000:5000"
 
   celery_worker:
     build:
       context: .
       dockerfile: Dockerfile
     container_name: mango_celery_worker_local
-    env_file:
-      - .env.docker
+    environment:
+      DATABASE_URL: postgresql://mango_user:local_password@postgres:5432/mango_local
+      REDIS_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/0
+      FLASK_ENV: development
+      SECRET_KEY: ${SECRET_KEY:-local-dev-secret-key-change-in-production}
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
-      backend:
-        condition: service_healthy
-    command: ["celery", "-A", "celery_app.celery", "worker", "-l", "info"]
-    restart: unless-stopped
+    command: ["celery", "-A", "celery_app:celery", "worker", "-l", "info"]
 
   pgadmin:
     image: dpage/pgadmin4
     container_name: mango_pgadmin_local
     environment:
-      PGADMIN_DEFAULT_EMAIL: admin@local.com
+      PGADMIN_DEFAULT_EMAIL: admin@mango.local
       PGADMIN_DEFAULT_PASSWORD: admin123
     ports:
       - "5050:80"
