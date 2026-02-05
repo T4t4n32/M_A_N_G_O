@@ -86,3 +86,48 @@ def get_history():
         })
 
     return jsonify(history)
+
+@api_bp.route("/history/series", methods=["GET"])
+def get_history_series():
+    limit = int(request.args.get("limit", 50))
+    limit = min(limit, 200)
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    rows = cursor.execute("""
+        SELECT
+            sr.value,
+            sr.is_valid,
+            sr.recorded_at,
+            s.type,
+            s.unit
+        FROM sensor_readings sr
+        JOIN sensors s ON sr.sensor_id = s.id
+        ORDER BY sr.recorded_at DESC
+        LIMIT ?
+    """, (limit * 3,)).fetchall()  # *3 para cubrir los 3 sensores
+
+    conn.close()
+
+    series = {
+        "ph": {"unit": "pH", "points": []},
+        "temperature": {"unit": "°C", "points": []},
+        "turbidity": {"unit": "NTU", "points": []},
+    }
+
+    for r in rows:
+        t = r["type"]
+        if t in series:
+            series[t]["unit"] = r["unit"]
+            series[t]["points"].append({
+                "value": r["value"],
+                "valid": bool(r["is_valid"]),
+                "timestamp": r["recorded_at"]
+            })
+
+    # Los rows vienen DESC, para graficar mejor los devolvemos ASC
+    for t in series:
+        series[t]["points"] = list(reversed(series[t]["points"]))[:limit]
+
+    return jsonify(series)
