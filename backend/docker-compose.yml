@@ -1,93 +1,126 @@
 services:
   postgres:
-    image: postgres:15-alpine
-    container_name: mango_postgres_local
+    image: timescale/timescaledb:latest-pg15
+    container_name: mango_postgres
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:-mango_local}
-      POSTGRES_USER: ${POSTGRES_USER:-mango_user}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-local_password}
+      POSTGRES_DB: ${DB_NAME:-mango_local}
+      POSTGRES_USER: ${DB_USER:-mango_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-local_password}
     ports:
-      - "5433:5432"   # evita choque con Postgres local de Windows
+      - "${DB_HOST_PORT:-5433}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
       interval: 5s
       timeout: 3s
-      retries: 20
+      retries: 30
+    restart: unless-stopped
 
   redis:
     image: redis:7-alpine
-    container_name: mango_redis_local
+    container_name: mango_redis
     ports:
-      - "6380:6379"   # evita choque si ya tienes Redis local
+      - "${REDIS_HOST_PORT:-6380}:6379"
     volumes:
       - redis_data:/data
+    command: ["redis-server", "--appendonly", "yes"]
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
       timeout: 3s
-      retries: 20
+      retries: 30
+    restart: unless-stopped
 
   backend:
     build:
-      context: .
+      context: ./backend
       dockerfile: Dockerfile
-    container_name: mango_backend_local
+    image: mango-backend:local
+    container_name: mango_backend
     environment:
       API_HOST: 0.0.0.0
       API_PORT: 5000
 
-      # OJO: dentro de Docker el host NO es localhost, es el nombre del servicio
-      DATABASE_URL: postgresql://mango_user:local_password@postgres:5432/mango_local
+      DB_NAME: ${DB_NAME:-mango_local}
+      DB_USER: ${DB_USER:-mango_user}
+      DB_PASSWORD: ${DB_PASSWORD:-local_password}
+
+      DATABASE_URL: postgresql://${DB_USER:-mango_user}:${DB_PASSWORD:-local_password}@postgres:5432/${DB_NAME:-mango_local}
       REDIS_URL: redis://redis:6379/0
       CELERY_BROKER_URL: redis://redis:6379/0
       CELERY_RESULT_BACKEND: redis://redis:6379/0
 
-      FLASK_ENV: development
-      DEBUG: "True"
-      SECRET_KEY: ${SECRET_KEY:-local-dev-secret-key-change-in-production}
+      SECRET_KEY: ${SECRET_KEY:-local-dev-secret}
+      JWT_SECRET: ${JWT_SECRET:-local-dev-jwt-secret}
 
-      # Ajusta si tu frontend está aparte
-      FRONTEND_URL: http://localhost:8000
+      FLASK_ENV: ${FLASK_ENV:-development}
+      DEBUG: ${DEBUG:-True}
+
+      # Gunicorn (ajustable)
+      GUNICORN_APP: ${GUNICORN_APP:-wsgi:app}
+      GUNICORN_WORKERS: ${GUNICORN_WORKERS:-2}
+      GUNICORN_THREADS: ${GUNICORN_THREADS:-4}
+      GUNICORN_TIMEOUT: ${GUNICORN_TIMEOUT:-60}
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
     ports:
-      - "5000:5000"
+      - "${API_HOST_PORT:-5000}:5000"
+    init: true
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import os,socket; s=socket.socket(); s.settimeout(1); s.connect(('127.0.0.1', int(os.getenv('API_PORT','5000')))); s.close()\""]
+      interval: 10s
+      timeout: 3s
+      retries: 15
+      start_period: 20s
 
   celery_worker:
     build:
-      context: .
+      context: ./backend
       dockerfile: Dockerfile
-    container_name: mango_celery_worker_local
+    image: mango-backend:local
+    container_name: mango_celery_worker
     environment:
-      DATABASE_URL: postgresql://mango_user:local_password@postgres:5432/mango_local
-      REDIS_URL: redis://redis:6379/0
+      DB_NAME: ${DB_NAME:-mango_local}
+      DB_USER: ${DB_USER:-mango_user}
+      DB_PASSWORD: ${DB_PASSWORD:-local_password}
+
+      DATABASE_URL: postgresql://${DB_USER:-mango_user}:${DB_PASSWORD:-local_password}@postgres:5432/${DB_NAME:-mango_local}
       CELERY_BROKER_URL: redis://redis:6379/0
       CELERY_RESULT_BACKEND: redis://redis:6379/0
-      FLASK_ENV: development
-      SECRET_KEY: ${SECRET_KEY:-local-dev-secret-key-change-in-production}
+
+      SECRET_KEY: ${SECRET_KEY:-local-dev-secret}
+      JWT_SECRET: ${JWT_SECRET:-local-dev-jwt-secret}
+
+      FLASK_ENV: ${FLASK_ENV:-development}
     depends_on:
+      backend:
+        condition: service_healthy
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
-    command: ["celery", "-A", "celery_app:celery", "worker", "-l", "info"]
+    command: ["celery", "-A", "celery_app:celery", "worker", "-l", "info", "--concurrency=1"]
+    init: true
+    restart: unless-stopped
 
-  pgadmin:
-    image: dpage/pgadmin4
-    container_name: mango_pgadmin_local
-    environment:
-      PGADMIN_DEFAULT_EMAIL: admin@mango.local
-      PGADMIN_DEFAULT_PASSWORD: admin123
+  nginx:
+    image: nginx:alpine
+    container_name: mango_nginx
     ports:
-      - "5050:80"
+      - "${NGINX_HTTP_PORT:-8080}:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      # AJUSTA esta ruta si tus html están en otro lado:
+      - ./frontend:/usr/share/nginx/html:ro
     depends_on:
-      postgres:
+      backend:
         condition: service_healthy
+    restart: unless-stopped
 
 volumes:
   postgres_data:
