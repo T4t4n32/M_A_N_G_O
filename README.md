@@ -1,9 +1,3 @@
-Here you go — **complete, copy-pasteable `README.md`** (no cuts). It integrates the strongest parts of your older README (banner, badge wall, “Latest release”, TOC, stack table, install/use, structure map, note) and updates it to your current reality (VPS + domain, Docker backend, LoRa JSON test, small frontend progress).
-
-**Note (important):** badges can break on repo names with dots (`M.A.N.G.O`). This is a known Shields behavior for release badges in some cases. ([GitHub][1])
-If that happens to you, rename the repo (recommended) or swap the badge block to the “NO DOTS” variant included below.
-
-````markdown
 # M.A.N.G.O — Autonomous Monitoring of Oceanic Management Levels
 
 <p align="center">
