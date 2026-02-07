@@ -12,6 +12,22 @@ The format follows a simplified interpretation of Keep a Changelog and semantic 
 
 ---
 
+## [v1.6.0] – 2026-02-06
+### Deployment Foundation & Dockerized Backend
+**Added**
+- VPS deployment baseline and domain acquisition: integramosoe.com (content pending).
+- Docker-based backend setup for consistent environments.
+- LoRa JSON link validation (static payload successfully transmitted and received).
+
+**Changed**
+- Backend workflow oriented toward production-style deployment.
+- Minor improvements to the dashboard/frontend layer (early-stage).
+
+**Notes**
+- LoRa payload is currently static; next milestone is real sensor data integration.
+
+---
+
 ## [v1.5.0] – Backend Stabilization & Data Flow Hardening
 **Release date:** 2026-01-XX
 
