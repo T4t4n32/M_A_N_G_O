@@ -1,236 +1,157 @@
-# **M.A.N.G.O — Autonomous Monitoring of Ocean Management Levels**
+# M.A.N.G.O — Autonomous Monitoring of Ocean Management Levels
 
 <p align="center">
-  <img src="docs/overview/LOGO.png" width="369" alt="MANGO Logo" style="max-width: 100%;">
+  <img src="docs/overview/LOGO.png" width="340" alt="M.A.N.G.O Logo" style="max-width: 100%;">
 </p>
+
 <h3 align="center">
-  Real-time environmental data collection for the protection and management of mangrove ecosystems in Colombia.
+  Real-time environmental data collection to support the protection and management of mangrove ecosystems in Colombia.
 </h3>
+
 <div align="center">
 
-[![Release](https://img.shields.io/github/v/release/T4t4n32/M_A_N_G_O?include_prereleases&style=for-the-badge&color=orange&label=Release)](https://github.com/T4t4n32/M_A_N_G_O/releases)
-[![Version](https://img.shields.io/github/v/tag/T4t4n32/M_A_N_G_O?style=for-the-badge&color=green&label=Version)](https://github.com/T4t4n32/M_A_N_G_O/tags)
-[![License](https://img.shields.io/github/license/T4t4n32/M_A_N_G_O?style=for-the-badge&color=blue&label=License)](LICENSE)
-[![Issues](https://img.shields.io/github/issues/T4t4n32/M_A_N_G_O?style=for-the-badge&color=red&label=Issues)](https://github.com/T4t4n32/M_A_N_G_O/issues)
-[![Pull Requests](https://img.shields.io/github/issues-pr/T4t4n32/M_A_N_G_O?style=for-for-the-badge&color=brightgreen&label=Pull%20Requests)](https://github.com/T4t4n32/M_A_N_G_O/pulls)
-[![Stars](https://img.shields.io/github/stars/T4t4n32/M_A_N_G_O?style=for-the-badge&color=yellow&label=Stars)](https://github.com/T4t4n32/M_A_N_G_O/stargazers)
-[![Build Status](https://img.shields.io/github/actions/workflow/status/T4t4n32/M_A_N_G_O/blank.yml?branch=main&style=for-the-badge&label=Build)](https://github.com/T4t4n32/M_A_N_G_O/actions/workflows/blank.yml)
+[![Release](https://img.shields.io/github/v/release/T4t4n32/M_A_N_G_O?include_prereleases=true&style=for-the-badge&label=Release)](https://github.com/T4t4n32/M_A_N_G_O/releases/latest)
+[![Version](https://img.shields.io/github/v/tag/T4t4n32/M_A_N_G_O?sort=semver&style=for-the-badge&label=Version)](https://github.com/T4t4n32/M_A_N_G_O/tags)
+[![License](https://img.shields.io/github/license/T4t4n32/M_A_N_G_O?style=for-the-badge&label=License)](LICENSE.md)
+[![Issues](https://img.shields.io/github/issues/T4t4n32/M_A_N_G_O?style=for-the-badge&label=Issues)](https://github.com/T4t4n32/M_A_N_G_O/issues)
+[![Pull Requests](https://img.shields.io/github/issues-pr/T4t4n32/M_A_N_G_O?style=for-the-badge&label=Pull%20Requests)](https://github.com/T4t4n32/M_A_N_G_O/pulls)
+[![Stars](https://img.shields.io/github/stars/T4t4n32/M_A_N_G_O?style=for-the-badge&label=Stars)](https://github.com/T4t4n32/M_A_N_G_O/stargazers)
+[![Build](https://img.shields.io/github/actions/workflow/status/T4t4n32/M_A_N_G_O/blank.yml?branch=main&style=for-the-badge&label=Build)](https://github.com/T4t4n32/M_A_N_G_O/actions/workflows/blank.yml)
 
 </div>
 
-## Latest Release - [v1.0.0]
-The most recent version introduces the following key features:
-* **New Sensor Integration:** Added turbidity and salinity sensors for more comprehensive data collection.
-* **Energy Consumption Optimization:** Firmware improvements on the **ESP32** to extend the buoy's battery life.
-* **Interactive Dashboard:** Updated web interface for more intuitive visualization and automatic report generation.
-[**View the Full Changelog (CHANGELOG)**](CHANGELOG.md) | [**View All Releases**](https://github.com/T4t4n32/M_A_N_G_O/releases)
+## Latest Release
+- **Latest release page:** https://github.com/T4t4n32/M_A_N_G_O/releases/latest  
+- **Changelog:** [CHANGELOG.md](CHANGELOG.md)
+
+> Why this matters: linking to `/releases/latest` always points to your most recent published release, even after you publish new versions. :contentReference[oaicite:3]{index=3}
+
+---
 
 ## Table of Contents
-**Anclajes Corregidos (Lowercase y guiones):**
-* [What is M.A.N.G.O.?](#what-is-mango)
-* [Key Features](#key-features)
-* [Technology Stack](#technology-stack)
-* [Installation and Usage](#installation-and-usage)
-* [System Measurements](#system-measurements)
-* [Important Clarification](#important-clarification)
-* [Why M.A.N.G.O. Matters](#why-mango-matters)
-* [System Overview](#system-overview)
-* [Planned Pilot Test Site](#planned-pilot-test-site)
-* [Alignment with UN SDGs](#alignment-with-un-sustainable-development-goals)
-* [Repository Structure](#repository-structure)
-* [Current Development Status](#current-development-status)
-* [Contributing](#contributing)
-* [License](#license)
-* [Changelog & Releases](#changelog--releases)
-* [Author](#author)
-* [Project Tagline](#project-tagline)
+- [What is M.A.N.G.O?](#what-is-mango)
+- [Key Features](#key-features)
+- [System Measurements](#system-measurements)
+- [Important Clarification](#important-clarification)
+- [Technology Stack](#technology-stack)
+- [Installation & Usage](#installation--usage)
+- [Repository Structure](#repository-structure)
+- [Roadmap](#roadmap)
+- [Contributing](#contributing)
+- [License](#license)
+- [Author](#author)
+- [Project Note](#project-note)
 
-## **What is M.A.N.G.O?**
-**M.A.N.G.O** is a **low-cost, portable, modular monitoring system** designed to measure key water conditions in mangrove ecosystems. Its goal: provide **accurate, real-time environmental information** to support conservation, research, and decision-making.
+---
+
+## What is M.A.N.G.O?
+**M.A.N.G.O** is a low-cost, portable monitoring system designed to measure key water conditions in mangrove ecosystems.  
+Its goal is to provide accurate field measurements and make them accessible for conservation, research, and decision-making.
+
 Mangroves are essential for:
-* Protecting coastal communities from storms
-* Filtering polluted water
-* Hosting rich biodiversity
-* Supporting over **200,000 families** in Colombia
-These ecosystems face threats such as **pollution, illegal mining, and climate change**, worsened by **lack of continuous and reliable environmental data**.
-**M.A.N.G.O addresses this** by collecting essential water parameters and storing them in a **24/7 cloud database**, accessible even when the device is not deployed.
+- Protecting coastal communities from storms
+- Filtering polluted water
+- Hosting rich biodiversity
+- Supporting local livelihoods
 
-## **Key Features**
-* **Autonomous Sensing:** Continuous, automated collection of water quality parameters (pH, Turbidity, Temperature).
-* **LoRa Connectivity:** Long-range, low-power data transmission suitable for remote coastal areas.
-* **Modular Hardware:** Easily deployable and scalable design using low-cost components.
-* **Cloud Data Storage:** Secure, 24/7 accessible database for historical analysis and reporting.
-* **Web Dashboard:** Intuitive interface for data visualization and alert notifications.
+M.A.N.G.O addresses a critical gap: **lack of reliable and continuous environmental data** in many mangrove areas.
 
-## **Technology Stack**
-| Component | Technology / Hardware | Purpose |
-| :--- | :--- | :--- |
-| **Microcontroller** | **NVIDIA Jetson TK1** (or similar micro-PC) | Data processing and sensor management. |
-| **Communication** | **LoRa** Wireless Module | Long-range, low-power data transmission. |
-| **Database** | **MySQL** / **Cloud** (e.g., AWS/GCP) | Data storage and retrieval. |
-| **Frontend** | Python (e.g., Flask/Django) & Web Stack | Data visualization and user dashboard. |
-| **Sensors** | pH, Turbidity, Temperature probes | Environmental data collection. |
+---
 
-## **Installation and Usage**
-To get a local copy up and running, follow these simple steps.
+## Key Features
+- **Field-ready monitoring:** portable deployments during measurement sessions
+- **LoRa connectivity:** long-range data transport suitable for remote areas
+- **Modular approach:** components can evolve without redesigning everything
+- **Backend-first reliability:** prioritize ingestion correctness before heavy UI work
+- **Cloud-ready direction:** VPS + domain in place (website content pending)
 
-### Prerequisites
-* Arduino IDE (for sensor firmware)
-* Python 3.x
-* Basic soldering skills (for hardware assembly)
+---
 
-### Hardware Assembly
-1.  Follow the wiring diagram in `hardware/wiring.md` to connect the sensors to the **Jetson TK1**.
-2.  Integrate the LoRa module into the setup.
-3.  Secure all components within the water-resistant enclosure.
-
-### Software Installation
-1.  **Clone the Repository:**
-    ```bash
-    git clone https://github.com/T4t4n32/M_A_N_G_O.git
-    ```
-    ```bash
-    cd M_A_N_G_O
-    ```
-2.  **Configure Firmware:**
-    * Load the appropriate `.ino` file from `firmware/` onto the micro-controller.
-3.  **Setup Database:**
-    * Execute `database/schema.sql` to initialize your database structure.
-4.  **Run Dashboard:**
-    * Navigate to `dashboard/` and follow the instructions in the local README for running the visualization server.
-
-## **System Measurements**
+## System Measurements
 M.A.N.G.O records:
-* **pH** – water acidity/alkalinity
-* **Turbidity** – water clarity
-* **Temperature** – affects species and ecosystem health
-Data flow: Sensors → **Jetson TK1** → **LoRa IoT** → Base station → Cloud database
+- **pH**
+- **Turbidity**
+- **Temperature**
 
-## **Important Clarification**
-The device **does NOT operate 24/7 in water**. Instead:
-* Temporarily deployed during field sessions
-* Measurements recorded and sent to the database
-* Device can be **removed, checked, or recharged** after sessions
-* **Database remains accessible 24/7**
-This ensures **practicality, portability, and ecosystem safety**.
+High-level flow:
+Sensors → Jetson TK1 → LoRa transport → Base station / server → Database (24/7 access)
 
-## **Why M.A.N.G.O. Matters**
-Traditional monitoring in mangroves is:
--   ❌ Manual
--   ❌ Slow
--   ❌ Infrequent
--   ❌ Expensive
+---
 
-M.A.N.G.O provides:
--   ✔️ Accurate field measurements
--   ✔️ 24/7 access to environmental data
--   ✔️ Low-cost, portable hardware
--   ✔️ Clear information for communities and researchers
--   ✔️ Scalable to additional zones
+## Important Clarification
+The device **does NOT stay permanently deployed in water (24/7)**.  
+Instead:
+- Temporarily deployed during field sessions
+- Measurements are recorded and sent
+- Device can be removed, checked, and recharged
+- The **database remains available 24/7** for stored data
 
-## **System Overview**
-### **Hardware**
-* NVIDIA Jetson TK1
-* LoRa wireless module
-* pH, Turbidity, and Temperature sensors
-* Water-resistant enclosure
-* *Future upgrade:* solar power module
+---
 
-### **Software**
-* Sensor reading scripts (Python / C++)
-* LoRa transmission code
-* Data ingestion (MySQL / Cloud)
-* Dashboard for graphs and alerts
-* Optional AI predictions (future phase)
+## Technology Stack
+| Layer | Technology / Hardware | Purpose |
+| --- | --- | --- |
+| Edge compute | NVIDIA Jetson TK1 | Sensor management + data processing |
+| Transport | LoRa modules | Long-range, low-power link |
+| Backend | (Current) Dockerized backend | Consistent local + server runtime |
+| Server | VPS + domain (integramosoe.com) | Deployment target (site pending) |
+| Frontend | Web dashboard (early-stage) | Visualization layer (minimal for now) |
+| Sensors | pH, turbidity, temperature | Field measurements |
 
-## **Planned Pilot Test Site**
-Official pilot test will be conducted in **one mangrove area on the Colombian Pacific coast**:
-* **Tumaco**
-* **Buenaventura**
-* **Nuquí**
-Selection based on **safety, accessibility, and environmental conditions**.
+---
 
-## **Alignment with UN Sustainable Development Goals**
-M.A.N.G.O contributes to:
-* **SDG 9** — Industry, Innovation, and Infrastructure
-* **SDG 13** — Climate Action
-* **SDG 14** — Life Below Water
+## Installation & Usage (Developer Setup)
+> This section is intentionally simple and safe for beginners.
 
-## **Repository Structure**
+### 1) Clone
+```bash
+git clone https://github.com/T4t4n32/M_A_N_G_O.git
+cd M_A_N_G_O
+2) Backend (Docker)
+Go to the backend folder (where your Docker setup lives) and follow its README.
+
+The goal is: one command to run the backend the same way locally and on the VPS.
+
+3) LoRa Tests
+LoRa test sketches are available under CODE/ (see the LoRa test folders).
+
+Current milestone: JSON message transmit/receive is working (payload still static).
+
+Repository Structure
+Your repo is large; this map helps people find things fast.
+
+CODE/ — experiments and implementation (LoRa tests, sensor scripts, historical code)
+
+HARDWARE/ — hardware references, components, and build-related files
+
+DEGREE PROJECT/ — research docs, drafts, investigation sources
+
+SENA/ — presentations and academic deliverables
+
+.github/workflows/ — CI workflows (build status badge)
+
+Roadmap
+Planned next milestones:
+
+Switch LoRa payload from static JSON → real sensor readings + validation rules
+
+Finish VPS web serving (reverse proxy + HTTPS) and connect frontend to stable API
+
+Add persistence (SQLite or time-series DB) + historical endpoints per sensor
+
+Tip: This roadmap is written in a changelog-style mindset (Added/Changed/Fixed), which makes updates easy to track. 
+
+Contributing
+See CONTRIBUTING.md.
+
+License
+MIT — see LICENSE.md.
+
+Author
+Sebastián Sánchez — https://github.com/T4t4n32
+
+Project Note
+This project began as a high-school research initiative and is currently developed independently by Sebastián Sánchez.
 
 
-```
-Directory structure:
-└── M_A_N_G_O/
-    ├── README.md
-    ├── ARCHITECTURE.md
-    ├── CHANGELOG.md
-    ├── CODE_OF_CONDUCT.md
-    ├── CONTRIBUTING.md
-    ├── LICENSE
-    ├── .NOTES.md
-    ├── database/
-    │   ├── cloud_config.md
-    │   ├── queries.md
-    │   ├── schema.sql
-    │   └── Python_Base_Data_Sensors/   
-    ├── docs/
-    │   ├── M A N G O.md
-    │   ├── overview/
-    │   │   ├── README.md
-    │   │   ├── parts/
-    │   │   │   └── .space/
-    │   │   │       └── context.mdb
-    │   │   └── various_files/
-    │   │       ├── DOCX_WORD_DATA/
-    │   │       ├── EXCEL_DATA/
-    │   │       ├── OTHERS/
-    │   │       ├── POWER_POINTS_DATA/
-    │   │       └── .space/
-    │   │           ├── context.mdb
-    │   │           └── views.mdb
-    │   └── .space/
-    │       └── def.json
-    ├── firmware/
-    ├── hardware/
-    │   └── README.md
-    ├── software/
-    │   └── README.md
-    └── .github/
-        └── workflows/
-            └── blank.yml
-```
-
-### Assets
--   [Animation Video](https://github.com/T4t4n32/M_A_N_G_O/releases/tag/v1.0.0-robotics/ANIMACION_RAMM.mp4)
--   [Source Code (ZIP)](https://github.com/T4t4n32/M_A_N_G_O/releases/tag/v1.0.0-robotics/M.A.N.G.O-1.0.0.zip)
--   [Source Code (TAR.GZ)](https://github.com/T4t4n32/M_A_N_G_O/releases/tag/v1.0.0-robotics/M.A.N.G.O-1.0.0.tar.gz)
--   [Additional Video](https://github.com/T4t4n32/M_A_N_G_O/releases/tag/v1.0.0-robotics/0001-0250.mkv)
-
-## **Current Development Status**
-* Core concept defined
-* Sensors selected and tested
-* LoRa communication in early testing
-* Database structure in development
-* Dashboard experimentation in progress
-* Pilot site selection pending
-
-## **Contributing**
-Contributions and ideas are welcome. See [**CONTRIBUTING**](CONTRIBUTING.md) for instructions.
-
-## **License**
-This project uses the [**MIT License**](LICENSE).
-
-## **Changelog & Releases**
-Check the official [CHANGELOG](https://github.com/T4t4n32/M.A.N.G.O/blob/main/CHANGELOG.md) for a full release history.
-See the [v1.0.0 Release](https://github.com/T4t4n32/M_A_N_G_O/releases/tag/v1.0.0) for the first stable release.
-
-## **Author**
-**Sebastián Sánchez**
-GitHub: [M.A.N.G.O](https://github.com/T4t4n32/M_A_N_G_O)
-
-## **Project Tagline**
-> **“Technology protecting life — one mangrove at a time.”**
-
-#### Project Note:
-This project was originally created as a high-school research initiative under the group "CALIBOTS". After the group disbanded, the project was entrusted entirely to Sebastián Sánchez Chacón, who continued its development independently. M.A.N.G.O represents an educational and scientific effort to support environmental monitoring in Colombian mangrove ecosystems.
+---
