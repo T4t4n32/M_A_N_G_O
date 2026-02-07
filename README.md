@@ -1,7 +1,7 @@
 # M.A.N.G.O — Autonomous Monitoring of Oceanic Management Levels
 
 <p align="center">
-  <img src="DEGREE PROJECT/INVESTIGATION/LOGO.png" width="340" alt="M.A.N.G.O Logo" style="max-width: 100%;">
+  <img src="frontend/assets/images/LOGO.png" width="340" alt="M.A.N.G.O Logo" style="max-width: 100%;">
 </p>
 
 <h3 align="center">
