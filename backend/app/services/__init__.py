@@ -1,9 +1,9 @@
-# backend/app/services/__init__.py
 """
-Módulo de servicios
-"""
-from .sensor_store import sensor_store
-from .serial_manager import serial_manager
-from .historical_data import HistoricalDataService
+app.services package
 
-__all__ = ['sensor_store', 'serial_manager', 'HistoricalDataService']
+IMPORTANTE:
+- Este archivo debe ser "import-safe".
+- NO importes módulos opcionales que aún no existen (eso fue lo que tumbó Gunicorn).
+
+En este MVP (LoRa -> HTTP -> dashboard), los services son opcionales.
+"""

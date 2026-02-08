@@ -1,7 +1,16 @@
+# backend/app/extensions.py
+import os
+import redis
 from flask_sqlalchemy import SQLAlchemy
-from flask_migrate import Migrate
-from flask_cors import CORS
 
 db = SQLAlchemy()
-migrate = Migrate()
-cors = CORS()
+redis_client = None
+
+
+def init_redis():
+    global redis_client
+    url = os.getenv("REDIS_URL", "").strip()
+    if not url:
+        redis_client = None
+        return
+    redis_client = redis.from_url(url, decode_responses=True)
