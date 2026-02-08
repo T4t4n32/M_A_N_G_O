@@ -1,23 +1,15 @@
+# backend/app/config.py
 import os
 
 class Config:
-    SECRET_KEY = os.getenv("SECRET_KEY", "dev-secret-change-me")
-
-    # DB
-    SQLALCHEMY_DATABASE_URI = os.getenv("DATABASE_URL", "sqlite:////app/data/mango.db")
+    SECRET_KEY = os.getenv("SECRET_KEY", "change-me")
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
-    # CORS
-    CORS_ORIGINS = [o.strip() for o in os.getenv("CORS_ORIGINS", "*").split(",") if o.strip()]
+    DATABASE_URL = os.getenv("DATABASE_URL", "").strip()
+    if not DATABASE_URL:
+        # fallback seguro (por si no está set)
+        DATABASE_URL = "postgresql+psycopg2://mango:mango@db:5432/mango"
 
-    # Celery
-    _redis = os.getenv("REDIS_URL", "redis://redis:6379/0")
-    CELERY = dict(
-        broker_url=os.getenv("CELERY_BROKER_URL", _redis),
-        result_backend=os.getenv("CELERY_RESULT_BACKEND", _redis),
-        task_ignore_result=True,
-    )
+    SQLALCHEMY_DATABASE_URI = DATABASE_URL
 
-    # Prototype helpers
-    AUTO_CREATE_DB = os.getenv("AUTO_CREATE_DB", "1") == "1"
-    SEED_DB = os.getenv("SEED_DB", "1") == "1"
+    JSON_SORT_KEYS = False
