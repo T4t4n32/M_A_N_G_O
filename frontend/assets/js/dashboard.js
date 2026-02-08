@@ -156,3 +156,64 @@ document.addEventListener("DOMContentLoaded", async () => {
   setInterval(updateKPIs, 5000);
   setInterval(updateChart, 15000);
 });
+
+
+cons:contentReference[oaicite:26]{index=26}t:"8000"; // si dashboard y backend están en el mismo origen, usa ""
+
+const SENSORS = [
+  { key: "temperature", label: "Temperatura", unit: "°C", valueId: "tempValue", statusId: "tempStatus" },
+  { key: "ph",          label: "pH",          unit: "pH", valueId: "phValue",   statusId: "phStatus"   },
+  { key: "turbidity",   label: "Turbidez",    unit: "NTU",valueId: "tuValue",   statusId: "tuStatus"   },
+];
+
+function setText(id, text) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = text;
+}
+
+function humanStatus(latest) {
+  if (!latest) return { text: "Sensor Offline", cls: "offline" };
+
+  if (latest.valid === false) {
+    // reason puede ser: MISSING_VALUE, OUT_OF_RANGE_LOW, OUT_OF_RANGE_HIGH, NOT_A_NUMBER...
+    const reason = latest.reason ? ` (${latest.reason})` : "";
+    return { text: `Sensor Fuera de Rango (En Mantenimiento)${reason}`, cls: "warn" };
+  }
+
+  return { text: "OK", cls: "ok" };
+}
+
+async function fetchLatest(sensorKey) {
+  const url = `${API_BASE}/api/sensors/${sensorKey}/latest?limit=1`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return await res.json();
+}
+
+async function tick() {
+  for (const s of SENSORS) {
+    try {
+      const data = await fetchLatest(s.key);
+      const latest = data.latest;
+
+      const st = humanStatus(latest);
+      setText(s.statusId, st.text);
+
+      if (!latest || latest.value === null || latest.value === undefined) {
+        setText(s.valueId, "--");
+      } else {
+        setText(s.valueId, `${Number(latest.value).toFixed(2)} ${s.unit}`);
+      }
+
+      if (latest && latest.timestamp) {
+        setText("lastUpdate", latest.timestamp);
+      }
+    } catch (e) {
+      setText(s.statusId, "Dashboard sin conexión al backend");
+      setText(s.valueId, "--");
+    }
+  }
+}
+
+setInterval(tick, 2000);
+tick();
