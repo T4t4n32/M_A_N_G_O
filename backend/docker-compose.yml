@@ -2,14 +2,28 @@ services:
   backend:
     build: .
     container_name: mango_backend
-    env_file: .env
     ports:
-      - "5000:5000"
+      - "8000:5000"
+    environment:
+      - PYTHONUNBUFFERED=1
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:5000/health').read()"]
+      interval: 10s
+      timeout: 3s
+      retries: 15
+
+  bridge:
+    build: ./bridge
+    environment:
+      - SERIAL_PORT=/dev/ttyUSB0
+      - BAUD=115200
+      - API_BASE_URL=http://backend:5000
     depends_on:
-      - db
-      - redis
-    volumes:
-      - ./data:/app/data
+      backend:
+        condition: service_healthy
+    devices:
+      - "/dev/ttyUSB0:/dev/ttyUSB0"
+
 
   db:
     image: postgres:16-alpine

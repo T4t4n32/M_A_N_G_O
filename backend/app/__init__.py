@@ -3,6 +3,7 @@ from .config import Config
 from .extensions import db, migrate, cors
 from .celery_ext import celery_init_app
 from .routes import register_routes
+from app.services import serial_bridge
 
 
 def create_app() -> Flask:
@@ -37,5 +38,7 @@ def create_app() -> Flask:
                     if not Sensor.query.filter_by(key=d["key"]).first():
                         db.session.add(Sensor(**d))
                 db.session.commit()
+
+    serial_bridge.start_lora_listener(app)  # inicia el hilo de lectura LoRa
 
     return app
