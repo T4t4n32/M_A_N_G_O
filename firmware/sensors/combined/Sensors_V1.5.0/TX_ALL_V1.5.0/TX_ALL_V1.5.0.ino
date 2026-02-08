@@ -14,13 +14,13 @@ static const int LORA_DIO0 = 26;
 static const int LORA_RST  = 14;
 
 // MAX31865 (PT100) shares SPI lines, separate CS:
-static const int MAX_CS = 17;      // set to your actual CS for MAX31865
+static const int MAX_CS = 17;
 
 // pH sensor analog (ADC):
 static const int PH_ADC = 32;
 
 // Turbidity (AZDM01) analog + optional digital:
-static const int TURB_ADC = 33;    // CHANGE if your AO is on another pin
+static const int TURB_ADC = 33;
 static const int TURB_DO  = 27;    // optional; if not used, set to -1
 
 // ===============================
@@ -35,8 +35,12 @@ static const unsigned long SEND_INTERVAL_MS = 10000;
 unsigned long lastSend = 0;
 
 // ===============================
-// Helpers: clamp
+// Helpers
 // ===============================
+static float adcToVolt(int raw, float vref = 3.3f) {
+  return (raw * vref) / 4095.0f;
+}
+
 static float clampf(float v, float lo, float hi) {
   if (v < lo) return lo;
   if (v > hi) return hi;
@@ -44,88 +48,75 @@ static float clampf(float v, float lo, float hi) {
 }
 
 // ===============================
-// ESP32 ADC to voltage (approx)
-// NOTE: If you use divider, this voltage is at the ADC pin.
+// pH (simple 2-point model placeholders)
 // ===============================
-static float adcToVolt(int raw, float vref = 3.3f) {
-  return (raw * vref) / 4095.0f;
-}
-
-// ===============================
-// pH (simple 2-point model)
-// You must calibrate these later; for now we keep a sane mapping.
-// Example placeholders (edit with your measured values):
-// ===============================
-static const float PH_V7 = 2.50f;  // voltage at pH 7 (placeholder)
-static const float PH_V4 = 3.00f;  // voltage at pH 4 (placeholder)
+static const float PH_V7 = 2.50f;  // placeholder
+static const float PH_V4 = 3.00f;  // placeholder
 
 static void phLine(float &m, float &b) {
-  // pH = m*V + b
   m = (4.0f - 7.0f) / (PH_V4 - PH_V7);
   b = 7.0f - (m * PH_V7);
 }
 
-static bool readPH(float &ph, float &v) {
+// Returns: okRead + fills (ph, v, raw)
+static bool readPH(float &ph, float &v, int &rawOut) {
   long sum = 0;
   const int N = 20;
-  for (int i=0;i<N;i++){
+  for (int i = 0; i < N; i++) {
     sum += analogRead(PH_ADC);
     delay(5);
   }
   int raw = (int)(sum / N);
+  rawOut = raw;
+
   v = adcToVolt(raw, 3.3f);
 
-  float m,b;
-  phLine(m,b);
+  float m, b;
+  phLine(m, b);
   ph = (m * v) + b;
 
-  // Range rules (for dashboard):
-  // - "offline": impossible voltage or raw stuck
-  // - "out-of-range": pH < 0 or > 14
+  // Offline criteria: voltage nonsense / ADC nonsense
+  if (raw <= 0 || raw >= 4095) return false;
   if (v < 0.05f || v > 3.25f) return false;
+
   return true;
 }
 
 // ===============================
-// Turbidity: read AO voltage; optional DO state
-// We keep it as voltage (stable), and also estimate NTU (rough).
+// Turbidity
+// Returns: okRead + fills (v, raw, dostate, ntu)
 // ===============================
-static bool readTurbidity(float &v, int &dostate, float &ntu) {
+static bool readTurbidity(float &v, int &rawOut, int &dostate, float &ntu) {
   long sum = 0;
   const int N = 30;
-  for (int i=0;i<N;i++){
+  for (int i = 0; i < N; i++) {
     sum += analogRead(TURB_ADC);
     delay(2);
   }
   int raw = (int)(sum / N);
+  rawOut = raw;
+
   v = adcToVolt(raw, 3.3f);
 
-  if (TURB_DO >= 0) {
-    dostate = digitalRead(TURB_DO);
-  } else {
-    dostate = -1;
-  }
+  if (TURB_DO >= 0) dostate = digitalRead(TURB_DO);
+  else dostate = -1;
 
-  // Classic polynomial used often (not guaranteed accurate):
-  // ntu = -1120.4*V^2 + 5742.3*V - 4352.9
+  // Rough estimation (not calibrated)
   float est = (-1120.4f * v * v) + (5742.3f * v) - 4352.9f;
-  if (est < 0) est = 0;
-  if (est > 1000) est = 1000;
+  est = clampf(est, 0.0f, 1000.0f);
   ntu = est;
 
-  // Offline criteria: voltage nonsense
+  // Offline criteria
+  if (raw <= 0 || raw >= 4095) return false;
   if (v < 0.01f || v > 3.29f) return false;
+
   return true;
 }
 
 // ===============================
 // MAX31865 minimal read (your style)
-// Works in SPI_MODE1, 500kHz, 3-wire config (0xB0)
 // ===============================
-double resistance = 0.0;
-double temperatureC = 0.0;
-
-static bool maxReadRegister(double &rawReg) {
+static bool maxReadRegister(uint16_t &raw15bits) {
   // Write config
   SPI.beginTransaction(SPISettings(500000, MSBFIRST, SPI_MODE1));
   digitalWrite(MAX_CS, LOW);
@@ -147,24 +138,20 @@ static bool maxReadRegister(double &rawReg) {
 
   uint16_t full = ((uint16_t)msb << 8) | lsb;
   full >>= 1; // remove fault bit
+  raw15bits = full;
 
-  rawReg = (double)full;
-
-  // Basic sanity
   if (full == 0 || full == 0x7FFF) return false;
   return true;
 }
 
-static bool maxConvertToTemp(double rawReg, double &tempOut) {
-  // Callendar–Van Dusen (PT100)
+static bool maxConvertToTemp(uint16_t raw15bits, double &tempOut) {
   const double RTDa = 3.9083e-3;
   const double RTDb = -5.775e-7;
 
-  double Rt = rawReg;
+  double Rt = (double)raw15bits;
   Rt /= 32768.0;
-  Rt *= 430.0; // Rref module
+  Rt *= 430.0;
 
-  // Sanity for PT100
   if (Rt < 50 || Rt > 300) return false;
 
   double Z1 = -RTDa;
@@ -175,7 +162,6 @@ static bool maxConvertToTemp(double rawReg, double &tempOut) {
   double t = Z2 + (Z3 * Rt);
   t = (sqrt(t) + Z1) / Z4;
 
-  // Accept typical water bounds (you can widen later)
   if (t < -20 || t > 100) return false;
 
   tempOut = t;
@@ -194,7 +180,6 @@ static int statusPH(float ph, float v, bool okRead) {
 
 static int statusTurb(float v, bool okRead) {
   if (!okRead) return 1;
-  // Out-of-range example: sensor nonsense voltage
   if (v < 0.05f || v > 3.25f) return 2;
   return 0;
 }
@@ -212,21 +197,22 @@ void setup() {
   Serial.begin(115200);
   delay(500);
 
-  Serial.println("\n[TX] Boot (3 sensors)");
+  Serial.println("\n[TX] Boot (3 sensors + raw)");
   Serial.println("[TX] Init SPI + pins");
 
-  // ADC setup
   analogReadResolution(12);
+
   pinMode(PH_ADC, INPUT);
   pinMode(TURB_ADC, INPUT);
   if (TURB_DO >= 0) pinMode(TURB_DO, INPUT);
 
-  // SPI shared bus
+  // Shared SPI bus
   SPI.begin(LORA_SCK, LORA_MISO, LORA_MOSI, LORA_NSS);
 
   // CS pins
   pinMode(LORA_NSS, OUTPUT);
   digitalWrite(LORA_NSS, HIGH);
+
   pinMode(MAX_CS, OUTPUT);
   digitalWrite(MAX_CS, HIGH);
 
@@ -241,18 +227,25 @@ void setup() {
 }
 
 // ===============================
-// Build compact JSON payload (short!)
-// Example:
-// {"t":24.31,"ts":0,"ph":7.02,"phs":0,"tu":1.92,"tus":0}
+// Build compact JSON payload
+// Keep keys short to reduce bytes.
+// t,ts,tr (temp)
+// ph,phs,phv,phr
+// tu,tus,tuv,tur,tunu,tudo
 // ===============================
 static void buildPayload(char *buf, size_t n,
-                         double tempC, int tempS,
-                         float ph, int phS,
-                         float turbV, int turbS) {
-  // keep it small
+                         double t, int ts, uint16_t tr,
+                         float ph, int phs, float phv, int phr,
+                         float tu, int tus, float tuv, int tur, float tunu, int tudo) {
+  // IMPORTANT: keep decimals limited
   snprintf(buf, n,
-           "{\"t\":%.2f,\"ts\":%d,\"ph\":%.2f,\"phs\":%d,\"tu\":%.2f,\"tus\":%d}",
-           tempC, tempS, ph, phS, turbV, turbS);
+    "{\"t\":%.2f,\"ts\":%d,\"tr\":%u,"
+    "\"ph\":%.2f,\"phs\":%d,\"phv\":%.3f,\"phr\":%d,"
+    "\"tu\":%.2f,\"tus\":%d,\"tuv\":%.3f,\"tur\":%d,\"tunu\":%.0f,\"tudo\":%d}",
+    t, ts, tr,
+    ph, phs, phv, phr,
+    tu, tus, tuv, tur, tunu, tudo
+  );
 }
 
 // ===============================
@@ -267,33 +260,38 @@ void loop() {
   lastSend = now;
 
   // --- Temperature ---
-  double rawReg = 0;
+  uint16_t rawReg = 0;
   bool okTempRead = maxReadRegister(rawReg);
   bool okTempConv = false;
   double tempC = -999.0;
 
-  if (okTempRead) {
-    okTempConv = maxConvertToTemp(rawReg, tempC);
-  }
+  if (okTempRead) okTempConv = maxConvertToTemp(rawReg, tempC);
   int tempS = statusTemp(tempC, okTempRead && okTempConv);
 
   // --- pH ---
   float ph = -1.0f, phV = 0.0f;
-  bool okPH = readPH(ph, phV);
+  int phRaw = -1;
+  bool okPH = readPH(ph, phV, phRaw);
   int phS = statusPH(ph, phV, okPH);
 
   // --- Turbidity ---
   float turbV = 0.0f, turbNTU = 0.0f;
+  int turbRaw = -1;
   int turbDO = -1;
-  bool okTurb = readTurbidity(turbV, turbDO, turbNTU);
+  bool okTurb = readTurbidity(turbV, turbRaw, turbDO, turbNTU);
   int turbS = statusTurb(turbV, okTurb);
 
-  // Build payload (sending turbidity voltage "tu")
-  char payload[140];
+  // Decide reported values (if not OK -> send -1 but keep raw+volt to debug)
+  double tSend   = (tempS == 0) ? tempC : -1.0;
+  float  phSend  = (phS == 0)   ? ph    : -1.0f;
+  float  tuSendV = (turbS == 0) ? turbV : -1.0f;
+
+  // Build payload
+  char payload[220]; // slightly bigger because we added raw fields
   buildPayload(payload, sizeof(payload),
-               (tempS==0 ? tempC : -1.0), tempS,
-               (phS==0 ? ph : -1.0f), phS,
-               (turbS==0 ? turbV : -1.0f), turbS);
+               tSend, tempS, rawReg,
+               phSend, phS, phV, phRaw,
+               tuSendV, turbS, turbV, turbRaw, turbNTU, turbDO);
 
   Serial.print("[TX] Payload: ");
   Serial.println(payload);
