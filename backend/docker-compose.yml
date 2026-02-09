@@ -47,20 +47,25 @@ services:
       timeout: 3s
       retries: 15
       start_period: 20s
+
   bridge:
     build:
-      context: ./bridge
-      dockerfile: Dockerfile
-    container_name: mango_bridge
+      context: .
+      dockerfile: Dockerfile.bridge
+    environment:
+      SERIAL_PORT: /dev/ttyMANGO
+      BAUDRATE: "9600"
+      READ_TIMEOUT_S: "1.0"
+      API_URL: http://backend:5000/api/v1/ingest
+      HTTP_TIMEOUT_S: "5.0"
+      STATION_NAME: "MANGO Station"
+      LOG_LEVEL: INFO
+    devices:
+      - "/dev/serial/by-id/usb-Silicon_Labs_CP2102_USB_to_UART_Bridge_Controller_0001-if00-port0:/dev/ttyMANGO"
     depends_on:
       backend:
         condition: service_healthy
-
-
-  # Tu bridge lo dejas como está si ya lo tienes funcionando; si depende del backend,
-  # asegúrate de que use service name "backend" dentro de la red.
-  # bridge:
-  #   ...
+    restart: unless-stopped
 
 volumes:
   mango_pg:
