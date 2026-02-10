@@ -1,109 +1,125 @@
-# backend/app/routes/data.py
 from datetime import datetime, timezone
-
 from flask import Blueprint, jsonify, request
+from sqlalchemy import select
 
 from app.extensions import db
-from app.models.sensor import SensorStation, Sensor, SensorData
+from app.models.sensor import SensorStation, Sensor, SensorData, SensorType
 
-api = Blueprint("api", __name__, url_prefix="/api/v1")
+api_bp = Blueprint("api", __name__)
 
-
-def _utcnow():
+def _now():
     return datetime.now(timezone.utc)
 
+def _parse_ts(value):
+    if not value:
+        return _now()
+    try:
+        # ISO 8601
+        return datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except Exception:
+        return _now()
 
-@api.post("/ingest")
-def ingest():
-    payload = request.get_json(force=True, silent=False) or {}
+def _get_or_create_station(station_payload: dict) -> SensorStation:
+    name = (station_payload or {}).get("name") or "MANGO Station"
 
-    station_payload = payload.get("station") or {}
-    station_name = (station_payload.get("name") or "MANGO Station").strip()
+    station = db.session.execute(
+        select(SensorStation).where(SensorStation.name == name)
+    ).scalar_one_or_none()
 
-    station = SensorStation.query.filter_by(name=station_name).first()
-    if station is None:
-        station = SensorStation(
-            name=station_name,
-            location=station_payload.get("location"),
-            lat=station_payload.get("lat"),
-            lon=station_payload.get("lon"),
+    if station:
+        # actualiza metadata si viene
+        station.location = (station_payload or {}).get("location", station.location)
+        station.lat = (station_payload or {}).get("lat", station.lat)
+        station.lon = (station_payload or {}).get("lon", station.lon)
+        return station
+
+    station = SensorStation(
+        name=name,
+        location=(station_payload or {}).get("location"),
+        lat=(station_payload or {}).get("lat"),
+        lon=(station_payload or {}).get("lon"),
+    )
+    db.session.add(station)
+    db.session.flush()
+    return station
+
+def _get_or_create_sensor(station_id: int, s_type: str, unit: str | None, label: str) -> Sensor:
+    label = label or ""
+    sensor = db.session.execute(
+        select(Sensor).where(
+            Sensor.station_id == station_id,
+            Sensor.type == s_type,
+            Sensor.label == label,
         )
-        db.session.add(station)
-        db.session.flush()  # obtiene station.id
+    ).scalar_one_or_none()
 
+    if sensor:
+        if unit is not None:
+            sensor.unit = unit
+        return sensor
+
+    sensor = Sensor(station_id=station_id, type=s_type, unit=unit, label=label)
+    db.session.add(sensor)
+    db.session.flush()
+    return sensor
+
+@api_bp.post("/ingest")
+def ingest():
+    payload = request.get_json(silent=True) or {}
+    station_payload = payload.get("station") or {}
     readings = payload.get("readings") or []
+
+    if not isinstance(readings, list) or len(readings) == 0:
+        return jsonify(ok=False, error="readings must be a non-empty list"), 400
+
+    station = _get_or_create_station(station_payload)
+
     inserted = 0
-
     for r in readings:
-        sensor_type = str(r.get("type", "unknown")).strip().lower()
-        label = str(r.get("label", "")).strip()
-        unit = r.get("unit")
-
-        # value obligatorio
-        if "value" not in r:
+        if not isinstance(r, dict):
             continue
+        r_type = (r.get("type") or "unknown").strip().lower()
+        if r_type not in {t.value for t in SensorType}:
+            r_type = SensorType.UNKNOWN.value
 
         try:
-            value = float(r["value"])
+            value = float(r.get("value"))
         except Exception:
             continue
 
-        ts = _utcnow()
-        if r.get("ts"):
-            # Si llega ts ISO, lo intentamos parsear; si falla, usamos now
-            try:
-                ts = datetime.fromisoformat(str(r["ts"]).replace("Z", "+00:00"))
-            except Exception:
-                ts = _utcnow()
+        unit = r.get("unit")
+        label = (r.get("label") or "").strip()
+        ts = _parse_ts(r.get("ts"))
 
-        sensor = (
-            Sensor.query.filter_by(station_id=station.id, sensor_type=sensor_type, label=label)
-            .first()
-        )
-        if sensor is None:
-            sensor = Sensor(
-                station_id=station.id,
-                sensor_type=sensor_type,
-                label=label,
-                unit=unit,
-            )
-            db.session.add(sensor)
-            db.session.flush()
-
-        db.session.add(
-            SensorData(
-                sensor_id=sensor.id,
-                ts=ts,
-                value=value,
-                raw=r,
-            )
-        )
+        sensor = _get_or_create_sensor(station.id, r_type, unit, label)
+        db.session.add(SensorData(sensor_id=sensor.id, ts=ts, value=value))
         inserted += 1
 
     db.session.commit()
     return jsonify(ok=True, inserted=inserted), 200
 
-
-@api.get("/latest")
+@api_bp.get("/latest")
 def latest():
-    # Devuelve el último dato por sensor (simple y útil para dashboard luego)
-    sensors = Sensor.query.all()
+    # Devuelve últimas 100 lecturas (ya “reflejables” en dashboard)
+    rows = db.session.execute(
+        select(SensorData, Sensor)
+        .join(Sensor, Sensor.id == SensorData.sensor_id)
+        .order_by(SensorData.ts.desc())
+        .limit(100)
+    ).all()
+
     out = []
-    for s in sensors:
-        last = (
-            SensorData.query.filter_by(sensor_id=s.id)
-            .order_by(SensorData.ts.desc())
-            .first()
-        )
+    for sd, s in rows:
         out.append(
             {
                 "station_id": s.station_id,
                 "sensor_id": s.id,
-                "type": s.sensor_type,
-                "label": s.label,
+                "type": s.type,
                 "unit": s.unit,
-                "ts": (last.ts.isoformat() if last else None),
-                "value": (last.value if last else None),
+                "label": s.label or "",
+                "value": sd.value,
+                "ts": sd.ts.isoformat(),
             }
         )
+
     return jsonify(out), 200

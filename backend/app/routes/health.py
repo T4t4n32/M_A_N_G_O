@@ -1,38 +1,35 @@
-# backend/app/routes/health.py
 from datetime import datetime, timezone
 
 from flask import Blueprint, jsonify
 from sqlalchemy import text
+import redis as redis_lib
 
-from app.extensions import db, redis_client
+from app.extensions import db
+from app.config import Config
 
-bp = Blueprint("health", __name__)
+health_bp = Blueprint("health", __name__)
 
-
-@bp.get("/health")
+@health_bp.get("/health")
 def health():
-    db_ok = False
-    redis_ok = False
+    db_status = "ok"
+    redis_status = "ok"
 
     try:
         db.session.execute(text("SELECT 1"))
-        db_ok = True
     except Exception:
-        db_ok = False
+        db_status = "fail"
 
     try:
-        if redis_client is None:
-            redis_ok = True  # si no usas redis aún, no bloquea el sistema
-        else:
-            redis_ok = (redis_client.ping() is True)
+        r = redis_lib.from_url(Config.REDIS_URL)
+        r.ping()
     except Exception:
-        redis_ok = False
+        redis_status = "fail"
 
-    status = "ok" if (db_ok and redis_ok) else "degraded"
+    status = "ok" if (db_status == "ok" and redis_status == "ok") else "degraded"
 
     return jsonify(
         status=status,
-        db=("ok" if db_ok else "fail"),
-        redis=("ok" if redis_ok else "fail"),
+        db=db_status,
+        redis=redis_status,
         time=datetime.now(timezone.utc).isoformat(),
-    ), (200 if status == "ok" else 200)
+    ), (200 if status == "ok" else 503)
