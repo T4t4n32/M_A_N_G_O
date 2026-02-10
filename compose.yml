@@ -1,20 +1,18 @@
-name: mango
-
 services:
   db:
-    image: ${DB_IMAGE:-postgres:16-alpine}
+    image: postgres:16-alpine
     container_name: mango_db
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-mango}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-mango}
-      POSTGRES_DB: ${POSTGRES_DB:-mango}
+      POSTGRES_USER: mango
+      POSTGRES_PASSWORD: mango
+      POSTGRES_DB: mango
     volumes:
       - mango_pg:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-mango} -d ${POSTGRES_DB:-mango}"]
+      test: ["CMD-SHELL", "pg_isready -U mango -d mango"]
       interval: 5s
       timeout: 3s
-      retries: 30
+      retries: 20
     restart: unless-stopped
 
   redis:
@@ -27,68 +25,65 @@ services:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
       timeout: 3s
-      retries: 30
+      retries: 20
     restart: unless-stopped
 
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    image: mango-backend:local
     container_name: mango_backend
     environment:
-      DATABASE_URL: postgresql+psycopg2://${POSTGRES_USER:-mango}:${POSTGRES_PASSWORD:-mango}@db:5432/${POSTGRES_DB:-mango}
+      DATABASE_URL: postgresql+psycopg2://mango:mango@db:5432/mango
       REDIS_URL: redis://redis:6379/0
-      SECRET_KEY: ${SECRET_KEY:-change-me}
-      GUNICORN_WORKERS: ${GUNICORN_WORKERS:-2}
-      GUNICORN_THREADS: ${GUNICORN_THREADS:-4}
-      GUNICORN_TIMEOUT: ${GUNICORN_TIMEOUT:-60}
+      SECRET_KEY: change-me
+      GUNICORN_WORKERS: "2"
+      GUNICORN_THREADS: "4"
+      GUNICORN_TIMEOUT: "60"
     depends_on:
       db:
         condition: service_healthy
       redis:
         condition: service_healthy
-    # Debug directo al backend (solo local)
     ports:
-      - "127.0.0.1:${BACKEND_HOST_PORT:-8000}:5000"
+      - "8000:5000"
     healthcheck:
       test: ["CMD-SHELL", "curl -fsS http://localhost:5000/health || exit 1"]
       interval: 10s
       timeout: 3s
       retries: 15
-      start_period: 25s
-    restart: unless-stopped
-
-  bridge:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile.bridge
-    image: mango-bridge:local
-    container_name: mango_bridge
-    environment:
-      SERIAL_PORT: /dev/ttyMANGO
-      BAUDRATE: "${BAUDRATE:-9600}"
-      READ_TIMEOUT_S: "${READ_TIMEOUT_S:-1.0}"
-      API_URL: http://backend:5000/api/v1/ingest
-      HTTP_TIMEOUT_S: "${HTTP_TIMEOUT_S:-5.0}"
-      STATION_NAME: "${STATION_NAME:-MANGO Station}"
-      LOG_LEVEL: "${LOG_LEVEL:-INFO}"
-    # Requiere que definas SERIAL_BY_ID en .env
-    devices:
-      - "${SERIAL_BY_ID:?Set SERIAL_BY_ID in .env to your /dev/serial/by-id/... path}:/dev/ttyMANGO"
-    depends_on:
-      backend:
-        condition: service_healthy
+      start_period: 20s
     restart: unless-stopped
 
   nginx:
     image: nginx:alpine
     container_name: mango_nginx
     ports:
-      - "${NGINX_HTTP_PORT:-8080}:80"
+      - "8080:80"
     volumes:
-      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
       - ./frontend:/usr/share/nginx/html:ro
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+
+  bridge:
+    build:
+      context: ./bridge
+      dockerfile: Dockerfile
+    container_name: mango_bridge
+    environment:
+      SERIAL_PORT: /dev/ttyMANGO
+      BAUDRATE: "9600"
+      READ_TIMEOUT_S: "1.0"
+      API_URL: http://backend:5000/api/v1/ingest
+      HTTP_TIMEOUT_S: "5.0"
+      STATION_NAME: "MANGO Station"
+      LOG_LEVEL: INFO
+    devices:
+      # USA TU by-id REAL (este es el tuyo según tu salida)
+      - "/dev/serial/by-id/usb-Silicon_Labs_CP2102_USB_to_UART_Bridge_Controller_0001-if00-port0:/dev/ttyMANGO"
     depends_on:
       backend:
         condition: service_healthy
