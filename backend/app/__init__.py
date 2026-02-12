@@ -1,17 +1,19 @@
+# backend/app/__init__.py
+import os
 from flask import Flask
-from app.config import Config
+
 from app.extensions import db
 from app.routes import register_routes
 
+
 def create_app() -> Flask:
     app = Flask(__name__)
-    app.config.from_object(Config())
+
+    app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("DATABASE_URL", "sqlite:///mango.db")
+    app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+    app.config["SECRET_KEY"] = os.getenv("SECRET_KEY", "change-me")
 
     db.init_app(app)
     register_routes(app)
-
-    # PROTOTIPO: crea tablas automáticamente (sin migraciones)
-    with app.app_context():
-        db.create_all()
 
     return app

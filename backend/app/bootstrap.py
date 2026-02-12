@@ -1,27 +1,38 @@
 # backend/app/bootstrap.py
-import time
+import os
 from sqlalchemy import text
 
-from app import create_app
 from app.extensions import db
 
+LOCK_KEY = 88442211  # número fijo para el lock (puede ser cualquiera, pero constante)
 
-def main():
-    app = create_app()
 
+def bootstrap_db(app) -> None:
     with app.app_context():
-        # Espera DB lista (reintentos)
-        for i in range(30):
+        # IMPORTANTÍSIMO: carga modelos para poblar metadata
+        import app.models  # noqa: F401
+
+        engine = db.engine
+
+        # Tomamos un lock a nivel DB (sesión) para evitar dobles create
+        with engine.connect() as conn:
+            conn.execute(text("SELECT pg_advisory_lock(:k)"), {"k": LOCK_KEY})
             try:
-                db.session.execute(text("SELECT 1"))
-                break
-            except Exception:
-                time.sleep(1)
-        else:
-            raise RuntimeError("DB not ready after retries")
+                # Crea tablas si faltan (idempotente)
+                db.Model.metadata.create_all(bind=conn)
 
-        db.create_all()
-
-
-if __name__ == "__main__":
-    main()
+                # Seed mínimo: estación por defecto (sin reventar si ya existe)
+                station_name = os.getenv("STATION_NAME", "MANGO Station")
+                conn.execute(
+                    text(
+                        """
+                        INSERT INTO sensor_stations (name, created_at)
+                        VALUES (:name, NOW())
+                        ON CONFLICT (name) DO NOTHING
+                        """
+                    ),
+                    {"name": station_name},
+                )
+                conn.commit()
+            finally:
+                conn.execute(text("SELECT pg_advisory_unlock(:k)"), {"k": LOCK_KEY})
