@@ -1,35 +1,32 @@
-from datetime import datetime, timezone
-
 from flask import Blueprint, jsonify
 from sqlalchemy import text
-import redis as redis_lib
-
 from app.extensions import db
-from app.config import Config
+from app.extensions import redis_client
+from datetime import datetime, timezone
 
 health_bp = Blueprint("health", __name__)
 
 @health_bp.get("/health")
 def health():
-    db_status = "ok"
-    redis_status = "ok"
-
+    # DB check
     try:
         db.session.execute(text("SELECT 1"))
+        db_ok = "ok"
     except Exception:
-        db_status = "fail"
+        db_ok = "fail"
 
+    # Redis check
     try:
-        r = redis_lib.from_url(Config.REDIS_URL)
-        r.ping()
+        redis_client.ping()
+        redis_ok = "ok"
     except Exception:
-        redis_status = "fail"
+        redis_ok = "fail"
 
-    status = "ok" if (db_status == "ok" and redis_status == "ok") else "degraded"
+    status = "ok" if (db_ok == "ok" and redis_ok == "ok") else "degraded"
 
-    return jsonify(
-        status=status,
-        db=db_status,
-        redis=redis_status,
-        time=datetime.now(timezone.utc).isoformat(),
-    ), (200 if status == "ok" else 503)
+    return jsonify({
+        "status": status,
+        "db": db_ok,
+        "redis": redis_ok,
+        "time": datetime.now(timezone.utc).isoformat(),
+    }), (200 if status == "ok" else 503)

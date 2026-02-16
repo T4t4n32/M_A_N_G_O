@@ -1,0 +1,30 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <title>MANGO Dashboard</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 16px; }
+    pre { background: #f3f3f3; padding: 12px; border-radius: 8px; }
+  </style>
+</head>
+<body>
+  <h1>MANGO Dashboard</h1>
+  <p>Últimas lecturas (auto refresh cada 2s)</p>
+  <pre id="out">Cargando...</pre>
+
+  <script>
+    async function tick() {
+      try {
+        const r = await fetch("/api/v1/latest");
+        const data = await r.json();
+        document.getElementById("out").textContent = JSON.stringify(data, null, 2);
+      } catch (e) {
+        document.getElementById("out").textContent = "Error: " + e;
+      }
+    }
+    tick();
+    setInterval(tick, 2000);
+  </script>
+</body>
+</html>

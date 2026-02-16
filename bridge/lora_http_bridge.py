@@ -1,14 +1,13 @@
-import json
 import os
 import time
+import json
 import logging
-from datetime import datetime, timezone
-
 import requests
 import serial
+from serial import SerialException
 
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()
-logging.basicConfig(level=getattr(logging, LOG_LEVEL, logging.INFO), format="%(asctime)s %(levelname)s %(message)s")
+logging.basicConfig(level=LOG_LEVEL, format="%(asctime)s %(levelname)s %(message)s")
 log = logging.getLogger("mango-bridge")
 
 SERIAL_PORT = os.getenv("SERIAL_PORT", "/dev/ttyMANGO")
@@ -19,87 +18,53 @@ API_URL = os.getenv("API_URL", "http://backend:5000/api/v1/ingest")
 HTTP_TIMEOUT_S = float(os.getenv("HTTP_TIMEOUT_S", "5.0"))
 STATION_NAME = os.getenv("STATION_NAME", "MANGO Station")
 
-KNOWN_KEYS = {
-    "ph": "ph",
-    "temp": "temperature",
-    "temperature": "temperature",
-    "turb": "turbidity",
-    "turbidity": "turbidity",
-}
+RETRY_S = 2.0
 
-def now_iso():
-    return datetime.now(timezone.utc).isoformat()
-
-def parse_line(line: str):
+def to_payload(line: str) -> dict | None:
     """
-    Soporta:
-    1) JSON: {"ph":7.1,"temperature":24.6,"turbidity":12.2}
-    2) key=val CSV: ph=7.1,temp=24.6,turbidity=12.2
-    3) CSV simple: 7.1,24.6,12.2  -> (ph,temp,turbidity) (solo si llega exacto)
+    Acepta:
+    - JSON completo {station:{name:"..."}, readings:[...]}
+    - JSON de una lectura {"type":"ph","value":7.1,"unit":"pH"} -> lo envuelve
+    - Texto simple "ph=7.1" -> lo convierte
     """
     line = line.strip()
     if not line:
-        return []
+        return None
 
-    # JSON
-    if line.startswith("{") and line.endswith("}"):
-        try:
-            obj = json.loads(line)
-            readings = []
-            for k, v in obj.items():
-                k2 = KNOWN_KEYS.get(str(k).strip().lower())
-                if not k2:
-                    continue
-                try:
-                    fv = float(v)
-                except Exception:
-                    continue
-                readings.append({"type": k2, "value": fv, "ts": now_iso()})
-            return readings
-        except Exception:
-            return []
+    # Intento JSON
+    try:
+        obj = json.loads(line)
+        if isinstance(obj, dict) and "station" in obj and "readings" in obj:
+            return obj
 
-    # key=val
+        if isinstance(obj, dict) and "type" in obj and "value" in obj:
+            unit = obj.get("unit", None)
+            return {"station": {"name": STATION_NAME}, "readings": [{"type": obj["type"], "value": obj["value"], "unit": unit}]}
+    except Exception:
+        pass
+
+    # Intento "tipo=valor"
     if "=" in line:
-        readings = []
-        parts = [p.strip() for p in line.split(",") if p.strip()]
-        for p in parts:
-            if "=" not in p:
-                continue
-            k, v = [x.strip() for x in p.split("=", 1)]
-            k2 = KNOWN_KEYS.get(k.lower())
-            if not k2:
-                continue
-            try:
-                fv = float(v)
-            except Exception:
-                continue
-            readings.append({"type": k2, "value": fv, "ts": now_iso()})
-        return readings
+        k, v = line.split("=", 1)
+        k = k.strip()
+        try:
+            v = float(v.strip())
+        except Exception:
+            return None
+        return {"station": {"name": STATION_NAME}, "readings": [{"type": k, "value": v}]}
 
-    # CSV simple
-    if "," in line:
-        parts = [p.strip() for p in line.split(",")]
-        if len(parts) == 3:
-            try:
-                ph = float(parts[0])
-                temp = float(parts[1])
-                turb = float(parts[2])
-                return [
-                    {"type": "ph", "value": ph, "ts": now_iso()},
-                    {"type": "temperature", "value": temp, "ts": now_iso()},
-                    {"type": "turbidity", "value": turb, "ts": now_iso()},
-                ]
-            except Exception:
-                return []
+    return None
 
-    return []
-
-def post_readings(readings):
-    payload = {"station": {"name": STATION_NAME}, "readings": readings}
-    r = requests.post(API_URL, json=payload, timeout=HTTP_TIMEOUT_S)
-    r.raise_for_status()
-    return r.json()
+def post_payload(payload: dict) -> bool:
+    try:
+        r = requests.post(API_URL, json=payload, timeout=HTTP_TIMEOUT_S)
+        if r.status_code >= 200 and r.status_code < 300:
+            return True
+        log.error("HTTP %s: %s", r.status_code, r.text[:200])
+        return False
+    except Exception as e:
+        log.error("HTTP FAIL: %s", e)
+        return False
 
 def main():
     log.info("Starting bridge: port=%s baud=%s api=%s station=%s", SERIAL_PORT, BAUDRATE, API_URL, STATION_NAME)
@@ -108,29 +73,29 @@ def main():
         try:
             with serial.Serial(SERIAL_PORT, BAUDRATE, timeout=READ_TIMEOUT_S) as ser:
                 log.info("Serial opened OK: %s", SERIAL_PORT)
+
                 while True:
-                    raw = ser.readline()
-                    if not raw:
-                        continue
                     try:
-                        line = raw.decode("utf-8", errors="ignore").strip()
-                    except Exception:
+                        raw = ser.readline().decode(errors="ignore")
+                    except SerialException as e:
+                        log.error("Serial read FAIL: %s (reopening in %.1fs)", e, RETRY_S)
+                        break
+
+                    payload = to_payload(raw)
+                    if not payload:
                         continue
 
-                    readings = parse_line(line)
-                    if not readings:
-                        log.debug("Ignored line: %r", line)
-                        continue
+                    ok = post_payload(payload)
+                    if not ok:
+                        # si falla la red, no matamos el loop; solo seguimos
+                        time.sleep(0.2)
 
-                    try:
-                        resp = post_readings(readings)
-                        log.info("Ingest OK: inserted=%s line=%r", resp.get("inserted"), line)
-                    except Exception as e:
-                        log.warning("Ingest FAIL: %s line=%r", e, line)
-
+        except SerialException as e:
+            log.error("Serial open FAIL: %s (retrying in %.1fs)", e, RETRY_S)
+            time.sleep(RETRY_S)
         except Exception as e:
-            log.error("Serial open FAIL: %s (retrying in 2s)", e)
-            time.sleep(2)
+            log.exception("Bridge fatal error: %s (retrying in %.1fs)", e, RETRY_S)
+            time.sleep(RETRY_S)
 
 if __name__ == "__main__":
     main()

@@ -1,125 +1,80 @@
+from flask import Blueprint, request, jsonify
 from datetime import datetime, timezone
-from flask import Blueprint, jsonify, request
-from sqlalchemy import select
-
 from app.extensions import db
 from app.models.sensor import SensorStation, Sensor, SensorData, SensorType
 
-api_bp = Blueprint("api", __name__)
-
-def _now():
-    return datetime.now(timezone.utc)
-
-def _parse_ts(value):
-    if not value:
-        return _now()
-    try:
-        # ISO 8601
-        return datetime.fromisoformat(value.replace("Z", "+00:00"))
-    except Exception:
-        return _now()
-
-def _get_or_create_station(station_payload: dict) -> SensorStation:
-    name = (station_payload or {}).get("name") or "MANGO Station"
-
-    station = db.session.execute(
-        select(SensorStation).where(SensorStation.name == name)
-    ).scalar_one_or_none()
-
-    if station:
-        # actualiza metadata si viene
-        station.location = (station_payload or {}).get("location", station.location)
-        station.lat = (station_payload or {}).get("lat", station.lat)
-        station.lon = (station_payload or {}).get("lon", station.lon)
-        return station
-
-    station = SensorStation(
-        name=name,
-        location=(station_payload or {}).get("location"),
-        lat=(station_payload or {}).get("lat"),
-        lon=(station_payload or {}).get("lon"),
-    )
-    db.session.add(station)
-    db.session.flush()
-    return station
-
-def _get_or_create_sensor(station_id: int, s_type: str, unit: str | None, label: str) -> Sensor:
-    label = label or ""
-    sensor = db.session.execute(
-        select(Sensor).where(
-            Sensor.station_id == station_id,
-            Sensor.type == s_type,
-            Sensor.label == label,
-        )
-    ).scalar_one_or_none()
-
-    if sensor:
-        if unit is not None:
-            sensor.unit = unit
-        return sensor
-
-    sensor = Sensor(station_id=station_id, type=s_type, unit=unit, label=label)
-    db.session.add(sensor)
-    db.session.flush()
-    return sensor
+api_bp = Blueprint("api_v1", __name__)
 
 @api_bp.post("/ingest")
 def ingest():
     payload = request.get_json(silent=True) or {}
-    station_payload = payload.get("station") or {}
+    station_obj = payload.get("station") or {}
     readings = payload.get("readings") or []
 
-    if not isinstance(readings, list) or len(readings) == 0:
-        return jsonify(ok=False, error="readings must be a non-empty list"), 400
+    if not readings or not isinstance(readings, list):
+        return jsonify({"ok": False, "error": "readings must be a non-empty list"}), 400
 
-    station = _get_or_create_station(station_payload)
+    station_name = (station_obj.get("name") or "MANGO Station").strip()
+
+    # Upsert station
+    station = SensorStation.query.filter_by(name=station_name).first()
+    if station is None:
+        station = SensorStation(name=station_name)
+        db.session.add(station)
+        db.session.flush()
 
     inserted = 0
+    ts = datetime.now(timezone.utc)
+
     for r in readings:
-        if not isinstance(r, dict):
-            continue
-        r_type = (r.get("type") or "unknown").strip().lower()
-        if r_type not in {t.value for t in SensorType}:
-            r_type = SensorType.UNKNOWN.value
+        t = (r.get("type") or "").strip().lower()
+        v = r.get("value", None)
+
+        if t not in {SensorType.PH.value, SensorType.TEMPERATURE.value, SensorType.TURBIDITY.value}:
+            t = SensorType.UNKNOWN.value
 
         try:
-            value = float(r.get("value"))
+            value = float(v)
         except Exception:
             continue
 
-        unit = r.get("unit")
-        label = (r.get("label") or "").strip()
-        ts = _parse_ts(r.get("ts"))
+        # Upsert sensor by (station, type)
+        sensor = Sensor.query.filter_by(station_id=station.id, type=t).first()
+        if sensor is None:
+            sensor = Sensor(station_id=station.id, type=t, label=r.get("label") or "")
+            db.session.add(sensor)
+            db.session.flush()
 
-        sensor = _get_or_create_sensor(station.id, r_type, unit, label)
-        db.session.add(SensorData(sensor_id=sensor.id, ts=ts, value=value))
+        row = SensorData(sensor_id=sensor.id, station_id=station.id, type=t, value=value, unit=r.get("unit"), ts=ts)
+        db.session.add(row)
         inserted += 1
 
     db.session.commit()
-    return jsonify(ok=True, inserted=inserted), 200
+    return jsonify({"ok": True, "inserted": inserted}), 200
+
 
 @api_bp.get("/latest")
 def latest():
-    # Devuelve últimas 100 lecturas (ya “reflejables” en dashboard)
-    rows = db.session.execute(
-        select(SensorData, Sensor)
-        .join(Sensor, Sensor.id == SensorData.sensor_id)
+    # Devuelve los últimos N registros (globales)
+    limit = int(request.args.get("limit", 20))
+
+    rows = (
+        SensorData.query
         .order_by(SensorData.ts.desc())
-        .limit(100)
-    ).all()
+        .limit(limit)
+        .all()
+    )
 
     out = []
-    for sd, s in rows:
-        out.append(
-            {
-                "station_id": s.station_id,
-                "sensor_id": s.id,
-                "type": s.type,
-                "unit": s.unit,
-                "label": s.label or "",
-                "value": sd.value,
-                "ts": sd.ts.isoformat(),
-            }
-        )
+    for r in rows:
+        out.append({
+            "station_id": r.station_id,
+            "sensor_id": r.sensor_id,
+            "type": r.type,
+            "value": r.value,
+            "unit": r.unit,
+            "label": r.label or "",
+            "ts": r.ts.isoformat() if r.ts else None,
+        })
 
     return jsonify(out), 200
