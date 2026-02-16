@@ -1,13 +1,23 @@
-#!/usr/bin/env bash
-set -euo pipefail
+#!/usr/bin/env sh
+set -e
 
-echo "[entrypoint] Bootstrapping database schema..."
-python -c "from app import create_app; app=create_app(); from app.bootstrap import bootstrap_db; bootstrap_db(app)"
+: "${API_HOST:=0.0.0.0}"
+: "${API_PORT:=5000}"
+: "${GUNICORN_APP:=wsgi:app}"
+: "${GUNICORN_WORKERS:=2}"
+: "${GUNICORN_THREADS:=4}"
+: "${GUNICORN_TIMEOUT:=60}"
+: "${GUNICORN_PRELOAD:=true}"
 
-echo "[entrypoint] Starting gunicorn..."
-exec gunicorn \
-  --bind 0.0.0.0:5000 \
-  --workers "${GUNICORN_WORKERS:-2}" \
-  --threads "${GUNICORN_THREADS:-4}" \
-  --timeout "${GUNICORN_TIMEOUT:-60}" \
-  "wsgi:app"
+PRELOAD_FLAG=""
+if [ "$GUNICORN_PRELOAD" = "true" ] || [ "$GUNICORN_PRELOAD" = "1" ]; then
+  PRELOAD_FLAG="--preload"
+fi
+
+exec gunicorn "$GUNICORN_APP" \
+  --bind "$API_HOST:$API_PORT" \
+  --workers "$GUNICORN_WORKERS" \
+  --threads "$GUNICORN_THREADS" \
+  --timeout "$GUNICORN_TIMEOUT" \
+  --worker-class gthread \
+  $PRELOAD_FLAG

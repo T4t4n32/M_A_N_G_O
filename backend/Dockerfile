@@ -10,7 +10,11 @@ COPY requirements.txt /app/requirements.txt
 RUN pip install --no-cache-dir -r /app/requirements.txt
 
 COPY . /app
-RUN chmod +x /app/entrypoint.sh
 
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+ENV PYTHONUNBUFFERED=1
 EXPOSE 5000
-CMD ["/app/entrypoint.sh"]
+
+ENTRYPOINT ["/entrypoint.sh"]
