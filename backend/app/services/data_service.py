@@ -1,63 +1,110 @@
-from datetime import datetime, timezone
-from app.extensions import db
-from app.models.sensor import Sensor, SensorData
-from app.services.validation_service import validate_reading
+# backend/app/services/data_service.py
+from __future__ import annotations
 
-def utcnow():
+from datetime import datetime, timezone
+from typing import Any, Dict, List, Optional
+
+from app.extensions import db
+from app.models.sensor import SensorStation, Sensor, SensorData
+
+
+def _utcnow():
     return datetime.now(timezone.utc)
 
-def ensure_default_sensors():
-    """
-    Crea sensores si no existen (una sola vez).
-    Ajusta turbidity model a AZDM01 hoy, TSW-20M después.
-    """
-    defaults = [
-        dict(key="ph", name="Sensor pH", unit="pH", min_value=0, max_value=14, model="GENERIC_PH", calibration_status="uncalibrated"),
-        dict(key="temperature", name="Temperatura PT100", unit="°C", min_value=-50, max_value=150, model="PT100_MAX31865", calibration_status="calibrated"),
-        dict(key="turbidity", name="Turbidez", unit="NTU", min_value=0, max_value=1000, model="AZDM01", calibration_status="unknown"),
-    ]
 
-    for d in defaults:
-        s = Sensor.query.filter_by(key=d["key"]).first()
-        if not s:
-            s = Sensor(**d)
-            db.session.add(s)
+def _get_station(name: str) -> SensorStation:
+    st = SensorStation.query.filter_by(name=name).first()
+    if st:
+        return st
+    st = SensorStation(name=name)
+    db.session.add(st)
     db.session.commit()
+    return st
 
-def get_last_valid_value(sensor_id: int):
-    row = (SensorData.query
-           .filter_by(sensor_id=sensor_id, valid=True)
-           .order_by(SensorData.timestamp.desc())
-           .first())
-    return row.value if row else None
 
-def insert_reading(sensor_key: str, value, *, timestamp=None, meta=None):
-    """
-    Inserta una lectura real: guarda válido o inválido (AMBOS).
-    """
-    ensure_default_sensors()
-    sensor = Sensor.query.filter_by(key=sensor_key).first()
-    if not sensor:
-        raise ValueError(f"Sensor desconocido: {sensor_key}")
+def _get_sensor(station_id: int, sensor_type: str, unit: Optional[str], label: Optional[str]) -> Sensor:
+    s = Sensor.query.filter_by(station_id=station_id, type=sensor_type).first()
+    if s:
+        # opcional: actualiza unit/label si llegan
+        if unit is not None:
+            s.unit = unit
+        if label is not None:
+            s.label = label
+        db.session.commit()
+        return s
 
-    ts = timestamp or utcnow()
-    if isinstance(ts, str):
-        # acepta ISO string
-        ts = datetime.fromisoformat(ts.replace("Z", "+00:00"))
+    s = Sensor(station_id=station_id, type=sensor_type, unit=unit, label=label)
+    db.session.add(s)
+    db.session.commit()
+    return s
 
-    last_valid = get_last_valid_value(sensor.id)
 
-    verdict = validate_reading(sensor, value, last_valid_value=last_valid, meta=meta)
+def ingest_payload(payload: Dict[str, Any]) -> Dict[str, Any]:
+    station = payload.get("station") or {}
+    station_name = (station.get("name") or "MANGO Station").strip()
 
-    data = SensorData(
-        sensor_id=sensor.id,
-        value=(None if value is None else float(value)),
-        timestamp=ts,
-        valid=verdict["valid"],
-        reason=verdict.get("reason"),
-        quality=verdict.get("quality", "error"),
+    readings = payload.get("readings")
+    if not isinstance(readings, list) or not readings:
+        return {"ok": False, "error": "readings_required", "inserted": 0}
+
+    st = _get_station(station_name)
+
+    inserted = 0
+    for r in readings:
+        if not isinstance(r, dict):
+            continue
+        r_type = (r.get("type") or "").strip()
+        if not r_type:
+            continue
+
+        try:
+            value = float(r.get("value"))
+        except Exception:
+            continue
+
+        unit = r.get("unit")
+        label = r.get("label")
+        sensor = _get_sensor(st.id, r_type, unit, label)
+
+        ts = _utcnow()
+        db.session.add(SensorData(sensor_id=sensor.id, ts=ts, value=value))
+        inserted += 1
+
+    if inserted:
+        db.session.commit()
+
+    return {"ok": True, "inserted": inserted}
+
+
+def latest_rows(station_name: Optional[str], limit: int) -> List[Dict[str, Any]]:
+    q = (
+        db.session.query(
+            SensorData.ts,
+            Sensor.type,
+            Sensor.unit,
+            Sensor.label,
+            Sensor.id.label("sensor_id"),
+            SensorStation.id.label("station_id"),
+        )
+        .join(Sensor, Sensor.id == SensorData.sensor_id)
+        .join(SensorStation, SensorStation.id == Sensor.station_id)
     )
 
-    db.session.add(data)
-    db.session.commit()
-    return data
+    if station_name:
+        q = q.filter(SensorStation.name == station_name)
+
+    q = q.order_by(SensorData.ts.desc()).limit(limit)
+
+    out = []
+    for row in q.all():
+        out.append(
+            {
+                "ts": row.ts.isoformat(),
+                "type": row.type,
+                "unit": row.unit,
+                "label": row.label or "",
+                "sensor_id": row.sensor_id,
+                "station_id": row.station_id,
+            }
+        )
+    return out

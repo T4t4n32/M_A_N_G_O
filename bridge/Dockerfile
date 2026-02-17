@@ -5,7 +5,6 @@ WORKDIR /app
 COPY requirements.bridge.txt /app/requirements.bridge.txt
 RUN pip install --no-cache-dir -r /app/requirements.bridge.txt
 
-COPY lora_http_bridge.py /app/lora_http_bridge.py
+COPY lora_http_bridge.py /app/lora_http_p/spool.jsonl
 
-ENV PYTHONUNBUFFERED=1
 CMD ["python", "-u", "/app/lora_http_bridge.py"]

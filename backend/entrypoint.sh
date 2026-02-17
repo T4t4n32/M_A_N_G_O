@@ -1,23 +1,6 @@
 #!/usr/bin/env sh
-set -e
+set -eu
 
-: "${API_HOST:=0.0.0.0}"
-: "${API_PORT:=5000}"
-: "${GUNICORN_APP:=wsgi:app}"
-: "${GUNICORN_WORKERS:=2}"
-: "${GUNICORN_THREADS:=4}"
-: "${GUNICORN_TIMEOUT:=60}"
-: "${GUNICORN_PRELOAD:=true}"
+python -c "from app import create_app; from app.bootstrap import bootstrap; app=create_app(); bootstrap(app)"
 
-PRELOAD_FLAG=""
-if [ "$GUNICORN_PRELOAD" = "true" ] || [ "$GUNICORN_PRELOAD" = "1" ]; then
-  PRELOAD_FLAG="--preload"
-fi
-
-exec gunicorn "$GUNICORN_APP" \
-  --bind "$API_HOST:$API_PORT" \
-  --workers "$GUNICORN_WORKERS" \
-  --threads "$GUNICORN_THREADS" \
-  --timeout "$GUNICORN_TIMEOUT" \
-  --worker-class gthread \
-  $PRELOAD_FLAG
+exec gunicorn -b 0.0.0.0:5000 --workers 2 --threads 4 --timeout 60 wsgi:app

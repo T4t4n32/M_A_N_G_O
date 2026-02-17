@@ -1,45 +1,47 @@
-import os
 import time
 from sqlalchemy import text
 
-from app import create_app
 from app.extensions import db
+from app.models import SensorStation
+
+LOCK_KEY = 734001234567  # bigint
 
 
-ADVISORY_LOCK_KEY = 424242  # cualquier entero fijo
-
-
-def wait_for_db(max_wait_s: int = 60):
-    deadline = time.time() + max_wait_s
-    last_err = None
-    while time.time() < deadline:
+def _wait_for_db(retries=30, delay=1.0):
+    for _ in range(retries):
         try:
-            with db.engine.connect() as conn:
-                conn.execute(text("SELECT 1"))
-            return
-        except Exception as e:
-            last_err = e
-            time.sleep(1)
-    raise RuntimeError(f"DB not ready after {max_wait_s}s. Last error: {last_err}")
+            db.session.execute(text("SELECT 1"))
+            return True
+        except Exception:
+            time.sleep(delay)
+    return False
 
 
-def main():
-    app = create_app()
-
+def init_db(app):
     with app.app_context():
-        # asegura que los modelos se registren en metadata
-        import app.models  # noqa: F401
+        if not _wait_for_db():
+            raise RuntimeError("Database not reachable")
 
-        wait_for_db(max_wait_s=int(os.getenv("DB_WAIT_S", "60")))
+        dialect = db.engine.dialect.name
+        locked = False
 
-        # lock para evitar concurrencia si algo raro reintenta
-        with db.engine.begin() as conn:
-            conn.execute(text("SELECT pg_advisory_lock(:k)"), {"k": ADVISORY_LOCK_KEY})
-            try:
-                db.create_all()
-            finally:
-                conn.execute(text("SELECT pg_advisory_unlock(:k)"), {"k": ADVISORY_LOCK_KEY})
+        try:
+            if dialect == "postgresql":
+                db.session.execute(text("SELECT pg_advisory_lock(:k)"), {"k": LOCK_KEY})
+                locked = True
 
+            db.create_all()
 
-if __name__ == "__main__":
-    main()
+            # Seed estación (idempotente)
+            name = app.config.get("DEFAULT_STATION_NAME", "MANGO Station")
+            if not SensorStation.query.filter_by(name=name).first():
+                db.session.add(SensorStation(name=name))
+                db.session.commit()
+
+        finally:
+            if locked:
+                try:
+                    db.session.execute(text("SELECT pg_advisory_unlock(:k)"), {"k": LOCK_KEY})
+                    db.session.commit()
+                except Exception:
+                    pass

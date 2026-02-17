@@ -7,14 +7,13 @@ services:
     container_name: mango_bridge
     environment:
       SERIAL_PORT: /dev/ttyMANGO
-      BAUDRATE: "9600"
-      READ_TIMEOUT_S: "1.0"
+      SERIAL_BAUD: "9600"
       API_URL: http://backend:5000/api/v1/ingest
-      HTTP_TIMEOUT_S: "5.0"
       STATION_NAME: "MANGO Station"
-      LOG_LEVEL: INFO
+      SPOOL_FILE: /app/spool.jsonl
+      POST_TIMEOUT: "5"
     devices:
-      - "${SERIAL_DEVICE}:/dev/ttyMANGO"
+      - "${SERIAL_DEVICE:?Set SERIAL_DEVICE before rx-on}:/dev/ttyMANGO"
     depends_on:
       backend:
         condition: service_healthy

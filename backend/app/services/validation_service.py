@@ -1,77 +1,57 @@
-import math
+class ValidationError(ValueError):
+    pass
 
-REASON = {
-    "NOT_A_NUMBER": "NOT_A_NUMBER",
-    "OUT_OF_RANGE_PH": "OUT_OF_RANGE_PH",
-    "OUT_OF_RANGE_TEMP": "OUT_OF_RANGE_TEMP",
-    "OUT_OF_RANGE_NTU": "OUT_OF_RANGE_NTU",
-    "SUSPECT_JUMP_PH": "SUSPECT_JUMP_PH",
-    "RTD_FAULT": "RTD_FAULT",
-    "KNOWN_SENSOR_ISSUE_AZDM01": "KNOWN_SENSOR_ISSUE_AZDM01",
-}
 
-def _is_bad_number(x: float) -> bool:
-    return x is None or isinstance(x, bool) or math.isnan(x) or math.isinf(x)
+def _as_str(x, field):
+    if x is None:
+        raise ValidationError(f"Missing field: {field}")
+    x = str(x).strip()
+    if not x:
+        raise ValidationError(f"Empty field: {field}")
+    return x
 
-def validate_reading(sensor, value, *, last_valid_value=None, meta=None):
-    """
-    Retorna:
-      dict(valid=bool, reason=str|None, quality=str, calibration_status=str)
-    """
-    meta = meta or {}
 
-    # 1) Normalización
-    if value is None:
-        return {"valid": False, "reason": REASON["NOT_A_NUMBER"], "quality": "error"}
-
+def _as_float(x, field):
     try:
-        v = float(value)
-    except Exception:
-        return {"valid": False, "reason": REASON["NOT_A_NUMBER"], "quality": "error"}
+        return float(x)
+    except Exception as e:
+        raise ValidationError(f"Invalid number for {field}: {x}") from e
 
-    if _is_bad_number(v):
-        return {"valid": False, "reason": REASON["NOT_A_NUMBER"], "quality": "error"}
 
-    # 2) Mantenimiento forzado (si lo activas)
-    if getattr(sensor, "maintenance_mode", False):
-        return {"valid": False, "reason": "MAINTENANCE_MODE", "quality": "maintenance"}
+def normalize_ingest_payload(payload):
+    if not isinstance(payload, dict):
+        raise ValidationError("Payload must be a JSON object")
 
-    # 3) Fallos eléctricos (ej: MAX31865)
-    # Si en el futuro recibes meta={"fault": true} desde Jetson/ESP32, aquí lo marcas.
-    if sensor.key == "temperature" and meta.get("fault") is True:
-        return {"valid": False, "reason": REASON["RTD_FAULT"], "quality": "maintenance"}
+    station_name = None
+    if "station" in payload:
+        st = payload["station"]
+        if isinstance(st, dict):
+            station_name = st.get("name")
+        else:
+            station_name = st
 
-    # 4) Validación dura por rango
-    if sensor.key == "ph":
-        if v < 0 or v > 14:
-            return {"valid": False, "reason": REASON["OUT_OF_RANGE_PH"], "quality": "maintenance"}
+    station_name = station_name or payload.get("station_name") or "MANGO Station"
+    station_name = _as_str(station_name, "station.name")
 
-    elif sensor.key == "temperature":
-        if v < -50 or v > 150:
-            return {"valid": False, "reason": REASON["OUT_OF_RANGE_TEMP"], "quality": "maintenance"}
+    readings = payload.get("readings")
+    if readings is None:
+        reading = payload.get("reading") or payload
+        readings = [reading]
 
-    elif sensor.key == "turbidity":
-        if v < 0 or v > 1000:
-            # si aún estás en AZDM01 y sabes que falla, lo dejamos explícito
-            if (sensor.model or "").upper() == "AZDM01":
-                return {"valid": False, "reason": REASON["KNOWN_SENSOR_ISSUE_AZDM01"], "quality": "maintenance"}
-            return {"valid": False, "reason": REASON["OUT_OF_RANGE_NTU"], "quality": "maintenance"}
+    if not isinstance(readings, list) or not readings:
+        raise ValidationError("readings must be a non-empty list")
 
-    # 5) Validación contextual (NO invalida, solo warn)
-    quality = "ok"
-    reason = None
+    out = []
+    for i, r in enumerate(readings):
+        if not isinstance(r, dict):
+            raise ValidationError(f"readings[{i}] must be an object")
 
-    # pH sin calibración
-    if sensor.key == "ph" and (sensor.calibration_status or "unknown") != "calibrated":
-        quality = "warn"
+        rtype = _as_str(r.get("type"), f"readings[{i}].type")
+        value = _as_float(r.get("value"), f"readings[{i}].value")
+        unit = r.get("unit")
+        label = r.get("label") or ""
+        ts = r.get("ts")  # opcional
 
-    # salto sospechoso de pH (ej: > 2.0 entre lecturas)
-    if sensor.key == "ph" and last_valid_value is not None:
-        try:
-            if abs(v - float(last_valid_value)) > 2.0:
-                quality = "warn"
-                reason = REASON["SUSPECT_JUMP_PH"]
-        except Exception:
-            pass
+        out.append({"type": rtype, "value": value, "unit": unit, "label": label, "ts": ts})
 
-    return {"valid": True, "reason": reason, "quality": quality}
+    return station_name, out

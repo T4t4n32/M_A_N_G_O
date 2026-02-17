@@ -1,133 +1,35 @@
-from flask import Blueprint, jsonify, request
-from app import get_db_connection
+# backend/app/routes/api.py
+from __future__ import annotations
 
-api_bp = Blueprint("api", __name__)
+from flask import Blueprint, jsonify, request, current_app
 
-# ==================================================
-# /api/latest
-# ==================================================
-@api_bp.route("/latest", methods=["GET"])
-def get_latest():
+from app.services.data_service import ingest_payload, latest_rows
 
-    conn = get_db_connection()
-    cursor = conn.cursor()
-
-    result = {}
-
-    sensors = cursor.execute("""
-        SELECT id, type, unit
-        FROM sensors
-        WHERE is_active = 1
-    """).fetchall()
-
-    for sensor in sensors:
-        reading = cursor.execute("""
-            SELECT value, is_valid, recorded_at
-            FROM sensor_readings
-            WHERE sensor_id = ?
-            ORDER BY recorded_at DESC
-            LIMIT 1
-        """, (sensor["id"],)).fetchone()
-
-        status = cursor.execute("""
-            SELECT status, message
-            FROM sensor_status
-            WHERE sensor_id = ?
-        """, (sensor["id"],)).fetchone()
-
-        result[sensor["type"]] = {
-            "value": reading["value"] if reading else None,
-            "unit": sensor["unit"],
-            "valid": bool(reading["is_valid"]) if reading else False,
-            "timestamp": reading["recorded_at"] if reading else None,
-            "status": status["status"] if status else "unknown",
-            "message": status["message"] if status else ""
-        }
-
-    conn.close()
-    return jsonify(result)
+bp = Blueprint("api", __name__, url_prefix="/api/v1")
 
 
-# ==================================================
-# /api/history?limit=50
-# ==================================================
-@api_bp.route("/history", methods=["GET"])
-def get_history():
+@bp.get("/latest")
+def latest():
+    station = request.args.get("station") or None
+    limit_raw = request.args.get("limit", "200")
 
-    limit = int(request.args.get("limit", 50))
-    limit = min(limit, 200)  # protección
+    try:
+        limit = int(limit_raw)
+    except Exception:
+        limit = 200
 
-    conn = get_db_connection()
-    cursor = conn.cursor()
+    max_limit = int(current_app.config.get("MAX_LATEST_LIMIT", 2000))
+    limit = max(1, min(limit, max_limit))
 
-    rows = cursor.execute("""
-        SELECT
-            sr.value,
-            sr.is_valid,
-            sr.recorded_at,
-            s.type,
-            s.unit
-        FROM sensor_readings sr
-        JOIN sensors s ON sr.sensor_id = s.id
-        ORDER BY sr.recorded_at DESC
-        LIMIT ?
-    """, (limit,)).fetchall()
+    return jsonify(latest_rows(station_name=station, limit=limit))
 
-    conn.close()
 
-    history = []
-    for r in rows:
-        history.append({
-            "type": r["type"],
-            "value": r["value"],
-            "unit": r["unit"],
-            "valid": bool(r["is_valid"]),
-            "timestamp": r["recorded_at"]
-        })
+@bp.post("/ingest")
+def ingest():
+    if not request.is_json:
+        return jsonify({"ok": False, "error": "expected_json"}), 400
 
-    return jsonify(history)
-
-@api_bp.route("/history/series", methods=["GET"])
-def get_history_series():
-    limit = int(request.args.get("limit", 50))
-    limit = min(limit, 200)
-
-    conn = get_db_connection()
-    cursor = conn.cursor()
-
-    rows = cursor.execute("""
-        SELECT
-            sr.value,
-            sr.is_valid,
-            sr.recorded_at,
-            s.type,
-            s.unit
-        FROM sensor_readings sr
-        JOIN sensors s ON sr.sensor_id = s.id
-        ORDER BY sr.recorded_at DESC
-        LIMIT ?
-    """, (limit * 3,)).fetchall()  # *3 para cubrir los 3 sensores
-
-    conn.close()
-
-    series = {
-        "ph": {"unit": "pH", "points": []},
-        "temperature": {"unit": "°C", "points": []},
-        "turbidity": {"unit": "NTU", "points": []},
-    }
-
-    for r in rows:
-        t = r["type"]
-        if t in series:
-            series[t]["unit"] = r["unit"]
-            series[t]["points"].append({
-                "value": r["value"],
-                "valid": bool(r["is_valid"]),
-                "timestamp": r["recorded_at"]
-            })
-
-    # Los rows vienen DESC, para graficar mejor los devolvemos ASC
-    for t in series:
-        series[t]["points"] = list(reversed(series[t]["points"]))[:limit]
-
-    return jsonify(series)
+    payload = request.get_json(silent=True) or {}
+    result = ingest_payload(payload)
+    status = 200 if result.get("ok") else 400
+    return jsonify(result), status

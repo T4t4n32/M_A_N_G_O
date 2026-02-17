@@ -158,8 +158,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 });
 
 
-cons:contentReference[oaicite:26]{index=26}t:"8000"; // si dashboard y backend están en el mismo origen, usa ""
-
 const SENSORS = [
   { key: "temperature", label: "Temperatura", unit: "°C", valueId: "tempValue", statusId: "tempStatus" },
   { key: "ph",          label: "pH",          unit: "pH", valueId: "phValue",   statusId: "phStatus"   },

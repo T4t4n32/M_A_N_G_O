@@ -1,57 +1,112 @@
-from __future__ import annotations
-
-from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from threading import RLock
-from typing import Any, Dict, Optional
+from sqlalchemy import text
+
+from app.extensions import db, get_redis
+from app.models import SensorStation, Sensor, SensorData
+from app.services.validation_service import normalize_ingest_payload
 
 
-@dataclass
-class LatestReading:
-    sensor_key: str
-    value: float | None
-    status: int               # 0=OK, 1=OFFLINE, 2=OUT_OF_RANGE
-    timestamp: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
-    raw: Dict[str, Any] = field(default_factory=dict)
+LOCK_KEY = 734001234567  # mismo lock que init_db para coherencia
 
 
-class SensorStore:
-    """
-    Minimal in-memory store for 'latest reading per sensor'.
-    This fixes ModuleNotFoundError and gives you a place to cache latest values
-    for websocket/dashboard without depending on DB queries.
-    """
-    def __init__(self) -> None:
-        self._lock = RLock()
-        self._latest: Dict[str, LatestReading] = {}
-
-    def set_latest(self, sensor_key: str, value: float | None, status: int, raw: Dict[str, Any] | None = None) -> None:
-        if raw is None:
-            raw = {}
-        with self._lock:
-            self._latest[sensor_key] = LatestReading(
-                sensor_key=sensor_key,
-                value=value,
-                status=status,
-                raw=raw,
-            )
-
-    def get_latest(self, sensor_key: str) -> Optional[LatestReading]:
-        with self._lock:
-            return self._latest.get(sensor_key)
-
-    def snapshot(self) -> Dict[str, Dict[str, Any]]:
-        with self._lock:
-            return {
-                k: {
-                    "sensor_key": v.sensor_key,
-                    "value": v.value,
-                    "status": v.status,
-                    "timestamp": v.timestamp.isoformat(),
-                    "raw": v.raw,
-                }
-                for k, v in self._latest.items()
-            }
+def _parse_ts(ts):
+    if not ts:
+        return None
+    if isinstance(ts, (int, float)):
+        return datetime.fromtimestamp(float(ts), tz=timezone.utc)
+    if isinstance(ts, str):
+        s = ts.replace("Z", "+00:00")
+        try:
+            dt = datetime.fromisoformat(s)
+            if dt.tzinfo is None:
+                dt = dt.replace(tzinfo=timezone.utc)
+            return dt.astimezone(timezone.utc)
+        except Exception:
+            return None
+    return None
 
 
-sensor_store = SensorStore()
+def get_or_create_station(name: str) -> SensorStation:
+    st = SensorStation.query.filter_by(name=name).first()
+    if st:
+        return st
+    st = SensorStation(name=name)
+    db.session.add(st)
+    db.session.flush()
+    return st
+
+
+def get_or_create_sensor(station_id: int, rtype: str, unit, label) -> Sensor:
+    s = Sensor.query.filter_by(station_id=station_id, type=rtype).first()
+    if s:
+        if unit and s.unit != unit:
+            s.unit = unit
+        if label is not None and s.label != label:
+            s.label = label
+        db.session.flush()
+        return s
+
+    s = Sensor(station_id=station_id, type=rtype, unit=unit, label=label)
+    db.session.add(s)
+    db.session.flush()
+    return s
+
+
+def ingest(payload) -> int:
+    station_name, readings = normalize_ingest_payload(payload)
+
+    st = get_or_create_station(station_name)
+    inserted = 0
+    rds = get_redis()
+
+    for r in readings:
+        sensor = get_or_create_sensor(st.id, r["type"], r.get("unit"), r.get("label"))
+        ts = _parse_ts(r.get("ts")) or datetime.now(timezone.utc)
+
+        row = SensorData(
+            station_id=st.id,
+            sensor_id=sensor.id,
+            type=r["type"],
+            value=float(r["value"]),
+            unit=r.get("unit"),
+            label=r.get("label"),
+            ts=ts,
+        )
+        db.session.add(row)
+        inserted += 1
+
+        if rds:
+            key = f"latest:{st.id}:{r['type']}"
+            rds.hset(key, mapping={
+                "station_id": st.id,
+                "sensor_id": sensor.id,
+                "type": r["type"],
+                "value": row.value,
+                "unit": row.unit or "",
+                "label": row.label or "",
+                "ts": row.ts.isoformat(),
+            })
+            rds.expire(key, 86400)
+
+    db.session.commit()
+    return inserted
+
+
+def latest(station_name=None, limit=200):
+    q = SensorData.query
+    if station_name:
+        st = SensorStation.query.filter_by(name=station_name).first()
+        if not st:
+            return []
+        q = q.filter(SensorData.station_id == st.id)
+
+    rows = q.order_by(SensorData.ts.desc()).limit(limit).all()
+    return [{
+        "station_id": r.station_id,
+        "sensor_id": r.sensor_id,
+        "type": r.type,
+        "value": r.value,
+        "unit": r.unit,
+        "label": r.label or "",
+        "ts": r.ts.isoformat(),
+    } for r in rows]
