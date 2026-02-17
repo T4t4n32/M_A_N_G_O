@@ -1,217 +1,163 @@
-// Dashboard M.A.N.G.O. — JS (LOCAL con frontend :8000 y backend :5000)
-const API_BASE = "http://127.0.0.1:5000/api";
+// frontend/assets/js/dashboard.js
 
-let chart = null;
+const API_LATEST = "/api/v1/latest?limit=50"; // relativo (funciona local y en dominio)
+const REFRESH_MS = 3000;
 
-const el = {
-  ph: document.getElementById("kpi-ph-value"),
-  temp: document.getElementById("kpi-temp-value"),
-  turb: document.getElementById("kpi-turb-value"),
+const els = {
+  phValue: document.getElementById("kpi-ph-value"),
   phStatus: document.getElementById("kpi-ph-status"),
+  tempValue: document.getElementById("kpi-temp-value"),
   tempStatus: document.getElementById("kpi-temp-status"),
+  turbValue: document.getElementById("kpi-turb-value"),
   turbStatus: document.getElementById("kpi-turb-status"),
+  ecosystem: document.getElementById("ecosystemStatus"),
   alerts: document.getElementById("alerts-list"),
-  eco: document.getElementById("ecosystemStatus"),
-  canvas: document.getElementById("mainChart"),
 };
 
-function fmt(v) {
-  if (v === null || v === undefined) return "—";
-  return Number(v).toFixed(2);
+function parseTs(ts) {
+  const d = new Date(ts);
+  return isNaN(d.getTime()) ? null : d;
 }
 
-function setStatus(node, ok, messageWhenBad = "En mantenimiento") {
-  node.textContent = ok ? "Operativo" : messageWhenBad;
-  node.style.color = ok ? "var(--mango-green)" : "var(--mango-gold)";
+function fmtTime(ts) {
+  const d = parseTs(ts);
+  if (!d) return "—";
+  return d.toLocaleString("es-CO", { hour12: false });
 }
 
-function resetAlerts() {
-  if (!el.alerts) return;
-  el.alerts.innerHTML = "";
+function newestByType(rows, type) {
+  const filtered = rows.filter(r => (r.type || "").toLowerCase() === type);
+  filtered.sort((a, b) => new Date(b.ts) - new Date(a.ts));
+  return filtered[0] || null;
 }
 
-function addAlert(msg) {
-  if (!el.alerts) return;
-  const li = document.createElement("li");
-  li.textContent = msg;
-  el.alerts.appendChild(li);
-}
-
-function setEcoText(text) {
-  if (el.eco) el.eco.textContent = text;
-}
-
-async function fetchJSON(url) {
-  const res = await fetch(url, { cache: "no-store" });
-  if (!res.ok) throw new Error(`Servidor no responde (${res.status})`);
-  return res.json();
-}
-
-async function updateKPIs() {
-  try {
-    const data = await fetchJSON(`${API_BASE}/latest`);
-
-    resetAlerts();
-
-    // pH
-    if (data.ph && data.ph.value !== null) {
-      el.ph.textContent = fmt(data.ph.value);
-      setStatus(el.phStatus, data.ph.valid);
-      if (!data.ph.valid) addAlert("Sensor de pH en mantenimiento: lecturas fuera de rango.");
-    } else {
-      el.ph.textContent = "—";
-      el.phStatus.textContent = "Sin datos";
-    }
-
-    // Temp
-    if (data.temperature && data.temperature.value !== null) {
-      el.temp.textContent = fmt(data.temperature.value);
-      setStatus(el.tempStatus, data.temperature.valid);
-      if (!data.temperature.valid) addAlert("Sensor PT100: lecturas inválidas detectadas.");
-    } else {
-      el.temp.textContent = "—";
-      el.tempStatus.textContent = "Sin datos";
-    }
-
-    // Turbidez
-    if (data.turbidity && data.turbidity.value !== null) {
-      el.turb.textContent = fmt(data.turbidity.value);
-      setStatus(el.turbStatus, data.turbidity.valid);
-      if (!data.turbidity.valid) addAlert("Sensor de turbidez en mantenimiento: revisar histórico confiable.");
-    } else {
-      el.turb.textContent = "—";
-      el.turbStatus.textContent = "Sin datos";
-    }
-
-    if (el.alerts && el.alerts.children.length === 0) {
-      addAlert("Sin alertas: sensores operando normalmente.");
-      setEcoText("Condición estable según lecturas actuales. Revisa histórico para tendencias.");
-    } else {
-      setEcoText("Condición degradada: hay lecturas inválidas o mantenimiento activo.");
-    }
-  } catch (err) {
-    console.error("Error KPIs:", err);
-    resetAlerts();
-    addAlert("No hay comunicación con la API local.");
-    el.ph.textContent = el.temp.textContent = el.turb.textContent = "—";
-    el.phStatus.textContent = el.tempStatus.textContent = el.turbStatus.textContent = "Desconectado";
-    setEcoText("Sin conexión con el sistema de adquisición.");
+function setKpi(valueEl, statusEl, row) {
+  if (!row) {
+    valueEl.textContent = "—";
+    statusEl.textContent = "Sin datos";
+    return;
   }
+
+  // OJO: si tu API no trae "value", aquí lo verás como undefined.
+  const v = row.value;
+  const unit = row.unit ? ` ${row.unit}` : "";
+
+  valueEl.textContent = (v === undefined || v === null) ? "—" : `${v}${unit}`;
+
+  const tsLabel = fmtTime(row.ts);
+  statusEl.textContent = `Actualizado: ${tsLabel}`;
 }
 
-function buildChart(labels, ph, temp, turb) {
-  if (!el.canvas) return;
+function computeAlerts(latest) {
+  const alerts = [];
 
-  if (chart) chart.destroy();
+  // Reglas simples (ajústalas a tu criterio real)
+  if (latest.ph?.value != null) {
+    const ph = Number(latest.ph.value);
+    if (!isNaN(ph) && (ph < 6.5 || ph > 8.5)) alerts.push(`pH fuera de rango típico: ${ph}`);
+  }
+  if (latest.temperature?.value != null) {
+    const t = Number(latest.temperature.value);
+    if (!isNaN(t) && (t < 0 || t > 40)) alerts.push(`Temperatura inusual: ${t} °C`);
+  }
+  if (latest.turbidity?.value != null) {
+    const tu = Number(latest.turbidity.value);
+    if (!isNaN(tu) && tu > 50) alerts.push(`Turbidez alta: ${tu} NTU`);
+  }
 
-  chart = new Chart(el.canvas, {
+  return alerts;
+}
+
+// -------- Chart.js ----------
+let chart;
+
+function ensureChart() {
+  if (chart) return chart;
+  const ctx = document.getElementById("mainChart");
+  chart = new Chart(ctx, {
     type: "line",
     data: {
-      labels,
+      labels: [],
       datasets: [
-        { label: "pH", data: ph, tension: 0.35 },
-        { label: "Temperatura (°C)", data: temp, tension: 0.35 },
-        { label: "Turbidez (NTU)", data: turb, tension: 0.35 },
+        { label: "pH", data: [] },
+        { label: "Temperatura (°C)", data: [] },
+        { label: "Turbidez (NTU)", data: [] },
       ],
     },
     options: {
       responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: { labels: { color: "#eaf6ff" } },
-        tooltip: { enabled: true },
-      },
+      animation: false,
       scales: {
-        x: { ticks: { color: "rgba(234,246,255,0.7)" }, grid: { color: "rgba(255,255,255,0.06)" } },
-        y: { ticks: { color: "rgba(234,246,255,0.7)" }, grid: { color: "rgba(255,255,255,0.06)" } },
+        x: { ticks: { maxRotation: 0 } },
       },
     },
   });
+  return chart;
 }
 
-async function updateChart() {
+// Actualizar datos y luego chart.update() es el flujo normal en Chart.js. :contentReference[oaicite:2]{index=2}
+function updateChart(rows) {
+  const c = ensureChart();
+
+  // Ordenar por ts asc para que el eje X vaya “hacia adelante”
+  const sorted = [...rows].filter(r => r.ts).sort((a, b) => new Date(a.ts) - new Date(b.ts));
+
+  // Tomamos puntos por tipo
+  const labels = sorted.map(r => {
+    const d = parseTs(r.ts);
+    return d ? d.toLocaleTimeString("es-CO", { hour12: false }) : "";
+  });
+
+  const ph = sorted.map(r => (r.type === "ph" ? r.value ?? null : null));
+  const temp = sorted.map(r => (r.type === "temperature" ? r.value ?? null : null));
+  const turb = sorted.map(r => (r.type === "turbidity" ? r.value ?? null : null));
+
+  c.data.labels = labels;
+  c.data.datasets[0].data = ph;
+  c.data.datasets[1].data = temp;
+  c.data.datasets[2].data = turb;
+
+  c.update();
+}
+
+async function refresh() {
   try {
-    const series = await fetchJSON(`${API_BASE}/history/series?limit=50`);
+    const res = await fetch(API_LATEST, { cache: "no-store" });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const rows = await res.json();
 
-    if (!series.ph || !series.ph.points || series.ph.points.length === 0) return;
+    const latest = {
+      ph: newestByType(rows, "ph"),
+      temperature: newestByType(rows, "temperature"),
+      turbidity: newestByType(rows, "turbidity"),
+    };
 
-    const labels = series.ph.points.map(p => new Date(p.timestamp).toLocaleTimeString());
+    setKpi(els.phValue, els.phStatus, latest.ph);
+    setKpi(els.tempValue, els.tempStatus, latest.temperature);
+    setKpi(els.turbValue, els.turbStatus, latest.turbidity);
 
-    const ph = series.ph.points.map(p => (p.valid ? p.value : null));
-    const temp = series.temperature.points.map(p => (p.valid ? p.value : null));
-    const turb = series.turbidity.points.map(p => (p.valid ? p.value : null));
-
-    buildChart(labels, ph, temp, turb);
-  } catch (err) {
-    console.error("Error Chart:", err);
-  }
-}
-
-document.addEventListener("DOMContentLoaded", async () => {
-  console.log("dashboard.js cargado ✅ API_BASE =", API_BASE);
-
-  await updateKPIs();
-  await updateChart();
-
-  setInterval(updateKPIs, 5000);
-  setInterval(updateChart, 15000);
-});
-
-
-const SENSORS = [
-  { key: "temperature", label: "Temperatura", unit: "°C", valueId: "tempValue", statusId: "tempStatus" },
-  { key: "ph",          label: "pH",          unit: "pH", valueId: "phValue",   statusId: "phStatus"   },
-  { key: "turbidity",   label: "Turbidez",    unit: "NTU",valueId: "tuValue",   statusId: "tuStatus"   },
-];
-
-function setText(id, text) {
-  const el = document.getElementById(id);
-  if (el) el.textContent = text;
-}
-
-function humanStatus(latest) {
-  if (!latest) return { text: "Sensor Offline", cls: "offline" };
-
-  if (latest.valid === false) {
-    // reason puede ser: MISSING_VALUE, OUT_OF_RANGE_LOW, OUT_OF_RANGE_HIGH, NOT_A_NUMBER...
-    const reason = latest.reason ? ` (${latest.reason})` : "";
-    return { text: `Sensor Fuera de Rango (En Mantenimiento)${reason}`, cls: "warn" };
-  }
-
-  return { text: "OK", cls: "ok" };
-}
-
-async function fetchLatest(sensorKey) {
-  const url = `${API_BASE}/api/sensors/${sensorKey}/latest?limit=1`;
-  const res = await fetch(url);
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  return await res.json();
-}
-
-async function tick() {
-  for (const s of SENSORS) {
-    try {
-      const data = await fetchLatest(s.key);
-      const latest = data.latest;
-
-      const st = humanStatus(latest);
-      setText(s.statusId, st.text);
-
-      if (!latest || latest.value === null || latest.value === undefined) {
-        setText(s.valueId, "--");
-      } else {
-        setText(s.valueId, `${Number(latest.value).toFixed(2)} ${s.unit}`);
-      }
-
-      if (latest && latest.timestamp) {
-        setText("lastUpdate", latest.timestamp);
-      }
-    } catch (e) {
-      setText(s.statusId, "Dashboard sin conexión al backend");
-      setText(s.valueId, "--");
+    const alerts = computeAlerts(latest);
+    els.alerts.innerHTML = "";
+    if (alerts.length === 0) {
+      els.alerts.innerHTML = "<li>No se han detectado alertas activas.</li>";
+      els.ecosystem.textContent = "Condiciones en rango según las últimas lecturas disponibles.";
+    } else {
+      alerts.forEach(a => {
+        const li = document.createElement("li");
+        li.textContent = a;
+        els.alerts.appendChild(li);
+      });
+      els.ecosystem.textContent = "Se detectaron observaciones que requieren revisión.";
     }
+
+    updateChart(rows);
+  } catch (e) {
+    // Silencioso pero visible
+    els.ecosystem.textContent = `Error leyendo datos del API: ${e.message}`;
   }
 }
 
-setInterval(tick, 2000);
-tick();
+document.addEventListener("DOMContentLoaded", () => {
+  refresh();
+  setInterval(refresh, REFRESH_MS);
+});

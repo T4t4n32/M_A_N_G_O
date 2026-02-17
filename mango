@@ -1,71 +1,133 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-BASE="docker compose -f compose.yaml"
-RX="docker compose -f compose.yaml -f compose.rx.yaml"
+BASE_FILE="compose.yaml"
+RX_FILE="compose.rx.yaml"
+
+BASE=(docker compose -f "$BASE_FILE")
+RX=(docker compose -f "$BASE_FILE" -f "$RX_FILE")
 
 cmd="${1:-help}"
 
+die() { echo "[mango] ERROR: $*" >&2; exit 1; }
+
+need() { command -v "$1" >/dev/null 2>&1 || die "No encontré '$1' en tu sistema."; }
+
+ensure_here() {
+  [ -f "$BASE_FILE" ] || die "No veo $BASE_FILE. Ejecuta esto desde la raíz del repo (donde está compose.yaml)."
+}
+
+rx_run() {
+  # Evita el error de interpolación cuando SOLO quieres bajar/parar el bridge
+  SERIAL_DEVICE="${SERIAL_DEVICE:-/dev/null}" "${RX[@]}" "$@"
+}
+
 detect_serial() {
-  # Linux: prefer /dev/serial/by-id for stability
-  if ls /dev/serial/by-id/* >/dev/null 2>&1; then
-    ls -1 /dev/serial/by-id/* | head -n 1
-    return 0
+  # Preferir /dev/serial/by-id (estable)
+  if compgen -G "/dev/serial/by-id/*" >/dev/null; then
+    # Preferencias comunes: CP210, CH340, FTDI (ajusta si quieres)
+    ls -1 /dev/serial/by-id/* 2>/dev/null | grep -Ei "CP210|CH340|FTDI|Silicon" | head -n 1 && return 0
+    ls -1 /dev/serial/by-id/* 2>/dev/null | head -n 1 && return 0
   fi
-  # fallback common devices
-  for d in /dev/ttyUSB0 /dev/ttyACM0 /dev/ttyS0; do
-    if [ -e "$d" ]; then echo "$d"; return 0; fi
+
+  # Fallbacks
+  for d in /dev/ttyUSB0 /dev/ttyACM0; do
+    [ -e "$d" ] && echo "$d" && return 0
   done
   return 1
 }
 
 case "$cmd" in
   up)
-    $BASE up -d --build
+    need docker; ensure_here
+    "${BASE[@]}" up -d --build
     ;;
+
   down)
-    # Stop everything including bridge (without requiring SERIAL_DEVICE)
-    SERIAL_DEVICE="${SERIAL_DEVICE:-/dev/null}" $RX down --remove-orphans
+    need docker; ensure_here
+    # Baja TODO (base + rx si existe) sin exigir RX conectado
+    rx_run down --remove-orphans
     ;;
+
   ps)
-    $BASE ps
+    need docker; ensure_here
+    "${BASE[@]}" ps
     ;;
+
   logs)
+    need docker; ensure_here
     svc="${2:-}"
     if [ -z "$svc" ]; then
-      $BASE logs -f
+      "${BASE[@]}" logs -f
     else
-      $BASE logs -f "$svc"
+      "${BASE[@]}" logs -f "$svc"
     fi
     ;;
+
   test)
-    echo "[1/3] Backend direct:"
+    need curl; ensure_here
+    echo "[mango] backend via 8000:"
     curl -fsS http://localhost:8000/health && echo
-    echo "[2/3] Nginx:"
+    echo
+    echo "[mango] nginx via 8080:"
     curl -fsS http://localhost:8080/health && echo
-    echo "[3/3] Latest:"
-    curl -fsS http://localhost:8080/api/v1/latest | head -c 300 && echo
+    echo
+    echo "[mango] latest via nginx:"
+    curl -fsS http://localhost:8080/api/v1/latest | head -c 400 && echo
     ;;
+
+  latest)
+    need curl; ensure_here
+    curl -fsS "http://localhost:8080/api/v1/latest${2:-}" && echo
+    ;;
+
   ingest-demo)
+    need curl; ensure_here
+    echo "[mango] Sending demo payload -> nginx (8080) -> backend"
     curl -fsS -X POST http://localhost:8080/api/v1/ingest \
       -H "Content-Type: application/json" \
       -d '{"station":{"name":"MANGO Station"},"readings":[{"type":"ph","value":7.1,"unit":"pH"},{"type":"temperature","value":24.6,"unit":"C"},{"type":"turbidity","value":12.2,"unit":"NTU"}]}' \
       && echo
     ;;
+
   rx-on)
-    dev="$(detect_serial || true)"
-    if [ -z "${dev:-}" ]; then
-      echo "No encontré RX conectado. Conéctalo y vuelve a intentar."
-      exit 1
+    need docker; ensure_here
+    dev="${2:-}"
+    if [ -z "$dev" ]; then
+      dev="$(detect_serial || true)"
     fi
+    [ -n "${dev:-}" ] || die "No encontré RX conectado. Conéctalo y ejecuta: ./mango rx-on"
     export SERIAL_DEVICE="$dev"
-    echo "Usando SERIAL_DEVICE=$SERIAL_DEVICE"
-    $RX up -d --build bridge
+    echo "[mango] Usando SERIAL_DEVICE=$SERIAL_DEVICE"
+    rx_run up -d --build bridge
+    echo "[mango] Bridge arriba. Ver logs: ./mango rx-logs"
     ;;
+
   rx-off)
-    SERIAL_DEVICE="${SERIAL_DEVICE:-/dev/null}" $RX stop bridge || true
-    SERIAL_DEVICE="${SERIAL_DEVICE:-/dev/null}" $RX rm -f bridge || true
+    need docker; ensure_here
+    rx_run stop bridge >/dev/null 2>&1 || true
+    rx_run rm -f bridge >/dev/null 2>&1 || true
+    echo "[mango] Bridge apagado."
     ;;
+
+  rx-logs)
+    need docker; ensure_here
+    rx_run logs -f bridge
+    ;;
+
+  doctor)
+    need docker; need curl; ensure_here
+    echo "[doctor] compose config (valida yaml):"
+    "${BASE[@]}" config >/dev/null && echo "OK"
+    echo "[doctor] backend /health:"
+    curl -fsS http://localhost:8000/health >/dev/null && echo "OK"
+    echo "[doctor] nginx /health:"
+    curl -fsS http://localhost:8080/health >/dev/null && echo "OK"
+    echo "[doctor] nginx /api/v1/latest:"
+    curl -fsS http://localhost:8080/api/v1/latest >/dev/null && echo "OK"
+    echo "[doctor] Todo OK."
+    ;;
+
   help|*)
     cat <<EOF
 Uso:
@@ -74,9 +136,12 @@ Uso:
   ./mango ps
   ./mango logs [servicio]
   ./mango test
+  ./mango latest
   ./mango ingest-demo
-  ./mango rx-on
+  ./mango rx-on [ruta_del_dispositivo]
   ./mango rx-off
+  ./mango rx-logs
+  ./mango doctor
 EOF
     ;;
 esac
