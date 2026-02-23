@@ -1,7 +1,10 @@
-from flask import Blueprint, request, jsonify
-from datetime import datetime, timezone
+from flask import Blueprint, jsonify, request
+from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy import func
+from datetime import datetime, timedelta, timezone
+
 from app.extensions import db
-from app.models.sensor import SensorStation, Sensor, SensorData, SensorType
+from app.models.sensor import Sensor, SensorData
 
 api_bp = Blueprint("api_v1", __name__)
 
