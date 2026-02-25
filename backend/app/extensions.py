@@ -1,61 +1,52 @@
-"""
-Extensions used by the Flask application.
+"""Flask extensions (DB + optional Redis).
 
-This module initialises and exposes application-wide extensions such
-as SQLAlchemy and, optionally, Redis. Initialising extensions in a
-central location helps avoid circular imports and ensures that
-extensions are available to all parts of the application once
-``create_app`` has been called.
+This file is used by the Flask app factory and also imported by some
+routes (e.g. health checks). Your error was:
+
+    ImportError: cannot import name 'redis_client' from 'app.extensions'
+
+So we define `redis_client` here and initialise it safely.
 """
 
 from __future__ import annotations
 
 from flask_sqlalchemy import SQLAlchemy
 
-
-# SQLAlchemy database instance. This will be bound to the Flask app
-# inside ``create_app`` via ``db.init_app(app)``.
+# SQLAlchemy instance
 db: SQLAlchemy = SQLAlchemy()
 
+# Optional Redis client (can be None)
+redis_client = None
 
-def init_redis(app) -> object | None:
-    """Initialise a Redis client.
 
-    Attempts to create a Redis client based on the ``REDIS_URL``
-    configuration setting and stores it on the Flask application's
-    ``extensions`` dictionary under the ``"redis"`` key. If the
-    ``redis`` package is not installed or the connection cannot be
-    established, the function silently returns ``None``.
+def init_redis(app):
+    """Initialise Redis and expose it as `redis_client`.
 
-    Parameters
-    ----------
-    app : flask.Flask
-        The Flask application instance to which the Redis client
-        should be attached.
-
-    Returns
-    -------
-    object | None
-        The Redis client if initialisation succeeds, otherwise
-        ``None``.
+    - If the `redis` library is missing, or Redis is unreachable,
+      it stays as None (no crash).
+    - If it succeeds, it also stores the client in `app.extensions["redis"]`.
     """
+
+    global redis_client
+
     redis_url = app.config.get("REDIS_URL")
     if not redis_url:
+        redis_client = None
         return None
 
     try:
         import redis  # type: ignore
     except Exception:
+        redis_client = None
         return None
 
     try:
         client = redis.Redis.from_url(redis_url)
-        # Simple connectivity check; this will raise an exception if
-        # the server is unreachable.
         client.ping()
     except Exception:
+        redis_client = None
         return None
 
-    # Attach the client to the app's extensions for later access.
+    redis_client = client
     app.extensions.setdefault("redis", client)
     return client

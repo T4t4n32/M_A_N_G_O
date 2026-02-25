@@ -1,0 +1,27 @@
+[Unit]
+Description=MANGO RX Gateway (LoRa RX -> VPS ingest, store-and-forward)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/mango/gateway
+Environment="SERIAL_PORT=/dev/ttyUSB0"
+Environment="BAUDRATE=115200"
+Environment="API_URL=https://integramosoe.com/api/v1/ingest"
+Environment="SPOOL_DB=/opt/mango/gateway/mango_gateway.db"
+Environment="FLUSH_INTERVAL_S=5"
+Environment="FLUSH_BATCH=50"
+Environment="LOCAL_API_PORT=9100"
+Environment="ENABLE_LOCAL_API=1"
+# Optional once you secure ingest:
+# Environment="INGEST_API_KEY=CHANGE_ME"
+
+ExecStart=/opt/mango/gateway/venv/bin/python /opt/mango/gateway/rx_gateway.py
+Restart=on-failure
+RestartSec=2
+StartLimitIntervalSec=60
+StartLimitBurst=20
+
+[Install]
+WantedBy=multi-user.target
