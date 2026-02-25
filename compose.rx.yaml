@@ -1,5 +1,7 @@
 services:
+  # Hardware bridge: only start this profile when the serial device exists.
   bridge:
+    profiles: ["hardware"]
     build:
       context: ./bridge
       dockerfile: Dockerfile
@@ -13,8 +15,29 @@ services:
       HTTP_TIMEOUT_S: "5.0"
       STATION_NAME: "MANGO Station"
       LOG_LEVEL: INFO
+    # Only works when the device exists on the host.
     devices:
-      - "${SERIAL_DEVICE}:/dev/ttyMANGO"
+      - "${SERIAL_DEVICE:-/dev/ttyUSB0}:/dev/ttyMANGO"
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # Dummy bridge: no serial device needed. Sends synthetic readings.
+  bridge_dummy:
+    profiles: ["dummy"]
+    build:
+      context: ./bridge
+      dockerfile: Dockerfile
+    image: mango-bridge:local
+    container_name: mango_bridge_dummy
+    environment:
+      API_URL: http://backend:5000/api/v1/ingest
+      HTTP_TIMEOUT_S: "5.0"
+      STATION_NAME: "MANGO Station"
+      LOG_LEVEL: INFO
+      DUMMY_INTERVAL_S: "5"
+    command: ["python", "/app/lora_http_bridge.py", "--dummy"]
     depends_on:
       backend:
         condition: service_healthy

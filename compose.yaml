@@ -27,6 +27,26 @@ services:
       retries: 30
     restart: unless-stopped
 
+  # Runs once to create DB tables. It must NOT start gunicorn.
+  # IMPORTANT: This uses db_init.py (not init_db.py) because your backend has db_init.py.
+  db_init:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    image: mango-backend:local
+    container_name: mango_db_init
+    environment:
+      DATABASE_URL: postgresql+psycopg2://mango:mango@db:5432/mango
+      REDIS_URL: redis://redis:6379/0
+      SECRET_KEY: local-dev-secret
+      DB_WAIT_S: "90"
+    depends_on:
+      db:
+        condition: service_healthy
+    # Override the Dockerfile ENTRYPOINT (which starts gunicorn)
+    entrypoint: ["python", "db_init.py"]
+    restart: "no"
+
   backend:
     build:
       context: ./backend
@@ -48,14 +68,19 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      db_init:
+        condition: service_completed_successfully
     ports:
       - "8000:5000"
     healthcheck:
-      test: ["CMD-SHELL", "curl -fsS http://localhost:5000/health || exit 1"]
+      # Your API lives under /api/v1
+      #test: ["CMD-SHELL", "curl -fsS http://localhost:5000/api/v1/health || exit 1"]
       interval: 10s
       timeout: 3s
       retries: 20
-      start_period: 25s
+      start_period: 20s
+      test: ["CMD-SHELL", "curl -fsS http://localhost:5000/api/v1/health || curl -fsS http://localhost:5000/api/health || curl -fsS http://localhost:5000/health || exit 1"]
+      #test: ["CMD-SHELL", "curl -fsS http://localhost:5000/api/v1/health || exit 1"]
     restart: unless-stopped
 
   nginx:
