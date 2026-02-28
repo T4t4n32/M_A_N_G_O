@@ -1,8 +1,0 @@
-Mira lo que me arrojo la terminal:
-➜  M_A_N_G_O git:(main) ✗ ./mango dummy-on
-[mango] No existe el servicio 'bridge_dummy' en compose.rx.yaml.
-[mango] Revisa que tu compose.rx.yaml tenga el servicio bridge_dummy y profile dummy.
-➜  M_A_N_G_O git:(main) ✗ ./mango rx-on   
-[mango] No existe el servicio 'bridge' en compose.rx.yaml.
-
-Dime el esquema completo de pasos y de archivos que debo tener en cuenta para que funciones. Por ahora no he hecho cambios drasticos o grandes por asi decirlo
