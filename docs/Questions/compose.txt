@@ -1,0 +1,124 @@
+Esto fue lo que me arrojo la terminal (Aun no funciona):
+➜  M_A_N_G_O git:(main) ✗ ./mango down
+[+] down 6/6
+ ✔ Container mango_nginx     Removed                                                                                               0.4s
+ ✔ Container mango_backend   Removed                                                                                               1.0s
+ ✔ Container mango_db        Removed                                                                                               0.4s
+ ✔ Container mango_redis     Removed                                                                                               0.4s
+ ✔ Container mango_db_init   Removed                                                                                               0.0s
+ ✔ Network m_a_n_g_o_default Removed                                                                                               0.1s
+➜  M_A_N_G_O git:(main) ✗ ./mango up  
+[+] Building 3.5s (15/15) FINISHED                                                                                                     
+ => [internal] load local bake definitions                                                                                        0.0s
+ => => reading from stdin 572B                                                                                                    0.0s
+ => [internal] load build definition from Dockerfile                                                                              0.0s
+ => => transferring dockerfile: 429B                                                                                              0.0s
+ => [internal] load metadata for docker.io/library/python:3.12-slim                                                               2.7s
+ => [internal] load .dockerignore                                                                                                 0.0s
+ => => transferring context: 2B                                                                                                   0.0s
+ => [1/8] FROM docker.io/library/python:3.12-slim@sha256:39e4e1ccb01578e3c86f7a0cf7b7fd89b8dbe2c27a88de11cf726ba669469f49         0.0s
+ => => resolve docker.io/library/python:3.12-slim@sha256:39e4e1ccb01578e3c86f7a0cf7b7fd89b8dbe2c27a88de11cf726ba669469f49         0.0s
+ => [internal] load build context                                                                                                 0.2s
+ => => transferring context: 101.94kB                                                                                             0.2s
+ => CACHED [2/8] WORKDIR /app                                                                                                     0.0s
+ => CACHED [3/8] RUN apt-get update   && apt-get install -y --no-install-recommends curl   && rm -rf /var/lib/apt/lists/*         0.0s
+ => CACHED [4/8] COPY requirements.txt /app/requirements.txt                                                                      0.0s
+ => CACHED [5/8] RUN pip install --no-cache-dir -r /app/requirements.txt                                                          0.0s
+ => CACHED [6/8] COPY . /app                                                                                                      0.0s
+ => CACHED [7/8] COPY entrypoint.sh /entrypoint.sh                                                                                0.0s
+ => CACHED [8/8] RUN chmod +x /entrypoint.sh                                                                                      0.0s
+ => exporting to image                                                                                                            0.2s
+ => => exporting layers                                                                                                           0.0s
+ => => exporting manifest sha256:36652b5ae5cab76b20653683c19015b5a5734554bea1b3b5d023dabc30cc55ff                                 0.0s
+ => => exporting config sha256:551bb9ab6b9ca049c4166d53a2118f97fd1d90c239250d58c4f14e40b11fa56b                                   0.0s
+ => => exporting attestation manifest sha256:c93c964ca60984d5af4879f0394e1251c0235e330bd8edd9fc3ade4ec459d14a                     0.0s
+ => => exporting manifest list sha256:bb5ef8feed45dadab29b7fd1fbf167adeab443d4cbce5197b4417fe61b84f05c                            0.0s
+ => => naming to docker.io/library/mango-backend:local                                                                            0.0s
+ => => unpacking to docker.io/library/mango-backend:local                                                                         0.0s
+ => resolving provenance for metadata file                                                                                        0.0s
+[+] up 6/6
+ ✔ Image mango-backend:local Built                                                                                                3.7ss
+ ✔ Network m_a_n_g_o_default Created                                                                                              0.1ss
+ ✔ Container mango_redis     Healthy                                                                                              6.5ss
+ ✔ Container mango_db        Healthy                                                                                              6.5ss
+ ✔ Container mango_backend   Healthy                                                                                              12.2s
+ ✔ Container mango_nginx     Created                                                                                              0.1ss
+➜  M_A_N_G_O git:(main) ✗ curl -fsS http://localhost:8000/api/v1/health
+{"db":"ok","status":"ok","time":"2026-02-25T15:44:02.877068+00:00"}
+➜  M_A_N_G_O git:(main) ✗ ./mango dummy-on
+[mango] No existe el servicio 'bridge_dummy' en compose.rx.yaml.
+[mango] Revisa que tu compose.rx.yaml tenga el servicio bridge_dummy y profile dummy.
+➜  M_A_N_G_O git:(main) ✗ ./mango dummy-on                             
+[mango] No existe el servicio 'bridge_dummy' en compose.rx.yaml.
+[mango] Revisa que tu compose.rx.yaml tenga el servicio bridge_dummy y profile dummy.
+➜  M_A_N_G_O git:(main) ✗ ./mango up                                   
+[+] Building 2.8s (15/15) FINISHED                                                                                                     
+ => [internal] load local bake definitions                                                                                        0.0s
+ => => reading from stdin 572B                                                                                                    0.0s
+ => [internal] load build definition from Dockerfile                                                                              0.0s
+ => => transferring dockerfile: 429B                                                                                              0.0s
+ => [internal] load metadata for docker.io/library/python:3.12-slim                                                               1.7s
+ => [internal] load .dockerignore                                                                                                 0.0s
+ => => transferring context: 2B                                                                                                   0.0s
+ => [internal] load build context                                                                                                 0.3s
+ => => transferring context: 101.94kB                                                                                             0.3s
+ => [1/8] FROM docker.io/library/python:3.12-slim@sha256:39e4e1ccb01578e3c86f7a0cf7b7fd89b8dbe2c27a88de11cf726ba669469f49         0.0s
+ => => resolve docker.io/library/python:3.12-slim@sha256:39e4e1ccb01578e3c86f7a0cf7b7fd89b8dbe2c27a88de11cf726ba669469f49         0.0s
+ => CACHED [2/8] WORKDIR /app                                                                                                     0.0s
+ => CACHED [3/8] RUN apt-get update   && apt-get install -y --no-install-recommends curl   && rm -rf /var/lib/apt/lists/*         0.0s
+ => CACHED [4/8] COPY requirements.txt /app/requirements.txt                                                                      0.0s
+ => CACHED [5/8] RUN pip install --no-cache-dir -r /app/requirements.txt                                                          0.0s
+ => CACHED [6/8] COPY . /app                                                                                                      0.0s
+ => CACHED [7/8] COPY entrypoint.sh /entrypoint.sh                                                                                0.0s
+ => CACHED [8/8] RUN chmod +x /entrypoint.sh                                                                                      0.0s
+ => exporting to image                                                                                                            0.2s
+ => => exporting layers                                                                                                           0.0s
+ => => exporting manifest sha256:36652b5ae5cab76b20653683c19015b5a5734554bea1b3b5d023dabc30cc55ff                                 0.0s
+ => => exporting config sha256:551bb9ab6b9ca049c4166d53a2118f97fd1d90c239250d58c4f14e40b11fa56b                                   0.0s
+ => => exporting attestation manifest sha256:dbf065a2131679b7536c114e204fae3fa04f5782ab6f0709c53a7d9168f72258                     0.0s
+ => => exporting manifest list sha256:4533619a9ed29e0fe9ed178e7e012588ea68ddc840afe9574b40ed66ea64ce27                            0.0s
+ => => naming to docker.io/library/mango-backend:local                                                                            0.0s
+ => => unpacking to docker.io/library/mango-backend:local                                                                         0.0s
+ => resolving provenance for metadata file                                                                                        0.0s
+[+] up 5/5
+ ✔ Image mango-backend:local Built                                                                                                 2.9s
+ ✔ Container mango_db        Healthy                                                                                               2.3s
+ ✔ Container mango_redis     Healthy                                                                                               2.3s
+ ✔ Container mango_backend   Healthy                                                                                               8.2s
+ ✔ Container mango_nginx     Running                                                                                               0.0s
+➜  M_A_N_G_O git:(main) ✗ ./mango dummy-on
+[mango] No existe el servicio 'bridge_dummy' en compose.rx.yaml.
+[mango] Revisa que tu compose.rx.yaml tenga el servicio bridge_dummy y profile dummy.
+
+Nada que funciona, no se que hes y no he tocado la programacion, lo raro es que el bridge si funciona o bueno funcionaba 
+
+El nginx.conf es
+server {
+  listen 80;
+  server_name _;
+
+  root /usr/share/nginx/html;
+  index index.html;
+
+  # API (NO uses slash final en proxy_pass)
+  location /api/ {
+    proxy_pass http://backend:5000;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+  }
+
+  # Health (opcional, pero útil)
+  location = /health {
+    proxy_pass http://backend:5000/health;
+  }
+
+  # Frontend estático
+  location / {
+    try_files $uri $uri/ =404;
+  }
+}
+
+
+Estamos cerca pero no se que pasa, arreglalo y has que quede EXCELENTE
