@@ -1,0 +1,16 @@
+Antes tenia un .env asi:
+# Identidad estación
+STATION_NAME=MANGO Station
+
+# Serial (se setea automáticamente por ./mango rx-on, pero puedes fijarlo aquí si quieres)
+# SERIAL_DEVICE=/dev/serial/by-id/usb-...
+
+BAUDRATE=9600
+READ_TIMEOUT_S=1.0
+HTTP_TIMEOUT_S=5.0
+LOG_LEVEL=INFO
+
+# Backend secrets/dev
+SECRET_KEY=local-dev-secret
+
+

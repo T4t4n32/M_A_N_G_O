@@ -1,0 +1,189 @@
+M.A.N.G.O - Estructura Final
+│
+├── 1. HEADER / NAVEGACIÓN (Sticky)
+│   ├── Logo: M.A.N.G.O
+│   ├── Nombre completo: "Monitoreo Autónomo de Niveles y Gestión Oceánica"
+│   ├── Menú: Proyecto | Documentación | Galería | Sobre | Contacto
+│   ├── Botón: "Acceso Institucional" (modal login)
+│   └── Mobile menu (responsive)
+│
+├── 2. HERO SECTION
+│   ├── Título principal con animación
+│   ├── Subtítulo: Sistema de monitoreo ambiental para manglares
+│   ├── Breve descripción del impacto ecológico
+│   ├── CTA: "Conoce el Proyecto" + "Solicitar Acceso"
+│   └── Imagen/video de manglares con overlay
+│
+├── 3. SECCIÓN: EL PROYECTO
+│   ├── 3.1 ¿Qué es M.A.N.G.O?
+│   │   ├── Definición formal del sistema
+│   │   ├── Objetivo: Protección de manglares mediante monitoreo
+│   │   └── Alcance: Datos en tiempo real para instituciones
+│   │
+│   ├── 3.2 Componentes Integrados
+│   │   ├── Sensores: pH, Temperatura, Turbidez (+ posibles extras)
+│   │   ├── Hardware: Microcontrolador, comunicación
+│   │   ├── Backend: API REST, base de datos time-series
+│   │   └── Frontend: Dashboard de visualización
+│   │
+│   ├── 3.3 Metodología de Implementación
+│   │   ├── Despliegue físico de sensores
+│   │   ├── Comunicación HTTP POST → /api/v1/ingest
+│   │   ├── Procesamiento y almacenamiento en DB
+│   │   ├── Mapeo geográfico de estaciones
+│   │   └── Visualización científica en dashboard
+│   │
+│   ├── 3.4 Funciones Principales
+│   │   ├── Monitoreo en tiempo real (KPIs)
+│   │   ├── Mapeo de ubicaciones de sensores
+│   │   ├── Análisis de tendencias históricas
+│   │   ├── Alertas automáticas (futuro)
+│   │   ├── Reportes generados (futuro)
+│   │   └── Acceso institucional controlado
+│   │
+│   ├── 3.5 Impacto Ambiental
+│   │   ├── Protección de ecosistemas de manglares
+│   │   ├── Conservación marítima
+│   │   ├── Datos para investigación científica
+│   │   └── Toma de decisiones informadas
+│   │
+│   └── 3.6 Acceso Restringido
+│       ├── Instituciones autorizadas:
+│       │   ├── ONGs ambientales
+│       │   ├── Universidades e investigación
+│       │   ├── Colegios con enfoque ecológico
+│       │   ├── Ministerios de Ambiente
+│       │   └── Sectores de cuidado marítimo
+│       ├── Proceso de solicitud de acceso
+│       ├── Requisitos de autenticación JWT
+│       └── Dashboard demo (prevista)
+│
+├── 4. SECCIÓN: DOCUMENTACIÓN (SENA)
+│   ├── 4.1 Informes Técnicos
+│   │   ├── Diseño electrónico completo
+│   │   ├── Esquemáticos y diagramas de conexión
+│   │   ├── Manuales de instalación paso a paso
+│   │   └── Protocolos de operación y mantenimiento
+│   │
+│   ├── 4.2 Documentación del Proyecto
+│   │   ├── Memorias técnicas detalladas
+│   │   ├── Guías de usuario para operadores
+│   │   ├── Especificaciones técnicas de sensores
+│   │   └── Manuales de mantenimiento preventivo
+│   │
+│   ├── 4.3 Bitácoras de Desarrollo
+│   │   ├── Registros cronológicos semanales
+│   │   ├── Avances por fase del proyecto
+│   │   ├── Problemas encontrados y soluciones implementadas
+│   │   └── Lecciones aprendidas y mejoras
+│   │
+│   └── 4.4 Presentaciones
+│       ├── PowerPoint institucionales (descargables)
+│       ├── PDFs explicativos del proyecto
+│       ├── Posters académicos
+│       └── Material de divulgación ambiental
+│
+├── 5. SECCIÓN: GALERÍA DE REGISTRO
+│   ├── Filtros: Todo | Hardware | Software | Campo | Progreso
+│   │
+│   ├── 5.1 Proceso de Desarrollo
+│   │   ├── Fotos con descripciones detalladas
+│   │   ├── Videos del montaje paso a paso
+│   │   ├── Capturas de avances semanales
+│   │   └── Timeline visual del proyecto
+│   │
+│   ├── 5.2 Hardware y Software
+│   │   ├── Imágenes de componentes electrónicos
+│   │   ├── Diagramas de conexión y circuitos
+│   │   ├── Interfaces de usuario (capturas)
+│   │   └── Configuraciones técnicas
+│   │
+│   ├── 5.3 Implementación en Campo
+│   │   ├── Fotos del despliegue en manglares
+│   │   ├── Videos de instalación de sensores
+│   │   ├── Ubicaciones geográficas de estaciones
+│   │   └── Contexto ambiental del sitio
+│   │
+│   ├── 5.4 Pruebas y Validación
+│   │   ├── Pruebas de laboratorio (calibración)
+│   │   ├── Pruebas en campo (funcionamiento real)
+│   │   ├── Calibración de sensores paso a paso
+│   │   └── Resultados preliminares de datos
+│   │
+│   └── 5.5 Progreso y Evolución
+│       ├── Comparativas temporales (antes/después)
+│       ├── Mejoras implementadas en el sistema
+│       ├── Expansión del sistema (nuevos sensores)
+│       └── Hitos alcanzados (fechas importantes)
+│
+├── 6. SECCIÓN: SOBRE EL PROYECTO
+│   ├── 6.1 Principal
+│   │   ├── Tu nombre y perfil profesional
+│   │   ├── Formación académica
+│   │   ├── Recorrido en CALIBOTS (Club de Robótica Comfandi El Prado)
+│   │   ├── Logros en robótica:
+│   │   │   ├── Participaciones Regionales
+│   │   │   ├── Participaciones Nacionales
+│   │   │   ├── Participaciones Internacionales
+│   │   │   └── Copa RobiSoft: 7mo puesto Nacional
+│   │   └── Continuación y consolidación del proyecto
+│   │
+│   ├── 6.2 Calibots
+│   │   └── Grid 2 Columnas (Equipo + Badge CALIBOTS)
+│   │           ├── Columna 1: Equipo Principal (~150px)
+│   │           │    ├── Título: "Inicios del Desarrollo"
+│   │           │    └── Descripcion breve: (Explicacion breve del rol que tuvo el grupo de Calibots sobre la idea)
+│   │           │
+│   │           └── Columna 2: Badge CALIBOTS (~150px)
+│   │                ├── Icono: (Logo actual del grupo)
+│   │                ├── Título: "Origen: CALIBOTS"
+│   │                ├── Texto: "Si quieres conocer sobre la propuesta del Club de Robótica de Comfandi El Prado..."
+│   │                └── Link: "Visitar sitio oficial →"
+│   │
+│   ├── 6.3 Contribuyentes:
+│   │   ├── Samuel Monsalve
+│   │   │   └── Desarrollo conjunto mientras estuvo activo
+│   │   ├── Profesor Víctor Mario Perilla
+│   │   │   └── Asesoría electrónica y mecatrónica continua
+│   │   ├── Richard Suarez
+│   │   │   └── Asesoría técnica adicional
+│   │   └── Grupo CALIBOTS
+│   │       └── Fundación inicial del proyecto
+│   │
+│   └── 6.4 Reconocimientos
+│       ├── Instituciones colaboradoras
+│       ├── Mentores y asesores académicos
+│       ├── Patrocinadores (si aplica)
+│       └── Agradecimientos especiales
+│
+├── 7. SECCIÓN: CONTACTO
+│   ├── Formulario de contacto institucional
+│   ├── Información de contacto directo
+│   ├── Redes sociales/profesionales
+│   └── Ubicación geográfica (si aplica)
+│
+├── 8. DASHBOARD (Acceso Restringido)
+│   ├── Header con información del usuario
+│   ├── Botón de cierre de sesión
+│   ├── KPIs en tiempo real:
+│   │   ├── Último valor de pH
+│   │   ├── Última temperatura
+│   │   ├── Última turbidez
+│   │   └── Métricas adicionales (si existen)
+│   ├── Gráficos Chart.js:
+│   │   ├── pH - Últimas 24 horas
+│   │   ├── Temperatura - Últimas 24 horas
+│   │   ├── Turbidez - Últimas 24 horas
+│   │   └── Comparativa de sensores
+│   ├── Tabla de datos históricos recientes
+│   ├── Filtros de tiempo (24h, 48h, 1 semana)
+│   └── Indicador de estado de conexión
+│
+└── 9. FOOTER
+    ├── Enlaces rápidos al menú
+    ├── Información legal
+    ├── Política de privacidad
+    └── Derechos de autor © 2026 M.A.N.G.O
+    
+    
+

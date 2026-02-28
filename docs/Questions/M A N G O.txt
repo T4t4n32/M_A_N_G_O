@@ -1,0 +1,334 @@
+
+➜  M_A_N_G_O git:(backend-robusto) ✗ BASE="http://localhost:8080"                                                                      
+
+for i in $(seq 0 143); do
+  TS=$(date -u -d "$((i*10)) minutes ago" +"%Y-%m-%dT%H:%M:%SZ")
+
+  # valores “realistas” (ajusta rangos si quieres)
+  TEMP=$(python3 - <<'PY'
+import random; print(round(random.uniform(22.0, 30.0), 2))
+PY
+)
+  PH=$(python3 - <<'PY'
+import random; print(round(random.uniform(6.5, 8.5), 2))
+PY
+)
+  TURB=$(python3 - <<'PY'
+import random; print(round(random.uniform(0.5, 15.0), 2))
+PY
+)
+
+  curl -fsS -X POST "$BASE/api/sensors/temperature/data" -H "Content-Type: application/json" \
+    -d "{\"value\": $TEMP, \"timestamp\": \"$TS\"}" >/dev/null
+
+  curl -fsS -X POST "$BASE/api/sensors/ph/data" -H "Content-Type: application/json" \
+    -d "{\"value\": $PH, \"timestamp\": \"$TS\"}" >/dev/null
+
+  curl -fsS -X POST "$BASE/api/sensors/turbidity/data" -H "Content-Type: application/json" \
+    -d "{\"value\": $TURB, \"timestamp\": \"$TS\"}" >/dev/null
+done
+
+echo "OK: seed histórico completo"                                                                                               <....
+curl: (22) The requested URL returned error: 404
+curl: (22) The requested URL returned error: 404
+curl: (22) The requested URL returned error: 404
+curl: (22) The requested URL returned error: 404
+curl: (22) The requested URL returned error: 404
+curl: (22) The requested URL returned error: 404
+curl: (22) The requested URL returned error: 404
+curl: (22) The requested URL returned error: 404
+curl: (22) The requested URL returned error: 404
+curl: (22) The requested URL returned error: 404
+curl: (22) The requested URL returned error: 404
+curl: (22) The requested URL returned error: 404
+curl: (22) The requested URL returned error: 404
+curl: (22) The requested URL returned error: 404
+curl: (22) The requested URL returned error: 404
+curl: (22) The requested URL returned error: 404
+curl: (22) The requested URL returned error: 404
+curl: (22) The requested URL returned error: 404
+curl: (22) The requested URL returned error: 404
+curl: (22) The requested URL returned error: 404
+curl: (22) The requested URL returned error: 404
+curl: (22) The requested URL returned error: 404
+curl: (22) The requested URL returned error: 404
+curl: (22) The requested URL returned error: 404
+curl: (22) The requested URL returned error: 404
+curl: (22) The requested URL returned error: 404
+curl: (22) The requested URL returned error: 404
+curl: (22) The requested URL returned error: 404
+curl: (22) The requested URL returned error: 404
+curl: (22) The requested URL returned error: 404
+curl: (22) The requested URL returned error: 404
+curl: (22) The requested URL returned error: 404
+curl: (22) The requested URL returned error: 404
+curl: (22) The requested URL returned error: 404
+curl: (22) The requested URL returned error: 404
+curl: (22) The requested URL returned error: 404
+curl: (22) The requested URL returned error: 404
+curl: (22) The requested URL returned error: 404
+curl: (22) The requested URL returned error: 404
+curl: (22) The requested URL returned error: 404
+curl: (22) The requested URL returned error: 404
+curl: (22) The requested URL returned error: 404
+curl: (22) The requested URL returned error: 404
+curl: (22) The requested URL returned error: 404
+curl: (22) The requested URL returned error: 404
+curl: (22) The requested URL returned error: 404
+curl: (22) The requested URL returned error: 404
+curl: (22) The requested URL returned error: 404
+curl: (22) The requested URL returned error: 404
+curl: (22) The requested URL returned error: 404
+curl: (22) The requested URL returned error: 404
+^C%                                                                                                                                    ➜  M_A_N_G_O git:(backend-robusto) ✗ ./mango up                         
+[+] Building 4.4s (15/15) FINISHED                                                                                                     
+ => [internal] load local bake definitions                                                                                        0.0s
+ => => reading from stdin 572B                                                                                                    0.0s
+ => [internal] load build definition from Dockerfile                                                                              0.0s
+ => => transferring dockerfile: 529B                                                                                              0.0s
+ => [internal] load metadata for docker.io/library/python:3.12-slim                                                               3.1s
+ => [internal] load .dockerignore                                                                                                 0.0s
+ => => transferring context: 2B                                                                                                   0.0s
+ => [1/8] FROM docker.io/library/python:3.12-slim@sha256:9e01bf1ae5db7649a236da7be1e94ffbbbdd7a93f867dd0d8d5720d9e1f89fab         0.1s
+ => => resolve docker.io/library/python:3.12-slim@sha256:9e01bf1ae5db7649a236da7be1e94ffbbbdd7a93f867dd0d8d5720d9e1f89fab         0.0s
+ => [internal] load build context                                                                                                 0.1s
+ => => transferring context: 19.86kB                                                                                              0.1s
+ => CACHED [2/8] WORKDIR /app                                                                                                     0.0s
+ => CACHED [3/8] RUN apt-get update  && apt-get install -y --no-install-recommends curl gcc libpq-dev  && rm -rf /var/lib/apt/li  0.0s
+ => CACHED [4/8] COPY requirements.txt /app/requirements.txt                                                                      0.0s
+ => CACHED [5/8] RUN pip install --no-cache-dir -r /app/requirements.txt                                                          0.0s
+ => CACHED [6/8] COPY . /app                                                                                                      0.0s
+ => CACHED [7/8] COPY entrypoint.sh /entrypoint.sh                                                                                0.0s
+ => CACHED [8/8] RUN chmod +x /entrypoint.sh                                                                                      0.0s
+ => exporting to image                                                                                                            0.3s
+ => => exporting layers                                                                                                           0.0s
+ => => exporting manifest sha256:2b76d940111988b2422080db70f0fb3a408fb3fe183742ff735fb902ab40bad6                                 0.0s
+ => => exporting config sha256:7e635dbff806a2fbcb616e29aa6d351d77703dac0f396503ce3cc23d46ec712f                                   0.0s
+ => => exporting attestation manifest sha256:6a40376f8dd64607e9cb82660ae5ba270abd470ab9b127b757562dae898c32e2                     0.1s
+ => => exporting manifest list sha256:5d8d55e5283e99555a6d316cb18d6684794f73be2adebacbdae0247760a93675                            0.0s
+ => => naming to docker.io/library/mango-backend:local                                                                            0.0s
+ => => unpacking to docker.io/library/mango-backend:local                                                                         0.1s
+ => resolving provenance for metadata file                                                                                        0.0s
+[+] up 5/5
+ ✔ Image mango-backend:local Built                                                                                                4.6ss
+ ✔ Container mango_redis     Healthy                                                                                              2.6ss
+ ✔ Container mango_db        Healthy                                                                                              2.6ss
+ ✔ Container mango_backend   Healthy                                                                                              13.6s
+ ✔ Container mango_nginx     Running                                                                                              0.0ss
+➜  M_A_N_G_O git:(backend-robusto) ✗ BASE="http://localhost:8080"
+
+for i in $(seq 0 143); do
+  TS=$(date -u -d "$((i*10)) minutes ago" +"%Y-%m-%dT%H:%M:%SZ")
+
+  # valores “realistas” (ajusta rangos si quieres)
+  TEMP=$(python3 - <<'PY'
+import random; print(round(random.uniform(22.0, 30.0), 2))
+PY
+)
+  PH=$(python3 - <<'PY'
+import random; print(round(random.uniform(6.5, 8.5), 2))
+PY
+)
+  TURB=$(python3 - <<'PY'
+import random; print(round(random.uniform(0.5, 15.0), 2))
+PY
+)
+
+  curl -fsS -X POST "$BASE/api/sensors/temperature/data" -H "Content-Type: application/json" \
+    -d "{\"value\": $TEMP, \"timestamp\": \"$TS\"}" >/dev/null
+
+  curl -fsS -X POST "$BASE/api/sensors/ph/data" -H "Content-Type: application/json" \
+    -d "{\"value\": $PH, \"timestamp\": \"$TS\"}" >/dev/null
+
+  curl -fsS -X POST "$BASE/api/sensors/turbidity/data" -H "Content-Type: application/json" \
+    -d "{\"value\": $TURB, \"timestamp\": \"$TS\"}" >/dev/null
+done
+
+echo "OK: seed histórico completo"                                                                                               <....
+curl: (22) The requested URL returned error: 404
+curl: (22) The requested URL returned error: 404
+curl: (22) The requested URL returned error: 404
+curl: (22) The requested URL returned error: 404
+curl: (22) The requested URL returned error: 404
+curl: (22) The requested URL returned error: 404
+curl: (22) The requested URL returned error: 404
+curl: (22) The requested URL returned error: 404
+curl: (22) The requested URL returned error: 404
+curl: (22) The requested URL returned error: 404
+curl: (22) The requested URL returned error: 404
+curl: (22) The requested URL returned error: 404
+curl: (22) The requested URL returned error: 404
+curl: (22) The requested URL returned error: 404
+curl: (22) The requested URL returned error: 404
+curl: (22) The requested URL returned error: 404
+curl: (22) The requested URL returned error: 404
+curl: (22) The requested URL returned error: 404
+^C%                                                                                                                                    ➜  M_A_N_G_O git:(backend-robusto) ✗ BASE="http://localhost:8000"
+
+for i in $(seq 0 143); do
+  TS=$(date -u -d "$((i*10)) minutes ago" +"%Y-%m-%dT%H:%M:%SZ")
+
+  # valores “realistas” (ajusta rangos si quieres)
+  TEMP=$(python3 - <<'PY'
+import random; print(round(random.uniform(22.0, 30.0), 2))
+PY
+)
+  PH=$(python3 - <<'PY'
+import random; print(round(random.uniform(6.5, 8.5), 2))
+PY
+)
+  TURB=$(python3 - <<'PY'
+import random; print(round(random.uniform(0.5, 15.0), 2))
+PY
+)
+
+  curl -fsS -X POST "$BASE/api/sensors/temperature/data" -H "Content-Type: application/json" \
+    -d "{\"value\": $TEMP, \"timestamp\": \"$TS\"}" >/dev/null
+
+  curl -fsS -X POST "$BASE/api/sensors/ph/data" -H "Content-Type: application/json" \
+    -d "{\"value\": $PH, \"timestamp\": \"$TS\"}" >/dev/null
+
+  curl -fsS -X POST "$BASE/api/sensors/turbidity/data" -H "Content-Type: application/json" \
+    -d "{\"value\": $TURB, \"timestamp\": \"$TS\"}" >/dev/null
+done
+
+echo "OK: seed histórico completo"                                                                                               <....
+curl: (22) The requested URL returned error: 404
+curl: (22) The requested URL returned error: 404
+curl: (22) The requested URL returned error: 404
+curl: (22) The requested URL returned error: 404
+curl: (22) The requested URL returned error: 404
+curl: (22) The requested URL returned error: 404
+curl: (22) The requested URL returned error: 404
+curl: (22) The requested URL returned error: 404
+curl: (22) The requested URL returned error: 404
+curl: (22) The requested URL returned error: 404
+curl: (22) The requested URL returned error: 404
+curl: (22) The requested URL returned error: 404
+curl: (22) The requested URL returned error: 404
+curl: (22) The requested URL returned error: 404
+curl: (22) The requested URL returned error: 404
+curl: (22) The requested URL returned error: 404
+curl: (22) The requested URL returned error: 404
+curl: (22) The requested URL returned error: 404
+^CFatal Python error: init_import_site: Failed to import the site module
+Python runtime state: initialized
+Traceback (most recent call last):
+  File "<frozen importlib._bootstrap>", line 1371, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 1342, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 938, in _load_unlocked
+  File "<frozen importlib._bootstrap>", line 1179, in exec_module
+  File "<frozen site>", line 722, in <module>
+  File "<frozen site>", line 715, in main
+  File "<frozen site>", line 654, in execsitecustomize
+  File "/home/linuxbrew/.linuxbrew/Cellar/python@3.14/3.14.2/lib/python3.14/sitecustomize.py", line 4, in <module>
+    import re
+  File "/home/linuxbrew/.linuxbrew/Cellar/python@3.14/3.14.2/lib/python3.14/re/__init__.py", line 127, in <module>
+    import functools
+  File "/home/linuxbrew/.linuxbrew/Cellar/python@3.14/3.14.2/lib/python3.14/functools.py", line 18, in <module>
+    from collections import namedtuple
+  File "/home/linuxbrew/.linuxbrew/Cellar/python@3.14/3.14.2/lib/python3.14/collections/__init__.py", line 35, in <module>
+    from itertools import chain as _chain
+KeyboardInterrupt
+➜  M_A_N_G_O git:(backend-robusto) ✗ BASE="http://localhost:5000"
+
+for i in $(seq 0 143); do
+  TS=$(date -u -d "$((i*10)) minutes ago" +"%Y-%m-%dT%H:%M:%SZ")
+
+  # valores “realistas” (ajusta rangos si quieres)
+  TEMP=$(python3 - <<'PY'
+import random; print(round(random.uniform(22.0, 30.0), 2))
+PY
+)
+  PH=$(python3 - <<'PY'
+import random; print(round(random.uniform(6.5, 8.5), 2))
+PY
+)
+  TURB=$(python3 - <<'PY'
+import random; print(round(random.uniform(0.5, 15.0), 2))
+PY
+)
+
+  curl -fsS -X POST "$BASE/api/sensors/temperature/data" -H "Content-Type: application/json" \
+    -d "{\"value\": $TEMP, \"timestamp\": \"$TS\"}" >/dev/null
+
+  curl -fsS -X POST "$BASE/api/sensors/ph/data" -H "Content-Type: application/json" \
+    -d "{\"value\": $PH, \"timestamp\": \"$TS\"}" >/dev/null
+
+  curl -fsS -X POST "$BASE/api/sensors/turbidity/data" -H "Content-Type: application/json" \
+    -d "{\"value\": $TURB, \"timestamp\": \"$TS\"}" >/dev/null
+done
+
+echo "OK: seed histórico completo"                                                                                               <....
+curl: (7) Failed to connect to localhost port 5000 after 0 ms: Couldn't connect to server
+curl: (7) Failed to connect to localhost port 5000 after 0 ms: Couldn't connect to server
+curl: (7) Failed to connect to localhost port 5000 after 0 ms: Couldn't connect to server
+curl: (7) Failed to connect to localhost port 5000 after 0 ms: Couldn't connect to server
+curl: (7) Failed to connect to localhost port 5000 after 0 ms: Couldn't connect to server
+curl: (7) Failed to connect to localhost port 5000 after 0 ms: Couldn't connect to server
+curl: (7) Failed to connect to localhost port 5000 after 0 ms: Couldn't connect to server
+curl: (7) Failed to connect to localhost port 5000 after 0 ms: Couldn't connect to server
+curl: (7) Failed to connect to localhost port 5000 after 0 ms: Couldn't connect to server
+curl: (7) Failed to connect to localhost port 5000 after 0 ms: Couldn't connect to server
+curl: (7) Failed to connect to localhost port 5000 after 0 ms: Couldn't connect to server
+curl: (7) Failed to connect to localhost port 5000 after 0 ms: Couldn't connect to server
+curl: (7) Failed to connect to localhost port 5000 after 0 ms: Couldn't connect to server
+curl: (7) Failed to connect to localhost port 5000 after 0 ms: Couldn't connect to server
+curl: (7) Failed to connect to localhost port 5000 after 0 ms: Couldn't connect to server
+curl: (7) Failed to connect to localhost port 5000 after 0 ms: Couldn't connect to server
+curl: (7) Failed to connect to localhost port 5000 after 0 ms: Couldn't connect to server
+curl: (7) Failed to connect to localhost port 5000 after 0 ms: Couldn't connect to server
+curl: (7) Failed to connect to localhost port 5000 after 0 ms: Couldn't connect to server
+curl: (7) Failed to connect to localhost port 5000 after 0 ms: Couldn't connect to server
+curl: (7) Failed to connect to localhost port 5000 after 0 ms: Couldn't connect to server
+curl: (7) Failed to connect to localhost port 5000 after 0 ms: Couldn't connect to server
+curl: (7) Failed to connect to localhost port 5000 after 0 ms: Couldn't connect to server
+curl: (7) Failed to connect to localhost port 5000 after 0 ms: Couldn't connect to server
+curl: (7) Failed to connect to localhost port 5000 after 0 ms: Couldn't connect to server
+curl: (7) Failed to connect to localhost port 5000 after 0 ms: Couldn't connect to server
+curl: (7) Failed to connect to localhost port 5000 after 0 ms: Couldn't connect to server
+curl: (7) Failed to connect to localhost port 5000 after 0 ms: Couldn't connect to server
+curl: (7) Failed to connect to localhost port 5000 after 0 ms: Couldn't connect to server
+curl: (7) Failed to connect to localhost port 5000 after 0 ms: Couldn't connect to server
+curl: (7) Failed to connect to localhost port 5000 after 0 ms: Couldn't connect to server
+curl: (7) Failed to connect to localhost port 5000 after 0 ms: Couldn't connect to server
+curl: (7) Failed to connect to localhost port 5000 after 0 ms: Couldn't connect to server
+curl: (7) Failed to connect to localhost port 5000 after 0 ms: Couldn't connect to server
+curl: (7) Failed to connect to localhost port 5000 after 0 ms: Couldn't connect to server
+curl: (7) Failed to connect to localhost port 5000 after 0 ms: Couldn't connect to server
+curl: (7) Failed to connect to localhost port 5000 after 0 ms: Couldn't connect to server
+curl: (7) Failed to connect to localhost port 5000 after 0 ms: Couldn't connect to server
+curl: (7) Failed to connect to localhost port 5000 after 0 ms: Couldn't connect to server
+curl: (7) Failed to connect to localhost port 5000 after 0 ms: Couldn't connect to server
+curl: (7) Failed to connect to localhost port 5000 after 0 ms: Couldn't connect to server
+curl: (7) Failed to connect to localhost port 5000 after 0 ms: Couldn't connect to server
+curl: (7) Failed to connect to localhost port 5000 after 0 ms: Couldn't connect to server
+curl: (7) Failed to connect to localhost port 5000 after 0 ms: Couldn't connect to server
+curl: (7) Failed to connect to localhost port 5000 after 0 ms: Couldn't connect to server
+^CFatal Python error: init_import_site: Failed to import the site module
+Python runtime state: initialized
+Traceback (most recent call last):
+  File "<frozen importlib._bootstrap>", line 1371, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 1342, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 938, in _load_unlocked
+  File "<frozen importlib._bootstrap>", line 1179, in exec_module
+  File "<frozen site>", line 722, in <module>
+  File "<frozen site>", line 715, in main
+  File "<frozen site>", line 654, in execsitecustomize
+  File "/home/linuxbrew/.linuxbrew/Cellar/python@3.14/3.14.2/lib/python3.14/sitecustomize.py", line 4, in <module>
+    import re
+  File "/home/linuxbrew/.linuxbrew/Cellar/python@3.14/3.14.2/lib/python3.14/re/__init__.py", line 126, in <module>
+    from . import _compiler, _parser
+  File "<frozen importlib._bootstrap>", line 474, in _lock_unlock_module
+  File "<frozen importlib._bootstrap>", line 311, in acquire
+  File "<frozen importlib._bootstrap>", line 170, in __enter__
+  File "<frozen importlib._bootstrap>", line 132, in setdefault
+  File "<frozen importlib._bootstrap>", line 74, in __new__
+KeyboardInterrupt
+➜  M_A_N_G_O git:(backend-robusto) ✗ curl -fsS "http://localhost:5000/api/sensors/temperature/data?limit=50" && echo
+curl: (7) Failed to connect to localhost port 5000 after 0 ms: Couldn't connect to server
+➜  M_A_N_G_O git:(backend-robusto) ✗ curl -fsS "http://localhost:8080/api/sensors/temperature/data?limit=50" && echo
+curl: (22) The requested URL returned error: 404
+➜  M_A_N_G_O git:(backend-robusto) ✗ curl -fsS "http://localhost:8000/api/sensors/temperature/data?limit=50" && echo
+curl: (22) The requested URL returned error: 404
+
