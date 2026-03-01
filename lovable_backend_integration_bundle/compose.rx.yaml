@@ -1,0 +1,41 @@
+services:
+  bridge_dummy:
+    build:
+      context: ./bridge
+      dockerfile: Dockerfile
+    image: mango-bridge:local
+    container_name: mango_bridge_dummy
+    environment:
+      HTTP_TIMEOUT_S: "${HTTP_TIMEOUT_S:-5.0}"
+      STATION_NAME: "${STATION_NAME:-MANGO Station}"
+      LOG_LEVEL: "${LOG_LEVEL:-INFO}"
+      DUMMY_INTERVAL_S: "${DUMMY_INTERVAL_S:-5}"
+      API_URL: "http://backend:5000/api/v1/ingest"
+    command: ["python", "/app/lora_http_bridge.py", "--dummy"]
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+    profiles: ["dummy"]
+
+  bridge:
+    build:
+      context: ./bridge
+      dockerfile: Dockerfile
+    image: mango-bridge:local
+    container_name: mango_bridge
+    environment:
+      SERIAL_PORT: /dev/ttyMANGO
+      BAUDRATE: "${BAUDRATE:-9600}"
+      READ_TIMEOUT_S: "${READ_TIMEOUT_S:-1.0}"
+      API_URL: "http://backend:5000/api/v1/ingest"
+      HTTP_TIMEOUT_S: "${HTTP_TIMEOUT_S:-5.0}"
+      STATION_NAME: "${STATION_NAME:-MANGO Station}"
+      LOG_LEVEL: "${LOG_LEVEL:-INFO}"
+    devices:
+      - "${SERIAL_DEVICE:-/dev/ttyUSB0}:/dev/ttyMANGO"
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+    profiles: ["hardware"]

@@ -1,0 +1,14 @@
+# ==============
+# UI mounting (Docker nginx)
+# ==============
+# Point this to the built (dist) folder of the Lovable project.
+# Example:
+# UI_DIR=./lovable_ui/MANGO_PAGE_LOVABLE_V1.3/dist
+UI_DIR=./lovable_ui/MANGO_PAGE_LOVABLE_V1.3/dist
+
+# Ports
+API_HOST_PORT=8000
+NGINX_HTTP_PORT=8080
+
+# Station identity
+STATION_NAME="MANGO Station"
