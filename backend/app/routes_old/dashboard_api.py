@@ -142,15 +142,7 @@ def metrics():
             params,
         ).fetchall()
         out = [r[0] for r in rows if r and r[0] is not None]
-        # Lovable/UI friendly: only expose the core 3 metrics (temperature/ph/turbidity)
-_map = {"temp": "temperature", "ph": "ph", "turbidity": "turbidity"}
-available = []
-for t in out:
-    ui_t = _map.get(t, None)
-    if ui_t:
-        available.append(ui_t)
-
-return jsonify({"metrics": out, "available": sorted(set(available)), "station_id": station_id}), 200
+        return jsonify({"metrics": out, "station_id": station_id}), 200
     except Exception as e:
         return _json_error("QUERY_FAILED", "Failed to query metrics.", 500, {"reason": str(e)})
 
@@ -233,27 +225,7 @@ def latest_by_type():
                 "value": float(r.get("value")) if r.get("value") is not None else None,
             }
 
-        # Lovable/UI friendly top-level keys (without breaking existing "latest" wrapper)
-def _pack_ui(item):
-    if not item:
-        return None
-    return {
-        "value": item.get("value"),
-        "timestamp": item.get("ts"),
-        "unit": item.get("unit") or "",
-        "connected": None,
-        "status": "unknown",
-    }
-
-ui = {
-    "ph": _pack_ui(latest.get("ph")),
-    "temperature": _pack_ui(latest.get("temp")),
-    "turbidity": _pack_ui(latest.get("turbidity")),
-}
-# Remove Nones so the response stays clean
-ui = {k: v for k, v in ui.items() if v is not None}
-
-return jsonify({"station_id": station_id, "latest": latest, **ui}), 200
+        return jsonify({"station_id": station_id, "latest": latest}), 200
     except Exception as e:
         return _json_error("QUERY_FAILED", "Failed to query latest values.", 500, {"reason": str(e)})
 
@@ -268,10 +240,6 @@ def range_series():
         return _json_error("NO_TABLES", "No readings table found. Run db_init or check database.", 503)
 
     metric_type = (request.args.get("type") or "").strip()
-# Lovable/UI alias support (additive)
-metric_type_internal = metric_type.lower()
-if metric_type_internal == "temperature":
-    metric_type_internal = "temp"
     if not metric_type:
         return _json_error("MISSING_TYPE", "Query param 'type' is required.", 400)
 
@@ -294,7 +262,7 @@ if metric_type_internal == "temperature":
 
     start_ts = _now_utc() - timedelta(minutes=minutes)
 
-    params: dict[str, Any] = {"type": metric_type_internal, "start": start_ts, "limit": limit}
+    params: dict[str, Any] = {"type": metric_type, "start": start_ts, "limit": limit}
     where_parts = ["type = :type", "ts >= :start"]
     if station_id is not None:
         where_parts.append("station_id = :station_id")

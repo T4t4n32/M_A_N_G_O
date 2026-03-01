@@ -22,8 +22,7 @@ def api_health():
     return jsonify({
         "status": "ok" if db_ok else "degraded",
         "db": "ok" if db_ok else "fail",
-        "time": datetime.now(timezone.utc).isoformat(),
-        "timestamp": datetime.now(timezone.utc).isoformat()
+        "time": datetime.now(timezone.utc).isoformat()
     }), status
 
 
