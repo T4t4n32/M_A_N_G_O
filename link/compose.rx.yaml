@@ -1,6 +1,4 @@
 services:
-  # Dummy bridge (sin hardware). Úsalo para demo:
-  # docker compose -f compose.yaml -f compose.rx.yaml --profile dummy up -d --build bridge_dummy
   bridge_dummy:
     build:
       context: ./bridge
@@ -8,11 +6,11 @@ services:
     image: mango-bridge:local
     container_name: mango_bridge_dummy
     environment:
-      API_URL: "http://backend:5000/api/v1/ingest"
       HTTP_TIMEOUT_S: "${HTTP_TIMEOUT_S:-5.0}"
       STATION_NAME: "${STATION_NAME:-MANGO Station}"
       LOG_LEVEL: "${LOG_LEVEL:-INFO}"
       DUMMY_INTERVAL_S: "${DUMMY_INTERVAL_S:-5}"
+      API_URL: "http://backend:5000/api/v1/ingest"
     command: ["python", "/app/lora_http_bridge.py", "--dummy"]
     depends_on:
       backend:
@@ -20,7 +18,6 @@ services:
     restart: unless-stopped
     profiles: ["dummy"]
 
-  # Hardware bridge (requiere RX conectado).
   bridge:
     build:
       context: ./bridge

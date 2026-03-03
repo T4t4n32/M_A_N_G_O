@@ -1,0 +1,56 @@
+[+] up 5/7
+ ✔ Image mango-backend:local Built                                                                                                5.7ss
+ ✔ Network m_a_n_g_o_default Created                                                                                              0.1ss
+ ✔ Container mango_redis     Healthy                                                                                              7.7ss
+ ✔ Container mango_db        Healthy                                                                                              6.8ss
+ ⠸ Container mango_db_init   Waiting                                                                                              64.7s
+ ⠙ Container mango_backend   Starting                                                                                             64.6s
+ ✔ Container mango_nginx     Created                                                                                              0.1ss
+^C
+➜  M_A_N_G_O git:(main) ✗ docker compose -f compose.yaml ps                                
+
+NAME            IMAGE                 COMMAND                  SERVICE   CREATED              STATUS                        PORTS
+mango_db        postgres:16-alpine    "docker-entrypoint.s…"   db        About a minute ago   Up About a minute (healthy)   5432/tcp
+mango_db_init   mango-backend:local   "/entrypoint.sh pyth…"   db_init   About a minute ago   Up About a minute             5000/tcp
+mango_redis     redis:7-alpine        "docker-entrypoint.s…"   redis     About a minute ago   Up About a minute (healthy)   6379/tcp
+➜  M_A_N_G_O git:(main) ✗ docker compose -f compose.yaml logs --no-color --tail=200 db_init
+mango_db_init  | compat_ingest import/register failed: No module named 'app.routes.compat_ingest'
+mango_db_init  | Traceback (most recent call last):
+mango_db_init  |   File "/app/app/routes/__init__.py", line 71, in register_routes
+mango_db_init  |     from .compat_ingest import compat_bp  # type: ignore
+mango_db_init  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+mango_db_init  | ModuleNotFoundError: No module named 'app.routes.compat_ingest'
+mango_db_init  | dashboard_api import/register failed: expected 'except' or 'finally' block (dashboard_api.py, line 146)
+mango_db_init  | Traceback (most recent call last):
+mango_db_init  |   File "/app/app/routes/__init__.py", line 78, in register_routes
+mango_db_init  |     from .dashboard_api import dashboard_bp  # type: ignore
+mango_db_init  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+mango_db_init  |   File "/app/app/routes/dashboard_api.py", line 146
+mango_db_init  |     _map = {"temp": "temperature", "ph": "ph", "turbidity": "turbidity"}
+mango_db_init  | SyntaxError: expected 'except' or 'finally' block
+mango_db_init  | lovable_auth not loaded (optional): No module named 'app.routes.lovable_auth'
+mango_db_init  | [2026-03-03 19:59:48,738] WARNING in __init__: Lovable auth blueprint not loaded: No module named 'app.routes.lovable_auth'
+mango_db_init  | [2026-03-03 19:59:48,739] WARNING in __init__: Lovable compat blueprint not loaded: No module named 'app.routes.lovable_compat'
+mango_db_init  | [2026-03-03 19:59:48 +0000] [1] [INFO] Starting gunicorn 21.2.0
+mango_db_init  | [2026-03-03 19:59:48 +0000] [1] [INFO] Listening at: http://0.0.0.0:5000 (1)
+mango_db_init  | [2026-03-03 19:59:48 +0000] [1] [INFO] Using worker: gthread
+mango_db_init  | [2026-03-03 19:59:48 +0000] [8] [INFO] Booting worker with pid: 8
+mango_db_init  | [2026-03-03 19:59:48 +0000] [9] [INFO] Booting worker with pid: 9
+
+Esto fue lo que me arrojo y quiero ser claro: HAZ QUE FUNCIONE DONDE SEA, NO IMPORTA EL DISPOSITIVO ESTA TAN BIEN PROGRAMADO Y DISEÑADO QUE FUNCIONA EN CUALQUIER DISPOSITIVO. Cualquier dispositivo podria ejecutar por lo bien construido que esta.
+Por ahora quiero que funcione BIEN, y mas que bien: EXCELENTE. Ayudame a arreglar esto, ademas, ve considerando en que parte se implementaria las advertencias. 
+
+Esas advertencias deben ir ya que el sistema "M.A.N.G.O" avisa y/o manda un mensaje/advertencia para cuando las cifras que esta recolectando estan mal.
+
+Recibe mediciones → las guarda → evalúa reglas de alerta (umbrales/rangos/tendencias).
+
+Si se cumple una condición: crea un evento de alerta (con severidad, sensor, valor, timestamp).
+Toma el evento y envía por uno o varios canales: SMS / WhatsApp / Telegram / Email.
+
+Maneja anti-spam, “cooldown”, escalamiento y “ack” (confirmación).Muestra estado: OK / Warning / Critical, historial de alertas, y si alguien ya confirmó
+
+Esta parte es la que sigue, tras hacer la prueba en campo. Quiero que no lo olvides ya que es lo siguiente en hacer, por ahora el enfoque que debemos tener esta en que la Jetson + Nodo TX envien por LoRa los datos obtenidos de los sensores, tras ser enviados y recibidos por el Nodo RX y del nodo al computador, para asi, traves de internet, enviarlo al VPS, ya que en el VPS estara el deploy de la pagina y principalmente el dashboard ya que el dashboard mostrara unicamente datos reales e historiales con datos reales.
+
+Nodo TX = ESP32 + LoRa (Ra-02) TX + Sensor de Temperatura (Completo, con modulo y todo) + Sensor de Turbidez (Completo, con modulo y todo) + Sensor de pH (Completo, con modulo y todo)
+
+Nodo RX = ESP32 + LoRa (Ra-02) RX
