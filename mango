@@ -1,92 +1,100 @@
-#!/usr/bin/env bash
-set -euo pipefail
+#!/bin/sh
+set -eu
 
 BASE_COMPOSE="compose.yaml"
 RX_COMPOSE="compose.rx.yaml"
 
-need() { command -v "$1" >/dev/null 2>&1 || { echo "Falta '$1'"; exit 1; }; }
+need() { command -v "$1" >/dev/null 2>&1 || { echo "[mango] Falta '$1'"; exit 1; }; }
+have_file() { [ -f "$1" ]; }
 
-detect_rx() {
-  local p
-  p=$(ls -1 /dev/serial/by-id/*CP2102* 2>/dev/null | head -n 1 || true)
-  if [[ -z "${p}" ]]; then
-    echo ""
+dc_base() { docker compose -f "$BASE_COMPOSE" "$@"; }
+dc_all() {
+  if have_file "$RX_COMPOSE"; then
+    docker compose -f "$BASE_COMPOSE" -f "$RX_COMPOSE" "$@"
   else
-    echo "${p}"
+    docker compose -f "$BASE_COMPOSE" "$@"
   fi
 }
 
-up_base() {
-  docker compose -f "$BASE_COMPOSE" up -d --build
-}
+up()   { dc_base up -d --build; }
+down() { dc_base down --remove-orphans; }
+purge(){ dc_base down --remove-orphans --volumes; }
 
-down_all() {
-  # --remove-orphans elimina bridge aunque no esté definido en compose.yaml
-  docker compose -f "$BASE_COMPOSE" down -v --remove-orphans
-}
-
-logs_svc() {
-  local svc="${1:-}"
-  if [[ -z "$svc" ]]; then
-    docker compose -f "$BASE_COMPOSE" logs -f --tail=200
-  else
-    docker compose -f "$BASE_COMPOSE" logs -f --tail=200 "$svc"
+dummy_on() {
+  if ! have_file "$RX_COMPOSE"; then
+    echo "[mango] Falta $RX_COMPOSE"
+    exit 1
   fi
+  dc_all --profile dummy up -d --build bridge_dummy
+  echo "[mango] bridge_dummy ON"
 }
 
-test_all() {
-  echo "[mango] backend via 8000:"
-  curl -fsS http://localhost:8000/health || true
-  echo -e "\n\n[mango] nginx via 8080:"
-  curl -fsS http://localhost:8080/health || true
-  echo -e "\n\n[mango] latest via nginx:"
-  curl -fsS http://localhost:8080/api/v1/latest || true
-  echo
-}
-
-ingest_demo() {
-  echo "[mango] Sending demo payload -> nginx (8080) -> backend"
-  curl -fsS -X POST http://localhost:8080/api/v1/ingest \
-    -H "Content-Type: application/json" \
-    -d '{"station":{"name":"MANGO Station"},"readings":[{"type":"ph","value":7.1},{"type":"temperature","value":24.6},{"type":"turbidity","value":12.2}]}' \
-    && echo
+dummy_off() {
+  if have_file "$RX_COMPOSE"; then
+    dc_all --profile dummy stop bridge_dummy >/dev/null 2>&1 || true
+    dc_all --profile dummy rm -f bridge_dummy >/dev/null 2>&1 || true
+  fi
+  echo "[mango] bridge_dummy OFF"
 }
 
 rx_on() {
-  local dev
-  dev="$(detect_rx)"
-  if [[ -z "$dev" ]]; then
-    echo "[mango] RX no detectado en /dev/serial/by-id/. Conéctalo y reintenta."
+  if ! have_file "$RX_COMPOSE"; then
+    echo "[mango] Falta $RX_COMPOSE"
     exit 1
   fi
-  echo "[mango] RX detectado: $dev"
-  SERIAL_DEVICE="$dev" docker compose -f "$BASE_COMPOSE" -f "$RX_COMPOSE" up -d --build bridge
+  # If SERIAL_DEVICE is not set, default is /dev/ttyUSB0 from compose.rx.yaml
+  dc_all --profile hardware up -d --build bridge
+  echo "[mango] bridge (hardware) ON"
 }
 
 rx_off() {
-  # Si bridge no existe, no debe tumbar todo.
-  SERIAL_DEVICE="/dev/null" docker compose -f "$BASE_COMPOSE" -f "$RX_COMPOSE" stop bridge >/dev/null 2>&1 || true
-  SERIAL_DEVICE="/dev/null" docker compose -f "$BASE_COMPOSE" -f "$RX_COMPOSE" rm -f bridge >/dev/null 2>&1 || true
-  echo "[mango] bridge apagado."
+  if have_file "$RX_COMPOSE"; then
+    dc_all --profile hardware stop bridge >/dev/null 2>&1 || true
+    dc_all --profile hardware rm -f bridge >/dev/null 2>&1 || true
+  fi
+  echo "[mango] bridge (hardware) OFF"
 }
 
-case "${1:-}" in
-  up) need docker; up_base ;;
-  down) need docker; down_all ;;
-  logs) need docker; logs_svc "${2:-}" ;;
-  test) need curl; test_all ;;
-  ingest-demo) need curl; ingest_demo ;;
+doctor() {
+  need docker
+  need curl
+  echo "[mango] UI:  http://localhost:${NGINX_HTTP_PORT:-8080}/"
+  echo "[mango] API: http://localhost:${API_HOST_PORT:-8000}/api/v1/health"
+  echo -n "[mango] backend health: "
+  curl -fsS "http://localhost:${API_HOST_PORT:-8000}/api/v1/health" >/dev/null 2>&1 && echo OK || echo FAIL
+  echo -n "[mango] latest(by_type) via nginx: "
+  curl -fsS "http://localhost:${NGINX_HTTP_PORT:-8080}/api/v1/latest/by_type" >/dev/null 2>&1 && echo OK || echo FAIL
+}
+
+usage() {
+  cat <<'USAGE'
+Uso:
+  ./mango up
+  ./mango down          # NO borra volúmenes
+  ./mango purge         # BORRA volúmenes (cuidado)
+  ./mango dummy-on      # datos sin RX/TX
+  ./mango dummy-off
+  ./mango rx-on         # requiere RX conectado
+  ./mango rx-off
+  ./mango doctor
+
+Direcciones:
+  UI:   http://localhost:8080/
+  API:  http://localhost:8000/api/v1/health
+  DATA: http://localhost:8080/api/v1/latest/by_type
+USAGE
+}
+
+cmd="${1:-}"
+case "$cmd" in
+  up) need docker; up ;;
+  down) need docker; down ;;
+  purge) need docker; purge ;;
+  dummy-on) need docker; dummy_on ;;
+  dummy-off) need docker; dummy_off ;;
   rx-on) need docker; rx_on ;;
   rx-off) need docker; rx_off ;;
-  *)
-    echo "Uso:"
-    echo "  ./mango up"
-    echo "  ./mango down"
-    echo "  ./mango logs [servicio]"
-    echo "  ./mango test"
-    echo "  ./mango ingest-demo"
-    echo "  ./mango rx-on"
-    echo "  ./mango rx-off"
-    exit 1
-  ;;
+  doctor) doctor ;;
+  ""|help|-h|--help) usage ;;
+  *) echo "[mango] Comando desconocido: $cmd"; usage; exit 1 ;;
 esac
