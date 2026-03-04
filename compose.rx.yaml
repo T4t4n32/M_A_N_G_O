@@ -1,7 +1,6 @@
 services:
-  # Dummy bridge (sin hardware). Úsalo para demo:
-  # docker compose -f compose.yaml -f compose.rx.yaml --profile dummy up -d --build bridge_dummy
   bridge_dummy:
+    profiles: ["dummy"]
     build:
       context: ./bridge
       dockerfile: Dockerfile
@@ -18,10 +17,9 @@ services:
       backend:
         condition: service_healthy
     restart: unless-stopped
-    profiles: ["dummy"]
 
-  # Hardware bridge (requiere RX conectado).
   bridge:
+    profiles: ["hardware"]
     build:
       context: ./bridge
       dockerfile: Dockerfile
@@ -41,4 +39,3 @@ services:
       backend:
         condition: service_healthy
     restart: unless-stopped
-    profiles: ["hardware"]
