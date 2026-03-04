@@ -1,5 +1,5 @@
-#!/bin/sh
-set -eu
+#!/usr/bin/env bash
+set -euo pipefail
 
 BASE_COMPOSE="compose.yaml"
 RX_COMPOSE="compose.rx.yaml"
