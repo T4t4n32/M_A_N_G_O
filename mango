@@ -1,68 +1,28 @@
-#!/usr/bin/env bash
-set -euo pipefail
+#!/bin/sh
+set -eu
 
-BASE_COMPOSE="compose.yaml"
-RX_COMPOSE="compose.rx.yaml"
+BASE="compose.yaml"
+RX="compose.rx.yaml"
 
 need() { command -v "$1" >/dev/null 2>&1 || { echo "[mango] Falta '$1'"; exit 1; }; }
-have_file() { [ -f "$1" ]; }
 
-dc_base() { docker compose -f "$BASE_COMPOSE" "$@"; }
-dc_all() {
-  if have_file "$RX_COMPOSE"; then
-    docker compose -f "$BASE_COMPOSE" -f "$RX_COMPOSE" "$@"
-  else
-    docker compose -f "$BASE_COMPOSE" "$@"
-  fi
-}
+dc() { docker compose -f "$BASE" "$@"; }
+dcx() { docker compose -f "$BASE" -f "$RX" "$@"; }
 
-up()   { dc_base up -d --build; }
-down() { dc_base down --remove-orphans; }
-purge(){ dc_base down --remove-orphans --volumes; }
+up() { dc up -d --build; }
+down() { dc down --remove-orphans; }
+purge() { dc down --remove-orphans --volumes; }
 
-dummy_on() {
-  if ! have_file "$RX_COMPOSE"; then
-    echo "[mango] Falta $RX_COMPOSE"
-    exit 1
-  fi
-  dc_all --profile dummy up -d --build bridge_dummy
-  echo "[mango] bridge_dummy ON"
-}
-
-dummy_off() {
-  if have_file "$RX_COMPOSE"; then
-    dc_all --profile dummy stop bridge_dummy >/dev/null 2>&1 || true
-    dc_all --profile dummy rm -f bridge_dummy >/dev/null 2>&1 || true
-  fi
-  echo "[mango] bridge_dummy OFF"
-}
-
-rx_on() {
-  if ! have_file "$RX_COMPOSE"; then
-    echo "[mango] Falta $RX_COMPOSE"
-    exit 1
-  fi
-  # If SERIAL_DEVICE is not set, default is /dev/ttyUSB0 from compose.rx.yaml
-  dc_all --profile hardware up -d --build bridge
-  echo "[mango] bridge (hardware) ON"
-}
-
-rx_off() {
-  if have_file "$RX_COMPOSE"; then
-    dc_all --profile hardware stop bridge >/dev/null 2>&1 || true
-    dc_all --profile hardware rm -f bridge >/dev/null 2>&1 || true
-  fi
-  echo "[mango] bridge (hardware) OFF"
-}
+dummy_on() { dcx --profile dummy up -d --build bridge_dummy; echo "[mango] dummy ON"; }
+dummy_off() { dcx --profile dummy stop bridge_dummy >/dev/null 2>&1 || true; dcx --profile dummy rm -f bridge_dummy >/dev/null 2>&1 || true; echo "[mango] dummy OFF"; }
 
 doctor() {
-  need docker
   need curl
-  echo "[mango] UI:  http://localhost:${NGINX_HTTP_PORT:-8080}/"
-  echo "[mango] API: http://localhost:${API_HOST_PORT:-8000}/api/v1/health"
-  echo -n "[mango] backend health: "
+  echo "[mango] UI:   http://localhost:${NGINX_HTTP_PORT:-8080}/"
+  echo "[mango] API:  http://localhost:${API_HOST_PORT:-8000}/api/v1/health"
+  printf "[mango] health: "
   curl -fsS "http://localhost:${API_HOST_PORT:-8000}/api/v1/health" >/dev/null 2>&1 && echo OK || echo FAIL
-  echo -n "[mango] latest(by_type) via nginx: "
+  printf "[mango] latest: "
   curl -fsS "http://localhost:${NGINX_HTTP_PORT:-8080}/api/v1/latest/by_type" >/dev/null 2>&1 && echo OK || echo FAIL
 }
 
@@ -70,15 +30,13 @@ usage() {
   cat <<'USAGE'
 Uso:
   ./mango up
-  ./mango down          # NO borra volúmenes
-  ./mango purge         # BORRA volúmenes (cuidado)
-  ./mango dummy-on      # datos sin RX/TX
+  ./mango down
+  ./mango purge        # BORRA volúmenes (DB) - cuidado
+  ./mango dummy-on     # sin RX/TX
   ./mango dummy-off
-  ./mango rx-on         # requiere RX conectado
-  ./mango rx-off
   ./mango doctor
 
-Direcciones:
+URLs:
   UI:   http://localhost:8080/
   API:  http://localhost:8000/api/v1/health
   DATA: http://localhost:8080/api/v1/latest/by_type
@@ -92,8 +50,6 @@ case "$cmd" in
   purge) need docker; purge ;;
   dummy-on) need docker; dummy_on ;;
   dummy-off) need docker; dummy_off ;;
-  rx-on) need docker; rx_on ;;
-  rx-off) need docker; rx_off ;;
   doctor) doctor ;;
   ""|help|-h|--help) usage ;;
   *) echo "[mango] Comando desconocido: $cmd"; usage; exit 1 ;;

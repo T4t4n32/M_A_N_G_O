@@ -1,29 +1,24 @@
-"""
-M.A.N.G.O. — Dashboard API (ADD-ONLY)
+"""M.A.N.G.O — Dashboard Read API (stable + additive)
 
-Purpose
-- Provide stable, dashboard-friendly read endpoints WITHOUT touching existing ingest/latest logic.
-- This module is safe to add even if other route modules fail; it should not break app startup.
+This module is READ-ONLY and is meant for dashboards (legacy + Lovable UI).
 
-Endpoints (all under /api/v1)
-- GET  /metrics                  -> list available metric types (e.g., ["temp","turbidity"])
-- GET  /stations                 -> list stations (id + optional name)
-- GET  /latest/by_type           -> latest reading per type (ideal for KPI cards)
-- GET  /range                    -> time-series for charts (type + minutes/hours)
+Endpoints (url_prefix=/api/v1):
+- GET  /metrics
+- GET  /stations
+- GET  /latest/by_type
+- GET  /range?type=<metric>&minutes=60
 
-Query params
-- station_id (int)   optional
-- station (string)   optional (station name; only works if station table has "name")
-- limit (int)        optional, for range (default 360, max 5000)
-- minutes (int)      optional, range window
-- hours (int)        optional, range window (alternative to minutes)
-- type (string)      required for /range
+Compatibility:
+- Returns BOTH:
+  - legacy wrapper: {"latest": { "temp": {...}, ...}}
+  - Lovable keys:  {"temperature": {...}, "ph": {...}, "turbidity": {...}}
+- Accepts Lovable alias: type=temperature (maps internally to temp)
 """
 
 from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
-from typing import Any
+from typing import Any, Dict, Optional, Set
 
 from flask import Blueprint, jsonify, request
 from sqlalchemy import inspect, text
@@ -72,16 +67,14 @@ def _get_table_names() -> set[str]:
 
 
 def _resolve_tables() -> dict[str, str | None]:
-    """
-    Try to find readings + stations tables without assuming the schema.
+    """Find readings/stations tables without assuming one schema.
 
-    Priority order:
-    - mango_compat_readings / mango_compat_stations  (compat bridge layer)
-    - sensor_readings / sensor_stations              (common naming)
-    - readings / stations                            (generic)
+    Priority:
+    - mango_compat_readings / mango_compat_stations (bridge/gateway compat layer)
+    - sensor_readings / sensor_stations
+    - readings / stations
     """
     tables = _get_table_names()
-
     candidates = [
         ("mango_compat_readings", "mango_compat_stations"),
         ("sensor_readings", "sensor_stations"),
@@ -90,17 +83,14 @@ def _resolve_tables() -> dict[str, str | None]:
     for readings, stations in candidates:
         if readings in tables:
             return {"readings": readings, "stations": stations if stations in tables else None}
-
     return {"readings": None, "stations": None}
 
 
 def _resolve_station_id(stations_table: str | None, station_id: int | None, station_name: str | None) -> int | None:
     if station_id is not None:
         return station_id
-
     if not station_name or not stations_table:
         return None
-
     try:
         row = db.session.execute(
             text(f"SELECT id FROM {stations_table} WHERE name = :name LIMIT 1"),
@@ -110,8 +100,33 @@ def _resolve_station_id(stations_table: str | None, station_id: int | None, stat
             return int(row["id"])
     except Exception:
         return None
-
     return None
+
+
+def _internal_to_ui(metric_type: str) -> str:
+    t = (metric_type or "").strip().lower()
+    if t == "temp":
+        return "temperature"
+    return t
+
+
+def _ui_to_internal(metric_type: str) -> str:
+    t = (metric_type or "").strip().lower()
+    if t == "temperature":
+        return "temp"
+    return t
+
+
+def _pack_ui(item: Optional[dict[str, Any]]) -> Optional[dict[str, Any]]:
+    if not item:
+        return None
+    return {
+        "value": item.get("value"),
+        "timestamp": item.get("ts"),
+        "unit": item.get("unit") or "",
+        "connected": None,
+        "status": "unknown",
+    }
 
 
 # -----------------------------
@@ -141,16 +156,22 @@ def metrics():
             text(f"SELECT DISTINCT type FROM {readings_table} {where} ORDER BY type ASC"),
             params,
         ).fetchall()
-        out = [r[0] for r in rows if r and r[0] is not None]
-        # Lovable/UI friendly: only expose the core 3 metrics (temperature/ph/turbidity)
-_map = {"temp": "temperature", "ph": "ph", "turbidity": "turbidity"}
-available = []
-for t in out:
-    ui_t = _map.get(t, None)
-    if ui_t:
-        available.append(ui_t)
+        internal = [r[0] for r in rows if r and r[0] is not None]
 
-return jsonify({"metrics": out, "available": sorted(set(available)), "station_id": station_id}), 200
+        # Lovable expects "available" as SensorType[] (ph/temperature/turbidity)
+        ui_available: Set[str] = set()
+        for t in internal:
+            ui_t = _internal_to_ui(str(t))
+            if ui_t in ("ph", "temperature", "turbidity"):
+                ui_available.add(ui_t)
+
+        return jsonify(
+            {
+                "metrics": internal,  # legacy/debug
+                "available": sorted(ui_available),
+                "station_id": station_id,
+            }
+        ), 200
     except Exception as e:
         return _json_error("QUERY_FAILED", "Failed to query metrics.", 500, {"reason": str(e)})
 
@@ -158,27 +179,15 @@ return jsonify({"metrics": out, "available": sorted(set(available)), "station_id
 @dashboard_bp.get("/stations")
 def stations():
     tables = _resolve_tables()
-    readings_table = tables["readings"]
     stations_table = tables["stations"]
-
-    if stations_table:
-        try:
-            rows = db.session.execute(
-                text(f"SELECT id, name FROM {stations_table} ORDER BY id ASC")
-            ).mappings().all()
-            out = [{"id": int(r["id"]), "name": r.get("name")} for r in rows]
-            return jsonify({"stations": out}), 200
-        except Exception:
-            pass
-
-    if not readings_table:
-        return _json_error("NO_TABLES", "No readings table found. Run db_init or check database.", 503)
+    if not stations_table:
+        return jsonify({"stations": []}), 200
 
     try:
         rows = db.session.execute(
-            text(f"SELECT DISTINCT station_id FROM {readings_table} ORDER BY station_id ASC")
-        ).fetchall()
-        out = [{"id": int(r[0]), "name": None} for r in rows if r and r[0] is not None]
+            text(f"SELECT id, name FROM {stations_table} ORDER BY id ASC")
+        ).mappings().all()
+        out = [{"id": int(r["id"]), "name": r.get("name")} for r in rows if r.get("id") is not None]
         return jsonify({"stations": out}), 200
     except Exception as e:
         return _json_error("QUERY_FAILED", "Failed to query stations.", 500, {"reason": str(e)})
@@ -220,40 +229,31 @@ def latest_by_type():
             params,
         ).mappings().all()
 
-        latest: dict[str, dict[str, Any]] = {}
+        latest: Dict[str, Dict[str, Any]] = {}
         for r in rows:
             t = r.get("type")
-            if not t or t in latest:
+            if not t:
                 continue
-            latest[str(t)] = {
+            t = str(t)
+            if t in latest:
+                continue
+            latest[t] = {
                 "station_id": int(r.get("station_id")) if r.get("station_id") is not None else None,
                 "ts": _ts_to_iso(r.get("ts")),
-                "type": str(t),
+                "type": t,
                 "unit": r.get("unit"),
                 "value": float(r.get("value")) if r.get("value") is not None else None,
             }
 
-        # Lovable/UI friendly top-level keys (without breaking existing "latest" wrapper)
-def _pack_ui(item):
-    if not item:
-        return None
-    return {
-        "value": item.get("value"),
-        "timestamp": item.get("ts"),
-        "unit": item.get("unit") or "",
-        "connected": None,
-        "status": "unknown",
-    }
+        # Lovable top-level keys (optional fields)
+        ui = {
+            "ph": _pack_ui(latest.get("ph")),
+            "temperature": _pack_ui(latest.get("temp")),
+            "turbidity": _pack_ui(latest.get("turbidity")),
+        }
+        ui = {k: v for k, v in ui.items() if v is not None}
 
-ui = {
-    "ph": _pack_ui(latest.get("ph")),
-    "temperature": _pack_ui(latest.get("temp")),
-    "turbidity": _pack_ui(latest.get("turbidity")),
-}
-# Remove Nones so the response stays clean
-ui = {k: v for k, v in ui.items() if v is not None}
-
-return jsonify({"station_id": station_id, "latest": latest, **ui}), 200
+        return jsonify({"station_id": station_id, "latest": latest, **ui}), 200
     except Exception as e:
         return _json_error("QUERY_FAILED", "Failed to query latest values.", 500, {"reason": str(e)})
 
@@ -268,12 +268,10 @@ def range_series():
         return _json_error("NO_TABLES", "No readings table found. Run db_init or check database.", 503)
 
     metric_type = (request.args.get("type") or "").strip()
-# Lovable/UI alias support (additive)
-metric_type_internal = metric_type.lower()
-if metric_type_internal == "temperature":
-    metric_type_internal = "temp"
     if not metric_type:
         return _json_error("MISSING_TYPE", "Query param 'type' is required.", 400)
+
+    metric_internal = _ui_to_internal(metric_type)
 
     station_id = _safe_int(request.args.get("station_id"))
     station_name = request.args.get("station")
@@ -294,7 +292,7 @@ if metric_type_internal == "temperature":
 
     start_ts = _now_utc() - timedelta(minutes=minutes)
 
-    params: dict[str, Any] = {"type": metric_type_internal, "start": start_ts, "limit": limit}
+    params: dict[str, Any] = {"type": metric_internal, "start": start_ts, "limit": limit}
     where_parts = ["type = :type", "ts >= :start"]
     if station_id is not None:
         where_parts.append("station_id = :station_id")
@@ -306,7 +304,7 @@ if metric_type_internal == "temperature":
         rows = db.session.execute(
             text(
                 f"""
-                SELECT ts, value, unit
+                SELECT ts, value
                 FROM {readings_table}
                 WHERE {where_sql}
                 ORDER BY ts ASC
@@ -316,12 +314,18 @@ if metric_type_internal == "temperature":
             params,
         ).mappings().all()
 
-        series = [{"ts": _ts_to_iso(r.get("ts")), "value": r.get("value"), "unit": r.get("unit")} for r in rows]
+        series = [{"ts": _ts_to_iso(r.get("ts")), "value": float(r.get("value")) if r.get("value") is not None else None} for r in rows]
+
+        # Lovable expects type in ("ph","temperature","turbidity")
+        ui_type = _internal_to_ui(metric_internal)
+        if ui_type not in ("ph", "temperature", "turbidity"):
+            # keep response still useful
+            ui_type = "temperature" if metric_internal == "temp" else ui_type
 
         return jsonify(
             {
                 "station_id": station_id,
-                "type": metric_type,
+                "type": ui_type,
                 "minutes": minutes,
                 "count": len(series),
                 "series": series,
