@@ -1,0 +1,512 @@
+mango@vps-eb441baa:~$ sudo nano /etc/nginx/sites-available/mango
+[sudo] password for mango: 
+mango@vps-eb441baa:~$ sudo ln -s /etc/nginx/sites-available/mango /etc/nginx/sites-enabled/mango 2>/dev/null || true
+mango@vps-eb441baa:~$ sudo nginx -t
+nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
+nginx: configuration file /etc/nginx/nginx.conf test is successful
+mango@vps-eb441baa:~$ sudo systemctl reload nginx
+mango@vps-eb441baa:~$ curl -I http://integramosoe.com/
+HTTP/1.1 500 Internal Server Error
+Server: nginx/1.22.1
+Date: Wed, 04 Mar 2026 15:32:36 GMT
+Content-Type: text/html
+Content-Length: 177
+Connection: close
+
+mango@vps-eb441baa:~$ curl -fsS http://integramosoe.com/api/v1/health
+{"db":"ok","status":"ok","time":"2026-03-04T15:33:07.986793+00:00","timestamp":"2026-03-04T15:33:07.986810+00:00"}
+mango@vps-eb441baa:~$ sudo certbot --nginx -d integramosoe.com -d www.integramosoe.com
+[sudo] password for mango: 
+Saving debug log to /var/log/letsencrypt/letsencrypt.log
+Certificate not yet due for renewal
+
+You have an existing certificate that has exactly the same domains or certificate name you requested and isn't close to expiry.
+(ref: /etc/letsencrypt/renewal/integramosoe.com.conf)
+
+What would you like to do?
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+1: Attempt to reinstall this existing certificate
+2: Renew & replace the certificate (may be subject to CA rate limits)
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+Select the appropriate number [1-2] then [enter] (press 'c' to cancel): 1
+Deploying certificate
+Successfully deployed certificate for integramosoe.com to /etc/nginx/sites-enabled/integramosoe
+Successfully deployed certificate for www.integramosoe.com to /etc/nginx/sites-enabled/integramosoe
+Congratulations! You have successfully enabled HTTPS on https://integramosoe.com and https://www.integramosoe.com
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+If you like Certbot, please consider supporting our work by:
+ * Donating to ISRG / Let's Encrypt:   https://letsencrypt.org/donate
+ * Donating to EFF:                    https://eff.org/donate-le
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+mango@vps-eb441baa:~$ ls
+M_A_N_G_O  backup
+mango@vps-eb441baa:~$ cd backup/
+mango@vps-eb441baa:~/backup$ ls
+M_A_N_G_O  backup_daily.sh  backups  monitor_errors.sh  update_mango.sh
+mango@vps-eb441baa:~/backup$ Mail 
+No mail for mango
+mango@vps-eb441baa:~/backup$ M_A_N_G_O/
+-bash: M_A_N_G_O/: Is a directory
+mango@vps-eb441baa:~/backup$ ls
+M_A_N_G_O  backup_daily.sh  backups  monitor_errors.sh  update_mango.sh
+mango@vps-eb441baa:~/backup$ cd M_A_N_G_O/
+mango@vps-eb441baa:~/backup/M_A_N_G_O$ ls
+ARCHITECTURE.md  CODE_OF_CONDUCT.md  Dockerfile  README.md   STATUS.md  database            docs      frontend  nginx.conf
+CHANGELOG.md     CONTRIBUTING.md     LICENSE.md  ROADMAP.md  backend    docker-compose.yml  firmware  hardware  software
+mango@vps-eb441baa:~/backup/M_A_N_G_O$ git status
+On branch main
+Your branch is up to date with 'origin/main'.
+
+nothing to commit, working tree clean
+mango@vps-eb441baa:~/backup/M_A_N_G_O$ git config --global alias.superpull '!git fetch origin main && git reset --hard origin/main && git clean -fd'
+mango@vps-eb441baa:~/backup/M_A_N_G_O$ git superpull
+remote: Enumerating objects: 747, done.
+remote: Counting objects: 100% (411/411), done.
+remote: Compressing objects: 100% (352/352), done.
+remote: Total 747 (delta 108), reused 340 (delta 47), pack-reused 336 (from 1)
+Receiving objects: 100% (747/747), 6.05 MiB | 8.84 MiB/s, done.
+Resolving deltas: 100% (241/241), completed with 4 local objects.
+From https://github.com/t4t4n32/M_A_N_G_O
+ * branch            main       -> FETCH_HEAD
+   d42b5c8..5dbed0d  main       -> origin/main
+HEAD is now at 5dbed0d Heat: All fix bugs - Ready Local
+mango@vps-eb441baa:~/backup/M_A_N_G_O$ ls
+ARCHITECTURE.md     ENV_ADDITIONS.txt  README_PATCH.txt  backend          deploy    frontend  lovable_ui
+CHANGELOG.md        LICENSE.md         ROADMAP.md        bridge           docs      gateway   mango
+CODE_OF_CONDUCT.md  README.md          STATUS.md         compose.rx.yaml  edge      hardware  nginx
+CONTRIBUTING.md     README_APPLY.md    VERSION           compose.yaml     firmware  link      scripts
+mango@vps-eb441baa:~/backup/M_A_N_G_O$ cd ..
+mango@vps-eb441baa:~/backup$ ls
+M_A_N_G_O  backup_daily.sh  backups  monitor_errors.sh  update_mango.sh
+mango@vps-eb441baa:~/backup$ ./update_mango.sh 
+=== 🔄 Actualizando M.A.N.G.O ===
+Fecha: Wed Mar  4 15:54:41 UTC 2026
+./update_mango.sh: line 8: cd: /home/mango/mango-OE: No such file or directory
+fatal: not a git repository (or any of the parent directories): .git
+📥 Obteniendo cambios de GitHub...
+fatal: not a git repository (or any of the parent directories): .git
+❌ Error al actualizar. Restaurando...
+fatal: not a git repository (or any of the parent directories): .git
+=== Fin de actualización ===
+mango@vps-eb441baa:~/backup$ sudo nano update_mango.sh 
+mango@vps-eb441baa:~/backup$ ./update_mango.sh 
+=== 🔄 Actualizando M.A.N.G.O ===
+Fecha: Wed Mar  4 15:57:28 UTC 2026
+📥 Obteniendo cambios de GitHub...
+From https://github.com/T4t4n32/M_A_N_G_O
+ * branch            main       -> FETCH_HEAD
+Already up to date.
+✅ Actualización completada exitosamente
+🔄 Reiniciando servicios...
+✅ Servicios reiniciados
+✅ M.A.N.G.O actualizado y funcionando
+=== Fin de actualización ===
+mango@vps-eb441baa:~/backup$ ./monitor_errors.sh 
+=== 🐛 MONITOREO DE ERRORES M.A.N.G.O ===
+Presiona Ctrl+C para detener
+
+tail: cannot open '/home/mango/mango-OE/logs/backend.log' for reading: No such file or directory
+tail: no files remaining
+mango@vps-eb441baa:~/backup$ sudo nano monitor_errors.sh.sh 
+mango@vps-eb441baa:~/backup$ sudo nano monitor_errors.sh
+mango@vps-eb441baa:~/backup$ ./monitor_errors.sh 
+=== 🐛 MONITOREO DE ERRORES M.A.N.G.O ===
+Presiona Ctrl+C para detener
+
+tail: error reading '/home/mango/M_A_N_G_O': Is a directory
+tail: /home/mango/M_A_N_G_O: cannot follow end of this type of file; giving up on this name
+tail: no files remaining
+mango@vps-eb441baa:~/backup$ rm -rf monitor_errors.sh 
+mango@vps-eb441baa:~/backup$ ls
+M_A_N_G_O  backup_daily.sh  backups  update_mango.sh
+mango@vps-eb441baa:~/backup$ cd backups/
+mango@vps-eb441baa:~/backup/backups$ ls
+mango_backup_20260203_001749.bundle
+mango@vps-eb441baa:~/backup/backups$ mv mango_backup_20260203_001749.bundle mango/M_A_N_G_O
+mv: cannot move 'mango_backup_20260203_001749.bundle' to 'mango/M_A_N_G_O': No such file or directory
+mango@vps-eb441baa:~/backup/backups$ mv mango_backup_20260203_001749.bundle ~/mango/M_A_N_G_O
+mv: cannot move 'mango_backup_20260203_001749.bundle' to '/home/mango/mango/M_A_N_G_O': No such file or directory
+mango@vps-eb441baa:~/backup/backups$ mv mango_backup_20260203_001749.bundle ~/M_A_N_G_O
+mv: cannot move 'mango_backup_20260203_001749.bundle' to '/home/mango/M_A_N_G_O/mango_backup_20260203_001749.bundle': Permission denied
+mango@vps-eb441baa:~/backup/backups$ sudo mv mango_backup_20260203_001749.bundle ~/M_A_N_G_O
+mango@vps-eb441baa:~/backup/backups$ ls
+mango@vps-eb441baa:~/backup/backups$ cd ..
+mango@vps-eb441baa:~/backup$ ls
+M_A_N_G_O  backup_daily.sh  backups  update_mango.sh
+mango@vps-eb441baa:~/backup$ cd ..
+mango@vps-eb441baa:~$ cd M_A_N_G_O/
+mango@vps-eb441baa:~/M_A_N_G_O$ ls
+ARCHITECTURE.md     LICENSE.md        STATUS.md        compose.yaml  frontend    mango
+CHANGELOG.md        README.md         VERSION          deploy        gateway     mango_backup_20260203_001749.bundle
+CODE_OF_CONDUCT.md  README_APPLY.md   backend          docs          hardware    nginx
+CONTRIBUTING.md     README_PATCH.txt  bridge           edge          link        scripts
+ENV_ADDITIONS.txt   ROADMAP.md        compose.rx.yaml  firmware      lovable_ui
+mango@vps-eb441baa:~/M_A_N_G_O$ git status
+On branch main
+Your branch is up to date with 'origin/main'.
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+	mango_backup_20260203_001749.bundle
+
+nothing added to commit but untracked files present (use "git add" to track)
+mango@vps-eb441baa:~/M_A_N_G_O$ git add .
+mango@vps-eb441baa:~/M_A_N_G_O$ git commit -m "VPS: backup 3 Feb"
+[main 6953cbb] VPS: backup 3 Feb
+ 1 file changed, 0 insertions(+), 0 deletions(-)
+ create mode 100644 mango_backup_20260203_001749.bundle
+mango@vps-eb441baa:~/M_A_N_G_O$ git push origin main
+Username for 'https://github.com': ^C
+mango@vps-eb441baa:~/M_A_N_G_O$ sudo apt install gh -y
+Reading package lists... Done
+Building dependency tree... Done
+Reading state information... Done
+gh is already the newest version (2.23.0+dfsg1-1).
+0 upgraded, 0 newly installed, 0 to remove and 0 not upgraded.
+mango@vps-eb441baa:~/M_A_N_G_O$ gh auth login
+? What account do you want to log into? GitHub.com
+? What is your preferred protocol for Git operations? HTTPS
+? Authenticate Git with your GitHub credentials? Yes
+? How would you like to authenticate GitHub CLI? Login with a web browser
+
+! First copy your one-time code: F0AC-1969
+Press Enter to open github.com in your browser... 
+! Failed opening a web browser at https://github.com/login/device
+  exec: "xdg-open,x-www-browser,www-browser,wslview": executable file not found in $PATH
+  Please try entering the URL in your browser manually
+^C
+mango@vps-eb441baa:~/M_A_N_G_O$ ^C
+mango@vps-eb441baa:~/M_A_N_G_O$ gh auth login
+? What account do you want to log into? GitHub.com
+? What is your preferred protocol for Git operations? HTTPS
+? Authenticate Git with your GitHub credentials? Yes
+? How would you like to authenticate GitHub CLI? Login with a web browser
+
+! First copy your one-time code: 8460-5F41
+Press Enter to open github.com in your browser... 
+! Failed opening a web browser at https://github.com/login/device
+  exec: "xdg-open,x-www-browser,www-browser,wslview": executable file not found in $PATH
+  Please try entering the URL in your browser manually
+✓ Authentication complete.
+- gh config set -h github.com git_protocol https
+✓ Configured git protocol
+✓ Logged in as T4t4n32
+mango@vps-eb441baa:~/M_A_N_G_O$ git push origin main
+Enumerating objects: 4, done.
+Counting objects: 100% (4/4), done.
+Delta compression using up to 4 threads
+Compressing objects: 100% (3/3), done.
+Writing objects: 100% (3/3), 134.42 MiB | 8.73 MiB/s, done.
+Total 3 (delta 1), reused 0 (delta 0), pack-reused 0
+remote: Resolving deltas: 100% (1/1), completed with 1 local object.
+remote: error: Trace: dc9c47d36f9aa9dc4e6f2a266c1781c3f438dcadf61f9e93b31a8a3e71c29a6a
+remote: error: See https://gh.io/lfs for more information.
+remote: error: File mango_backup_20260203_001749.bundle is 220.64 MB; this exceeds GitHub's file size limit of 100.00 MB
+remote: error: GH001: Large files detected. You may want to try Git Large File Storage - https://git-lfs.github.com.
+To https://github.com/T4t4n32/M_A_N_G_O.git
+ ! [remote rejected] main -> main (pre-receive hook declined)
+error: failed to push some refs to 'https://github.com/T4t4n32/M_A_N_G_O.git'
+mango@vps-eb441baa:~/M_A_N_G_O$ ^C
+mango@vps-eb441baa:~/M_A_N_G_O$ sudo apt install git-lfs -y
+[sudo] password for mango: 
+Reading package lists... Done
+Building dependency tree... Done
+Reading state information... Done
+The following NEW packages will be installed:
+  git-lfs
+0 upgraded, 1 newly installed, 0 to remove and 0 not upgraded.
+Need to get 3489 kB of archives.
+After this operation, 11.2 MB of additional disk space will be used.
+Get:1 file:/etc/apt/mirrors/debian.list Mirrorlist [30 B]
+Get:2 https://deb.debian.org/debian bookworm/main amd64 git-lfs amd64 3.3.0-1+deb12u1 [3489 kB]
+Fetched 3489 kB in 0s (21.6 MB/s) 
+apt-listchanges: Can't set locale; make sure $LC_* and $LANG are correct!
+perl: warning: Setting locale failed.
+perl: warning: Please check that your locale settings:
+	LANGUAGE = (unset),
+	LC_ALL = (unset),
+	LC_TIME = "es_CO.UTF-8",
+	LC_MONETARY = "es_CO.UTF-8",
+	LC_ADDRESS = "es_CO.UTF-8",
+	LC_TELEPHONE = "es_CO.UTF-8",
+	LC_NAME = "es_CO.UTF-8",
+	LC_MEASUREMENT = "es_CO.UTF-8",
+	LC_IDENTIFICATION = "es_CO.UTF-8",
+	LC_NUMERIC = "es_CO.UTF-8",
+	LC_PAPER = "es_CO.UTF-8",
+	LANG = "C.UTF-8"
+    are supported and installed on your system.
+perl: warning: Falling back to a fallback locale ("C.UTF-8").
+Selecting previously unselected package git-lfs.
+(Reading database ... 41086 files and directories currently installed.)
+Preparing to unpack .../git-lfs_3.3.0-1+deb12u1_amd64.deb ...
+Unpacking git-lfs (3.3.0-1+deb12u1) ...
+Setting up git-lfs (3.3.0-1+deb12u1) ...
+Processing triggers for man-db (2.11.2-2) ...
+mango@vps-eb441baa:~/M_A_N_G_O$ git lfs install
+Updated Git hooks.
+Git LFS initialized.
+mango@vps-eb441baa:~/M_A_N_G_O$ git lfs track "*.zip"
+git lfs track "*.mp4"
+git lfs track "*.bin"
+git lfs track "*.pt"
+git lfs track "*.onnx"
+"*.zip" already supported
+"*.mp4" already supported
+"*.bin" already supported
+Tracking "*.pt"
+Tracking "*.onnx"
+mango@vps-eb441baa:~/M_A_N_G_O$ git add .gitattributes
+git add .
+git commit -m "Track large files with Git LFS"
+git push
+[main 83024f5] Track large files with Git LFS
+ 1 file changed, 2 insertions(+), 3 deletions(-)
+Enumerating objects: 8, done.
+Counting objects: 100% (8/8), done.
+Delta compression using up to 4 threads
+Compressing objects: 100% (6/6), done.
+Writing objects: 100% (6/6), 134.42 MiB | 4.60 MiB/s, done.
+Total 6 (delta 3), reused 0 (delta 0), pack-reused 0
+remote: Resolving deltas: 100% (3/3), completed with 2 local objects.
+remote: error: Trace: 0bd0713a1d20d7916b0d4404efde7a16fa42625c19cb5f076454102301066eaa
+remote: error: See https://gh.io/lfs for more information.
+remote: error: File mango_backup_20260203_001749.bundle is 220.64 MB; this exceeds GitHub's file size limit of 100.00 MB
+remote: error: GH001: Large files detected. You may want to try Git Large File Storage - https://git-lfs.github.com.
+To https://github.com/T4t4n32/M_A_N_G_O.git
+ ! [remote rejected] main -> main (pre-receive hook declined)
+error: failed to push some refs to 'https://github.com/T4t4n32/M_A_N_G_O.git'
+mango@vps-eb441baa:~/M_A_N_G_O$ ls
+ARCHITECTURE.md     LICENSE.md        STATUS.md        compose.yaml  frontend    mango
+CHANGELOG.md        README.md         VERSION          deploy        gateway     mango_backup_20260203_001749.bundle
+CODE_OF_CONDUCT.md  README_APPLY.md   backend          docs          hardware    nginx
+CONTRIBUTING.md     README_PATCH.txt  bridge           edge          link        scripts
+ENV_ADDITIONS.txt   ROADMAP.md        compose.rx.yaml  firmware      lovable_ui
+mango@vps-eb441baa:~/M_A_N_G_O$ sudo nano mango_backup_20260203_001749.bundle 
+mango@vps-eb441baa:~/M_A_N_G_O$ sudo mv mango_backup_20260203_001749.bundle link
+mango@vps-eb441baa:~/M_A_N_G_O$ echo "*.bundle" >> .gitignore
+git add .gitignore
+mango@vps-eb441baa:~/M_A_N_G_O$ git reset HEAD mango_backup_20260203_001749.bundle 2>/dev/null || true
+Unstaged changes after reset:
+D	mango_backup_20260203_001749.bundle
+mango@vps-eb441baa:~/M_A_N_G_O$ sudo cp mango_backup_20260203_001749.bundle mango_backup_vps_20260203.bundle.bak 
+cp: cannot stat 'mango_backup_20260203_001749.bundle': No such file or directory
+mango@vps-eb441baa:~/M_A_N_G_O$ git rm --cached mango_backup_20260203_001749.bundle 2>/dev/null || true
+git commit --amend --no-edit
+rm 'mango_backup_20260203_001749.bundle'
+[main d90452d] Track large files with Git LFS
+ Date: Wed Mar 4 16:18:57 2026 +0000
+ 3 files changed, 3 insertions(+), 4 deletions(-)
+ delete mode 100644 mango_backup_20260203_001749.bundle
+mango@vps-eb441baa:~/M_A_N_G_O$ git push origin main
+Enumerating objects: 10, done.
+Counting objects: 100% (10/10), done.
+Delta compression using up to 4 threads
+Compressing objects: 100% (7/7), done.
+Writing objects: 100% (7/7), 134.42 MiB | 8.72 MiB/s, done.
+Total 7 (delta 4), reused 0 (delta 0), pack-reused 0
+remote: Resolving deltas: 100% (4/4), completed with 3 local objects.
+remote: error: Trace: 070459b701dc91b916466d82ca55bb10f2d06a87f4ee8ddb02ddaadf16e785d8
+remote: error: See https://gh.io/lfs for more information.
+remote: error: File mango_backup_20260203_001749.bundle is 220.64 MB; this exceeds GitHub's file size limit of 100.00 MB
+remote: error: GH001: Large files detected. You may want to try Git Large File Storage - https://git-lfs.github.com.
+To https://github.com/T4t4n32/M_A_N_G_O.git
+ ! [remote rejected] main -> main (pre-receive hook declined)
+error: failed to push some refs to 'https://github.com/T4t4n32/M_A_N_G_O.git'
+mango@vps-eb441baa:~/M_A_N_G_O$ git push --force-with-lease
+Enumerating objects: 10, done.
+Counting objects: 100% (10/10), done.
+Delta compression using up to 4 threads
+Compressing objects: 100% (7/7), done.
+Writing objects: 100% (7/7), 134.42 MiB | 8.79 MiB/s, done.
+Total 7 (delta 4), reused 0 (delta 0), pack-reused 0
+remote: Resolving deltas: 100% (4/4), completed with 3 local objects.
+remote: error: Trace: 74d916abd342901b1546e82a1d8191584125a5e4b90d762b56f11765909ce55e
+remote: error: See https://gh.io/lfs for more information.
+remote: error: File mango_backup_20260203_001749.bundle is 220.64 MB; this exceeds GitHub's file size limit of 100.00 MB
+remote: error: GH001: Large files detected. You may want to try Git Large File Storage - https://git-lfs.github.com.
+To https://github.com/T4t4n32/M_A_N_G_O.git
+ ! [remote rejected] main -> main (pre-receive hook declined)
+error: failed to push some refs to 'https://github.com/T4t4n32/M_A_N_G_O.git'
+mango@vps-eb441baa:~/M_A_N_G_O$ git lfs track "*.bundle"
+git add .gitattributes
+Tracking "*.bundle"
+mango@vps-eb441baa:~/M_A_N_G_O$ git rm --cached mango_backup_20260203_001749.bundle
+git add mango_backup_20260203_001749.bundle
+git commit -m "Track .bundle with LFS"
+git push
+fatal: pathspec 'mango_backup_20260203_001749.bundle' did not match any files
+fatal: pathspec 'mango_backup_20260203_001749.bundle' did not match any files
+[main a6ecb0c] Track .bundle with LFS
+ 1 file changed, 1 insertion(+)
+Enumerating objects: 13, done.
+Counting objects: 100% (13/13), done.
+Delta compression using up to 4 threads
+Compressing objects: 100% (10/10), done.
+Writing objects: 100% (10/10), 134.42 MiB | 8.55 MiB/s, done.
+Total 10 (delta 6), reused 0 (delta 0), pack-reused 0
+remote: Resolving deltas: 100% (6/6), completed with 3 local objects.
+remote: error: Trace: eb3722ce4f1f59d1bcf02a67a0ce9ee977e8cd556d102d50303c418c6112be0d
+remote: error: See https://gh.io/lfs for more information.
+remote: error: File mango_backup_20260203_001749.bundle is 220.64 MB; this exceeds GitHub's file size limit of 100.00 MB
+remote: error: GH001: Large files detected. You may want to try Git Large File Storage - https://git-lfs.github.com.
+To https://github.com/T4t4n32/M_A_N_G_O.git
+ ! [remote rejected] main -> main (pre-receive hook declined)
+error: failed to push some refs to 'https://github.com/T4t4n32/M_A_N_G_O.git'
+mango@vps-eb441baa:~/M_A_N_G_O$ ls
+ARCHITECTURE.md     ENV_ADDITIONS.txt  README_PATCH.txt  backend          deploy    frontend  lovable_ui
+CHANGELOG.md        LICENSE.md         ROADMAP.md        bridge           docs      gateway   mango
+CODE_OF_CONDUCT.md  README.md          STATUS.md         compose.rx.yaml  edge      hardware  nginx
+CONTRIBUTING.md     README_APPLY.md    VERSION           compose.yaml     firmware  link      scripts
+mango@vps-eb441baa:~/M_A_N_G_O$ cd ..
+mango@vps-eb441baa:~$ ls
+M_A_N_G_O  backup
+mango@vps-eb441baa:~$ cd backup/
+mango@vps-eb441baa:~/backup$ ls
+M_A_N_G_O  backup_daily.sh  backups  update_mango.sh
+mango@vps-eb441baa:~/backup$ cd M_A_N_G_O/
+mango@vps-eb441baa:~/backup/M_A_N_G_O$ ls
+ARCHITECTURE.md     ENV_ADDITIONS.txt  README_PATCH.txt  backend          deploy    frontend  lovable_ui
+CHANGELOG.md        LICENSE.md         ROADMAP.md        bridge           docs      gateway   mango
+CODE_OF_CONDUCT.md  README.md          STATUS.md         compose.rx.yaml  edge      hardware  nginx
+CONTRIBUTING.md     README_APPLY.md    VERSION           compose.yaml     firmware  link      scripts
+mango@vps-eb441baa:~/backup/M_A_N_G_O$ cd ..
+mango@vps-eb441baa:~/backup$ ls
+M_A_N_G_O  backup_daily.sh  backups  update_mango.sh
+mango@vps-eb441baa:~/backup$ cd backups/
+mango@vps-eb441baa:~/backup/backups$ ls
+mango@vps-eb441baa:~/backup/backups$ cd ..
+mango@vps-eb441baa:~/backup$ rm -rf backup
+mango@vps-eb441baa:~/backup$ rm -rf backups
+mango@vps-eb441baa:~/backup$ ls
+M_A_N_G_O  backup_daily.sh  update_mango.sh
+mango@vps-eb441baa:~/backup$ ./update_mango.sh 
+=== 🔄 Actualizando M.A.N.G.O ===
+Fecha: Wed Mar  4 16:45:48 UTC 2026
+⚠️ Detectados cambios locales, haciendo backup...
+[main a8d12ae] Backup automático: Wed Mar  4 16:45:50 UTC 2026
+ 1 file changed, 3 insertions(+)
+ create mode 100644 link/mango_backup_20260203_001749.bundle
+📥 Obteniendo cambios de GitHub...
+From https://github.com/T4t4n32/M_A_N_G_O
+ * branch            main       -> FETCH_HEAD
+Current branch main is up to date.
+✅ Actualización completada exitosamente
+🔄 Reiniciando servicios...
+[sudo] password for mango: 
+✅ Servicios reiniciados
+✅ M.A.N.G.O actualizado y funcionando
+=== Fin de actualización ===
+mango@vps-eb441baa:~/backup$ ls
+M_A_N_G_O  backup_daily.sh  update_mango.sh
+mango@vps-eb441baa:~/backup$ mv update_mango.sh M_A_N_G_O/
+mango@vps-eb441baa:~/backup$ ls
+M_A_N_G_O  backup_daily.sh
+mango@vps-eb441baa:~/backup$ cd M_A_N_G_O/
+mango@vps-eb441baa:~/backup/M_A_N_G_O$ ls
+ARCHITECTURE.md     ENV_ADDITIONS.txt  README_PATCH.txt  backend          deploy    frontend  lovable_ui  update_mango.sh
+CHANGELOG.md        LICENSE.md         ROADMAP.md        bridge           docs      gateway   mango
+CODE_OF_CONDUCT.md  README.md          STATUS.md         compose.rx.yaml  edge      hardware  nginx
+CONTRIBUTING.md     README_APPLY.md    VERSION           compose.yaml     firmware  link      scripts
+mango@vps-eb441baa:~/backup/M_A_N_G_O$ cd ..
+mango@vps-eb441baa:~/backup$ ls
+M_A_N_G_O  backup_daily.sh
+mango@vps-eb441baa:~/backup$ sudo nano backup_daily.sh 
+mango@vps-eb441baa:~/backup$ cd ..
+mango@vps-eb441baa:~$ ls
+M_A_N_G_O  backup
+mango@vps-eb441baa:~$ cd M_A_N_G_O/
+mango@vps-eb441baa:~/M_A_N_G_O$ ls
+ARCHITECTURE.md     ENV_ADDITIONS.txt  README_PATCH.txt  backend          deploy    frontend  lovable_ui
+CHANGELOG.md        LICENSE.md         ROADMAP.md        bridge           docs      gateway   mango
+CODE_OF_CONDUCT.md  README.md          STATUS.md         compose.rx.yaml  edge      hardware  nginx
+CONTRIBUTING.md     README_APPLY.md    VERSION           compose.yaml     firmware  link      scripts
+mango@vps-eb441baa:~/M_A_N_G_O$ cd ..
+mango@vps-eb441baa:~$ cd backup/
+mango@vps-eb441baa:~/backup$ ls
+M_A_N_G_O  backup_daily.sh
+mango@vps-eb441baa:~/backup$ cd M_A_N_G_O/
+mango@vps-eb441baa:~/backup/M_A_N_G_O$ ls -la
+total 152
+drwxr-xr-x 17 mango mango 4096 Mar  4 16:46 .
+drwxr-xr-x  3 mango mango 4096 Mar  4 16:46 ..
+drwxr-xr-x  8 mango mango 4096 Mar  4 15:52 .git
+-rw-r--r--  1 mango mango  900 Feb  3 04:17 .gitattributes
+drwxr-xr-x  3 mango mango 4096 Feb  3 04:17 .github
+-rw-r--r--  1 mango mango  328 Feb  3 04:17 .gitignore
+-rw-r--r--  1 mango mango 4397 Mar  4 15:52 ARCHITECTURE.md
+-rw-r--r--  1 mango mango 7327 Mar  4 15:52 CHANGELOG.md
+-rw-r--r--  1 mango mango 2652 Feb  3 04:17 CODE_OF_CONDUCT.md
+-rw-r--r--  1 mango mango 2526 Feb  3 04:17 CONTRIBUTING.md
+-rw-r--r--  1 mango mango  336 Mar  4 15:52 ENV_ADDITIONS.txt
+-rw-r--r--  1 mango mango 1080 Feb  3 04:17 LICENSE.md
+-rw-r--r--  1 mango mango 8882 Mar  4 15:52 README.md
+-rw-r--r--  1 mango mango  831 Mar  4 15:52 README_APPLY.md
+-rw-r--r--  1 mango mango 1940 Mar  4 15:52 README_PATCH.txt
+-rw-r--r--  1 mango mango 2689 Feb  3 04:17 ROADMAP.md
+-rw-r--r--  1 mango mango 2767 Feb  3 04:17 STATUS.md
+-rw-r--r--  1 mango mango    0 Mar  4 15:52 VERSION
+drwxr-xr-x  6 mango mango 4096 Mar  4 15:52 backend
+drwxr-xr-x  2 mango mango 4096 Mar  4 15:52 bridge
+-rw-r--r--  1 mango mango 1244 Mar  4 15:52 compose.rx.yaml
+-rw-r--r--  1 mango mango 2892 Mar  4 15:52 compose.yaml
+drwxr-xr-x  5 mango mango 4096 Mar  4 15:52 deploy
+drwxr-xr-x  2 mango mango 4096 Mar  4 15:52 docs
+drwxr-xr-x  5 mango mango 4096 Mar  4 15:52 edge
+drwxr-xr-x  6 mango mango 4096 Feb  3 04:17 firmware
+drwxr-xr-x  3 mango mango 4096 Mar  4 15:52 frontend
+drwxr-xr-x  3 mango mango 4096 Mar  4 15:52 gateway
+drwxr-xr-x  4 mango mango 4096 Mar  4 15:52 hardware
+drwxr-xr-x  2 mango mango 4096 Mar  4 15:52 link
+drwxr-xr-x  6 mango mango 4096 Mar  4 15:52 lovable_ui
+-rwxr-xr-x  1 mango mango 1702 Mar  4 15:52 mango
+drwxr-xr-x  2 mango mango 4096 Mar  4 15:52 nginx
+drwxr-xr-x  2 mango mango 4096 Mar  4 15:52 scripts
+-rwxr-xr-x  1 mango mango  990 Mar  4 15:57 update_mango.sh
+mango@vps-eb441baa:~/backup/M_A_N_G_O$ cd ..
+mango@vps-eb441baa:~/backup$ cd ..
+mango@vps-eb441baa:~$ 
+
+
+
+Quiero serte claro y ya casi logramos montarlo, pero hay unos errores. El primero que me aparecio fue con el: "./mango up":
+mango@vps-eb441baa:~/M_A_N_G_O$ ./mango up
+[+] Building 0.8s (17/17) FINISHED                                                                                                     
+ => [internal] load local bake definitions                                                                                        0.0s
+ => => reading from stdin 953B                                                                                                    0.0s
+ => [db_init internal] load build definition from Dockerfile                                                                      0.0s
+ => => transferring dockerfile: 429B                                                                                              0.0s
+ => [backend internal] load metadata for docker.io/library/python:3.12-slim                                                       0.5s
+ => [backend internal] load .dockerignore                                                                                         0.0s
+ => => transferring context: 2B                                                                                                   0.0s
+ => [backend 1/8] FROM docker.io/library/python:3.12-slim@sha256:d51616d5860ba60aa1786987d93b6aaebc05dd70f59f4cc36b008e9768cb88f  0.0s
+ => [backend internal] load build context                                                                                         0.0s
+ => => transferring context: 3.35kB                                                                                               0.0s
+ => CACHED [backend 2/8] WORKDIR /app                                                                                             0.0s
+ => CACHED [backend 3/8] RUN apt-get update   && apt-get install -y --no-install-recommends curl   && rm -rf /var/lib/apt/lists/  0.0s
+ => CACHED [backend 4/8] COPY requirements.txt /app/requirements.txt                                                              0.0s
+ => CACHED [backend 5/8] RUN pip install --no-cache-dir -r /app/requirements.txt                                                  0.0s
+ => CACHED [backend 6/8] COPY . /app                                                                                              0.0s
+ => CACHED [backend 7/8] COPY entrypoint.sh /entrypoint.sh                                                                        0.0s
+ => CACHED [backend 8/8] RUN chmod +x /entrypoint.sh                                                                              0.0s
+ => [db_init] exporting to image                                                                                                  0.0s
+ => => exporting layers                                                                                                           0.0s
+ => => writing image sha256:0f0430e1643feae281c630be9288cf75fe3e8918f2af92501875781e912cf590                                      0.0s
+ => => naming to docker.io/library/mango-backend:local                                                                            0.0s
+ => [backend] exporting to image                                                                                                  0.0s
+ => => exporting layers                                                                                                           0.0s
+ => => writing image sha256:e0a7a599a6266a903385dfa60513b564671d36619699c4c8e0893d0404ac7407                                      0.0s
+ => => naming to docker.io/library/mango-backend:local                                                                            0.0s
+ => [backend] resolving provenance for metadata file                                                                              0.0s
+ => [db_init] resolving provenance for metadata file                                                                              0.0s
+[+] up 6/6
+ ✔ Image mango-backend:local Built                                                                                                 0.9s
+ ✔ Container mango_redis     Healthy                                                                                               1.3s
+ ✔ Container mango_db        Healthy                                                                                               0.5s
+ ✔ Container mango_backend   Healthy                                                                                               2.4s
+ ✔ Container mango_db_init   Exited                                                                                                1.4s
+ ✔ Container mango_nginx     Started 
+
+Por alguna razon ahora funciona, pero en el dominio o en la pagina, direcciona a un codigo o una pagina vieja que tenia.
+Cabe aclarar que ya habia configurado gran parte del VPS antes de terminar y concretar el backend y el frontend. Ya estamos cerca solo que siento que hay un poco mucho de desorden. Ayudame a organizar y ver que tan bien o mal esta el panorama

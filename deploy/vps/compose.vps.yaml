@@ -1,0 +1,72 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: mango_db
+    environment:
+      POSTGRES_USER: "${DB_USER}"
+      POSTGRES_PASSWORD: "${DB_PASSWORD}"
+      POSTGRES_DB: "${DB_NAME}"
+    volumes:
+      - mango_pg:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    container_name: mango_redis
+    volumes:
+      - mango_redis:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+    restart: unless-stopped
+
+  backend:
+    build:
+      # Repo root is two levels up from deploy/vps
+      context: ../../
+      dockerfile: backend/Dockerfile
+    image: mango-backend:local
+    container_name: mango_backend
+    environment:
+      API_HOST: 0.0.0.0
+      API_PORT: "5000"
+      DATABASE_URL: "postgresql+psycopg2://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME}"
+      REDIS_URL: "redis://redis:6379/0"
+      SECRET_KEY: "${SECRET_KEY}"
+
+      # Optional auth (Lovable)
+      ADMIN_EMAIL: "${ADMIN_EMAIL:-}"
+      ADMIN_PASSWORD_HASH: "${ADMIN_PASSWORD_HASH:-}"
+      AUTH_DISABLED: "${AUTH_DISABLED:-0}"
+
+      # Gunicorn tuning
+      GUNICORN_WORKERS: "${GUNICORN_WORKERS:-2}"
+      GUNICORN_THREADS: "${GUNICORN_THREADS:-4}"
+      GUNICORN_TIMEOUT: "${GUNICORN_TIMEOUT:-60}"
+      GUNICORN_PRELOAD: "${GUNICORN_PRELOAD:-true}"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    # Expose ONLY to localhost; host Nginx proxies to this.
+    ports:
+      - "127.0.0.1:${API_HOST_PORT:-8000}:5000"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:5000/api/v1/health || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 20
+      start_period: 25s
+    restart: unless-stopped
+
+volumes:
+  mango_pg:
+  mango_redis:
