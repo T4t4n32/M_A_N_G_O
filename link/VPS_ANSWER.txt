@@ -1,0 +1,294 @@
+mango@vps-eb441baa:~/M_A_N_G_O/lovable_ui/MANGO_PAGE_LOVABLE_V1.6$ sudo apt list --upgradable
+Listing... Done
+mango@vps-eb441baa:~/M_A_N_G_O/lovable_ui/MANGO_PAGE_LOVABLE_V1.6$ ls /var/
+backups/ cache/   lib/     local/   lock/    log/     mail/    opt/     run/     spool/   tmp/     www/     
+mango@vps-eb441baa:~/M_A_N_G_O/lovable_ui/MANGO_PAGE_LOVABLE_V1.6$ ls /var/www/
+html/         integramosoe/ 
+mango@vps-eb441baa:~/M_A_N_G_O/lovable_ui/MANGO_PAGE_LOVABLE_V1.6$ ls /var/www/
+html/         integramosoe/ 
+mango@vps-eb441baa:~/M_A_N_G_O/lovable_ui/MANGO_PAGE_LOVABLE_V1.6$ ls /var/www/integramosoe/index.html 
+/var/www/integramosoe/index.html
+mango@vps-eb441baa:~/M_A_N_G_O/lovable_ui/MANGO_PAGE_LOVABLE_V1.6$ sudo nano /var/www/integramosoe/index.html 
+mango@vps-eb441baa:~/M_A_N_G_O/lovable_ui/MANGO_PAGE_LOVABLE_V1.6$ ls /var/www/
+html/         integramosoe/ 
+mango@vps-eb441baa:~/M_A_N_G_O/lovable_ui/MANGO_PAGE_LOVABLE_V1.6$ ls /var/www/
+html/         integramosoe/ 
+mango@vps-eb441baa:~/M_A_N_G_O/lovable_ui/MANGO_PAGE_LOVABLE_V1.6$ ls /var/www/html/index.nginx-debian.html
+/var/www/html/index.nginx-debian.html
+mango@vps-eb441baa:~/M_A_N_G_O/lovable_ui/MANGO_PAGE_LOVABLE_V1.6$ 
+mango@vps-eb441baa:~/M_A_N_G_O/lovable_ui/MANGO_PAGE_LOVABLE_V1.6$ sudo nano /var/www/html/index.nginx-debian.html 
+mango@vps-eb441baa:~/M_A_N_G_O/lovable_ui/MANGO_PAGE_LOVABLE_V1.6$ sudo mkdir /var/www/mango-ui
+mango@vps-eb441baa:~/M_A_N_G_O/lovable_ui/MANGO_PAGE_LOVABLE_V1.6$ sudo nano /var/www/
+mango@vps-eb441baa:~/M_A_N_G_O/lovable_ui/MANGO_PAGE_LOVABLE_V1.6$ ls /var/www/
+html  integramosoe  mango-ui
+mango@vps-eb441baa:~/M_A_N_G_O/lovable_ui/MANGO_PAGE_LOVABLE_V1.6$ git superpull
+remote: Enumerating objects: 22308, done.
+remote: Counting objects: 100% (6/6), done.
+remote: Total 22308 (delta 5), reused 5 (delta 5), pack-reused 22302 (from 2)
+Receiving objects: 100% (22308/22308), 216.48 MiB | 45.41 MiB/s, done.
+Resolving deltas: 100% (7900/7900), completed with 5 local objects.
+From https://github.com/T4t4n32/M_A_N_G_O
+ * branch              main       -> FETCH_HEAD
+   66cc7dac..6e789b5f  main       -> origin/main
+Updating files: 100% (23185/23185), done.
+Filtering content: 100% (33/33), 321.37 MiB | 10.20 MiB/s, done.
+HEAD is now at 6e789b5f T4: Created Folder Dist Lovable UI
+mango@vps-eb441baa:~/M_A_N_G_O/lovable_ui/MANGO_PAGE_LOVABLE_V1.6$ ls
+README.md  components.json   package-lock.json  public              tsconfig.app.json   vite.config.ts
+bun.lock   eslint.config.js  package.json       src                 tsconfig.json       vitest.config.ts
+bun.lockb  index.html        postcss.config.js  tailwind.config.ts  tsconfig.node.json
+mango@vps-eb441baa:~/M_A_N_G_O/lovable_ui/MANGO_PAGE_LOVABLE_V1.6$ cd ..
+mango@vps-eb441baa:~/M_A_N_G_O/lovable_ui$ ls
+MANGO_PAGE_LOVABLE_V0.1  MANGO_PAGE_LOVABLE_V1.2  MANGO_PAGE_LOVABLE_V1.4  MANGO_PAGE_LOVABLE_V1.6  MANGO_V1.0.0_LOVABLE
+MANGO_PAGE_LOVABLE_V1.1  MANGO_PAGE_LOVABLE_V1.3  MANGO_PAGE_LOVABLE_V1.5  MANGO_PAGE_LOVABLE_V1.7  README.md
+mango@vps-eb441baa:~/M_A_N_G_O/lovable_ui$ cd MANGO_
+MANGO_PAGE_LOVABLE_V0.1/ MANGO_PAGE_LOVABLE_V1.2/ MANGO_PAGE_LOVABLE_V1.4/ MANGO_PAGE_LOVABLE_V1.6/ MANGO_V1.0.0_LOVABLE/
+MANGO_PAGE_LOVABLE_V1.1/ MANGO_PAGE_LOVABLE_V1.3/ MANGO_PAGE_LOVABLE_V1.5/ MANGO_PAGE_LOVABLE_V1.7/ 
+mango@vps-eb441baa:~/M_A_N_G_O/lovable_ui$ cd MANGO_PAGE_LOVABLE_V1.
+MANGO_PAGE_LOVABLE_V1.1/ MANGO_PAGE_LOVABLE_V1.3/ MANGO_PAGE_LOVABLE_V1.5/ MANGO_PAGE_LOVABLE_V1.7/ 
+MANGO_PAGE_LOVABLE_V1.2/ MANGO_PAGE_LOVABLE_V1.4/ MANGO_PAGE_LOVABLE_V1.6/ 
+mango@vps-eb441baa:~/M_A_N_G_O/lovable_ui$ cd MANGO_PAGE_LOVABLE_V1.7/
+mango@vps-eb441baa:~/M_A_N_G_O/lovable_ui/MANGO_PAGE_LOVABLE_V1.7$ ls
+README.md  components.json   package-lock.json  public              tsconfig.app.json   vite.config.ts
+bun.lock   eslint.config.js  package.json       src                 tsconfig.json       vitest.config.ts
+bun.lockb  index.html        postcss.config.js  tailwind.config.ts  tsconfig.node.json
+mango@vps-eb441baa:~/M_A_N_G_O/lovable_ui/MANGO_PAGE_LOVABLE_V1.7$ cd ..
+mango@vps-eb441baa:~/M_A_N_G_O/lovable_ui$ cd ..
+mango@vps-eb441baa:~/M_A_N_G_O$ cd ..
+mango@vps-eb441baa:~$ cd..
+-bash: cd..: command not found
+mango@vps-eb441baa:~$ ls
+M_A_N_G_O  backup
+mango@vps-eb441baa:~$ cd M_A_N_G_O/
+mango@vps-eb441baa:~/M_A_N_G_O$ ls
+ARCHITECTURE.md     ENV_ADDITIONS.txt  README_PATCH.txt  backend          deploy    frontend  lovable_ui
+CHANGELOG.md        LICENSE.md         ROADMAP.md        bridge           docs      gateway   mango
+CODE_OF_CONDUCT.md  README.md          STATUS.md         compose.rx.yaml  edge      hardware  nginx
+CONTRIBUTING.md     README_APPLY.md    VERSION           compose.yaml     firmware  link      scripts
+mango@vps-eb441baa:~/M_A_N_G_O$ git suerpull
+git: 'suerpull' is not a git command. See 'git --help'.
+
+The most similar command is
+	superpull
+mango@vps-eb441baa:~/M_A_N_G_O$ git superpull
+From https://github.com/T4t4n32/M_A_N_G_O
+ * branch              main       -> FETCH_HEAD
+HEAD is now at 6e789b5f T4: Created Folder Dist Lovable UI
+mango@vps-eb441baa:~/M_A_N_G_O$ cd lovable_ui/
+mango@vps-eb441baa:~/M_A_N_G_O/lovable_ui$ ls
+MANGO_PAGE_LOVABLE_V0.1  MANGO_PAGE_LOVABLE_V1.2  MANGO_PAGE_LOVABLE_V1.4  MANGO_PAGE_LOVABLE_V1.6  MANGO_V1.0.0_LOVABLE
+MANGO_PAGE_LOVABLE_V1.1  MANGO_PAGE_LOVABLE_V1.3  MANGO_PAGE_LOVABLE_V1.5  MANGO_PAGE_LOVABLE_V1.7  README.md
+mango@vps-eb441baa:~/M_A_N_G_O/lovable_ui$ cd MANGO_PAGE_LOVABLE_V1.0
+-bash: cd: MANGO_PAGE_LOVABLE_V1.0: No such file or directory
+mango@vps-eb441baa:~/M_A_N_G_O/lovable_ui$ cd MANGO_PAGE_LOVABLE_V1.1/
+mango@vps-eb441baa:~/M_A_N_G_O/lovable_ui/MANGO_PAGE_LOVABLE_V1.1$ ls
+README.md        dist              node_modules       postcss.config.js  tailwind.config.ts  tsconfig.node.json
+bun.lockb        eslint.config.js  package-lock.json  public             tsconfig.app.json   vite.config.ts
+components.json  index.html        package.json       src                tsconfig.json       vitest.config.ts
+mango@vps-eb441baa:~/M_A_N_G_O/lovable_ui/MANGO_PAGE_LOVABLE_V1.1$ cd ..
+mango@vps-eb441baa:~/M_A_N_G_O/lovable_ui$ cd MANGO_PAGE_LOVABLE_V1.7/
+mango@vps-eb441baa:~/M_A_N_G_O/lovable_ui/MANGO_PAGE_LOVABLE_V1.7$ ls
+README.md  components.json   package-lock.json  public              tsconfig.app.json   vite.config.ts
+bun.lock   eslint.config.js  package.json       src                 tsconfig.json       vitest.config.ts
+bun.lockb  index.html        postcss.config.js  tailwind.config.ts  tsconfig.node.json
+mango@vps-eb441baa:~/M_A_N_G_O/lovable_ui/MANGO_PAGE_LOVABLE_V1.7$ ls
+README.md  components.json   package-lock.json  public              tsconfig.app.json   vite.config.ts
+bun.lock   eslint.config.js  package.json       src                 tsconfig.json       vitest.config.ts
+bun.lockb  index.html        postcss.config.js  tailwind.config.ts  tsconfig.node.json
+mango@vps-eb441baa:~/M_A_N_G_O/lovable_ui/MANGO_PAGE_LOVABLE_V1.7$ cd d
+-bash: cd: d: No such file or directory
+mango@vps-eb441baa:~/M_A_N_G_O/lovable_ui/MANGO_PAGE_LOVABLE_V1.7$ cd ..
+mango@vps-eb441baa:~/M_A_N_G_O/lovable_ui$ cd MANGO_PAGE_LOVABLE_V1.6/
+mango@vps-eb441baa:~/M_A_N_G_O/lovable_ui/MANGO_PAGE_LOVABLE_V1.6$ ls
+README.md  components.json   package-lock.json  public              tsconfig.app.json   vite.config.ts
+bun.lock   eslint.config.js  package.json       src                 tsconfig.json       vitest.config.ts
+bun.lockb  index.html        postcss.config.js  tailwind.config.ts  tsconfig.node.json
+mango@vps-eb441baa:~/M_A_N_G_O/lovable_ui/MANGO_PAGE_LOVABLE_V1.6$ cd ..
+mango@vps-eb441baa:~/M_A_N_G_O/lovable_ui$ cd ..
+mango@vps-eb441baa:~/M_A_N_G_O$ cd frontend/
+mango@vps-eb441baa:~/M_A_N_G_O/frontend$ ls
+README.md  images  index.html  script.js  styles.css
+mango@vps-eb441baa:~/M_A_N_G_O/frontend$ sudo mv index.html script.js styles.css /var/www/integramosoe/
+[sudo] password for mango: 
+mango@vps-eb441baa:~/M_A_N_G_O/frontend$ ls /var/www/integramosoe/
+index.html  script.js  styles.css
+mango@vps-eb441baa:~/M_A_N_G_O/frontend$ sudo nano /var/www/integramosoe/index.html 
+mango@vps-eb441baa:~/M_A_N_G_O/frontend$ sudo nano /var/www/integramosoe/script.js 
+mango@vps-eb441baa:~/M_A_N_G_O/frontend$ cd ..
+mango@vps-eb441baa:~/M_A_N_G_O$ ls lovable_ui/MANGO_PAGE_LOVABLE_V1.4/
+README.md  components.json   index.html         package.json       public  tailwind.config.ts  tsconfig.json       vite.config.ts
+bun.lockb  eslint.config.js  package-lock.json  postcss.config.js  src     tsconfig.app.json   tsconfig.node.json  vitest.config.ts
+mango@vps-eb441baa:~/M_A_N_G_O$ ls lovable_ui/MANGO_PAGE_LOVABLE_V1.3/
+README.md  components.json   index.html         package.json       public  tailwind.config.ts  tsconfig.json       vite.config.ts
+bun.lockb  eslint.config.js  package-lock.json  postcss.config.js  src     tsconfig.app.json   tsconfig.node.json  vitest.config.ts
+mango@vps-eb441baa:~/M_A_N_G_O$ ls lovable_ui/MANGO_PAGE_LOVABLE_V1.1/
+README.md        dist              node_modules       postcss.config.js  tailwind.config.ts  tsconfig.node.json
+bun.lockb        eslint.config.js  package-lock.json  public             tsconfig.app.json   vite.config.ts
+components.json  index.html        package.json       src                tsconfig.json       vitest.config.ts
+mango@vps-eb441baa:~/M_A_N_G_O$ sudo nano /var/www/integramosoe/script.js 
+mango@vps-eb441baa:~/M_A_N_G_O$ sudo nano /var/www/integramosoe/script.js 
+mango@vps-eb441baa:~/M_A_N_G_O$ git superpull
+remote: Enumerating objects: 4, done.
+remote: Counting objects: 100% (4/4), done.
+remote: Total 4 (delta 3), reused 4 (delta 3), pack-reused 0 (from 0)
+Unpacking objects: 100% (4/4), 472 bytes | 472.00 KiB/s, done.
+From https://github.com/T4t4n32/M_A_N_G_O
+ * branch              main       -> FETCH_HEAD
+   6e789b5f..680d1898  main       -> origin/main
+HEAD is now at 680d1898 T4: script Frontend link
+mango@vps-eb441baa:~/M_A_N_G_O$ sudo mv frontend/script.js /var/www/integramosoe/
+mango@vps-eb441baa:~/M_A_N_G_O$ sudo nano /var/www/integramosoe/script.js
+mango@vps-eb441baa:~/M_A_N_G_O$ sudo nginx -t && sudo systemctl reload nginx
+nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
+nginx: configuration file /etc/nginx/nginx.conf test is successful
+mango@vps-eb441baa:~/M_A_N_G_O$ git superpull
+remote: Enumerating objects: 9, done.
+remote: Counting objects: 100% (9/9), done.
+remote: Compressing objects: 100% (2/2), done.
+remote: Total 5 (delta 3), reused 5 (delta 3), pack-reused 0 (from 0)
+Unpacking objects: 100% (5/5), 686 bytes | 686.00 KiB/s, done.
+From https://github.com/T4t4n32/M_A_N_G_O
+ * branch              main       -> FETCH_HEAD
+   680d1898..a3c466aa  main       -> origin/main
+HEAD is now at a3c466aa T4: VPS Deploy
+mango@vps-eb441baa:~/M_A_N_G_O$ cd deploy/
+mango@vps-eb441baa:~/M_A_N_G_O/deploy$ 
+mango@vps-eb441baa:~/M_A_N_G_O/deploy$ ls
+edge-jetson  gateway-laptop  vps
+mango@vps-eb441baa:~/M_A_N_G_O/deploy$ cd vps/
+mango@vps-eb441baa:~/M_A_N_G_O/deploy/vps$ ls
+README.VPS.md  compose.vps.yml  nginx
+mango@vps-eb441baa:~/M_A_N_G_O/deploy/vps$ docker compose --env-file .env.vps -f docker-compose.yml up -d --build
+open /home/mango/M_A_N_G_O/deploy/vps/docker-compose.yml: no such file or directory
+mango@vps-eb441baa:~/M_A_N_G_O/deploy/vps$ docker compose --env-file .env.vps -f compose.vps.yml up -d --build
+[+] Building 40.6s (12/13)                                                                                                             
+ => [internal] load local bake definitions                                                                                        0.0s
+ => => reading from stdin 506B                                                                                                    0.0s
+ => [internal] load build definition from Dockerfile                                                                              0.0s
+ => => transferring dockerfile: 429B                                                                                              0.0s
+ => [internal] load metadata for docker.io/library/python:3.12-slim                                                               0.4s
+ => [internal] load .dockerignore                                                                                                 0.0s
+ => => transferring context: 2B                                                                                                   0.0s
+ => [1/8] FROM docker.io/library/python:3.12-slim@sha256:ccc7089399c8bb65dd1fb3ed6d55efa538a3f5e7fca3f5988ac3b5b87e593bf0         0.0s
+ => => resolve docker.io/library/python:3.12-slim@sha256:ccc7089399c8bb65dd1fb3ed6d55efa538a3f5e7fca3f5988ac3b5b87e593bf0         0.0s
+ => [internal] load build context                                                                                                39.9s
+ => => transferring context: 3.52GB                                                                                              39.8s
+ => CACHED [5/8] RUN pip install --no-cache-dir -r /app/requirements.txt                                                          0.0s
+ => CACHED [6/8] COPY . /app                                                                                                      0.0s
+ => ERROR [7/8] COPY entrypoint.sh /entrypoint.sh                                                                                 0.0s
+ => CACHED [2/8] WORKDIR /app                                                                                                     0.0s
+ => CACHED [3/8] RUN apt-get update   && apt-get install -y --no-install-recommends curl   && rm -rf /var/lib/apt/lists/*         0.0s
+ => ERROR [4/8] COPY requirements.txt /app/requirements.txt                                                                       0.0s
+------
+ > [7/8] COPY entrypoint.sh /entrypoint.sh:
+------
+------
+ > [4/8] COPY requirements.txt /app/requirements.txt:
+------
+[+] up 0/1
+ ⠙ Image mango-backend:local Building                                                                                             40.7s
+Dockerfile:14
+
+--------------------
+
+  12 |     COPY . /app
+
+  13 |     
+
+  14 | >>> COPY entrypoint.sh /entrypoint.sh
+
+  15 |     RUN chmod +x /entrypoint.sh
+
+  16 |     
+
+--------------------
+
+failed to solve: failed to compute cache key: failed to calculate checksum of ref 36c2a062-87e0-455c-ae06-feb9ca57e934::eacibt4d4r9vu2xmhdl6sz6o0: "/entrypoint.sh": not found
+
+mango@vps-eb441baa:~/M_A_N_G_O/deploy/vps$ cd ..
+mango@vps-eb441baa:~/M_A_N_G_O/deploy$ cd ..
+mango@vps-eb441baa:~/M_A_N_G_O$ cd backend/
+mango@vps-eb441baa:~/M_A_N_G_O/backend$ ls
+Dockerfile  README.txt   app            data        entrypoint.sh  migrations        scripts
+README.md   __init__.py  celery_app.py  db_init.py  main.py        requirements.txt  wsgi.py
+mango@vps-eb441baa:~/M_A_N_G_O/backend$ chmod +x entrypoint.sh 
+mango@vps-eb441baa:~/M_A_N_G_O/backend$ cd ..
+mango@vps-eb441baa:~/M_A_N_G_O$ cd deploy/vps/
+mango@vps-eb441baa:~/M_A_N_G_O/deploy/vps$ docker compose --env-file .env.vps -f compose.vps.yml up -d --build
+[+] Building 1.9s (12/13)                                                                                                              
+ => [internal] load local bake definitions                                                                                        0.0s
+ => => reading from stdin 506B                                                                                                    0.0s
+ => [internal] load build definition from Dockerfile                                                                              0.0s
+ => => transferring dockerfile: 429B                                                                                              0.0s
+ => [internal] load metadata for docker.io/library/python:3.12-slim                                                               0.1s
+ => [internal] load .dockerignore                                                                                                 0.0s
+ => => transferring context: 2B                                                                                                   0.0s
+ => [1/8] FROM docker.io/library/python:3.12-slim@sha256:ccc7089399c8bb65dd1fb3ed6d55efa538a3f5e7fca3f5988ac3b5b87e593bf0         0.0s
+ => => resolve docker.io/library/python:3.12-slim@sha256:ccc7089399c8bb65dd1fb3ed6d55efa538a3f5e7fca3f5988ac3b5b87e593bf0         0.0s
+ => [internal] load build context                                                                                                 1.6s
+ => => transferring context: 3.00MB                                                                                               1.5s
+ => CACHED [2/8] WORKDIR /app                                                                                                     0.0s
+ => CACHED [3/8] RUN apt-get update   && apt-get install -y --no-install-recommends curl   && rm -rf /var/lib/apt/lists/*         0.0s
+ => ERROR [4/8] COPY requirements.txt /app/requirements.txt                                                                       0.0s
+ => CACHED [5/8] RUN pip install --no-cache-dir -r /app/requirements.txt                                                          0.0s
+ => CACHED [6/8] COPY . /app                                                                                                      0.0s
+ => ERROR [7/8] COPY entrypoint.sh /entrypoint.sh                                                                                 0.0s
+------
+ > [4/8] COPY requirements.txt /app/requirements.txt:
+------
+------
+ > [7/8] COPY entrypoint.sh /entrypoint.sh:
+------
+[+] up 0/1
+ ⠙ Image mango-backend:local Building                                                                                              2.0s
+Dockerfile:14
+
+--------------------
+
+  12 |     COPY . /app
+
+  13 |     
+
+  14 | >>> COPY entrypoint.sh /entrypoint.sh
+
+  15 |     RUN chmod +x /entrypoint.sh
+
+  16 |     
+
+--------------------
+
+failed to solve: failed to compute cache key: failed to calculate checksum of ref 36c2a062-87e0-455c-ae06-feb9ca57e934::24h797lh0g55uza81dreojroi: "/entrypoint.sh": not found
+
+mango@vps-eb441baa:~/M_A_N_G_O/deploy/vps$ sudo apt install -y certbot python3-certbot-nginx
+Reading package lists... Done
+Building dependency tree... Done
+Reading state information... Done
+certbot is already the newest version (2.1.0-4).
+python3-certbot-nginx is already the newest version (2.1.0-2).
+0 upgraded, 0 newly installed, 0 to remove and 0 not upgraded.
+mango@vps-eb441baa:~/M_A_N_G_O/deploy/vps$ ls /etc/nginx/
+conf.d/            koi-utf            modules-available/ proxy_params       sites-enabled/     win-utf            
+fastcgi.conf       koi-win            modules-enabled/   scgi_params        snippets/          
+fastcgi_params     mime.types         nginx.conf         sites-available/   uwsgi_params       
+mango@vps-eb441baa:~/M_A_N_G_O/deploy/vps$ ls /etc/nginx/sites-available/
+default  integramosoe  mango
+mango@vps-eb441baa:~/M_A_N_G_O/deploy/vps$ ls /etc/nginx/sites-available/mango 
+.env.vps         README.VPS.md    compose.vps.yml  nginx/           
+mango@vps-eb441baa:~/M_A_N_G_O/deploy/vps$ ls /etc/nginx/sites-available/mango 
+.env.vps         README.VPS.md    compose.vps.yml  nginx/           
+mango@vps-eb441baa:~/M_A_N_G_O/deploy/vps$ ls /etc/nginx/sites-available/mango 
+.env.vps         README.VPS.md    compose.vps.yml  nginx/           
+mango@vps-eb441baa:~/M_A_N_G_O/deploy/vps$ ls /etc/nginx/sites-available/mango nginx/default.conf 
+/etc/nginx/sites-available/mango  nginx/default.conf
+mango@vps-eb441baa:~/M_A_N_G_O/deploy/vps$ sudo nano /etc/nginx/sites-available/mango nginx/default.conf
+mango@vps-eb441baa:~/M_A_N_G_O/deploy/vps$ sudo nano /etc/nginx/sites-available/mango nginx/default.conf
+mango@vps-eb441baa:~/M_A_N_G_O/deploy/vps$ 
+
+
+
+
+
+
+
+
+
