@@ -27,11 +27,27 @@ services:
       retries: 30
     restart: unless-stopped
 
+  # One-shot init: crea tablas y sale
+  db_init:
+    build:
+      context: ../../backend
+      dockerfile: Dockerfile
+    image: mango-backend:local
+    container_name: mango_db_init
+    environment:
+      DATABASE_URL: "postgresql+psycopg2://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME}"
+      DB_WAIT_S: "${DB_WAIT_S:-90}"
+    depends_on:
+      db:
+        condition: service_healthy
+    # clave: override del entrypoint para que NO arranque gunicorn
+    entrypoint: ["python", "db_init.py"]
+    restart: "no"
+
   backend:
     build:
-      # Repo root is two levels up from deploy/vps
-      context: ../../
-      dockerfile: backend/Dockerfile
+      context: ../../backend
+      dockerfile: Dockerfile
     image: mango-backend:local
     container_name: mango_backend
     environment:
@@ -41,22 +57,16 @@ services:
       REDIS_URL: "redis://redis:6379/0"
       SECRET_KEY: "${SECRET_KEY}"
 
-      # Optional auth (Lovable)
+      # opcional auth (Lovable)
       ADMIN_EMAIL: "${ADMIN_EMAIL:-}"
       ADMIN_PASSWORD_HASH: "${ADMIN_PASSWORD_HASH:-}"
       AUTH_DISABLED: "${AUTH_DISABLED:-0}"
-
-      # Gunicorn tuning
-      GUNICORN_WORKERS: "${GUNICORN_WORKERS:-2}"
-      GUNICORN_THREADS: "${GUNICORN_THREADS:-4}"
-      GUNICORN_TIMEOUT: "${GUNICORN_TIMEOUT:-60}"
-      GUNICORN_PRELOAD: "${GUNICORN_PRELOAD:-true}"
     depends_on:
-      db:
-        condition: service_healthy
+      db_init:
+        condition: service_completed_successfully
       redis:
         condition: service_healthy
-    # Expose ONLY to localhost; host Nginx proxies to this.
+    # Backend solo interno (localhost):
     ports:
       - "127.0.0.1:${API_HOST_PORT:-8000}:5000"
     healthcheck:
