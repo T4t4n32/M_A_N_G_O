@@ -1,0 +1,55 @@
+mango@vps-eb441baa:~/M_A_N_G_O$ sudo chown -R www-data:www-data /var/www/mango-ui
+mango@vps-eb441baa:~/M_A_N_G_O$ sudo find /var/www/mango-ui -type d -exec chmod 755 {} \;
+sudo find /var/www/mango-ui -type f -exec chmod 644 {} \;
+mango@vps-eb441baa:~/M_A_N_G_O$ sudo find /var/www/mango-ui -type d -exec chmod 755 {} \;
+sudo find /var/www/mango-ui -type f -exec chmod 644 {} \;
+mango@vps-eb441baa:~/M_A_N_G_O$ sudo -u www-data stat /var/www/mango-ui/index.html
+  File: /var/www/mango-ui/index.html
+  Size: 1531      	Blocks: 8          IO Block: 4096   regular file
+Device: 8,1	Inode: 816702      Links: 1
+Access: (0644/-rw-r--r--)  Uid: (   33/www-data)   Gid: (   33/www-data)
+Access: 2026-03-14 19:57:04.997841940 +0000
+Modify: 2026-03-14 19:56:14.589901370 +0000
+Change: 2026-03-14 20:13:32.274151737 +0000
+ Birth: 2026-03-14 19:57:04.997841940 +0000
+mango@vps-eb441baa:~/M_A_N_G_O$ sudo rm -f /etc/
+Display all 173 possibilities? (y or n)
+mango@vps-eb441baa:~/M_A_N_G_O$ sudo rm -f /etc/nginx/sites-available/mango 
+mango@vps-eb441baa:~/M_A_N_G_O$ sudo nginx -t
+2026/03/14 20:14:37 [emerg] 1706781#1706781: open() "/etc/nginx/sites-enabled/mango" failed (2: No such file or directory) in /etc/nginx/nginx.conf:60
+nginx: configuration file /etc/nginx/nginx.conf test failed
+mango@vps-eb441baa:~/M_A_N_G_O$ sudo nano /etc/nginx/nginx.conf 
+mango@vps-eb441baa:~/M_A_N_G_O$ sudo systemctl reload nginx
+Job for nginx.service failed.
+See "systemctl status nginx.service" and "journalctl -xeu nginx.service" for details.
+mango@vps-eb441baa:~/M_A_N_G_O$ sudo nano /etc/nginx/sites-available/integramosoe 
+mango@vps-eb441baa:~/M_A_N_G_O$ curl -I https://integramosoe.com/ | head -n 5
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0  1531    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0
+HTTP/2 200 
+server: nginx/1.22.1
+date: Sat, 14 Mar 2026 20:18:41 GMT
+content-type: text/html
+content-length: 1531
+mango@vps-eb441baa:~/M_A_N_G_O$ curl -I https://www.integramosoe.com/ | head -n 5
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0  1531    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0
+HTTP/2 200 
+server: nginx/1.22.1
+date: Sat, 14 Mar 2026 20:18:51 GMT
+content-type: text/html
+content-length: 1531
+mango@vps-eb441baa:~/M_A_N_G_O$ curl -fsS https://www.integramosoe.com/api/v1/health ; echo
+{"db":"ok","status":"ok","time":"2026-03-14T20:19:19.971389+00:00","timestamp":"2026-03-14T20:19:19.971411+00:00"}
+
+mango@vps-eb441baa:~/M_A_N_G_O$ sudo nginx -T | sed -n '160,280p'
+2026/03/14 20:20:03 [emerg] 1710397#1710397: open() "/etc/nginx/sites-enabled/mango" failed (2: No such file or directory) in /etc/nginx/nginx.conf:60
+nginx: configuration file /etc/nginx/nginx.conf test failed
+mango@vps-eb441baa:~/M_A_N_G_O$ 
+
+
+Algo curioso es que cuando ingreso, ya sea con "integramosoe.com" o "www.integramosoe.com" me arroja la pagina correcta, apesar los errores.
+Apesar de eso, quiero dejar todo limpio y corregido, dejarlo completo y saludable para que no me de errores. Ademas, quiero que me digas que ruta o que camino tomo para cuando quiera subir al dominio, los cambios que le haga a la pagina, se sencillo, pero rapido y profesional
+Ademas, de que ya quiero que empiece a funcionar el backend completo para poder entrar y ver el dashboard.
