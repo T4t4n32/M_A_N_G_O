@@ -1,0 +1,348 @@
+
+(kicad_symbol_lib (version 20211014) (generator kicad_symbol_editor)
+  (symbol "WIFI_KIT_32__V3_" (pin_names (offset 1.016)) (in_bom yes) (on_board yes)
+    (property "Reference" "U" (id 0) (at -25.4 23.368 0)
+      (effects (font (size 1.27 1.27)) (justify bottom left))
+    )
+    (property "Value" "WIFI_KIT_32__V3_" (id 1) (at -25.4 -25.4 0)
+      (effects (font (size 1.27 1.27)) (justify bottom left))
+    )
+    (property "Footprint" "WIFI_KIT_32__V3_:MODULE_WIFI_KIT_32__V3_" (id 2) (at 0 0 0)
+      (effects (font (size 1.27 1.27)) (justify bottom) hide)
+    )
+    (property "MF" "Heltec Automation" (id 4) (at 0 0 0)
+      (effects (font (size 1.27 1.27)) (justify bottom) hide)
+    )
+    (property "MAXIMUM_PACKAGE_HEIGHT" "10.2mm" (id 5) (at 0 0 0)
+      (effects (font (size 1.27 1.27)) (justify bottom) hide)
+    )
+    (property "Package" "Package" (id 6) (at 0 0 0)
+      (effects (font (size 1.27 1.27)) (justify bottom) hide)
+    )
+    (property "Price" "None" (id 7) (at 0 0 0)
+      (effects (font (size 1.27 1.27)) (justify bottom) hide)
+    )
+    (property "Check_prices" "https://www.snapeda.com/parts/WIFI%20KIT%2032%20(V3)/Heltec+Automation/view-part/?ref=eda" (id 8) (at 0 0 0)
+      (effects (font (size 1.27 1.27)) (justify bottom) hide)
+    )
+    (property "STANDARD" "Manufacturer Recommendations" (id 9) (at 0 0 0)
+      (effects (font (size 1.27 1.27)) (justify bottom) hide)
+    )
+    (property "PARTREV" "Rev 1.1" (id 10) (at 0 0 0)
+      (effects (font (size 1.27 1.27)) (justify bottom) hide)
+    )
+    (property "SnapEDA_Link" "https://www.snapeda.com/parts/WIFI%20KIT%2032%20(V3)/Heltec+Automation/view-part/?ref=snap" (id 11) (at 0 0 0)
+      (effects (font (size 1.27 1.27)) (justify bottom) hide)
+    )
+    (property "MP" "WIFI KIT 32 (V3)" (id 12) (at 0 0 0)
+      (effects (font (size 1.27 1.27)) (justify bottom) hide)
+    )
+    (property "Description" "\n                        \n                            *GPIO input only\n*ADC preamplifier\n*GPIOs are 3.3V tolerant only\n                        \n" (id 13) (at 0 0 0)
+      (effects (font (size 1.27 1.27)) (justify bottom) hide)
+    )
+    (property "Availability" "Not in stock" (id 14) (at 0 0 0)
+      (effects (font (size 1.27 1.27)) (justify bottom) hide)
+    )
+    (property "MANUFACTURER" "Heltec Automation" (id 15) (at 0 0 0)
+      (effects (font (size 1.27 1.27)) (justify bottom) hide)
+    )
+    (symbol "WIFI_KIT_32__V3__1_0"
+      (rectangle (start -25.4 -22.86) (end 25.4 22.86)
+        (stroke (width 0.254)) (fill (type background))
+      )
+      (pin power_in line (at -30.48 20.32 0) (length 5.08)
+        (name "GND_J2"
+          (effects (font (size 1.016 1.016)))
+        )
+        (number "J2_1"
+          (effects (font (size 1.016 1.016)))
+        )
+      )
+      (pin power_in line (at -30.48 17.78 0) (length 5.08)
+        (name "5V"
+          (effects (font (size 1.016 1.016)))
+        )
+        (number "J2_2"
+          (effects (font (size 1.016 1.016)))
+        )
+      )
+      (pin power_in line (at -30.48 15.24 0) (length 5.08)
+        (name "VE"
+          (effects (font (size 1.016 1.016)))
+        )
+        (number "J2_3"
+          (effects (font (size 1.016 1.016)))
+        )
+      )
+      (pin power_in line (at -30.48 15.24 0) (length 5.08) hide
+        (name "VE"
+          (effects (font (size 1.016 1.016)))
+        )
+        (number "J2_4"
+          (effects (font (size 1.016 1.016)))
+        )
+      )
+      (pin bidirectional line (at -30.48 12.7 0) (length 5.08)
+        (name "U0RXD/GPIO44/CP2102_TX"
+          (effects (font (size 1.016 1.016)))
+        )
+        (number "J2_5"
+          (effects (font (size 1.016 1.016)))
+        )
+      )
+      (pin bidirectional line (at -30.48 10.16 0) (length 5.08)
+        (name "U0TXD/GPIO43/CP2102_RX"
+          (effects (font (size 1.016 1.016)))
+        )
+        (number "J2_6"
+          (effects (font (size 1.016 1.016)))
+        )
+      )
+      (pin input line (at -30.48 7.62 0) (length 5.08)
+        (name "RST/RST_SW"
+          (effects (font (size 1.016 1.016)))
+        )
+        (number "J2_7"
+          (effects (font (size 1.016 1.016)))
+        )
+      )
+      (pin bidirectional line (at -30.48 5.08 0) (length 5.08)
+        (name "GPIO0/USER_SW"
+          (effects (font (size 1.016 1.016)))
+        )
+        (number "J2_8"
+          (effects (font (size 1.016 1.016)))
+        )
+      )
+      (pin bidirectional line (at -30.48 2.54 0) (length 5.08)
+        (name "GPIO21/OLED_RST"
+          (effects (font (size 1.016 1.016)))
+        )
+        (number "J2_9"
+          (effects (font (size 1.016 1.016)))
+        )
+      )
+      (pin bidirectional line (at -30.48 0.0 0) (length 5.08)
+        (name "GPIO20/U1CTS/ADC2_CH9/CLK_OUT1/USB_D+"
+          (effects (font (size 1.016 1.016)))
+        )
+        (number "J2_10"
+          (effects (font (size 1.016 1.016)))
+        )
+      )
+      (pin bidirectional line (at -30.48 -2.54 0) (length 5.08)
+        (name "GPIO19/U1RST/ADC2_CH9/CLK_OUT2/USB_D-"
+          (effects (font (size 1.016 1.016)))
+        )
+        (number "J2_11"
+          (effects (font (size 1.016 1.016)))
+        )
+      )
+      (pin bidirectional line (at -30.48 -5.08 0) (length 5.08)
+        (name "GPIO7/ADC1_CH6/TOUCH7"
+          (effects (font (size 1.016 1.016)))
+        )
+        (number "J2_12"
+          (effects (font (size 1.016 1.016)))
+        )
+      )
+      (pin bidirectional line (at -30.48 -7.62 0) (length 5.08)
+        (name "GPIO6/ADC1_CH5/TOUCH6"
+          (effects (font (size 1.016 1.016)))
+        )
+        (number "J2_13"
+          (effects (font (size 1.016 1.016)))
+        )
+      )
+      (pin bidirectional line (at -30.48 -10.16 0) (length 5.08)
+        (name "GPIO5/ADC1_CH4/TOUCH5"
+          (effects (font (size 1.016 1.016)))
+        )
+        (number "J2_14"
+          (effects (font (size 1.016 1.016)))
+        )
+      )
+      (pin bidirectional line (at -30.48 -12.7 0) (length 5.08)
+        (name "GPIO4/ADC1_CH3/TOUCH4"
+          (effects (font (size 1.016 1.016)))
+        )
+        (number "J2_15"
+          (effects (font (size 1.016 1.016)))
+        )
+      )
+      (pin bidirectional line (at -30.48 -15.24 0) (length 5.08)
+        (name "GPIO3/ADC1_CH2/TOUCH3"
+          (effects (font (size 1.016 1.016)))
+        )
+        (number "J2_16"
+          (effects (font (size 1.016 1.016)))
+        )
+      )
+      (pin bidirectional line (at -30.48 -17.78 0) (length 5.08)
+        (name "GPIO2/ADC1_CH1/TOUCH2"
+          (effects (font (size 1.016 1.016)))
+        )
+        (number "J2_17"
+          (effects (font (size 1.016 1.016)))
+        )
+      )
+      (pin bidirectional line (at -30.48 -20.32 0) (length 5.08)
+        (name "GPIO1/ADC1_CH0/VBAT_READ/TOUCH1"
+          (effects (font (size 1.016 1.016)))
+        )
+        (number "J2_18"
+          (effects (font (size 1.016 1.016)))
+        )
+      )
+    )
+    (symbol "WIFI_KIT_32__V3__2_0"
+      (rectangle (start -27.94 -22.86) (end 27.94 22.86)
+        (stroke (width 0.254)) (fill (type background))
+      )
+      (pin power_in line (at -33.02 20.32 0) (length 5.08)
+        (name "GND_J3"
+          (effects (font (size 1.016 1.016)))
+        )
+        (number "J3_1"
+          (effects (font (size 1.016 1.016)))
+        )
+      )
+      (pin power_in line (at -33.02 17.78 0) (length 5.08)
+        (name "3V3"
+          (effects (font (size 1.016 1.016)))
+        )
+        (number "J3_2"
+          (effects (font (size 1.016 1.016)))
+        )
+      )
+      (pin power_in line (at -33.02 17.78 0) (length 5.08) hide
+        (name "3V3"
+          (effects (font (size 1.016 1.016)))
+        )
+        (number "J3_3"
+          (effects (font (size 1.016 1.016)))
+        )
+      )
+      (pin bidirectional line (at -33.02 15.24 0) (length 5.08)
+        (name "GPIO26/SPICS1"
+          (effects (font (size 1.016 1.016)))
+        )
+        (number "J3_4"
+          (effects (font (size 1.016 1.016)))
+        )
+      )
+      (pin bidirectional line (at -33.02 12.7 0) (length 5.08)
+        (name "GPIO48"
+          (effects (font (size 1.016 1.016)))
+        )
+        (number "J3_5"
+          (effects (font (size 1.016 1.016)))
+        )
+      )
+      (pin bidirectional line (at -33.02 10.16 0) (length 5.08)
+        (name "GPIO47"
+          (effects (font (size 1.016 1.016)))
+        )
+        (number "J3_6"
+          (effects (font (size 1.016 1.016)))
+        )
+      )
+      (pin bidirectional line (at -33.02 7.62 0) (length 5.08)
+        (name "GPIO33/SPIIO4/FSPIHD/SUBSPIHD"
+          (effects (font (size 1.016 1.016)))
+        )
+        (number "J3_7"
+          (effects (font (size 1.016 1.016)))
+        )
+      )
+      (pin bidirectional line (at -33.02 5.08 0) (length 5.08)
+        (name "GPIO34/SPIIO5/FSPICS0/SUBSPICS0"
+          (effects (font (size 1.016 1.016)))
+        )
+        (number "J3_8"
+          (effects (font (size 1.016 1.016)))
+        )
+      )
+      (pin bidirectional line (at -33.02 2.54 0) (length 5.08)
+        (name "GPIO35/SPIIO6/FSPID/SUBSPID/LED_WRITE"
+          (effects (font (size 1.016 1.016)))
+        )
+        (number "J3_9"
+          (effects (font (size 1.016 1.016)))
+        )
+      )
+      (pin bidirectional line (at -33.02 0.0 0) (length 5.08)
+        (name "GPIO36/SPIIO7/FSPICLK/SUBSPICLK/VEXT_CTRL"
+          (effects (font (size 1.016 1.016)))
+        )
+        (number "J3_10"
+          (effects (font (size 1.016 1.016)))
+        )
+      )
+      (pin bidirectional line (at -33.02 -2.54 0) (length 5.08)
+        (name "GPIO37/SPIDQS/FSPIQ/SUBSPIQ/ADC_CTRL"
+          (effects (font (size 1.016 1.016)))
+        )
+        (number "J3_11"
+          (effects (font (size 1.016 1.016)))
+        )
+      )
+      (pin bidirectional line (at -33.02 -5.08 0) (length 5.08)
+        (name "GPIO38/FSPIWP/SUBSPIWP"
+          (effects (font (size 1.016 1.016)))
+        )
+        (number "J3_12"
+          (effects (font (size 1.016 1.016)))
+        )
+      )
+      (pin bidirectional line (at -33.02 -7.62 0) (length 5.08)
+        (name "GPIO39/MTCK"
+          (effects (font (size 1.016 1.016)))
+        )
+        (number "J3_13"
+          (effects (font (size 1.016 1.016)))
+        )
+      )
+      (pin bidirectional line (at -33.02 -10.16 0) (length 5.08)
+        (name "GPIO40/MTDO"
+          (effects (font (size 1.016 1.016)))
+        )
+        (number "J3_14"
+          (effects (font (size 1.016 1.016)))
+        )
+      )
+      (pin bidirectional line (at -33.02 -12.7 0) (length 5.08)
+        (name "GPIO41/MTDI"
+          (effects (font (size 1.016 1.016)))
+        )
+        (number "J3_15"
+          (effects (font (size 1.016 1.016)))
+        )
+      )
+      (pin bidirectional line (at -33.02 -15.24 0) (length 5.08)
+        (name "GPIO42/MTMS"
+          (effects (font (size 1.016 1.016)))
+        )
+        (number "J3_16"
+          (effects (font (size 1.016 1.016)))
+        )
+      )
+      (pin bidirectional line (at -33.02 -17.78 0) (length 5.08)
+        (name "GPIO45"
+          (effects (font (size 1.016 1.016)))
+        )
+        (number "J3_17"
+          (effects (font (size 1.016 1.016)))
+        )
+      )
+      (pin bidirectional line (at -33.02 -20.32 0) (length 5.08)
+        (name "GPIO46"
+          (effects (font (size 1.016 1.016)))
+        )
+        (number "J3_18"
+          (effects (font (size 1.016 1.016)))
+        )
+      )
+    )
+  )
+)
