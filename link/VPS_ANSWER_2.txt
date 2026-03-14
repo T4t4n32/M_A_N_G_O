@@ -106,3 +106,105 @@ nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
 nginx: configuration file /etc/nginx/nginx.conf test is successful
 mango@vps-eb441baa:~/M_A_N_G_O/deploy/vps$ sudo systemctl reload nginx
 mango@vps-eb441baa:~/M_A_N_G_O/deploy/vps$ 
+
+
+Esto fue el permiso o lo que me arrojo error la primera vez del compose:
+mango@vps-eb441baa:~/M_A_N_G_O/deploy/vps$ docker compose --env-file .env.vps -f compose.vps.yml up -d --build
+[+] Building 40.6s (12/13)                                                                                                             
+ => [internal] load local bake definitions                                                                                        0.0s
+ => => reading from stdin 506B                                                                                                    0.0s
+ => [internal] load build definition from Dockerfile                                                                              0.0s
+ => => transferring dockerfile: 429B                                                                                              0.0s
+ => [internal] load metadata for docker.io/library/python:3.12-slim                                                               0.4s
+ => [internal] load .dockerignore                                                                                                 0.0s
+ => => transferring context: 2B                                                                                                   0.0s
+ => [1/8] FROM docker.io/library/python:3.12-slim@sha256:ccc7089399c8bb65dd1fb3ed6d55efa538a3f5e7fca3f5988ac3b5b87e593bf0         0.0s
+ => => resolve docker.io/library/python:3.12-slim@sha256:ccc7089399c8bb65dd1fb3ed6d55efa538a3f5e7fca3f5988ac3b5b87e593bf0         0.0s
+ => [internal] load build context                                                                                                39.9s
+ => => transferring context: 3.52GB                                                                                              39.8s
+ => CACHED [5/8] RUN pip install --no-cache-dir -r /app/requirements.txt                                                          0.0s
+ => CACHED [6/8] COPY . /app                                                                                                      0.0s
+ => ERROR [7/8] COPY entrypoint.sh /entrypoint.sh                                                                                 0.0s
+ => CACHED [2/8] WORKDIR /app                                                                                                     0.0s
+ => CACHED [3/8] RUN apt-get update   && apt-get install -y --no-install-recommends curl   && rm -rf /var/lib/apt/lists/*         0.0s
+ => ERROR [4/8] COPY requirements.txt /app/requirements.txt                                                                       0.0s
+------
+ > [7/8] COPY entrypoint.sh /entrypoint.sh:
+------
+------
+ > [4/8] COPY requirements.txt /app/requirements.txt:
+------
+[+] up 0/1
+ ⠙ Image mango-backend:local Building                                                                                             40.7s
+Dockerfile:14
+
+--------------------
+
+  12 |     COPY . /app
+
+  13 |     
+
+  14 | >>> COPY entrypoint.sh /entrypoint.sh
+
+  15 |     RUN chmod +x /entrypoint.sh
+
+  16 |     
+
+--------------------
+
+failed to solve: failed to compute cache key: failed to calculate checksum of ref 36c2a062-87e0-455c-ae06-feb9ca57e934::eacibt4d4r9vu2xmhdl6sz6o0: "/entrypoint.sh": not found
+
+mango@vps-eb441baa:~/M_A_N_G_O/deploy/vps$ cd ..
+mango@vps-eb441baa:~/M_A_N_G_O/deploy$ cd ..
+mango@vps-eb441baa:~/M_A_N_G_O$ cd backend/
+mango@vps-eb441baa:~/M_A_N_G_O/backend$ ls
+Dockerfile  README.txt   app            data        entrypoint.sh  migrations        scripts
+README.md   __init__.py  celery_app.py  db_init.py  main.py        requirements.txt  wsgi.py
+mango@vps-eb441baa:~/M_A_N_G_O/backend$ chmod +x entrypoint.sh 
+mango@vps-eb441baa:~/M_A_N_G_O/backend$ cd ..
+mango@vps-eb441baa:~/M_A_N_G_O$ cd deploy/vps/
+mango@vps-eb441baa:~/M_A_N_G_O/deploy/vps$ docker compose --env-file .env.vps -f compose.vps.yml up -d --build
+[+] Building 1.9s (12/13)                                                                                                              
+ => [internal] load local bake definitions                                                                                        0.0s
+ => => reading from stdin 506B                                                                                                    0.0s
+ => [internal] load build definition from Dockerfile                                                                              0.0s
+ => => transferring dockerfile: 429B                                                                                              0.0s
+ => [internal] load metadata for docker.io/library/python:3.12-slim                                                               0.1s
+ => [internal] load .dockerignore                                                                                                 0.0s
+ => => transferring context: 2B                                                                                                   0.0s
+ => [1/8] FROM docker.io/library/python:3.12-slim@sha256:ccc7089399c8bb65dd1fb3ed6d55efa538a3f5e7fca3f5988ac3b5b87e593bf0         0.0s
+ => => resolve docker.io/library/python:3.12-slim@sha256:ccc7089399c8bb65dd1fb3ed6d55efa538a3f5e7fca3f5988ac3b5b87e593bf0         0.0s
+ => [internal] load build context                                                                                                 1.6s
+ => => transferring context: 3.00MB                                                                                               1.5s
+ => CACHED [2/8] WORKDIR /app                                                                                                     0.0s
+ => CACHED [3/8] RUN apt-get update   && apt-get install -y --no-install-recommends curl   && rm -rf /var/lib/apt/lists/*         0.0s
+ => ERROR [4/8] COPY requirements.txt /app/requirements.txt                                                                       0.0s
+ => CACHED [5/8] RUN pip install --no-cache-dir -r /app/requirements.txt                                                          0.0s
+ => CACHED [6/8] COPY . /app                                                                                                      0.0s
+ => ERROR [7/8] COPY entrypoint.sh /entrypoint.sh                                                                                 0.0s
+------
+ > [4/8] COPY requirements.txt /app/requirements.txt:
+------
+------
+ > [7/8] COPY entrypoint.sh /entrypoint.sh:
+------
+[+] up 0/1
+ ⠙ Image mango-backend:local Building                                                                                              2.0s
+Dockerfile:14
+
+--------------------
+
+  12 |     COPY . /app
+
+  13 |     
+
+  14 | >>> COPY entrypoint.sh /entrypoint.sh
+
+  15 |     RUN chmod +x /entrypoint.sh
+
+  16 |     
+
+--------------------
+
+failed to solve: failed to compute cache key: failed to calculate checksum of ref 36c2a062-87e0-455c-ae06-feb9ca57e934::24h797lh0g55uza81dreojroi: "/entrypoint.sh": not found
+
