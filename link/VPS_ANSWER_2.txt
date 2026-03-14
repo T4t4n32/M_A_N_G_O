@@ -1,0 +1,108 @@
+PS C:\Users\T4t4n32\OneDrive\Documentos\M_A_N_G_O\lovable_ui\MANGO_PAGE_LOVABLE_V1.7> scp -r .\dist\* mango@158.69.193.158:/var/www/mango-ui
+ssh: connect to host 158.69.193.158 port 22: Connection timed out
+C:\WINDOWS\System32\OpenSSH\scp.exe: Connection closed
+PS C:\Users\T4t4n32\OneDrive\Documentos\M_A_N_G_O\lovable_ui\MANGO_PAGE_LOVABLE_V1.7> scp -r .\dist\* -p 5972 mango@158.69.193.158:/var/www/mango-ui
+ssh: connect to host 158.69.193.158 port 22: Connection timed out
+C:\WINDOWS\System32\OpenSSH\scp.exe: Connection closed
+PS C:\Users\T4t4n32\OneDrive\Documentos\M_A_N_G_O\lovable_ui\MANGO_PAGE_LOVABLE_V1.7> scp -P .\dist\* mango@158.69.193.158:/var/www/mango-ui
+C:\WINDOWS\System32\OpenSSH\scp.exe: bad port "./dist/assets"
+
+PS C:\Users\T4t4n32\OneDrive\Documentos\M_A_N_G_O\lovable_ui\MANGO_PAGE_LOVABLE_V1.7> scp -P -r .\dist\* mango@158.69.193.158:/var/www/mango-ui
+C:\WINDOWS\System32\OpenSSH\scp.exe: bad port "-r"
+
+PS C:\Users\T4t4n32\OneDrive\Documentos\M_A_N_G_O\lovable_ui\MANGO_PAGE_LOVABLE_V1.7> scp -P 5972 .\dist\* mango@158.69.193.158:/var/www/mango-ui
+mango@158.69.193.158's password:
+C:\WINDOWS\System32\OpenSSH\scp.exe: local "./dist/assets" is not a regular file
+C:\WINDOWS\System32\OpenSSH\scp.exe: failed to upload file ./dist/assets to /var/www/mango-ui
+C:\WINDOWS\System32\OpenSSH\scp.exe: local "./dist/docs" is not a regular file
+C:\WINDOWS\System32\OpenSSH\scp.exe: failed to upload file ./dist/docs to /var/www/mango-ui
+C:\WINDOWS\System32\OpenSSH\scp.exe: dest open "/var/www/mango-ui/favicon.ico": Permission denied
+C:\WINDOWS\System32\OpenSSH\scp.exe: failed to upload file ./dist/favicon.ico to /var/www/mango-ui
+C:\WINDOWS\System32\OpenSSH\scp.exe: local "./dist/images" is not a regular file
+C:\WINDOWS\System32\OpenSSH\scp.exe: failed to upload file ./dist/images to /var/www/mango-ui
+C:\WINDOWS\System32\OpenSSH\scp.exe: dest open "/var/www/mango-ui/index.html": Permission denied
+C:\WINDOWS\System32\OpenSSH\scp.exe: failed to upload file ./dist/index.html to /var/www/mango-ui
+C:\WINDOWS\System32\OpenSSH\scp.exe: dest open "/var/www/mango-ui/placeholder.svg": Permission denied
+C:\WINDOWS\System32\OpenSSH\scp.exe: failed to upload file ./dist/placeholder.svg to /var/www/mango-ui
+C:\WINDOWS\System32\OpenSSH\scp.exe: dest open "/var/www/mango-ui/robots.txt": Permission denied
+C:\WINDOWS\System32\OpenSSH\scp.exe: failed to upload file ./dist/robots.txt to /var/www/mango-ui
+PS C:\Users\T4t4n32\OneDrive\Documentos\M_A_N_G_O\lovable_ui\MANGO_PAGE_LOVABLE_V1.7> scp -r -P 5972 .\dist\* mango@158.69.193.158:/var/www/mango-ui
+mango@158.69.193.158's password:
+C:\WINDOWS\System32\OpenSSH\scp.exe: stat remote: No such file or directory
+C:\WINDOWS\System32\OpenSSH\scp.exe: failed to upload directory ./dist/assets to /var/www/mango-ui
+C:\WINDOWS\System32\OpenSSH\scp.exe: stat remote: No such file or directory
+C:\WINDOWS\System32\OpenSSH\scp.exe: failed to upload directory ./dist/docs to /var/www/mango-ui
+C:\WINDOWS\System32\OpenSSH\scp.exe: dest open "/var/www/mango-ui/favicon.ico": Permission denied
+C:\WINDOWS\System32\OpenSSH\scp.exe: failed to upload file ./dist/favicon.ico to /var/www/mango-ui
+C:\WINDOWS\System32\OpenSSH\scp.exe: stat remote: No such file or directory
+C:\WINDOWS\System32\OpenSSH\scp.exe: failed to upload directory ./dist/images to /var/www/mango-ui
+C:\WINDOWS\System32\OpenSSH\scp.exe: dest open "/var/www/mango-ui/index.html": Permission denied
+C:\WINDOWS\System32\OpenSSH\scp.exe: failed to upload file ./dist/index.html to /var/www/mango-ui
+C:\WINDOWS\System32\OpenSSH\scp.exe: dest open "/var/www/mango-ui/placeholder.svg": Permission denied
+C:\WINDOWS\System32\OpenSSH\scp.exe: failed to upload file ./dist/placeholder.svg to /var/www/mango-ui
+C:\WINDOWS\System32\OpenSSH\scp.exe: dest open "/var/www/mango-ui/robots.txt": Permission denied
+C:\WINDOWS\System32\OpenSSH\scp.exe: failed to upload file ./dist/robots.txt to /var/www/mango-ui
+PS C:\Users\T4t4n32\OneDrive\Documentos\M_A_N_G_O\lovable_ui\MANGO_PAGE_LOVABLE_V1.7>
+
+
+
+Esto me arrojo desde el VPS:
+
+mango@vps-eb441baa:~/M_A_N_G_O/deploy/vps$ docker compose --env-file .env.vps -f compose.vps.yml up -d --build
+[+] Building 0.6s (17/17) FINISHED                                                                                                     
+ => [internal] load local bake definitions                                                                                        0.0s
+ => => reading from stdin 941B                                                                                                    0.0s
+ => [db_init internal] load build definition from Dockerfile                                                                      0.0s
+ => => transferring dockerfile: 429B                                                                                              0.0s
+ => [db_init internal] load metadata for docker.io/library/python:3.12-slim                                                       0.3s
+ => [db_init internal] load .dockerignore                                                                                         0.0s
+ => => transferring context: 2B                                                                                                   0.0s
+ => [db_init 1/8] FROM docker.io/library/python:3.12-slim@sha256:ccc7089399c8bb65dd1fb3ed6d55efa538a3f5e7fca3f5988ac3b5b87e593bf  0.0s
+ => => resolve docker.io/library/python:3.12-slim@sha256:ccc7089399c8bb65dd1fb3ed6d55efa538a3f5e7fca3f5988ac3b5b87e593bf0         0.0s
+ => [db_init internal] load build context                                                                                         0.0s
+ => => transferring context: 3.91kB                                                                                               0.0s
+ => CACHED [backend 2/8] WORKDIR /app                                                                                             0.0s
+ => CACHED [backend 3/8] RUN apt-get update   && apt-get install -y --no-install-recommends curl   && rm -rf /var/lib/apt/lists/  0.0s
+ => CACHED [backend 4/8] COPY requirements.txt /app/requirements.txt                                                              0.0s
+ => CACHED [backend 5/8] RUN pip install --no-cache-dir -r /app/requirements.txt                                                  0.0s
+ => CACHED [backend 6/8] COPY . /app                                                                                              0.0s
+ => CACHED [backend 7/8] COPY entrypoint.sh /entrypoint.sh                                                                        0.0s
+ => CACHED [backend 8/8] RUN chmod +x /entrypoint.sh                                                                              0.0s
+ => [backend] exporting to image                                                                                                  0.0s
+ => => exporting layers                                                                                                           0.0s
+ => => writing image sha256:24bd6a98c2d1576cd767834340bdd2a8ba05b740917133862ddd160124b32c1b                                      0.0s
+ => => naming to docker.io/library/mango-backend:local                                                                            0.0s
+ => [db_init] exporting to image                                                                                                  0.0s
+ => => exporting layers                                                                                                           0.0s
+ => => writing image sha256:7ad73b9adef1e70de13534376585d712b91e84871e644e0443d3dd1dda260d85                                      0.0s
+ => => naming to docker.io/library/mango-backend:local                                                                            0.0s
+ => [backend] resolving provenance for metadata file                                                                              0.0s
+ => [db_init] resolving provenance for metadata file                                                                              0.0s
+[+] up 5/6
+ ✔ Image m... Built                                                                                                                0.7s
+ ✔ Network... Created                                                                                                              0.1s
+ ✔ Volume ... Created                                                                                                              0.0s
+ ✔ Volume ... Created                                                                                                              0.0s
+ ⠋ Contain... Creating                                                                                                             0.0s
+ ✘ Contain... Error response from daemon: Conflict. The container name "/mango_db" is already in use by container "0743629ab0b3aa3c274cb870bce8ac640f0d2cce61d385de91fb34dd7802304f". You have to remove (or rename) that container to be able to reuse that name. 0.0s
+Error response from daemon: Conflict. The container name "/mango_db" is already in use by container "0743629ab0b3aa3c274cb870bce8ac640f0d2cce61d385de91fb34dd7802304f". You have to remove (or rename) that container to be able to reuse that name.
+mango@vps-eb441baa:~/M_A_N_G_O/deploy/vps$ curl -fsS http://127.0.0.1:8000/api/v1/health
+{"db":"ok","status":"ok","time":"2026-03-14T18:57:24.526464+00:00","timestamp":"2026-03-14T18:57:24.526488+00:00"}
+mango@vps-eb441baa:~/M_A_N_G_O/deploy/vps$ sudo nginx -T | grep -n "server_name .*integramosoe"
+nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
+nginx: configuration file /etc/nginx/nginx.conf test is successful
+187:    server_name integramosoe.com www.integramosoe.com;
+237:  server_name integramosoe.com www.integramosoe.com;
+mango@vps-eb441baa:~/M_A_N_G_O/deploy/vps$ sudo nginx -T | grep -n "server_name .*integramosoe"
+nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
+nginx: configuration file /etc/nginx/nginx.conf test is successful
+187:    server_name integramosoe.com www.integramosoe.com;
+237:  server_name integramosoe.com www.integramosoe.com;
+mango@vps-eb441baa:~/M_A_N_G_O/deploy/vps$ sudo nano /etc/nginx/sites-enabled/integramosoe
+mango@vps-eb441baa:~/M_A_N_G_O/deploy/vps$ sudo nano /etc/nginx/sites-enabled/integramosoe
+mango@vps-eb441baa:~/M_A_N_G_O/deploy/vps$ sudo nano /etc/nginx/sites-enabled/integramosoe
+mango@vps-eb441baa:~/M_A_N_G_O/deploy/vps$ sudo nginx -t
+nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
+nginx: configuration file /etc/nginx/nginx.conf test is successful
+mango@vps-eb441baa:~/M_A_N_G_O/deploy/vps$ sudo systemctl reload nginx
+mango@vps-eb441baa:~/M_A_N_G_O/deploy/vps$ 
