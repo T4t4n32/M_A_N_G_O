@@ -6,7 +6,7 @@
     const REDIRECT_DELAY = 3000; // 3 segundos
 
     // URL destino (carpeta lovable)
-    const DESTINATION_URL = '../var/www/mango-ui/index.html';
+    const DESTINATION_URL = '~/var/www/mango-ui/index.html';
 
     // Contador visual
     let countdown = Math.floor(REDIRECT_DELAY / 1000);
