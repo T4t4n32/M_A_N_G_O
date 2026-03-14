@@ -1,0 +1,81 @@
+mango@vps-eb441baa:~$ sudo chown -R www-data:www-data /var/www/mango-ui
+mango@vps-eb441baa:~$ sudo find /var/www/mango-ui -type d -exec chmod 755 {} \;
+mango@vps-eb441baa:~$ sudo find /var/www/mango-ui -type f -exec chmod 644 {} \;
+mango@vps-eb441baa:~$ sudo -u www-data stat /var/www/mango-ui/index.html
+  File: /var/www/mango-ui/index.html
+  Size: 1531      	Blocks: 8          IO Block: 4096   regular file
+Device: 8,1	Inode: 816703      Links: 1
+Access: (0644/-rw-r--r--)  Uid: (   33/www-data)   Gid: (   33/www-data)
+Access: 2026-03-14 19:28:57.856622934 +0000
+Modify: 2026-03-14 19:23:28.324843442 +0000
+Change: 2026-03-14 19:42:32.547173305 +0000
+ Birth: 2026-03-14 19:28:57.856622934 +0000
+mango@vps-eb441baa:~$ sudo nginx -t
+nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
+nginx: configuration file /etc/nginx/nginx.conf test is successful
+mango@vps-eb441baa:~$ sudo systemctl reload nginx
+mango@vps-eb441baa:~$ sudo nginx -T | grep server_name
+nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
+nginx: configuration file /etc/nginx/nginx.conf test is successful
+	# server_names_hash_bucket_size 64;
+	# server_name_in_redirect off;
+    server_name integramosoe.com www.integramosoe.com;
+  server_name integramosoe.com www.integramosoe.com;
+mango@vps-eb441baa:~$ sudo nano /etc/nginx/sites-enabled/integramosoe
+mango@vps-eb441baa:~$ sudo nano /etc/nginx/nginx.conf 
+mango@vps-eb441baa:~$ sudo nano /etc/nginx/sites-enabled/integramosoe
+mango@vps-eb441baa:~$ curl -I https://integramosoe.com/ | head -n 5
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0  1531    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0
+HTTP/1.1 200 OK
+Server: nginx/1.22.1
+Date: Sat, 14 Mar 2026 19:48:37 GMT
+Content-Type: text/html
+Content-Length: 1531
+mango@vps-eb441baa:~$ curl -fsS https://integramosoe.com/api/v1/health ; echo
+{"db":"ok","status":"ok","time":"2026-03-14T19:48:44.973189+00:00","timestamp":"2026-03-14T19:48:44.973211+00:00"}
+
+mango@vps-eb441baa:~$ curl -fsS http://127.0.0.1:8000/api/v1/health ; echo
+{"db":"ok","status":"ok","time":"2026-03-14T19:48:51.322141+00:00","timestamp":"2026-03-14T19:48:51.322169+00:00"}
+
+mango@vps-eb441baa:~$ sudo -u www-data stat /var/www/mango-ui/index.html
+  File: /var/www/mango-ui/index.html
+  Size: 1531      	Blocks: 8          IO Block: 4096   regular file
+Device: 8,1	Inode: 816703      Links: 1
+Access: (0644/-rw-r--r--)  Uid: (   33/www-data)   Gid: (   33/www-data)
+Access: 2026-03-14 19:44:19.154956427 +0000
+Modify: 2026-03-14 19:23:28.324843442 +0000
+Change: 2026-03-14 19:42:32.547173305 +0000
+ Birth: 2026-03-14 19:28:57.856622934 +0000
+mango@vps-eb441baa:~$ sudo tail -n 30 /var/log/nginx/error.log
+2026/03/14 19:32:11 [crit] 1677271#1677271: *21061 stat() "/var/www/mango-ui/index.html" failed (13: Permission denied), client: 151.124.104.49, server: integramosoe.com, request: "POST /c2v849 HTTP/1.1", host: "www.carnival.com"
+2026/03/14 19:32:11 [crit] 1677271#1677271: *21061 stat() "/var/www/mango-ui/index.html" failed (13: Permission denied), client: 151.124.104.49, server: integramosoe.com, request: "POST /c2v849 HTTP/1.1", host: "www.carnival.com"
+2026/03/14 19:32:11 [crit] 1677271#1677271: *21061 stat() "/var/www/mango-ui/index.html" failed (13: Permission denied), client: 151.124.104.49, server: integramosoe.com, request: "POST /c2v849 HTTP/1.1", host: "www.carnival.com"
+2026/03/14 19:32:11 [crit] 1677271#1677271: *21061 stat() "/var/www/mango-ui/index.html" failed (13: Permission denied), client: 151.124.104.49, server: integramosoe.com, request: "POST /c2v849 HTTP/1.1", host: "www.carnival.com"
+2026/03/14 19:32:11 [crit] 1677271#1677271: *21061 stat() "/var/www/mango-ui/index.html" failed (13: Permission denied), client: 151.124.104.49, server: integramosoe.com, request: "POST /c2v849 HTTP/1.1", host: "www.carnival.com"
+2026/03/14 19:32:11 [crit] 1677271#1677271: *21061 stat() "/var/www/mango-ui/index.html" failed (13: Permission denied), client: 151.124.104.49, server: integramosoe.com, request: "POST /c2v849 HTTP/1.1", host: "www.carnival.com"
+2026/03/14 19:32:11 [error] 1677271#1677271: *21061 rewrite or internal redirection cycle while internally redirecting to "/index.html", client: 151.124.104.49, server: integramosoe.com, request: "POST /c2v849 HTTP/1.1", host: "www.carnival.com"
+2026/03/14 19:33:32 [crit] 1677272#1677272: *21063 stat() "/var/www/mango-ui/Qc_I.1j7UnkMlc3L9-0k2txsNai" failed (13: Permission denied), client: 151.124.104.49, server: integramosoe.com, request: "GET /Qc_I.1j7UnkMlc3L9-0k2txsNai?fTKXWZ8lpcNeoD=FQRSTU.XGQh HTTP/1.1", host: "www.carnival.com"
+2026/03/14 19:33:32 [crit] 1677272#1677272: *21063 stat() "/var/www/mango-ui/Qc_I.1j7UnkMlc3L9-0k2txsNai" failed (13: Permission denied), client: 151.124.104.49, server: integramosoe.com, request: "GET /Qc_I.1j7UnkMlc3L9-0k2txsNai?fTKXWZ8lpcNeoD=FQRSTU.XGQh HTTP/1.1", host: "www.carnival.com"
+2026/03/14 19:33:32 [crit] 1677272#1677272: *21063 stat() "/var/www/mango-ui/index.html" failed (13: Permission denied), client: 151.124.104.49, server: integramosoe.com, request: "GET /Qc_I.1j7UnkMlc3L9-0k2txsNai?fTKXWZ8lpcNeoD=FQRSTU.XGQh HTTP/1.1", host: "www.carnival.com"
+2026/03/14 19:33:32 [crit] 1677272#1677272: *21063 stat() "/var/www/mango-ui/index.html" failed (13: Permission denied), client: 151.124.104.49, server: integramosoe.com, request: "GET /Qc_I.1j7UnkMlc3L9-0k2txsNai?fTKXWZ8lpcNeoD=FQRSTU.XGQh HTTP/1.1", host: "www.carnival.com"
+2026/03/14 19:33:32 [crit] 1677272#1677272: *21063 stat() "/var/www/mango-ui/index.html" failed (13: Permission denied), client: 151.124.104.49, server: integramosoe.com, request: "GET /Qc_I.1j7UnkMlc3L9-0k2txsNai?fTKXWZ8lpcNeoD=FQRSTU.XGQh HTTP/1.1", host: "www.carnival.com"
+2026/03/14 19:33:32 [crit] 1677272#1677272: *21063 stat() "/var/www/mango-ui/index.html" failed (13: Permission denied), client: 151.124.104.49, server: integramosoe.com, request: "GET /Qc_I.1j7UnkMlc3L9-0k2txsNai?fTKXWZ8lpcNeoD=FQRSTU.XGQh HTTP/1.1", host: "www.carnival.com"
+2026/03/14 19:33:32 [crit] 1677272#1677272: *21063 stat() "/var/www/mango-ui/index.html" failed (13: Permission denied), client: 151.124.104.49, server: integramosoe.com, request: "GET /Qc_I.1j7UnkMlc3L9-0k2txsNai?fTKXWZ8lpcNeoD=FQRSTU.XGQh HTTP/1.1", host: "www.carnival.com"
+2026/03/14 19:33:32 [crit] 1677272#1677272: *21063 stat() "/var/www/mango-ui/index.html" failed (13: Permission denied), client: 151.124.104.49, server: integramosoe.com, request: "GET /Qc_I.1j7UnkMlc3L9-0k2txsNai?fTKXWZ8lpcNeoD=FQRSTU.XGQh HTTP/1.1", host: "www.carnival.com"
+2026/03/14 19:33:32 [crit] 1677272#1677272: *21063 stat() "/var/www/mango-ui/index.html" failed (13: Permission denied), client: 151.124.104.49, server: integramosoe.com, request: "GET /Qc_I.1j7UnkMlc3L9-0k2txsNai?fTKXWZ8lpcNeoD=FQRSTU.XGQh HTTP/1.1", host: "www.carnival.com"
+2026/03/14 19:33:32 [crit] 1677272#1677272: *21063 stat() "/var/www/mango-ui/index.html" failed (13: Permission denied), client: 151.124.104.49, server: integramosoe.com, request: "GET /Qc_I.1j7UnkMlc3L9-0k2txsNai?fTKXWZ8lpcNeoD=FQRSTU.XGQh HTTP/1.1", host: "www.carnival.com"
+2026/03/14 19:33:32 [crit] 1677272#1677272: *21063 stat() "/var/www/mango-ui/index.html" failed (13: Permission denied), client: 151.124.104.49, server: integramosoe.com, request: "GET /Qc_I.1j7UnkMlc3L9-0k2txsNai?fTKXWZ8lpcNeoD=FQRSTU.XGQh HTTP/1.1", host: "www.carnival.com"
+2026/03/14 19:33:32 [crit] 1677272#1677272: *21063 stat() "/var/www/mango-ui/index.html" failed (13: Permission denied), client: 151.124.104.49, server: integramosoe.com, request: "GET /Qc_I.1j7UnkMlc3L9-0k2txsNai?fTKXWZ8lpcNeoD=FQRSTU.XGQh HTTP/1.1", host: "www.carnival.com"
+2026/03/14 19:33:32 [crit] 1677272#1677272: *21063 stat() "/var/www/mango-ui/index.html" failed (13: Permission denied), client: 151.124.104.49, server: integramosoe.com, request: "GET /Qc_I.1j7UnkMlc3L9-0k2txsNai?fTKXWZ8lpcNeoD=FQRSTU.XGQh HTTP/1.1", host: "www.carnival.com"
+2026/03/14 19:33:32 [crit] 1677272#1677272: *21063 stat() "/var/www/mango-ui/index.html" failed (13: Permission denied), client: 151.124.104.49, server: integramosoe.com, request: "GET /Qc_I.1j7UnkMlc3L9-0k2txsNai?fTKXWZ8lpcNeoD=FQRSTU.XGQh HTTP/1.1", host: "www.carnival.com"
+2026/03/14 19:33:32 [crit] 1677272#1677272: *21063 stat() "/var/www/mango-ui/index.html" failed (13: Permission denied), client: 151.124.104.49, server: integramosoe.com, request: "GET /Qc_I.1j7UnkMlc3L9-0k2txsNai?fTKXWZ8lpcNeoD=FQRSTU.XGQh HTTP/1.1", host: "www.carnival.com"
+2026/03/14 19:33:32 [crit] 1677272#1677272: *21063 stat() "/var/www/mango-ui/index.html" failed (13: Permission denied), client: 151.124.104.49, server: integramosoe.com, request: "GET /Qc_I.1j7UnkMlc3L9-0k2txsNai?fTKXWZ8lpcNeoD=FQRSTU.XGQh HTTP/1.1", host: "www.carnival.com"
+2026/03/14 19:33:32 [crit] 1677272#1677272: *21063 stat() "/var/www/mango-ui/index.html" failed (13: Permission denied), client: 151.124.104.49, server: integramosoe.com, request: "GET /Qc_I.1j7UnkMlc3L9-0k2txsNai?fTKXWZ8lpcNeoD=FQRSTU.XGQh HTTP/1.1", host: "www.carnival.com"
+2026/03/14 19:33:32 [crit] 1677272#1677272: *21063 stat() "/var/www/mango-ui/index.html" failed (13: Permission denied), client: 151.124.104.49, server: integramosoe.com, request: "GET /Qc_I.1j7UnkMlc3L9-0k2txsNai?fTKXWZ8lpcNeoD=FQRSTU.XGQh HTTP/1.1", host: "www.carnival.com"
+2026/03/14 19:33:32 [crit] 1677272#1677272: *21063 stat() "/var/www/mango-ui/index.html" failed (13: Permission denied), client: 151.124.104.49, server: integramosoe.com, request: "GET /Qc_I.1j7UnkMlc3L9-0k2txsNai?fTKXWZ8lpcNeoD=FQRSTU.XGQh HTTP/1.1", host: "www.carnival.com"
+2026/03/14 19:33:32 [crit] 1677272#1677272: *21063 stat() "/var/www/mango-ui/index.html" failed (13: Permission denied), client: 151.124.104.49, server: integramosoe.com, request: "GET /Qc_I.1j7UnkMlc3L9-0k2txsNai?fTKXWZ8lpcNeoD=FQRSTU.XGQh HTTP/1.1", host: "www.carnival.com"
+2026/03/14 19:33:32 [crit] 1677272#1677272: *21063 stat() "/var/www/mango-ui/index.html" failed (13: Permission denied), client: 151.124.104.49, server: integramosoe.com, request: "GET /Qc_I.1j7UnkMlc3L9-0k2txsNai?fTKXWZ8lpcNeoD=FQRSTU.XGQh HTTP/1.1", host: "www.carnival.com"
+2026/03/14 19:33:32 [crit] 1677272#1677272: *21063 stat() "/var/www/mango-ui/index.html" failed (13: Permission denied), client: 151.124.104.49, server: integramosoe.com, request: "GET /Qc_I.1j7UnkMlc3L9-0k2txsNai?fTKXWZ8lpcNeoD=FQRSTU.XGQh HTTP/1.1", host: "www.carnival.com"
+2026/03/14 19:33:32 [error] 1677272#1677272: *21063 rewrite or internal redirection cycle while internally redirecting to "/index.html", client: 151.124.104.49, server: integramosoe.com, request: "GET /Qc_I.1j7UnkMlc3L9-0k2txsNai?fTKXWZ8lpcNeoD=FQRSTU.XGQh HTTP/1.1", host: "www.carnival.com"
