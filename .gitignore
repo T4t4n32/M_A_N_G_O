@@ -28,3 +28,11 @@ venv/
 .env
 .env.local
 .env.production
+
+# Secrets — never commit real env files
+*.env.vps
+*.env.edge
+*.env.gateway
+.env.production
+.env.local
+deploy/**/.env
