@@ -1,0 +1,1049 @@
+npx shadcn@latest add @react-bits/ModelViewer-TS-CSS
+
+import ModelViewer from './ModelViewer';
+
+<ModelViewer
+  url="https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/main/2.0/ToyCar/glTF-Binary/ToyCar.glb"
+  width={400}
+  height={400}
+  modelXOffset={0.5}
+  modelYOffset={0}
+  enableMouseParallax
+  enableHoverRotation
+  environmentPreset="forest"
+  fadeIn={false}
+  autoRotate={false}
+  autoRotateSpeed={0.35}
+  showScreenshotButton
+/>
+
+import { FC, Suspense, useRef, useLayoutEffect, useEffect, useMemo } from 'react';
+import { Canvas, useFrame, useLoader, useThree, invalidate } from '@react-three/fiber';
+import { OrbitControls, useGLTF, useFBX, useProgress, Html, Environment, ContactShadows } from '@react-three/drei';
+import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader';
+import * as THREE from 'three';
+
+const isMeshObject = (object: THREE.Object3D): object is THREE.Mesh => {
+  return 'isMesh' in object && object.isMesh === true;
+};
+
+const isLightObject = (object: THREE.Object3D): object is THREE.Light => {
+  return 'isLight' in object && object.isLight === true;
+};
+
+export interface ViewerProps {
+  url: string;
+  width?: number | string;
+  height?: number | string;
+  modelXOffset?: number;
+  modelYOffset?: number;
+  defaultRotationX?: number;
+  defaultRotationY?: number;
+  defaultZoom?: number;
+  minZoomDistance?: number;
+  maxZoomDistance?: number;
+  enableMouseParallax?: boolean;
+  enableManualRotation?: boolean;
+  enableHoverRotation?: boolean;
+  enableManualZoom?: boolean;
+  ambientIntensity?: number;
+  keyLightIntensity?: number;
+  fillLightIntensity?: number;
+  rimLightIntensity?: number;
+  environmentPreset?: 'city' | 'sunset' | 'night' | 'dawn' | 'studio' | 'apartment' | 'forest' | 'park' | 'none';
+  autoFrame?: boolean;
+  placeholderSrc?: string;
+  showScreenshotButton?: boolean;
+  fadeIn?: boolean;
+  autoRotate?: boolean;
+  autoRotateSpeed?: number;
+  onModelLoaded?: () => void;
+}
+
+const isTouch = typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
+const deg2rad = (d: number) => (d * Math.PI) / 180;
+const DECIDE = 8; // px before we decide horizontal vs vertical
+const ROTATE_SPEED = 0.005;
+const INERTIA = 0.925;
+const PARALLAX_MAG = 0.05;
+const PARALLAX_EASE = 0.12;
+const HOVER_MAG = deg2rad(6);
+const HOVER_EASE = 0.15;
+
+const Loader: FC<{ placeholderSrc?: string }> = ({ placeholderSrc }) => {
+  const { progress, active } = useProgress();
+  if (!active && placeholderSrc) return null;
+  return (
+    <Html center>
+      {placeholderSrc ? (
+        <img src={placeholderSrc} width={128} height={128} style={{ filter: 'blur(8px)', borderRadius: 8 }} />
+      ) : (
+        `${Math.round(progress)} %`
+      )}
+    </Html>
+  );
+};
+
+const DesktopControls: FC<{
+  pivot: THREE.Vector3;
+  min: number;
+  max: number;
+  zoomEnabled: boolean;
+}> = ({ pivot, min, max, zoomEnabled }) => {
+  const ref = useRef<any>(null);
+  useFrame(() => ref.current?.target.copy(pivot));
+  return (
+    <OrbitControls
+      ref={ref}
+      makeDefault
+      enablePan={false}
+      enableRotate={false}
+      enableZoom={zoomEnabled}
+      minDistance={min}
+      maxDistance={max}
+    />
+  );
+};
+
+interface ModelInnerProps {
+  url: string;
+  xOff: number;
+  yOff: number;
+  pivot: THREE.Vector3;
+  initYaw: number;
+  initPitch: number;
+  minZoom: number;
+  maxZoom: number;
+  enableMouseParallax: boolean;
+  enableManualRotation: boolean;
+  enableHoverRotation: boolean;
+  enableManualZoom: boolean;
+  autoFrame: boolean;
+  fadeIn: boolean;
+  autoRotate: boolean;
+  autoRotateSpeed: number;
+  onLoaded?: () => void;
+}
+
+const ModelInner: FC<ModelInnerProps> = ({
+  url,
+  xOff,
+  yOff,
+  pivot,
+  initYaw,
+  initPitch,
+  minZoom,
+  maxZoom,
+  enableMouseParallax,
+  enableManualRotation,
+  enableHoverRotation,
+  enableManualZoom,
+  autoFrame,
+  fadeIn,
+  autoRotate,
+  autoRotateSpeed,
+  onLoaded
+}) => {
+  const outer = useRef<THREE.Group>(null!);
+  const inner = useRef<THREE.Group>(null!);
+  const { camera, gl } = useThree();
+
+  const vel = useRef({ x: 0, y: 0 });
+  const tPar = useRef({ x: 0, y: 0 });
+  const cPar = useRef({ x: 0, y: 0 });
+  const tHov = useRef({ x: 0, y: 0 });
+  const cHov = useRef({ x: 0, y: 0 });
+
+  const ext = useMemo(() => url.split('.').pop()!.toLowerCase(), [url]);
+  const content = useMemo<THREE.Object3D | null>(() => {
+    if (ext === 'glb' || ext === 'gltf') return useGLTF(url).scene.clone();
+    if (ext === 'fbx') return useFBX(url).clone();
+    if (ext === 'obj') return useLoader(OBJLoader, url).clone();
+    console.error('Unsupported format:', ext);
+    return null;
+  }, [url, ext]);
+
+  const pivotW = useRef(new THREE.Vector3());
+  useLayoutEffect(() => {
+    if (!content) return;
+    const g = inner.current;
+    g.updateWorldMatrix(true, true);
+
+    const sphere = new THREE.Box3().setFromObject(g).getBoundingSphere(new THREE.Sphere());
+    const s = 1 / (sphere.radius * 2);
+    g.position.set(-sphere.center.x, -sphere.center.y, -sphere.center.z);
+    g.scale.setScalar(s);
+
+    g.traverse((o: THREE.Object3D) => {
+      if (isMeshObject(o)) {
+        o.castShadow = true;
+        o.receiveShadow = true;
+        if (fadeIn) {
+          const materials = Array.isArray(o.material) ? o.material : [o.material];
+          materials.forEach(material => {
+            material.transparent = true;
+            material.opacity = 0;
+          });
+        }
+      }
+    });
+
+    g.getWorldPosition(pivotW.current);
+    pivot.copy(pivotW.current);
+    outer.current.rotation.set(initPitch, initYaw, 0);
+
+    if (autoFrame && (camera as THREE.PerspectiveCamera).isPerspectiveCamera) {
+      const persp = camera as THREE.PerspectiveCamera;
+      const fitR = sphere.radius * s;
+      const d = (fitR * 1.2) / Math.sin((persp.fov * Math.PI) / 180 / 2);
+      persp.position.set(pivotW.current.x, pivotW.current.y, pivotW.current.z + d);
+      persp.near = d / 10;
+      persp.far = d * 10;
+      persp.updateProjectionMatrix();
+    }
+
+    /* optional fade-in */
+    if (fadeIn) {
+      let t = 0;
+      const id = setInterval(() => {
+        t += 0.05;
+        const v = Math.min(t, 1);
+        g.traverse((o: THREE.Object3D) => {
+          if (isMeshObject(o)) {
+            const materials = Array.isArray(o.material) ? o.material : [o.material];
+            materials.forEach(material => {
+              material.opacity = v;
+            });
+          }
+        });
+        invalidate();
+        if (v === 1) {
+          clearInterval(id);
+          onLoaded?.();
+        }
+      }, 16);
+      return () => clearInterval(id);
+    } else onLoaded?.();
+  }, [content]);
+
+  useEffect(() => {
+    if (!enableManualRotation || isTouch) return;
+    const el = gl.domElement;
+    let drag = false;
+    let lx = 0,
+      ly = 0;
+    const down = (e: PointerEvent) => {
+      if (e.pointerType !== 'mouse' && e.pointerType !== 'pen') return;
+      drag = true;
+      lx = e.clientX;
+      ly = e.clientY;
+      window.addEventListener('pointerup', up);
+    };
+    const move = (e: PointerEvent) => {
+      if (!drag) return;
+      const dx = e.clientX - lx;
+      const dy = e.clientY - ly;
+      lx = e.clientX;
+      ly = e.clientY;
+      outer.current.rotation.y += dx * ROTATE_SPEED;
+      outer.current.rotation.x += dy * ROTATE_SPEED;
+      vel.current = { x: dx * ROTATE_SPEED, y: dy * ROTATE_SPEED };
+      invalidate();
+    };
+    const up = () => (drag = false);
+    el.addEventListener('pointerdown', down);
+    el.addEventListener('pointermove', move);
+    return () => {
+      el.removeEventListener('pointerdown', down);
+      el.removeEventListener('pointermove', move);
+      window.removeEventListener('pointerup', up);
+    };
+  }, [gl, enableManualRotation]);
+
+  useEffect(() => {
+    if (!isTouch) return;
+    const el = gl.domElement;
+    const pts = new Map<number, { x: number; y: number }>();
+    type Mode = 'idle' | 'decide' | 'rotate' | 'pinch';
+    let mode: Mode = 'idle';
+    let sx = 0,
+      sy = 0,
+      lx = 0,
+      ly = 0,
+      startDist = 0,
+      startZ = 0;
+
+    const down = (e: PointerEvent) => {
+      if (e.pointerType !== 'touch') return;
+      pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      if (pts.size === 1) {
+        mode = 'decide';
+        sx = lx = e.clientX;
+        sy = ly = e.clientY;
+      } else if (pts.size === 2 && enableManualZoom) {
+        mode = 'pinch';
+        const [p1, p2] = [...pts.values()];
+        startDist = Math.hypot(p1.x - p2.x, p1.y - p2.y);
+        startZ = camera.position.z;
+        e.preventDefault();
+      }
+      invalidate();
+    };
+
+    const move = (e: PointerEvent) => {
+      const p = pts.get(e.pointerId);
+      if (!p) return;
+      p.x = e.clientX;
+      p.y = e.clientY;
+
+      if (mode === 'decide') {
+        const dx = e.clientX - sx;
+        const dy = e.clientY - sy;
+        if (Math.abs(dx) > DECIDE || Math.abs(dy) > DECIDE) {
+          if (enableManualRotation && Math.abs(dx) > Math.abs(dy)) {
+            mode = 'rotate';
+            el.setPointerCapture(e.pointerId);
+          } else {
+            mode = 'idle';
+            pts.clear();
+          }
+        }
+      }
+
+      if (mode === 'rotate') {
+        e.preventDefault();
+        const dx = e.clientX - lx;
+        const dy = e.clientY - ly;
+        lx = e.clientX;
+        ly = e.clientY;
+        outer.current.rotation.y += dx * ROTATE_SPEED;
+        outer.current.rotation.x += dy * ROTATE_SPEED;
+        vel.current = { x: dx * ROTATE_SPEED, y: dy * ROTATE_SPEED };
+        invalidate();
+      } else if (mode === 'pinch' && pts.size === 2) {
+        e.preventDefault();
+        const [p1, p2] = [...pts.values()];
+        const d = Math.hypot(p1.x - p2.x, p1.y - p2.y);
+        const ratio = startDist / d;
+        camera.position.z = THREE.MathUtils.clamp(startZ * ratio, minZoom, maxZoom);
+        invalidate();
+      }
+    };
+
+    const up = (e: PointerEvent) => {
+      pts.delete(e.pointerId);
+      if (mode === 'rotate' && pts.size === 0) mode = 'idle';
+      if (mode === 'pinch' && pts.size < 2) mode = 'idle';
+    };
+
+    el.addEventListener('pointerdown', down, { passive: true });
+    window.addEventListener('pointermove', move, { passive: false });
+    window.addEventListener('pointerup', up, { passive: true });
+    window.addEventListener('pointercancel', up, { passive: true });
+    return () => {
+      el.removeEventListener('pointerdown', down);
+      window.removeEventListener('pointermove', move);
+      window.removeEventListener('pointerup', up);
+      window.removeEventListener('pointercancel', up);
+    };
+  }, [gl, enableManualRotation, enableManualZoom, minZoom, maxZoom]);
+
+  useEffect(() => {
+    if (isTouch) return;
+    const mm = (e: PointerEvent) => {
+      if (e.pointerType !== 'mouse') return;
+      const nx = (e.clientX / window.innerWidth) * 2 - 1;
+      const ny = (e.clientY / window.innerHeight) * 2 - 1;
+      if (enableMouseParallax) tPar.current = { x: -nx * PARALLAX_MAG, y: -ny * PARALLAX_MAG };
+      if (enableHoverRotation) tHov.current = { x: ny * HOVER_MAG, y: nx * HOVER_MAG };
+      invalidate();
+    };
+    window.addEventListener('pointermove', mm);
+    return () => window.removeEventListener('pointermove', mm);
+  }, [enableMouseParallax, enableHoverRotation]);
+
+  useFrame((_, dt) => {
+    let need = false;
+    cPar.current.x += (tPar.current.x - cPar.current.x) * PARALLAX_EASE;
+    cPar.current.y += (tPar.current.y - cPar.current.y) * PARALLAX_EASE;
+    const phx = cHov.current.x,
+      phy = cHov.current.y;
+    cHov.current.x += (tHov.current.x - cHov.current.x) * HOVER_EASE;
+    cHov.current.y += (tHov.current.y - cHov.current.y) * HOVER_EASE;
+
+    const ndc = pivotW.current.clone().project(camera);
+    ndc.x += xOff + cPar.current.x;
+    ndc.y += yOff + cPar.current.y;
+    outer.current.position.copy(ndc.unproject(camera));
+
+    outer.current.rotation.x += cHov.current.x - phx;
+    outer.current.rotation.y += cHov.current.y - phy;
+
+    if (autoRotate) {
+      outer.current.rotation.y += autoRotateSpeed * dt;
+      need = true;
+    }
+
+    outer.current.rotation.y += vel.current.x;
+    outer.current.rotation.x += vel.current.y;
+    vel.current.x *= INERTIA;
+    vel.current.y *= INERTIA;
+    if (Math.abs(vel.current.x) > 1e-4 || Math.abs(vel.current.y) > 1e-4) need = true;
+
+    if (
+      Math.abs(cPar.current.x - tPar.current.x) > 1e-4 ||
+      Math.abs(cPar.current.y - tPar.current.y) > 1e-4 ||
+      Math.abs(cHov.current.x - tHov.current.x) > 1e-4 ||
+      Math.abs(cHov.current.y - tHov.current.y) > 1e-4
+    )
+      need = true;
+
+    if (need) invalidate();
+  });
+
+  if (!content) return null;
+  return (
+    <group ref={outer}>
+      <group ref={inner}>
+        <primitive object={content} />
+      </group>
+    </group>
+  );
+};
+
+const ModelViewer: FC<ViewerProps> = ({
+  url,
+  width = 400,
+  height = 400,
+  modelXOffset = 0,
+  modelYOffset = 0,
+  defaultRotationX = -50,
+  defaultRotationY = 20,
+  defaultZoom = 0.5,
+  minZoomDistance = 0.5,
+  maxZoomDistance = 10,
+  enableMouseParallax = true,
+  enableManualRotation = true,
+  enableHoverRotation = true,
+  enableManualZoom = true,
+  ambientIntensity = 0.3,
+  keyLightIntensity = 1,
+  fillLightIntensity = 0.5,
+  rimLightIntensity = 0.8,
+  environmentPreset = 'forest',
+  autoFrame = false,
+  placeholderSrc,
+  showScreenshotButton = true,
+  fadeIn = false,
+  autoRotate = false,
+  autoRotateSpeed = 0.35,
+  onModelLoaded
+}) => {
+  useEffect(() => void useGLTF.preload(url), [url]);
+  const pivot = useRef(new THREE.Vector3()).current;
+  const contactRef = useRef<THREE.Mesh>(null);
+  const rendererRef = useRef<THREE.WebGLRenderer>(null);
+  const sceneRef = useRef<THREE.Scene>(null);
+  const cameraRef = useRef<THREE.Camera>(null);
+
+  const initYaw = deg2rad(defaultRotationX);
+  const initPitch = deg2rad(defaultRotationY);
+  const camZ = Math.min(Math.max(defaultZoom, minZoomDistance), maxZoomDistance);
+
+  const capture = () => {
+    const g = rendererRef.current,
+      s = sceneRef.current,
+      c = cameraRef.current;
+    if (!g || !s || !c) return;
+    g.shadowMap.enabled = false;
+    const tmp: { l: THREE.Light; cast: boolean }[] = [];
+    s.traverse((o: THREE.Object3D) => {
+      if (isLightObject(o)) {
+        tmp.push({ l: o, cast: o.castShadow });
+        o.castShadow = false;
+      }
+    });
+    if (contactRef.current) contactRef.current.visible = false;
+    g.render(s, c);
+    const urlPNG = g.domElement.toDataURL('image/png');
+    const a = document.createElement('a');
+    a.download = 'model.png';
+    a.href = urlPNG;
+    a.click();
+    g.shadowMap.enabled = true;
+    tmp.forEach(({ l, cast }) => (l.castShadow = cast));
+    if (contactRef.current) contactRef.current.visible = true;
+    invalidate();
+  };
+
+  return (
+    <div
+      style={{
+        width,
+        height,
+        position: 'relative',
+        touchAction: 'pan-y pinch-zoom'
+      }}
+    >
+      {showScreenshotButton && (
+        <button
+          onClick={capture}
+          style={{
+            position: 'absolute',
+            border: '1px solid #fff',
+            right: 16,
+            top: 16,
+            zIndex: 10,
+            cursor: 'pointer',
+            padding: '8px 16px',
+            borderRadius: 10
+          }}
+        >
+          Take Screenshot
+        </button>
+      )}
+
+      <Canvas
+        shadows
+        frameloop="demand"
+        gl={{ preserveDrawingBuffer: true }}
+        onCreated={({ gl, scene, camera }) => {
+          rendererRef.current = gl;
+          sceneRef.current = scene;
+          cameraRef.current = camera;
+          gl.toneMapping = THREE.ACESFilmicToneMapping;
+          gl.outputColorSpace = THREE.SRGBColorSpace;
+        }}
+        camera={{ fov: 50, position: [0, 0, camZ], near: 0.01, far: 100 }}
+        style={{ touchAction: 'pan-y pinch-zoom' }}
+      >
+        {environmentPreset !== 'none' && <Environment preset={environmentPreset as any} background={false} />}
+
+        <ambientLight intensity={ambientIntensity} />
+        <directionalLight position={[5, 5, 5]} intensity={keyLightIntensity} castShadow />
+        <directionalLight position={[-5, 2, 5]} intensity={fillLightIntensity} />
+        <directionalLight position={[0, 4, -5]} intensity={rimLightIntensity} />
+
+        <ContactShadows ref={contactRef as any} position={[0, -0.5, 0]} opacity={0.35} scale={10} blur={2} />
+
+        <Suspense fallback={<Loader placeholderSrc={placeholderSrc} />}>
+          <ModelInner
+            url={url}
+            xOff={modelXOffset}
+            yOff={modelYOffset}
+            pivot={pivot}
+            initYaw={initYaw}
+            initPitch={initPitch}
+            minZoom={minZoomDistance}
+            maxZoom={maxZoomDistance}
+            enableMouseParallax={enableMouseParallax}
+            enableManualRotation={enableManualRotation}
+            enableHoverRotation={enableHoverRotation}
+            enableManualZoom={enableManualZoom}
+            autoFrame={autoFrame}
+            fadeIn={fadeIn}
+            autoRotate={autoRotate}
+            autoRotateSpeed={autoRotateSpeed}
+            onLoaded={onModelLoaded}
+          />
+        </Suspense>
+
+        {!isTouch && (
+          <DesktopControls pivot={pivot} min={minZoomDistance} max={maxZoomDistance} zoomEnabled={enableManualZoom} />
+        )}
+      </Canvas>
+    </div>
+  );
+};
+
+export default ModelViewer;
+
+
+npx shadcn@latest add @react-bits/GlassIcons-TS-CSS
+
+import GlassIcons from './GlassIcons'
+
+// update with your own icons and colors
+const items = [
+  { icon: <FiFileText />, color: 'blue', label: 'Files' },
+  { icon: <FiBook />, color: 'purple', label: 'Books' },
+  { icon: <FiHeart />, color: 'red', label: 'Health' },
+  { icon: <FiCloud />, color: 'indigo', label: 'Weather' },
+  { icon: <FiEdit />, color: 'orange', label: 'Notes' },
+  { icon: <FiBarChart2 />, color: 'green', label: 'Stats' },
+];
+
+<div style={{ height: '600px', position: 'relative' }}>
+  <GlassIcons items={items} className="custom-class"
+  colorful={false}
+/>
+</div>
+
+import React from 'react';
+import './GlassIcons.css';
+
+export interface GlassIconsItem {
+  icon: React.ReactElement;
+  color: string;
+  label: string;
+  customClass?: string;
+}
+
+export interface GlassIconsProps {
+  items: GlassIconsItem[];
+  className?: string;
+}
+
+const gradientMapping: Record<string, string> = {
+  blue: 'linear-gradient(hsl(223, 90%, 50%), hsl(208, 90%, 50%))',
+  purple: 'linear-gradient(hsl(283, 90%, 50%), hsl(268, 90%, 50%))',
+  red: 'linear-gradient(hsl(3, 90%, 50%), hsl(348, 90%, 50%))',
+  indigo: 'linear-gradient(hsl(253, 90%, 50%), hsl(238, 90%, 50%))',
+  orange: 'linear-gradient(hsl(43, 90%, 50%), hsl(28, 90%, 50%))',
+  green: 'linear-gradient(hsl(123, 90%, 40%), hsl(108, 90%, 40%))'
+};
+
+const GlassIcons: React.FC<GlassIconsProps> = ({ items, className }) => {
+  const getBackgroundStyle = (color: string): React.CSSProperties => {
+    if (gradientMapping[color]) {
+      return { background: gradientMapping[color] };
+    }
+    return { background: color };
+  };
+
+  return (
+    <div className={`icon-btns ${className || ''}`}>
+      {items.map((item, index) => (
+        <button key={index} type="button" className={`icon-btn ${item.customClass || ''}`} aria-label={item.label}>
+          <span className="icon-btn__back" style={getBackgroundStyle(item.color)}></span>
+          <span className="icon-btn__front">
+            <span className="icon-btn__icon" aria-hidden="true">
+              {item.icon}
+            </span>
+          </span>
+          <span className="icon-btn__label">{item.label}</span>
+        </button>
+      ))}
+    </div>
+  );
+};
+
+export default GlassIcons;
+
+npx shadcn@latest add @react-bits/ProfileCard-TS-CSS
+
+import ProfileCard from './ProfileCard'
+  
+<ProfileCard
+  name="Javi A. Torres"
+  title="Software Engineer"
+  handle="javicodes"
+  status="Online"
+  contactText="Contact Me"
+  avatarUrl="/path/to/avatar.jpg"
+  showUserInfo={false}
+  enableTilt={true}
+  enableMobileTilt={false}
+  onContactClick={() => console.log('Contact clicked')}
+  behindGlowColor="rgba(125, 190, 255, 0.67)"
+  iconUrl="/assets/demo/iconpattern.png"
+  behindGlowEnabled
+  innerGradient="linear-gradient(145deg,#60496e8c 0%,#71C4FF44 100%)"
+/>
+
+import React, { useEffect, useRef, useCallback, useMemo } from 'react';
+import './ProfileCard.css';
+
+interface ProfileCardProps {
+  avatarUrl: string;
+  iconUrl?: string;
+  grainUrl?: string;
+  innerGradient?: string;
+  behindGlowEnabled?: boolean;
+  behindGlowColor?: string;
+  behindGlowSize?: string;
+  className?: string;
+  enableTilt?: boolean;
+  enableMobileTilt?: boolean;
+  mobileTiltSensitivity?: number;
+  miniAvatarUrl?: string;
+  name?: string;
+  title?: string;
+  handle?: string;
+  status?: string;
+  contactText?: string;
+  showUserInfo?: boolean;
+  onContactClick?: () => void;
+}
+
+const DEFAULT_INNER_GRADIENT = 'linear-gradient(145deg,#60496e8c 0%,#71C4FF44 100%)';
+
+const ANIMATION_CONFIG = {
+  INITIAL_DURATION: 1200,
+  INITIAL_X_OFFSET: 70,
+  INITIAL_Y_OFFSET: 60,
+  DEVICE_BETA_OFFSET: 20,
+  ENTER_TRANSITION_MS: 180
+} as const;
+
+const clamp = (v: number, min = 0, max = 100): number => Math.min(Math.max(v, min), max);
+const round = (v: number, precision = 3): number => parseFloat(v.toFixed(precision));
+const adjust = (v: number, fMin: number, fMax: number, tMin: number, tMax: number): number =>
+  round(tMin + ((tMax - tMin) * (v - fMin)) / (fMax - fMin));
+
+const ProfileCardComponent: React.FC<ProfileCardProps> = ({
+  avatarUrl = '<Placeholder for avatar URL>',
+  iconUrl = '<Placeholder for icon URL>',
+  grainUrl = '<Placeholder for grain URL>',
+  innerGradient,
+  behindGlowEnabled = true,
+  behindGlowColor,
+  behindGlowSize,
+  className = '',
+  enableTilt = true,
+  enableMobileTilt = false,
+  mobileTiltSensitivity = 5,
+  miniAvatarUrl,
+  name = 'Javi A. Torres',
+  title = 'Software Engineer',
+  handle = 'javicodes',
+  status = 'Online',
+  contactText = 'Contact',
+  showUserInfo = true,
+  onContactClick
+}) => {
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const shellRef = useRef<HTMLDivElement>(null);
+
+  const enterTimerRef = useRef<number | null>(null);
+  const leaveRafRef = useRef<number | null>(null);
+
+  const tiltEngine = useMemo(() => {
+    if (!enableTilt) return null;
+
+    let rafId: number | null = null;
+    let running = false;
+    let lastTs = 0;
+
+    let currentX = 0;
+    let currentY = 0;
+    let targetX = 0;
+    let targetY = 0;
+
+    const DEFAULT_TAU = 0.14;
+    const INITIAL_TAU = 0.6;
+    let initialUntil = 0;
+
+    const setVarsFromXY = (x: number, y: number) => {
+      const shell = shellRef.current;
+      const wrap = wrapRef.current;
+      if (!shell || !wrap) return;
+
+      const width = shell.clientWidth || 1;
+      const height = shell.clientHeight || 1;
+
+      const percentX = clamp((100 / width) * x);
+      const percentY = clamp((100 / height) * y);
+
+      const centerX = percentX - 50;
+      const centerY = percentY - 50;
+
+      const properties = {
+        '--pointer-x': `${percentX}%`,
+        '--pointer-y': `${percentY}%`,
+        '--background-x': `${adjust(percentX, 0, 100, 35, 65)}%`,
+        '--background-y': `${adjust(percentY, 0, 100, 35, 65)}%`,
+        '--pointer-from-center': `${clamp(Math.hypot(percentY - 50, percentX - 50) / 50, 0, 1)}`,
+        '--pointer-from-top': `${percentY / 100}`,
+        '--pointer-from-left': `${percentX / 100}`,
+        '--rotate-x': `${round(-(centerX / 5))}deg`,
+        '--rotate-y': `${round(centerY / 4)}deg`
+      } as Record<string, string>;
+
+      for (const [k, v] of Object.entries(properties)) wrap.style.setProperty(k, v);
+    };
+
+    const step = (ts: number) => {
+      if (!running) return;
+      if (lastTs === 0) lastTs = ts;
+      const dt = (ts - lastTs) / 1000;
+      lastTs = ts;
+
+      const tau = ts < initialUntil ? INITIAL_TAU : DEFAULT_TAU;
+      const k = 1 - Math.exp(-dt / tau);
+
+      currentX += (targetX - currentX) * k;
+      currentY += (targetY - currentY) * k;
+
+      setVarsFromXY(currentX, currentY);
+
+      const stillFar = Math.abs(targetX - currentX) > 0.05 || Math.abs(targetY - currentY) > 0.05;
+
+      if (stillFar || document.hasFocus()) {
+        rafId = requestAnimationFrame(step);
+      } else {
+        running = false;
+        lastTs = 0;
+        if (rafId) {
+          cancelAnimationFrame(rafId);
+          rafId = null;
+        }
+      }
+    };
+
+    const start = () => {
+      if (running) return;
+      running = true;
+      lastTs = 0;
+      rafId = requestAnimationFrame(step);
+    };
+
+    return {
+      setImmediate(x: number, y: number) {
+        currentX = x;
+        currentY = y;
+        setVarsFromXY(currentX, currentY);
+      },
+      setTarget(x: number, y: number) {
+        targetX = x;
+        targetY = y;
+        start();
+      },
+      toCenter() {
+        const shell = shellRef.current;
+        if (!shell) return;
+        this.setTarget(shell.clientWidth / 2, shell.clientHeight / 2);
+      },
+      beginInitial(durationMs: number) {
+        initialUntil = performance.now() + durationMs;
+        start();
+      },
+      getCurrent() {
+        return { x: currentX, y: currentY, tx: targetX, ty: targetY };
+      },
+      cancel() {
+        if (rafId) cancelAnimationFrame(rafId);
+        rafId = null;
+        running = false;
+        lastTs = 0;
+      }
+    };
+  }, [enableTilt]);
+
+  const getOffsets = (evt: PointerEvent, el: HTMLElement) => {
+    const rect = el.getBoundingClientRect();
+    return { x: evt.clientX - rect.left, y: evt.clientY - rect.top };
+  };
+
+  const handlePointerMove = useCallback(
+    (event: PointerEvent) => {
+      const shell = shellRef.current;
+      if (!shell || !tiltEngine) return;
+      const { x, y } = getOffsets(event, shell);
+      tiltEngine.setTarget(x, y);
+    },
+    [tiltEngine]
+  );
+
+  const handlePointerEnter = useCallback(
+    (event: PointerEvent) => {
+      const shell = shellRef.current;
+      if (!shell || !tiltEngine) return;
+
+      shell.classList.add('active');
+      shell.classList.add('entering');
+      if (enterTimerRef.current) window.clearTimeout(enterTimerRef.current);
+      enterTimerRef.current = window.setTimeout(() => {
+        shell.classList.remove('entering');
+      }, ANIMATION_CONFIG.ENTER_TRANSITION_MS);
+
+      const { x, y } = getOffsets(event, shell);
+      tiltEngine.setTarget(x, y);
+    },
+    [tiltEngine]
+  );
+
+  const handlePointerLeave = useCallback(() => {
+    const shell = shellRef.current;
+    if (!shell || !tiltEngine) return;
+
+    tiltEngine.toCenter();
+
+    const checkSettle = () => {
+      const { x, y, tx, ty } = tiltEngine.getCurrent();
+      const settled = Math.hypot(tx - x, ty - y) < 0.6;
+      if (settled) {
+        shell.classList.remove('active');
+        leaveRafRef.current = null;
+      } else {
+        leaveRafRef.current = requestAnimationFrame(checkSettle);
+      }
+    };
+    if (leaveRafRef.current) cancelAnimationFrame(leaveRafRef.current);
+    leaveRafRef.current = requestAnimationFrame(checkSettle);
+  }, [tiltEngine]);
+
+  const handleDeviceOrientation = useCallback(
+    (event: DeviceOrientationEvent) => {
+      const shell = shellRef.current;
+      if (!shell || !tiltEngine) return;
+
+      const { beta, gamma } = event;
+      if (beta == null || gamma == null) return;
+
+      const centerX = shell.clientWidth / 2;
+      const centerY = shell.clientHeight / 2;
+      const x = clamp(centerX + gamma * mobileTiltSensitivity, 0, shell.clientWidth);
+      const y = clamp(
+        centerY + (beta - ANIMATION_CONFIG.DEVICE_BETA_OFFSET) * mobileTiltSensitivity,
+        0,
+        shell.clientHeight
+      );
+
+      tiltEngine.setTarget(x, y);
+    },
+    [tiltEngine, mobileTiltSensitivity]
+  );
+
+  useEffect(() => {
+    if (!enableTilt || !tiltEngine) return;
+
+    const shell = shellRef.current;
+    if (!shell) return;
+
+    const pointerMoveHandler = handlePointerMove as EventListener;
+    const pointerEnterHandler = handlePointerEnter as EventListener;
+    const pointerLeaveHandler = handlePointerLeave as EventListener;
+    const deviceOrientationHandler = handleDeviceOrientation as EventListener;
+
+    shell.addEventListener('pointerenter', pointerEnterHandler);
+    shell.addEventListener('pointermove', pointerMoveHandler);
+    shell.addEventListener('pointerleave', pointerLeaveHandler);
+
+    const handleClick = () => {
+      if (!enableMobileTilt || location.protocol !== 'https:') return;
+      const anyMotion = window.DeviceMotionEvent as any;
+      if (anyMotion && typeof anyMotion.requestPermission === 'function') {
+        anyMotion
+          .requestPermission()
+          .then((state: string) => {
+            if (state === 'granted') {
+              window.addEventListener('deviceorientation', deviceOrientationHandler);
+            }
+          })
+          .catch(console.error);
+      } else {
+        window.addEventListener('deviceorientation', deviceOrientationHandler);
+      }
+    };
+    shell.addEventListener('click', handleClick);
+
+    const initialX = (shell.clientWidth || 0) - ANIMATION_CONFIG.INITIAL_X_OFFSET;
+    const initialY = ANIMATION_CONFIG.INITIAL_Y_OFFSET;
+    tiltEngine.setImmediate(initialX, initialY);
+    tiltEngine.toCenter();
+    tiltEngine.beginInitial(ANIMATION_CONFIG.INITIAL_DURATION);
+
+    return () => {
+      shell.removeEventListener('pointerenter', pointerEnterHandler);
+      shell.removeEventListener('pointermove', pointerMoveHandler);
+      shell.removeEventListener('pointerleave', pointerLeaveHandler);
+      shell.removeEventListener('click', handleClick);
+      window.removeEventListener('deviceorientation', deviceOrientationHandler);
+      if (enterTimerRef.current) window.clearTimeout(enterTimerRef.current);
+      if (leaveRafRef.current) cancelAnimationFrame(leaveRafRef.current);
+      tiltEngine.cancel();
+      shell.classList.remove('entering');
+    };
+  }, [
+    enableTilt,
+    enableMobileTilt,
+    tiltEngine,
+    handlePointerMove,
+    handlePointerEnter,
+    handlePointerLeave,
+    handleDeviceOrientation
+  ]);
+
+  const cardStyle = useMemo(
+    () =>
+      ({
+        '--icon': iconUrl ? `url(${iconUrl})` : 'none',
+        '--grain': grainUrl ? `url(${grainUrl})` : 'none',
+        '--inner-gradient': innerGradient ?? DEFAULT_INNER_GRADIENT,
+        '--behind-glow-color': behindGlowColor ?? 'rgba(125, 190, 255, 0.67)',
+        '--behind-glow-size': behindGlowSize ?? '50%'
+      }) as React.CSSProperties,
+    [iconUrl, grainUrl, innerGradient, behindGlowColor, behindGlowSize]
+  );
+
+  const handleContactClick = useCallback(() => {
+    onContactClick?.();
+  }, [onContactClick]);
+
+  return (
+    <div ref={wrapRef} className={`pc-card-wrapper ${className}`.trim()} style={cardStyle}>
+      {behindGlowEnabled && <div className="pc-behind" />}
+      <div ref={shellRef} className="pc-card-shell">
+        <section className="pc-card">
+          <div className="pc-inside">
+            <div className="pc-shine" />
+            <div className="pc-glare" />
+            <div className="pc-content pc-avatar-content">
+              <img
+                className="avatar"
+                src={avatarUrl}
+                alt={`${name || 'User'} avatar`}
+                loading="lazy"
+                onError={e => {
+                  const t = e.target as HTMLImageElement;
+                  t.style.display = 'none';
+                }}
+              />
+              {showUserInfo && (
+                <div className="pc-user-info">
+                  <div className="pc-user-details">
+                    <div className="pc-mini-avatar">
+                      <img
+                        src={miniAvatarUrl || avatarUrl}
+                        alt={`${name || 'User'} mini avatar`}
+                        loading="lazy"
+                        onError={e => {
+                          const t = e.target as HTMLImageElement;
+                          t.style.opacity = '0.5';
+                          t.src = avatarUrl;
+                        }}
+                      />
+                    </div>
+                    <div className="pc-user-text">
+                      <div className="pc-handle">@{handle}</div>
+                      <div className="pc-status">{status}</div>
+                    </div>
+                  </div>
+                  <button
+                    className="pc-contact-btn"
+                    onClick={handleContactClick}
+                    style={{ pointerEvents: 'auto' }}
+                    type="button"
+                    aria-label={`Contact ${name || 'user'}`}
+                  >
+                    {contactText}
+                  </button>
+                </div>
+              )}
+            </div>
+            <div className="pc-content">
+              <div className="pc-details">
+                <h3>{name}</h3>
+                <p>{title}</p>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+  );
+};
+
+const ProfileCard = React.memo(ProfileCardComponent);
+export default ProfileCard;
