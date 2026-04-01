@@ -1,0 +1,14 @@
+[Unit]
+Description=MANGO sync manager
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/mango_edge
+ExecStart=/usr/bin/python3 /opt/mango_edge/sync_manager.py
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
