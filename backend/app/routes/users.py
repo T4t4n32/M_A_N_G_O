@@ -1,19 +1,17 @@
 """
-API de gestión de usuarios M.A.N.G.O.
+API de usuarios M.A.N.G.O. — compatible con Lovable UI.
 
-Endpoints (url_prefix=/api/v1/users):
-  POST  /register        → crear cuenta (admin o primer usuario)
-  POST  /login           → login con sesión + registro histórico
-  POST  /logout          → cierra sesión
-  GET   /me              → perfil del usuario autenticado
-  GET   /me/history      → historial de logins del usuario actual
-  GET   /                → listar usuarios (solo admin)
-  PATCH /<id>/role       → cambiar rol (solo admin)
-  PATCH /<id>/active     → activar/desactivar (solo admin)
-
-Roles:
-  admin   → acceso total
-  viewer  → solo lectura del dashboard
+Endpoints que el frontend consume:
+  GET   /api/v1/users/status     → estado de sesión actual
+  POST  /api/v1/users/login      → iniciar sesión
+  POST  /api/v1/users/logout     → cerrar sesión
+  POST  /api/v1/users/register   → crear cuenta
+  GET   /api/v1/users            → listar (admin)
+  GET   /api/v1/users/me         → perfil propio
+  GET   /api/v1/users/me/history → historial de logins
+  PATCH /api/v1/users/<id>/role   → cambiar rol (admin)
+  PATCH /api/v1/users/<id>/active → activar/desactivar (admin)
+  DELETE /api/v1/users/<id>      → eliminar usuario (admin)
 """
 
 from __future__ import annotations
@@ -29,10 +27,6 @@ from app.models.user import MangoLoginEvent, MangoUser
 users_bp = Blueprint("users", __name__, url_prefix="/api/v1/users")
 
 
-# ------------------------------------------------------------------
-# Helpers
-# ------------------------------------------------------------------
-
 def _utcnow() -> datetime:
     return datetime.now(timezone.utc)
 
@@ -41,7 +35,7 @@ def _current_user() -> MangoUser | None:
     uid = session.get("user_id")
     if not uid:
         return None
-    return MangoUser.query.get(uid)
+    return db.session.get(MangoUser, uid)
 
 
 def _require_auth(fn):
@@ -71,16 +65,38 @@ def _first_user_exists() -> bool:
 
 
 # ------------------------------------------------------------------
+# Estado de sesión — el frontend lo llama al cargar la app
+# ------------------------------------------------------------------
+
+@users_bp.get("/status")
+def status():
+    """
+    GET /api/v1/users/status
+    Devuelve si hay sesión activa y datos básicos del usuario.
+    El Lovable frontend llama esto al iniciar para decidir si mostrar
+    el dashboard o redirigir a /login.
+    """
+    user = _current_user()
+    if not user or not user.active:
+        return jsonify({"authenticated": False}), 200
+
+    return jsonify({
+        "authenticated": True,
+        "user": {
+            "id":    user.id,
+            "email": user.email,
+            "name":  user.name or user.email.split("@")[0],
+            "role":  user.role,
+        },
+    }), 200
+
+
+# ------------------------------------------------------------------
 # Registro
 # ------------------------------------------------------------------
 
 @users_bp.post("/register")
 def register():
-    """
-    Crea un nuevo usuario.
-    - Si no hay ningún usuario en la DB → primer registro es admin, sin restricciones.
-    - Si ya hay usuarios → solo un admin autenticado puede crear nuevos usuarios.
-    """
     data     = request.get_json(silent=True) or {}
     email    = (data.get("email") or "").strip().lower()
     password = data.get("password") or ""
@@ -91,7 +107,7 @@ def register():
         return jsonify({"error": "email y password son requeridos"}), 400
 
     if len(password) < 8:
-        return jsonify({"error": "password debe tener al menos 8 caracteres"}), 400
+        return jsonify({"error": "El password debe tener al menos 8 caracteres"}), 400
 
     if role not in ("admin", "viewer"):
         role = "viewer"
@@ -99,7 +115,6 @@ def register():
     is_first = not _first_user_exists()
 
     if not is_first:
-        # Solo admin puede crear usuarios después del primero
         current = _current_user()
         if not current or current.role != "admin":
             return jsonify({
@@ -108,7 +123,7 @@ def register():
             }), 403
 
     if MangoUser.query.filter_by(email=email).first():
-        return jsonify({"error": "email ya registrado"}), 409
+        return jsonify({"error": "El email ya está registrado"}), 409
 
     user = MangoUser(
         email=email,
@@ -121,8 +136,8 @@ def register():
     db.session.commit()
 
     return jsonify({
-        "ok":     True,
-        "user":   user.to_dict(),
+        "ok":       True,
+        "user":     user.to_dict(),
         "is_first": is_first,
     }), 201
 
@@ -142,7 +157,6 @@ def login():
 
     user = MangoUser.query.filter_by(email=email).first()
 
-    # Registrar intento fallido
     if not user or not user.check_password(password):
         if user:
             event = MangoLoginEvent(
@@ -158,26 +172,31 @@ def login():
     if not user.active:
         return jsonify({"error": "Cuenta desactivada — contacta al administrador"}), 403
 
-    # Login exitoso
     user.record_login(
         ip=request.remote_addr,
         user_agent=request.headers.get("User-Agent"),
     )
     db.session.commit()
 
+    # Guardar en sesión — ambas claves para compatibilidad con lovable_auth
     session["user_id"] = user.id
-    session["user"]    = user.email   # compatibilidad con Lovable auth
+    session["user"]    = user.email
+    session.permanent  = True
 
     return jsonify({
         "ok":   True,
-        "user": user.to_dict(),
+        "user": {
+            "id":    user.id,
+            "email": user.email,
+            "name":  user.name or user.email.split("@")[0],
+            "role":  user.role,
+        },
     }), 200
 
 
 @users_bp.post("/logout")
 def logout():
-    session.pop("user_id", None)
-    session.pop("user",    None)
+    session.clear()
     return jsonify({"ok": True}), 200
 
 
@@ -188,8 +207,7 @@ def logout():
 @users_bp.get("/me")
 @_require_auth
 def me():
-    user = _current_user()
-    return jsonify(user.to_dict()), 200
+    return jsonify(_current_user().to_dict()), 200
 
 
 @users_bp.get("/me/history")
@@ -197,7 +215,6 @@ def me():
 def my_history():
     user  = _current_user()
     limit = min(int(request.args.get("limit", 20)), 200)
-
     events = (
         MangoLoginEvent.query
         .filter_by(user_id=user.id)
@@ -225,9 +242,8 @@ def list_users():
 @users_bp.get("/<int:user_id>/history")
 @_require_admin
 def user_history(user_id: int):
-    user = MangoUser.query.get_or_404(user_id)
+    user  = db.get_or_404(MangoUser, user_id)
     limit = min(int(request.args.get("limit", 50)), 500)
-
     events = (
         MangoLoginEvent.query
         .filter_by(user_id=user.id)
@@ -244,14 +260,13 @@ def user_history(user_id: int):
 @users_bp.patch("/<int:user_id>/role")
 @_require_admin
 def change_role(user_id: int):
-    user = MangoUser.query.get_or_404(user_id)
-    data = request.get_json(silent=True) or {}
-    role = data.get("role")
+    user    = db.get_or_404(MangoUser, user_id)
+    data    = request.get_json(silent=True) or {}
+    role    = data.get("role")
+    current = _current_user()
 
     if role not in ("admin", "viewer"):
         return jsonify({"error": "role debe ser 'admin' o 'viewer'"}), 400
-
-    current = _current_user()
     if user.id == current.id:
         return jsonify({"error": "No puedes cambiar tu propio rol"}), 400
 
@@ -263,13 +278,27 @@ def change_role(user_id: int):
 @users_bp.patch("/<int:user_id>/active")
 @_require_admin
 def toggle_active(user_id: int):
-    user = MangoUser.query.get_or_404(user_id)
-    data = request.get_json(silent=True) or {}
-
+    user    = db.get_or_404(MangoUser, user_id)
+    data    = request.get_json(silent=True) or {}
     current = _current_user()
+
     if user.id == current.id:
         return jsonify({"error": "No puedes desactivarte a ti mismo"}), 400
 
     user.active = bool(data.get("active", not user.active))
     db.session.commit()
     return jsonify({"ok": True, "user": user.to_dict()}), 200
+
+
+@users_bp.delete("/<int:user_id>")
+@_require_admin
+def delete_user(user_id: int):
+    user    = db.get_or_404(MangoUser, user_id)
+    current = _current_user()
+
+    if user.id == current.id:
+        return jsonify({"error": "No puedes eliminarte a ti mismo"}), 400
+
+    db.session.delete(user)
+    db.session.commit()
+    return jsonify({"ok": True, "deleted_id": user_id}), 200

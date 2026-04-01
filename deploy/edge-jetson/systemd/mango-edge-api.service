@@ -1,0 +1,16 @@
+[Unit]
+Description=MANGO Edge — local dashboard API (port 9100)
+After=local-fs.target
+
+[Service]
+Type=simple
+User=mango
+WorkingDirectory=/opt/mango_node
+EnvironmentFile=/opt/mango_node/.env
+ExecStart=/usr/bin/python3 -m mango_node.local_api
+Restart=always
+RestartSec=3
+Environment=PYTHONUNBUFFERED=1
+
+[Install]
+WantedBy=multi-user.target

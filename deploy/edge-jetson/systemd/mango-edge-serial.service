@@ -1,16 +1,16 @@
 [Unit]
-Description=MANGO Edge — sync manager (SQLite → VPS / LoRa)
-After=network-online.target
-Wants=network-online.target
+Description=MANGO Edge — serial acquisition (ESP32 → SQLite)
+After=local-fs.target
+Wants=local-fs.target
 
 [Service]
 Type=simple
 User=mango
 WorkingDirectory=/opt/mango_node
 EnvironmentFile=/opt/mango_node/.env
-ExecStart=/usr/bin/python3 -m mango_node.sync_manager
+ExecStart=/usr/bin/python3 -m mango_node.serial_acquire
 Restart=always
-RestartSec=5
+RestartSec=3
 StandardOutput=journal
 StandardError=journal
 Environment=PYTHONUNBUFFERED=1

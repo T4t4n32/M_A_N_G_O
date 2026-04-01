@@ -1,38 +1,21 @@
-"""
-Application configuration.
-
-This module defines a simple ``Config`` class which reads
-configuration values from environment variables with sensible
-defaults. It can be extended or replaced in the future if more
-complex configuration management is required.
-"""
-
 from __future__ import annotations
 
 import os
+from datetime import timedelta
 
 
 class Config:
-    """Base configuration for the Flask application.
-
-    Attributes
-    ----------
-    SQLALCHEMY_DATABASE_URI : str
-        The database connection URI. If not provided via the
-        ``DATABASE_URL`` environment variable, defaults to an empty
-        string which causes SQLAlchemy to defer connection until
-        explicitly configured.
-    SQLALCHEMY_TRACK_MODIFICATIONS : bool
-        Disable modification tracking overhead in SQLAlchemy.
-    REDIS_URL : str
-        The Redis connection URI used by Celery and optional cache.
-        Defaults to ``redis://redis:6379/0``.
-    SECRET_KEY : str
-        Secret key used for session signing. Should be changed in
-        production to a long, random value.
-    """
-
+    # Database
     SQLALCHEMY_DATABASE_URI: str = os.getenv("DATABASE_URL", "")
     SQLALCHEMY_TRACK_MODIFICATIONS: bool = False
+
+    # Redis
     REDIS_URL: str = os.getenv("REDIS_URL", "redis://redis:6379/0")
+
+    # Sessions
     SECRET_KEY: str = os.getenv("SECRET_KEY", "change-me")
+    SESSION_COOKIE_HTTPONLY:  bool = True
+    SESSION_COOKIE_SAMESITE:  str  = "Lax"
+    # En producción con HTTPS se activa Secure automáticamente
+    SESSION_COOKIE_SECURE:    bool = os.getenv("SESSION_SECURE", "0") in ("1", "true", "yes")
+    PERMANENT_SESSION_LIFETIME: timedelta = timedelta(days=7)
