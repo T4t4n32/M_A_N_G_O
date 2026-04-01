@@ -1,0 +1,62 @@
+Usemos esto que sigue para las fotos de "Temporadas que Construyeron el Camino" y la de "Hitos y Expasion", y ademas, agrega la opcion de hacer clic y que haga expanda la imagen, asi que integremos eso con lo siguiente:
+Circular Gallery:
+npx shadcn@latest add @react-bits/CircularGallery-TS-CSS
+import CircularGallery from './CircularGallery'
+
+<div style={{ height: '600px', position: 'relative' }}>
+  <CircularGallery bend={3} textColor="#ffffff" borderRadius={0.05} scrollEase={0.02}
+  bend={0}
+  borderRadius={0.13}
+  scrollSpeed={3.1}
+  scrollEase={0.07}
+/>
+</div>
+
+Para cuando la pagina arroje "404", colocar este texto:
+Fuzzy Text:
+npx shadcn@latest add @react-bits/FuzzyText-TS-CSS
+import FuzzyText from './FuzzyText';
+  
+<FuzzyText 
+  baseIntensity={0.2}
+  hoverIntensity={0.5}
+  enableHover
+>
+  404
+</FuzzyText>
+
+Para la seccion de "Temporadas que Construyeron el Camino" y la de "Hitos y Expasion", usemos esto:
+Chroma Grid:
+npx shadcn@latest add @react-bits/ChromaGrid-TS-CSS
+import ChromaGrid from './ChromaGrid'
+
+const items = [
+  {
+    image: "https://i.pravatar.cc/300?img=1",
+    title: "Sarah Johnson",
+    subtitle: "Frontend Developer",
+    handle: "@sarahjohnson",
+    borderColor: "#3B82F6",
+    gradient: "linear-gradient(145deg, #3B82F6, #000)",
+    url: "https://github.com/sarahjohnson"
+  },
+  {
+    image: "https://i.pravatar.cc/300?img=2",
+    title: "Mike Chen",
+    subtitle: "Backend Engineer",
+    handle: "@mikechen",
+    borderColor: "#10B981",
+    gradient: "linear-gradient(180deg, #10B981, #000)",
+    url: "https://linkedin.com/in/mikechen"
+  }
+];
+
+<div style={{ height: '600px', position: 'relative' }}>
+  <ChromaGrid 
+    items={items}
+    radius={300}
+    damping={0.45}
+    fadeOut={0.6}
+    ease="power3.out"
+  />
+</div>

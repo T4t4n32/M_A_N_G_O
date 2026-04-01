@@ -1,0 +1,348 @@
+import { useState } from "react";
+import { useAuth } from "@/hooks/useAuth";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { getUsers, register, deleteUser, ApiError } from "@/lib/api";
+import type { UserRecord, UserRole } from "@/types/dashboard";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Users,
+  UserPlus,
+  Trash2,
+  Loader2,
+  AlertCircle,
+  CheckCircle2,
+  ArrowLeft,
+  Shield,
+  Eye,
+} from "lucide-react";
+import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
+import DecryptedText from "@/components/effects/DecryptedText";
+import GradientText from "@/components/effects/GradientText";
+import BorderGlow from "@/components/effects/BorderGlow";
+
+export default function Admin() {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+
+  // Registration form state
+  const [regEmail, setRegEmail] = useState("");
+  const [regPassword, setRegPassword] = useState("");
+  const [regName, setRegName] = useState("");
+  const [regRole, setRegRole] = useState<UserRole>("viewer");
+  const [regError, setRegError] = useState<string | null>(null);
+  const [regSuccess, setRegSuccess] = useState<string | null>(null);
+
+  // Fetch users
+  const usersQuery = useQuery<UserRecord[]>({
+    queryKey: ["admin-users"],
+    queryFn: getUsers,
+    retry: 1,
+    refetchOnWindowFocus: false,
+  });
+
+  // Register mutation
+  const registerMutation = useMutation({
+    mutationFn: register,
+    onSuccess: (res) => {
+      setRegSuccess(res.message || "Usuario registrado exitosamente.");
+      setRegError(null);
+      setRegEmail("");
+      setRegPassword("");
+      setRegName("");
+      setRegRole("viewer");
+      queryClient.invalidateQueries({ queryKey: ["admin-users"] });
+    },
+    onError: (err: unknown) => {
+      setRegSuccess(null);
+      if (err instanceof ApiError) {
+        setRegError(err.message);
+      } else {
+        setRegError("Error al registrar usuario.");
+      }
+    },
+  });
+
+  // Delete mutation
+  const deleteMutation = useMutation({
+    mutationFn: deleteUser,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-users"] });
+    },
+  });
+
+  const handleRegister = (ev: React.FormEvent) => {
+    ev.preventDefault();
+    setRegError(null);
+    setRegSuccess(null);
+
+    if (!regEmail || !regPassword || !regName) {
+      setRegError("Todos los campos son obligatorios.");
+      return;
+    }
+    if (regPassword.length < 6) {
+      setRegError("La contraseña debe tener al menos 6 caracteres.");
+      return;
+    }
+
+    registerMutation.mutate({
+      email: regEmail,
+      password: regPassword,
+      name: regName,
+      role: regRole,
+    });
+  };
+
+  const roleIcon = (role: UserRole) =>
+    role === "admin" ? (
+      <Shield className="h-3.5 w-3.5 text-amber-400" />
+    ) : (
+      <Eye className="h-3.5 w-3.5 text-blue-400" />
+    );
+
+  return (
+    <div className="min-h-screen bg-[hsl(205,35%,8%)] relative">
+      {/* Background accents */}
+      <div className="fixed inset-0 bg-[radial-gradient(ellipse_at_20%_80%,hsl(168_72%_42%/0.06),transparent_55%)] pointer-events-none" />
+      <div className="fixed inset-0 bg-[radial-gradient(ellipse_at_80%_20%,hsl(204_70%_53%/0.05),transparent_50%)] pointer-events-none" />
+
+      <header className="border-b border-white/[0.06] bg-white/[0.02] backdrop-blur-md">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate("/dashboard")}
+              className="text-white/50 hover:text-white hover:bg-white/[0.06]"
+            >
+              <ArrowLeft className="h-4 w-4 mr-1" />
+              Dashboard
+            </Button>
+            <div className="h-5 w-px bg-white/10" />
+            <h1 className="text-lg font-semibold text-white">
+              <DecryptedText
+                text="Gestión de Usuarios"
+                speed={35}
+                maxIterations={6}
+                animateOn="view"
+                className="text-white"
+                encryptedClassName="text-accent/30"
+              />
+            </h1>
+          </div>
+          <p className="text-xs text-white/40 hidden sm:block">
+            {user?.email}
+          </p>
+        </div>
+      </header>
+
+      <main className="max-w-5xl mx-auto px-4 sm:px-6 py-8 space-y-8 relative z-10">
+        {/* Registration Form */}
+        <motion.section
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+        >
+          <div className="flex items-center gap-2 mb-4">
+            <UserPlus className="h-4 w-4 text-[hsl(168,72%,42%)]" />
+            <h2 className="text-sm font-semibold tracking-wide uppercase text-white/70">
+              Registrar Nuevo Usuario
+            </h2>
+          </div>
+
+          <BorderGlow
+            borderRadius={12}
+            glowRadius={20}
+            glowIntensity={0.5}
+            colors={["#00c9a7", "#38bdf8", "#c084fc"]}
+          >
+            <form onSubmit={handleRegister} className="p-6 space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <Label className="text-white/60 text-xs">Nombre completo</Label>
+                  <Input
+                    value={regName}
+                    onChange={(e) => setRegName(e.target.value)}
+                    placeholder="Juan Pérez"
+                    className="h-10 bg-white/[0.05] border-white/[0.1] text-white placeholder:text-white/25 rounded-lg"
+                    disabled={registerMutation.isPending}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-white/60 text-xs">Email</Label>
+                  <Input
+                    type="email"
+                    value={regEmail}
+                    onChange={(e) => setRegEmail(e.target.value)}
+                    placeholder="usuario@institucion.edu"
+                    className="h-10 bg-white/[0.05] border-white/[0.1] text-white placeholder:text-white/25 rounded-lg"
+                    disabled={registerMutation.isPending}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-white/60 text-xs">Contraseña</Label>
+                  <Input
+                    type="password"
+                    value={regPassword}
+                    onChange={(e) => setRegPassword(e.target.value)}
+                    placeholder="Mínimo 6 caracteres"
+                    className="h-10 bg-white/[0.05] border-white/[0.1] text-white placeholder:text-white/25 rounded-lg"
+                    disabled={registerMutation.isPending}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-white/60 text-xs">Rol</Label>
+                  <Select
+                    value={regRole}
+                    onValueChange={(v) => setRegRole(v as UserRole)}
+                    disabled={registerMutation.isPending}
+                  >
+                    <SelectTrigger className="h-10 bg-white/[0.05] border-white/[0.1] text-white rounded-lg">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="viewer">Viewer</SelectItem>
+                      <SelectItem value="admin">Admin</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              {regError && (
+                <div className="flex items-center gap-2 text-sm text-red-400">
+                  <AlertCircle className="h-4 w-4 shrink-0" />
+                  {regError}
+                </div>
+              )}
+              {regSuccess && (
+                <div className="flex items-center gap-2 text-sm text-emerald-400">
+                  <CheckCircle2 className="h-4 w-4 shrink-0" />
+                  {regSuccess}
+                </div>
+              )}
+
+              <Button
+                type="submit"
+                disabled={registerMutation.isPending}
+                className="bg-gradient-to-r from-[hsl(168,72%,42%)] to-[hsl(204,70%,53%)] hover:from-[hsl(168,72%,38%)] hover:to-[hsl(204,70%,48%)] text-white rounded-lg font-medium"
+              >
+                {registerMutation.isPending && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+                Registrar Usuario
+              </Button>
+            </form>
+          </BorderGlow>
+        </motion.section>
+
+        {/* Users Table */}
+        <motion.section
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.15 }}
+        >
+          <div className="flex items-center gap-2 mb-4">
+            <Users className="h-4 w-4 text-[hsl(168,72%,42%)]" />
+            <h2 className="text-sm font-semibold tracking-wide uppercase text-white/70">
+              Usuarios Registrados
+            </h2>
+          </div>
+
+          <BorderGlow
+            borderRadius={12}
+            glowRadius={20}
+            glowIntensity={0.5}
+            colors={["#00c9a7", "#38bdf8", "#c084fc"]}
+          >
+            <div className="p-4">
+              {usersQuery.isLoading ? (
+                <div className="flex items-center justify-center py-12 gap-3">
+                  <Loader2 className="h-5 w-5 animate-spin text-white/40" />
+                  <span className="text-sm text-white/40">Cargando usuarios…</span>
+                </div>
+              ) : usersQuery.isError ? (
+                <div className="flex items-center justify-center py-12 gap-2 text-white/40">
+                  <AlertCircle className="h-5 w-5" />
+                  <span className="text-sm">No se pudieron cargar los usuarios. El endpoint puede no estar disponible.</span>
+                </div>
+              ) : !usersQuery.data || usersQuery.data.length === 0 ? (
+                <div className="text-center py-12 text-white/30 text-sm">
+                  No hay usuarios registrados.
+                </div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow className="border-white/[0.06] hover:bg-transparent">
+                      <TableHead className="text-white/50">Nombre</TableHead>
+                      <TableHead className="text-white/50">Email</TableHead>
+                      <TableHead className="text-white/50">Rol</TableHead>
+                      <TableHead className="text-white/50 text-right">Acciones</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {usersQuery.data.map((u) => (
+                      <TableRow key={u.id} className="border-white/[0.04] hover:bg-white/[0.02]">
+                        <TableCell className="text-white/80 font-medium">{u.name || "—"}</TableCell>
+                        <TableCell className="text-white/60 text-sm">{u.email}</TableCell>
+                        <TableCell>
+                          <span className="inline-flex items-center gap-1.5 text-xs font-medium capitalize">
+                            {roleIcon(u.role)}
+                            <span className="text-white/60">{u.role}</span>
+                          </span>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          {u.email !== user?.email && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => {
+                                if (confirm(`¿Eliminar al usuario ${u.email}?`)) {
+                                  deleteMutation.mutate(u.id);
+                                }
+                              }}
+                              disabled={deleteMutation.isPending}
+                              className="text-red-400/60 hover:text-red-400 hover:bg-red-400/10"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            </div>
+          </BorderGlow>
+        </motion.section>
+
+        {/* Footer */}
+        <p className="text-center text-[11px] pb-6">
+          <GradientText
+            colors={["#00c9a7", "#38bdf8", "#c084fc", "#00c9a7"]}
+            animationSpeed={10}
+            className="text-[11px]"
+          >
+            M.A.N.G.O · Gestión de Usuarios
+          </GradientText>
+        </p>
+      </main>
+    </div>
+  );
+}
