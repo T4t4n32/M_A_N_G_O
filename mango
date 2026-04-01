@@ -1,56 +1,229 @@
 #!/bin/sh
 set -eu
 
-BASE="compose.yaml"
-RX="compose.rx.yaml"
+# ---------------------------
+# M.A.N.G.O HUB (portable sh)
+# ---------------------------
+
+# Resolve repo root based on where THIS script lives (run from anywhere)
+ROOT_DIR="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
+
+BASE_COMPOSE="${BASE_COMPOSE:-$ROOT_DIR/compose.yaml}"
+RX_COMPOSE="${RX_COMPOSE:-$ROOT_DIR/compose.rx.yaml}"
 
 need() { command -v "$1" >/dev/null 2>&1 || { echo "[mango] Falta '$1'"; exit 1; }; }
+have_file() { [ -f "$1" ]; }
 
-dc() { docker compose -f "$BASE" "$@"; }
-dcx() { docker compose -f "$BASE" -f "$RX" "$@"; }
+dc()  { docker compose -f "$BASE_COMPOSE" "$@"; }
+dcx() {
+  if have_file "$RX_COMPOSE"; then
+    docker compose -f "$BASE_COMPOSE" -f "$RX_COMPOSE" "$@"
+  else
+    docker compose -f "$BASE_COMPOSE" "$@"
+  fi
+}
 
-up() { dc up -d --build; }
-down() { dc down --remove-orphans; }
-purge() { dc down --remove-orphans --volumes; }
+# ---------------------------
+# Core stack
+# ---------------------------
+up()   { need docker; dc up -d --build; }
+down() { need docker; dc down --remove-orphans; }
+purge(){ need docker; dc down --remove-orphans --volumes; }
 
-dummy_on() { dcx --profile dummy up -d --build bridge_dummy; echo "[mango] dummy ON"; }
-dummy_off() { dcx --profile dummy stop bridge_dummy >/dev/null 2>&1 || true; dcx --profile dummy rm -f bridge_dummy >/dev/null 2>&1 || true; echo "[mango] dummy OFF"; }
+dummy_on()  { need docker; have_file "$RX_COMPOSE" || { echo "[mango] Falta $RX_COMPOSE"; exit 1; }; dcx --profile dummy up -d --build bridge_dummy; echo "[mango] dummy ON"; }
+dummy_off() { need docker; have_file "$RX_COMPOSE" || { echo "[mango] Falta $RX_COMPOSE"; exit 1; }; dcx --profile dummy stop bridge_dummy >/dev/null 2>&1 || true; dcx --profile dummy rm -f bridge_dummy >/dev/null 2>&1 || true; echo "[mango] dummy OFF"; }
 
 doctor() {
   need curl
-  echo "[mango] UI:   http://localhost:${NGINX_HTTP_PORT:-8080}/"
-  echo "[mango] API:  http://localhost:${API_HOST_PORT:-8000}/api/v1/health"
+  echo "[mango] Repo: $ROOT_DIR"
+  echo "[mango] UI (local):  http://localhost:${NGINX_HTTP_PORT:-8080}/"
+  echo "[mango] API (local): http://localhost:${API_HOST_PORT:-8000}/api/v1/health"
   printf "[mango] health: "
   curl -fsS "http://localhost:${API_HOST_PORT:-8000}/api/v1/health" >/dev/null 2>&1 && echo OK || echo FAIL
   printf "[mango] latest: "
   curl -fsS "http://localhost:${NGINX_HTTP_PORT:-8080}/api/v1/latest/by_type" >/dev/null 2>&1 && echo OK || echo FAIL
 }
 
+# ---------------------------
+# UI: Build / Sync / Publish
+# ---------------------------
+
+# Build Lovable UI (only if npm exists). If lock is out of sync, fall back to npm install.
+ui_build() {
+  need npm
+  LOVABLE_DIR="${LOVABLE_DIR:-$ROOT_DIR/lovable_ui/MANGO_PAGE_LOVABLE_V1.8}"
+  [ -d "$LOVABLE_DIR" ] || { echo "[mango] No existe LOVABLE_DIR: $LOVABLE_DIR"; exit 1; }
+
+  echo "[mango] UI build in: $LOVABLE_DIR"
+  cd "$LOVABLE_DIR"
+
+  if [ -f package-lock.json ]; then
+    echo "[mango] Trying npm ci..."
+    npm ci || { echo "[mango] npm ci falló; usando npm install para regenerar lock"; rm -rf node_modules package-lock.json 2>/dev/null || true; npm install; }
+  else
+    npm install
+  fi
+
+  npm run build
+  [ -f dist/index.html ] || { echo "[mango] Build no generó dist/index.html"; exit 1; }
+  echo "[mango] Build OK: $LOVABLE_DIR/dist/index.html"
+}
+
+# Sync local dist/ to VPS staging directory via rsync/ssh
+ui_sync() {
+  need rsync
+  need ssh
+
+  VPS_HOST="${VPS_HOST:-}"
+  VPS_USER="${VPS_USER:-mango}"
+  VPS_PORT="${VPS_PORT:-22}"
+
+  [ -n "$VPS_HOST" ] || { echo "[mango] Falta VPS_HOST. Ej: VPS_HOST=158.69.193.158"; exit 1; }
+
+  LOCAL_DIST="${LOCAL_DIST:-$ROOT_DIR/lovable_ui/MANGO_PAGE_LOVABLE_V1.8/dist}"
+  [ -d "$LOCAL_DIST" ] || { echo "[mango] No existe LOCAL_DIST: $LOCAL_DIST (¿ya hiciste build?)"; exit 1; }
+
+  REMOTE_STAGE="${REMOTE_STAGE:-~/mango-ui/}"
+  echo "[mango] Sync $LOCAL_DIST/ -> $VPS_USER@$VPS_HOST:$REMOTE_STAGE (ssh port $VPS_PORT)"
+
+  rsync -az --delete -e "ssh -p $VPS_PORT" "$LOCAL_DIST/." "$VPS_USER@$VPS_HOST:$REMOTE_STAGE"
+  echo "[mango] UI sync OK"
+}
+
+# Publish staged UI to Nginx web root on the VPS (RUN THIS ON VPS)
+ui_publish() {
+  need rsync
+  need find
+
+  UI_STAGING="${UI_STAGING:-$HOME/mango-ui}"
+  UI_TARGET="${UI_TARGET:-/var/www/mango-ui}"
+
+  [ -d "$UI_STAGING" ] || { echo "[mango] No existe UI_STAGING: $UI_STAGING"; exit 1; }
+
+  if command -v sudo >/dev/null 2>&1; then
+    SUDO="sudo"
+  else
+    SUDO=""
+  fi
+
+  echo "[mango] Publish UI: $UI_STAGING/ -> $UI_TARGET/"
+  $SUDO mkdir -p "$UI_TARGET"
+  $SUDO rsync -a --delete "$UI_STAGING/." "$UI_TARGET/"
+
+  # Correct permissions for nginx to read (dirs 755, files 644)
+  $SUDO chown -R www-data:www-data "$UI_TARGET"
+  $SUDO find "$UI_TARGET" -type d -exec chmod 755 {} \;
+  $SUDO find "$UI_TARGET" -type f -exec chmod 644 {} \;
+
+  # Reload nginx
+  if command -v systemctl >/dev/null 2>&1; then
+    $SUDO systemctl reload nginx || $SUDO systemctl restart nginx
+  else
+    $SUDO service nginx reload || $SUDO service nginx restart
+  fi
+
+  echo "[mango] Publish OK"
+}
+
+# One command from your PC: build -> sync -> remote publish
+ui_deploy() {
+  VPS_HOST="${VPS_HOST:-}"
+  VPS_USER="${VPS_USER:-mango}"
+  VPS_PORT="${VPS_PORT:-22}"
+  REMOTE_MANGO="${REMOTE_MANGO:-~/M_A_N_G_O/mango}"
+
+  [ -n "$VPS_HOST" ] || { echo "[mango] Falta VPS_HOST"; exit 1; }
+
+  # build if npm exists (optional); if not, you can build elsewhere then run ui-sync
+  if command -v npm >/dev/null 2>&1; then
+    ui_build
+  else
+    echo "[mango] npm no está en esta máquina; saltando ui-build (usa una máquina con node)"
+  fi
+
+  ui_sync
+
+  echo "[mango] Running remote publish: $REMOTE_MANGO ui-publish"
+  ssh -p "$VPS_PORT" "$VPS_USER@$VPS_HOST" "$REMOTE_MANGO ui-publish"
+  echo "[mango] UI deploy OK (domain should be updated)"
+}
+
+# ---------------------------
+# Bootstrap / deps
+# ---------------------------
+
+bootstrap() {
+  # Installs common tools on Debian/Ubuntu (requires sudo)
+  if ! command -v sudo >/dev/null 2>&1; then
+    echo "[mango] bootstrap requiere sudo"
+    exit 1
+  fi
+
+  if command -v apt-get >/dev/null 2>&1; then
+    sudo apt-get update
+    sudo apt-get install -y curl rsync unzip ca-certificates gnupg lsb-release
+    echo "[mango] bootstrap OK (curl/rsync/unzip/ca-certificates/gnupg/lsb-release)"
+    echo "[mango] Si necesitas nginx: sudo apt-get install -y nginx"
+  else
+    echo "[mango] bootstrap automático solo soporta Debian/Ubuntu (apt-get)."
+    exit 1
+  fi
+}
+
+docker_noroot() {
+  # Optional: run docker without sudo (security note)
+  if ! command -v sudo >/dev/null 2>&1; then
+    echo "[mango] docker-noroot requiere sudo"
+    exit 1
+  fi
+  sudo groupadd docker 2>/dev/null || true
+  sudo usermod -aG docker "$USER"
+  echo "[mango] Listo. Ejecuta: newgrp docker  (o cierra sesión y vuelve a entrar)"
+  echo "[mango] OJO: el grupo docker da privilegios tipo root."
+}
+
 usage() {
-  cat <<'USAGE'
+  cat <<USAGE
 Uso:
-  ./mango up
-  ./mango down
-  ./mango purge        # BORRA volúmenes (DB) - cuidado
-  ./mango dummy-on     # sin RX/TX
-  ./mango dummy-off
+  ./mango up | down | purge
+  ./mango dummy-on | dummy-off
   ./mango doctor
 
-URLs:
-  UI:   http://localhost:8080/
-  API:  http://localhost:8000/api/v1/health
-  DATA: http://localhost:8080/api/v1/latest/by_type
+UI (PC con Node):
+  ./mango ui-build
+  VPS_HOST=IP VPS_PORT=5972 VPS_USER=mango ./mango ui-sync
+  VPS_HOST=IP VPS_PORT=5972 VPS_USER=mango ./mango ui-deploy
+
+UI (VPS):
+  ./mango ui-publish     # publica ~/mango-ui -> /var/www/mango-ui y recarga nginx
+
+Bootstrap:
+  ./mango bootstrap
+  ./mango docker-noroot  # opcional
+
+Variables útiles:
+  LOVABLE_DIR=...     (default lovable_ui/MANGO_PAGE_LOVABLE_V1.8)
+  LOCAL_DIST=...      (default \$LOVABLE_DIR/dist)
+  UI_STAGING=...      (default ~/mango-ui)
+  UI_TARGET=...       (default /var/www/mango-ui)
+
 USAGE
 }
 
 cmd="${1:-}"
 case "$cmd" in
-  up) need docker; up ;;
-  down) need docker; down ;;
-  purge) need docker; purge ;;
-  dummy-on) need docker; dummy_on ;;
-  dummy-off) need docker; dummy_off ;;
+  up) up ;;
+  down) down ;;
+  purge) purge ;;
+  dummy-on) dummy_on ;;
+  dummy-off) dummy_off ;;
   doctor) doctor ;;
+  ui-build) ui_build ;;
+  ui-sync) ui_sync ;;
+  ui-publish) ui_publish ;;
+  ui-deploy) ui_deploy ;;
+  bootstrap) bootstrap ;;
+  docker-noroot) docker_noroot ;;
   ""|help|-h|--help) usage ;;
   *) echo "[mango] Comando desconocido: $cmd"; usage; exit 1 ;;
 esac

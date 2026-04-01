@@ -1,0 +1,13 @@
+[Unit]
+Description=MANGO sensor acquisition
+After=local-fs.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/mango_edge
+ExecStart=/usr/bin/python3 /opt/mango_edge/acquire.py
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
