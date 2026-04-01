@@ -93,6 +93,13 @@ def register_routes(app) -> None:
         safe_register(users_bp)
     except Exception as e:
         log.exception("users import/register failed: %s", e)
+        
+    # Contact form
+    try:
+        from .contact import contact_bp
+        safe_register(contact_bp)
+    except Exception as e:
+        log.exception("contact import/register failed: %s", e)
 
     # -----------------------
     # OPTIONAL (experimental)

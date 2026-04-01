@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from flask import Flask, jsonify
+from flask_cors import CORS
 
 from .config import Config
 from .extensions import db, init_redis
@@ -11,11 +12,23 @@ def create_app() -> Flask:
     app = Flask(__name__)
     app.config.from_object(Config())
 
+    # CORS — credentials: include para que las cookies de sesión funcionen
+    CORS(
+        app,
+        supports_credentials=True,
+        origins=[
+            "https://integramosoe.com",
+            "https://www.integramosoe.com",
+            "http://localhost:5173",   # Vite dev
+            "http://localhost:3000",
+            "http://localhost:8080",
+        ],
+    )
+
     db.init_app(app)
     init_redis(app)
     register_routes(app)
 
-    # Error handlers coherentes con el resto de la API
     @app.errorhandler(404)
     def not_found(e):
         return jsonify({"error": "not_found", "message": str(e)}), 404
@@ -29,4 +42,3 @@ def create_app() -> Flask:
         return jsonify({"error": "internal_server_error"}), 500
 
     return app
-
