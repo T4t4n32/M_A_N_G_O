@@ -87,6 +87,13 @@ def register_routes(app) -> None:
     except Exception as e:
         log.warning("lovable_auth not loaded (optional): %s", e)
 
+    # User management (register, login, history)
+    try:
+        from .users import users_bp
+        safe_register(users_bp)
+    except Exception as e:
+        log.exception("users import/register failed: %s", e)
+
     # -----------------------
     # OPTIONAL (experimental)
     # -----------------------
