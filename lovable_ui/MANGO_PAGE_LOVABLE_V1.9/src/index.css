@@ -1,0 +1,170 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@300;400;500;600;700;800&family=Merriweather:wght@400;700&display=swap');
+
+@layer base {
+  :root {
+    --background: 200 35% 96%;
+    --foreground: 205 35% 15%;
+
+    --card: 200 30% 98%;
+    --card-foreground: 205 35% 15%;
+
+    --popover: 200 25% 92%;
+    --popover-foreground: 205 35% 15%;
+
+    --primary: 200 72% 42%;
+    --primary-foreground: 200 90% 97%;
+
+    --secondary: 195 30% 35%;
+    --secondary-foreground: 195 20% 97%;
+
+    --muted: 200 18% 65%;
+    --muted-foreground: 200 20% 30%;
+
+    --accent: 175 55% 90%;
+    --accent-foreground: 185 65% 32%;
+
+    --destructive: 0 72% 50%;
+    --destructive-foreground: 0 85% 97%;
+
+    --border: 200 22% 84%;
+    --input: 200 22% 84%;
+    --ring: 200 72% 42%;
+
+    --radius: 0.875rem;
+
+    --sidebar-background: 195 30% 94%;
+    --sidebar-foreground: 205 35% 15%;
+    --sidebar-primary: 200 72% 42%;
+    --sidebar-primary-foreground: 200 90% 97%;
+    --sidebar-accent: 195 30% 35%;
+    --sidebar-accent-foreground: 195 20% 97%;
+    --sidebar-border: 200 22% 84%;
+    --sidebar-ring: 200 72% 42%;
+
+    --mango-dark: 210 35% 8%;
+    --mango-blue: 200 65% 50%;
+    --mango-teal: 180 55% 42%;
+    --mango-deep: 210 38% 6%;
+    --mango-slate: 210 28% 14%;
+    --chart-1: 200 65% 52%;
+    --chart-2: 175 55% 48%;
+    --chart-3: 215 50% 55%;
+    --chart-4: 165 50% 48%;
+    --chart-5: 195 25% 50%;
+    --alert-normal: 160 60% 42%;
+    --alert-normal-foreground: 160 60% 15%;
+    --alert-warning: 38 92% 50%;
+    --alert-warning-foreground: 38 92% 15%;
+    --alert-critical: 0 72% 50%;
+    --alert-critical-foreground: 0 85% 97%;
+    --sidebar: 0 0% 98%;
+    --font-sans: "Source Sans 3", ui-sans-serif, system-ui, sans-serif;
+    --font-serif: Merriweather, ui-serif, Georgia, serif;
+    --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    --shadow-2xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
+    --shadow-xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
+    --shadow-sm: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 1px 2px -1px hsl(0 0% 0% / 0.1);
+    --shadow: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 1px 2px -1px hsl(0 0% 0% / 0.1);
+    --shadow-md: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 2px 4px -1px hsl(0 0% 0% / 0.1);
+    --shadow-lg: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 4px 6px -1px hsl(0 0% 0% / 0.1);
+    --shadow-xl: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 8px 10px -1px hsl(0 0% 0% / 0.1);
+    --shadow-2xl: 0 1px 3px 0px hsl(0 0% 0% / 0.25);
+    --tracking-normal: 0em;
+    --spacing: 0.25rem;
+  }
+
+  .dark {
+    --background: 210 35% 8%;
+    --foreground: 195 30% 93%;
+
+    --card: 210 30% 12%;
+    --card-foreground: 195 30% 93%;
+
+    --popover: 210 28% 14%;
+    --popover-foreground: 195 30% 93%;
+
+    --primary: 195 70% 48%;
+    --primary-foreground: 200 90% 95%;
+
+    --secondary: 210 28% 18%;
+    --secondary-foreground: 195 25% 90%;
+
+    --muted: 210 22% 18%;
+    --muted-foreground: 195 20% 68%;
+
+    --accent: 50 90% 58%;
+    --accent-foreground: 210 35% 8%;
+
+    --destructive: 0 65% 51%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 210 25% 16%;
+    --input: 210 28% 14%;
+    --ring: 50 90% 58%;
+
+    --sidebar-background: 210 32% 10%;
+    --sidebar-foreground: 195 25% 96%;
+    --sidebar-primary: 195 65% 52%;
+    --sidebar-primary-foreground: 210 35% 8%;
+    --sidebar-accent: 180 50% 45%;
+    --sidebar-accent-foreground: 210 35% 8%;
+    --sidebar-border: 210 25% 18%;
+    --sidebar-ring: 195 65% 52%;
+    --mango-dark: 210 35% 8%;
+    --mango-deep: 210 38% 6%;
+    --mango-slate: 210 28% 14%;
+    --chart-1: 195 70% 50%;
+    --chart-2: 50 90% 58%;
+    --chart-3: 180 50% 45%;
+    --chart-4: 215 50% 52%;
+    --chart-5: 170 45% 40%;
+    --alert-normal: 160 55% 45%;
+    --alert-normal-foreground: 160 55% 90%;
+    --alert-warning: 42 90% 55%;
+    --alert-warning-foreground: 42 90% 12%;
+    --alert-critical: 0 65% 51%;
+    --alert-critical-foreground: 0 0% 100%;
+    --sidebar: 0 0% 14%;
+    --shadow-2xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
+    --shadow-xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
+    --shadow-sm: 0px 1px 7px 1px hsla(142, 83%, 93%, 0.71);
+    --shadow: 0px 1px 14px 1px hsla(142, 83%, 93%, 0.71);
+    --shadow-md: 0px 1px 21px 1px hsla(142, 83%, 93%, 0.71);
+    --shadow-lg: 0px 1px 35px 1px hsla(142, 83%, 93%, 0.71);
+    --shadow-xl: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 8px 10px -1px hsl(0 0% 0% / 0.1);
+    --shadow-2xl: 0 1px 3px 0px hsl(0 0% 0% / 0.25);
+    --radius: 0rem;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+@keyframes gradient-shift {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 300% 50%; }
+}
+
+.gradient-rotating-char {
+  background-image: linear-gradient(90deg, #00ffcc, #38bdf8, #ffffff, #00ffcc);
+  background-size: 300% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: gradient-shift 8s linear infinite;
+}
