@@ -36,3 +36,4 @@ venv/
 .env.production
 .env.local
 deploy/**/.env
+.obsidian/
