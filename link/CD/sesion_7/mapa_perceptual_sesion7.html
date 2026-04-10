@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mapa Perceptual — Sesión 7</title>
+<style>
+  #btn-download { margin-top: 16px; padding: 9px 20px; background: #1f4e79; color: #fff; border: none; border-radius: 8px; font-size: 13px; font-family: Arial, sans-serif; cursor: pointer; display: block; }
+  #btn-download:hover { background: #185FA5; }
+</style>
+<style>
+  body { font-family: Arial, sans-serif; background: #f5f8fc; margin: 0; padding: 24px; color: #1f4e79; }
+  h1 { font-size: 20px; font-weight: 600; margin: 0 0 4px; color: #1f4e79; }
+  .subtitle { font-size: 13px; color: #888; margin-bottom: 20px; }
+  .meta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+  .meta-card { background: #fff; border: 1px solid #dde5f0; border-radius: 8px; padding: 10px 14px; }
+  .meta-card .lbl { font-size: 11px; color: #888; margin: 0 0 2px; }
+  .meta-card .val { font-size: 14px; font-weight: 600; color: #1f4e79; margin: 0; }
+  .chart-wrap { background: #fff; border: 1px solid #dde5f0; border-radius: 12px; padding: 16px; }
+  .chart-inner { position: relative; width: 100%; height: 440px; }
+  .legend { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 14px; font-size: 12px; color: #555; }
+  .legend span { display: flex; align-items: center; gap: 6px; }
+  .dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; }
+  .sq  { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+  .footer { margin-top: 20px; font-size: 11px; color: #aaa; text-align: center; }
+</style>
+</head>
+<body>
+<h1>Mapa Perceptual de Posicionamiento</h1>
+<p class="subtitle">Sesión 7 — Componente Digital | Grado 11° | Marzo 2026</p>
+
+<div class="meta-grid">
+  <div class="meta-card"><p class="lbl">Eje X</p><p class="val">Innovación (1–10)</p></div>
+  <div class="meta-card"><p class="lbl">Eje Y</p><p class="val">Variedad de Funciones (1–10)</p></div>
+</div>
+
+<div class="chart-wrap">
+  <div class="chart-inner">
+    <canvas id="map" role="img" aria-label="Mapa perceptual: Mi solución (7.2, 7.9) en cuadrante alto-alto junto a EduConnect (7.4, 9.4) y SchoolPro (4.3, 9.0).">Mapa perceptual de soluciones educativas por Innovación y Variedad de Funciones.</canvas>
+  </div>
+  <div class="legend">
+    <span><span class="dot" style="background:#185FA5;"></span> Mi solución (propio)</span>
+    <span><span class="dot" style="background:#D85A30;"></span> Competidores directos</span>
+    <span><span class="sq"  style="background:#888780;"></span> Competidores indirectos</span>
+  </div>
+</div>
+
+<p class="footer">Componente Digital — Grado 11° | Comfandi | Marzo 2026</p>
+
+<button id="btn-download" onclick="exportImage()">⬇ Descargar imagen del mapa</button>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+const own     = [{ x:7.2, y:7.9, label:'Mi solución' }];
+const direct  = [
+  { x:4.1, y:8.3, label:'MiApp Escolar' },
+  { x:7.4, y:9.4, label:'EduConnect' },
+  { x:4.8, y:5.1, label:'ProfeYa' },
+  { x:8.0, y:1.6, label:'ClasesGO' },
+  { x:4.3, y:9.0, label:'SchoolPro' },
+  { x:2.4, y:7.9, label:'AulaDigital' },
+];
+const indirect = [
+  { x:2.9, y:6.4, label:'AprendoYa' },
+  { x:4.3, y:1.1, label:'SmartLearn' },
+];
+
+const chartInst = new Chart(document.getElementById('map'), {
+  type: 'scatter',
+  data: {
+    datasets: [
+      { label:'Mi solución',          data: own,      backgroundColor:'#185FA5', borderColor:'#185FA5', pointRadius:11, pointHoverRadius:13 },
+      { label:'Competidores directos',data: direct,   backgroundColor:'#D85A30', borderColor:'#D85A30', pointRadius:8,  pointHoverRadius:10 },
+      { label:'Indirectos',           data: indirect, backgroundColor:'#888780', borderColor:'#888780', pointRadius:8,  pointHoverRadius:10, pointStyle:'rectRounded' },
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+      tooltip: { callbacks: { label: c => `${c.raw.label}: (Inn: ${c.raw.x}, Var: ${c.raw.y})` } }
+    },
+    scales: {
+      x: { min:0, max:11, title:{ display:true, text:'Innovación →', color:'#5f5e5a', font:{size:12} }, grid:{ color:'rgba(0,0,0,0.07)' }, ticks:{ color:'#5f5e5a', stepSize:2 } },
+      y: { min:0, max:11, title:{ display:true, text:'Variedad de Funciones →', color:'#5f5e5a', font:{size:12} }, grid:{ color:'rgba(0,0,0,0.07)' }, ticks:{ color:'#5f5e5a', stepSize:2 } }
+    },
+    layout: { padding:{ top:30, right:70, bottom:10, left:10 } }
+  },
+  plugins: [{
+    id:'labels',
+    afterDatasetsDraw(chart) {
+      const ctx = chart.ctx;
+      const ca = chart.chartArea;
+      chart.data.datasets.forEach((ds, di) => {
+        ds.data.forEach((pt, pi) => {
+          const el = chart.getDatasetMeta(di).data[pi];
+          if (!el) return;
+          const {x, y} = el.getCenterPoint();
+          ctx.save();
+          ctx.font = '11px Arial';
+          ctx.fillStyle = '#444';
+          ctx.textAlign = x > ca.right - 80 ? 'right' : 'left';
+          ctx.fillText(pt.label, x + (x > ca.right - 80 ? -13 : 13), y - 5);
+          ctx.restore();
+        });
+      });
+      ctx.save();
+      ctx.strokeStyle = 'rgba(0,0,0,0.12)';
+      ctx.setLineDash([4,4]);
+      ctx.lineWidth = 1;
+      const mx = ca.left + (ca.right - ca.left)/2;
+      const my = ca.top  + (ca.bottom - ca.top)/2;
+      ctx.beginPath(); ctx.moveTo(mx, ca.top);  ctx.lineTo(mx, ca.bottom); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(ca.left, my); ctx.lineTo(ca.right, my);  ctx.stroke();
+      ctx.restore();
+      ctx.save();
+      ctx.font = '10px Arial'; ctx.fillStyle = '#b4b2a9';
+      ctx.fillText('BAJO INNOV. / ALTA VAR.',  ca.left+6,  ca.top+14);
+      ctx.fillText('ALTO INNOV. / ALTA VAR.',  mx+6,       ca.top+14);
+      ctx.fillText('BAJO INNOV. / BAJA VAR.',  ca.left+6,  my+14);
+      ctx.fillText('ALTO INNOV. / BAJA VAR.',  mx+6,       my+14);
+      ctx.restore();
+    }
+  }]
+});
+
+function exportImage() {
+  const PAD = 24, TITLE_H = 60, LEG_H = 48, FOOTER_H = 32;
+  const chartCanvas = document.getElementById('map');
+  const cw = chartCanvas.width, ch = chartCanvas.height;
+  const W = cw + PAD * 2;
+  const H = TITLE_H + ch + LEG_H + FOOTER_H + PAD * 2;
+
+  const out = document.createElement('canvas');
+  out.width = W; out.height = H;
+  const ctx = out.getContext('2d');
+
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, W, H);
+
+  // top accent bar
+  ctx.fillStyle = '#1f4e79';
+  ctx.fillRect(0, 0, W, 6);
+
+  // title
+  ctx.fillStyle = '#1f4e79';
+  ctx.font = 'bold 18px Arial';
+  ctx.textAlign = 'left';
+  ctx.fillText('Mapa Perceptual de Posicionamiento — Sesión 7', PAD, PAD + 22);
+
+  ctx.fillStyle = '#888888';
+  ctx.font = '12px Arial';
+  ctx.fillText('Componente Digital | Grado 11° | Fecha de creación: Marzo 2026', PAD, PAD + 42);
+
+  // chart
+  ctx.drawImage(chartCanvas, PAD, TITLE_H + PAD);
+
+  // legend
+  const legendY = TITLE_H + PAD + ch + 14;
+  const items = [
+    { color: '#185FA5', shape: 'circle', label: 'Mi solución (propuesta tecnológica)' },
+    { color: '#D85A30', shape: 'circle', label: 'Competidores directos (MiApp Escolar, EduConnect, ProfeYa, ClasesGO, SchoolPro, AulaDigital)' },
+    { color: '#888780', shape: 'square', label: 'Competidores indirectos (AprendoYa, SmartLearn)' },
+  ];
+  let lx = PAD;
+  items.forEach(item => {
+    ctx.fillStyle = item.color;
+    if (item.shape === 'circle') {
+      ctx.beginPath(); ctx.arc(lx + 6, legendY + 6, 6, 0, Math.PI * 2); ctx.fill();
+    } else {
+      ctx.fillRect(lx, legendY, 12, 12);
+    }
+    ctx.fillStyle = '#444';
+    ctx.font = '11px Arial';
+    ctx.textAlign = 'left';
+    ctx.fillText(item.label, lx + 18, legendY + 10);
+    lx += ctx.measureText(item.label).width + 36;
+  });
+
+  // footer
+  ctx.fillStyle = '#cccccc';
+  ctx.fillRect(PAD, H - FOOTER_H, W - PAD * 2, 0.5);
+  ctx.fillStyle = '#aaaaaa';
+  ctx.font = '10px Arial';
+  ctx.textAlign = 'center';
+  ctx.fillText('Componente Digital — Grado 11° | Comfandi | Marzo 2026', W / 2, H - 10);
+
+  const link = document.createElement('a');
+  link.download = 'mapa_perceptual_sesion7.png';
+  link.href = out.toDataURL('image/png');
+  link.click();
+}
+</script>
+</body>
+</html>
