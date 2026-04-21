@@ -40,3 +40,15 @@ deploy/**/.env
 
 # Lovable UI
 .lovable_ui/
+
+# Claude (Configuraciones locales, skills y logs)
+.claude/
+CLAUDE.local.md
+
+# Ignorar todos los archivos y carpetas que inician con punto (ocultos)
+.*
+
+# Excepciones vitales para Git
+!.gitignore
+!.gitattributes
+!.github/

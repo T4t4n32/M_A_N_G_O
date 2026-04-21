@@ -4,19 +4,11 @@
   <img src=".assets/logo.png" width="340" alt="M.A.N.G.O Logo" style="max-width: 100%;">
 </p>
 
-
 <h3 align="center">
   Real-time environmental data collection to support the protection and management of mangrove ecosystems in Colombia.
 </h3>
 
 <div align="center">
-
-<!-- =========================================================
-BADGES (CURRENT REPO NAME: M.A.N.G.O)
-If these badges fail due to the dots in the repo name,
-use the NO DOTS block right below instead.
-Known issue exists for repo names with "." on Shields release badges. 
-========================================================= -->
 
 [![Release](https://img.shields.io/github/v/release/T4t4n32/M.A.N.G.O?include_prereleases=true&style=for-the-badge&label=Release)](https://github.com/T4t4n32/M.A.N.G.O/releases/latest)
 [![Version](https://img.shields.io/github/v/tag/T4t4n32/M.A.N.G.O?sort=semver&style=for-the-badge&label=Version)](https://github.com/T4t4n32/M.A.N.G.O/tags)
@@ -24,48 +16,9 @@ Known issue exists for repo names with "." on Shields release badges.
 [![Issues](https://img.shields.io/github/issues/T4t4n32/M.A.N.G.O?style=for-the-badge&label=Issues)](https://github.com/T4t4n32/M.A.N.G.O/issues)
 [![Pull Requests](https://img.shields.io/github/issues-pr/T4t4n32/M.A.N.G.O?style=for-the-badge&label=Pull%20Requests)](https://github.com/T4t4n32/M.A.N.G.O/pulls)
 [![Stars](https://img.shields.io/github/stars/T4t4n32/M.A.N.G.O?style=for-the-badge&label=Stars)](https://github.com/T4t4n32/M.A.N.G.O/stargazers)
-
-<!-- Build badge (only works if workflow path/name matches) -->
-
 [![Build](https://img.shields.io/github/actions/workflow/status/T4t4n32/M.A.N.G.O/blank.yml?branch=main&style=for-the-badge&label=Build)](https://github.com/T4t4n32/M.A.N.G.O/actions/workflows/blank.yml)
 
 </div>
-
-<!-- =========================================================
-BADGES (NO DOTS VARIANT)
-If your release badge shows "no releases" or "repo not found",
-rename the repository (recommended), then use this block:
-
-Example repo names:
-- MANGO
-- M_A_N_G_O
-- M-A-N-G-O
-
-Then replace REPO_NAME_HERE below with your final repo name.
-=========================================================
-
-<div align="center">
-
-[![Release](https://img.shields.io/github/v/release/T4t4n32/REPO_NAME_HERE?include_prereleases=true&style=for-the-badge&label=Release)](https://github.com/T4t4n32/REPO_NAME_HERE/releases/latest)
-[![Version](https://img.shields.io/github/v/tag/T4t4n32/REPO_NAME_HERE?sort=semver&style=for-the-badge&label=Version)](https://github.com/T4t4n32/REPO_NAME_HERE/tags)
-[![License](https://img.shields.io/github/license/T4t4n32/REPO_NAME_HERE?style=for-the-badge&label=License)](LICENSE.md)
-[![Issues](https://img.shields.io/github/issues/T4t4n32/REPO_NAME_HERE?style=for-the-badge&label=Issues)](https://github.com/T4t4n32/REPO_NAME_HERE/issues)
-[![Pull Requests](https://img.shields.io/github/issues-pr/T4t4n32/REPO_NAME_HERE?style=for-the-badge&label=Pull%20Requests)](https://github.com/T4t4n32/REPO_NAME_HERE/pulls)
-[![Stars](https://img.shields.io/github/stars/T4t4n32/REPO_NAME_HERE?style=for-the-badge&label=Stars)](https://github.com/T4t4n32/REPO_NAME_HERE/stargazers)
-[![Build](https://img.shields.io/github/actions/workflow/status/T4t4n32/REPO_NAME_HERE/blank.yml?branch=main&style=for-the-badge&label=Build)](https://github.com/T4t4n32/REPO_NAME_HERE/actions/workflows/blank.yml)
-
-</div>
-
-========================================================= -->
-
----
-
-## Latest Release
-
-- **Latest release (always up-to-date):** https://github.com/T4t4n32/M.A.N.G.O/releases/latest
-- **Changelog:** [CHANGELOG.md](CHANGELOG.md)
-
-> Why use `/releases/latest`? It always points to the most recent published release, so you don’t have to update the README every time.
 
 ---
 
@@ -74,17 +27,16 @@ Then replace REPO_NAME_HERE below with your final repo name.
 - [What is M.A.N.G.O?](#what-is-mango)
 - [Key Features](#key-features)
 - [System Measurements](#system-measurements)
-- [Important Clarification](#important-clarification)
+- [Field Operation Model](#field-operation-model)
 - [Current Status](#current-status)
 - [Technology Stack](#technology-stack)
-- [Installation &amp; Usage](#installation--usage)
+- [Installation and Usage](#installation-and-usage)
 - [Repository Structure](#repository-structure)
 - [Roadmap](#roadmap)
-- [Changelog &amp; Releases](#changelog--releases)
+- [Changelog and Releases](#changelog-and-releases)
 - [Contributing](#contributing)
 - [License](#license)
 - [Author](#author)
-- [Project Note](#project-note)
 
 ---
 
@@ -110,8 +62,8 @@ M.A.N.G.O addresses a critical gap: **lack of reliable and continuous environmen
 - **LoRa connectivity:** Long-range data transport suitable for remote areas.
 - **Modular approach:** Components can evolve without redesigning the entire system.
 - **Backend-first reliability:** Prioritizes data ingestion correctness before heavy UI development.
-- **Cloud-ready direction:** VPS and domain integrated (website content pending).
 - **Dockerized backend:** Consistent runtime locally and on the deployment server.
+- **Cloud deployment:** VPS and domain integrated at integramosoe.com.
 
 ---
 
@@ -123,100 +75,107 @@ M.A.N.G.O records:
 - **Turbidity**
 - **Temperature**
 
-High-level flow:
-Sensors → Jetson TK1 → LoRa transport → Base station / server → Database (24/7 access)
+Data flow: Sensors → NVIDIA Jetson TK1 → LoRa transport → Base station → PostgreSQL database
 
 ---
 
-## Important Clarification
+## Field Operation Model
 
-The device **does NOT stay permanently deployed in water (24/7)**.
-Instead:
+The device is deployed temporarily during field sessions, not permanently submerged.
 
-- Temporarily deployed during field sessions
-- Measurements are recorded and transmitted
-- Device can be removed, checked, and recharged
-- The **database remains available 24/7** for stored data
+- Measurements are recorded and transmitted during each session.
+- The device can be retrieved, inspected, and recharged between sessions.
+- The backend database remains available continuously for stored data access.
 
 ---
 
 ## Current Status
 
-- LoRa link validated: **JSON message transmitted and received** (static test payload for now).
-- Backend is being hardened for robust ingestion and delivery.
-- VPS and domain are integrated: **integramosoe.com** (website content pending).
-- Minimal improvements applied to the dashboard/frontend layer.
+- LoRa link validated: JSON message transmitted and received (static test payload for now).
+- Backend hardened for robust ingestion and delivery.
+- VPS and domain integrated: integramosoe.com (website content pending).
+- Frontend dashboard at early stage.
+
+See [STATUS.md](STATUS.md) for detail.
 
 ---
 
 ## Technology Stack
 
-| Layer        | Technology / Hardware           | Purpose                               |
-| ------------ | ------------------------------- | ------------------------------------- |
-| Edge compute | NVIDIA Jetson TK1               | Sensor handling + processing          |
-| Transport    | LoRa modules                    | Long-range, low-power communication   |
-| Backend      | Dockerized backend              | Consistent environment (local + VPS)  |
-| Server       | VPS + domain (integramosoe.com) | Deployment target (site pending)      |
-| Frontend     | Web dashboard (early stage)     | Visualization layer (minimal for now) |
-| Sensors      | pH, turbidity, temperature      | Field measurements                    |
+| Layer        | Technology / Hardware           | Purpose                              |
+| ------------ | ------------------------------- | ------------------------------------ |
+| Edge compute | NVIDIA Jetson TK1               | Sensor handling and processing       |
+| Transport    | LoRa modules                    | Long-range, low-power communication  |
+| Backend      | Flask, PostgreSQL, Docker        | Data ingestion, API, storage         |
+| Server       | VPS + domain (integramosoe.com) | Deployment target                    |
+| Frontend     | React, Vite, TypeScript         | Web dashboard                        |
+| Sensors      | pH, turbidity, temperature      | Field measurements                   |
 
 ---
 
-## Installation & Usage
+## Installation and Usage
 
-> Beginner-friendly on purpose: clean steps, no hidden complexity.
-
-### 1) Clone the Repository
+### 1. Clone the repository
 
 ```bash
 git clone https://github.com/T4t4n32/M.A.N.G.O.git
 cd M.A.N.G.O
 ```
 
-### 2) Backend (Docker)
+### 2. Start the backend (Docker)
 
-* Navigate to the `backend/` folder, which contains the Docker setup.
-* Follow the backend `README.md` in that folder for detailed instructions.
-* The goal is to use a single command to run the backend identically in both local and VPS environments.
+```bash
+cp .env.example .env   # fill in DB_PASSWORD, SECRET_KEY, INGEST_API_KEY
+docker compose up -d
+```
 
-### 3) LoRa Tests
+See `backend/README.md` for environment variable reference and VPS deployment instructions.
 
-* LoRa test sketches and firmware reside under the `firmware/` and `link/` directories.
-* Current milestone: JSON messages are successfully transmitted and received (payload is currently static).
+### 3. Start the frontend
+
+```bash
+cd .lovable_ui/MANGO_PAGE_LOVABLE_V2.0
+npm install
+npm run dev
+```
+
+### 4. LoRa firmware
+
+Sketches are under `firmware/LoRa/3th_test/`. Flash with Arduino IDE. Gateway service is in `gateway/`.
 
 ---
 
 ## Repository Structure
 
-This repository contains the complete engineering source code for the M.A.N.G.O project.
-
-* `backend/` — Dockerized backend for data ingestion, processing, and API services.
-* `edge/` & `firmware/` — Sensor firmware and edge compute components (e.g., NVIDIA Jetson TK1).
-* `hardware/` — Hardware documentation, component references, and build-related schematics.
-* `link/`, `bridge/` & `gateway/` — LoRa transport and network communication components.
-* `lovable_ui/` — Web dashboard and user interface.
-* `deploy/` & `nginx/` — Deployment configurations and reverse proxy setups.
-* `scripts/` — Helper scripts for setup, testing, and maintenance.
-* `assets/` — Shared assets, including images and logos.
-* `.github/workflows/` — CI/CD workflows for automated building and testing.
+| Path | Contents |
+| ---- | -------- |
+| `backend/` | Flask API, Docker setup, database migrations |
+| `.lovable_ui/` | Web dashboard (React + TypeScript) |
+| `firmware/` | Arduino sketches for sensor nodes and LoRa transport |
+| `gateway/` | Python gateway: serial LoRa RX to HTTP POST |
+| `edge/` | Edge compute scripts (NVIDIA Jetson TK1) |
+| `hardware/` | Component references and schematics |
+| `link/` `bridge/` | LoRa transport layer and bridge service |
+| `deploy/` `nginx/` | Deployment configs and reverse proxy |
+| `scripts/` | Setup and maintenance scripts |
 
 ---
 
 ## Roadmap
 
-Planned next milestones:
+1. Switch LoRa payload from static JSON to real sensor readings with validation
+2. Finish VPS web serving (HTTPS) and connect frontend to stable API
+3. Add historical query endpoints per sensor type
+4. Expand dashboard with calibration and confidence indicators
 
-1. Switch LoRa payload from static JSON → **real sensor readings** + validation rules
-2. Finish VPS web serving (reverse proxy + HTTPS) and connect frontend to stable API
-3. Add persistence (SQLite or time-series DB) + historical endpoints per sensor
-4. Expand dashboard with calibration/confidence indicators (when data pipeline is stable)
+See [ROADMAP.md](ROADMAP.md) for detail.
 
 ---
 
-## Changelog & Releases
+## Changelog and Releases
 
-* [CHANGELOG.md](CHANGELOG.md) contains a curated history of notable changes.
-* Releases are published in GitHub under the Releases tab.
+- [CHANGELOG.md](CHANGELOG.md) — curated history of notable changes
+- [Releases](https://github.com/T4t4n32/M.A.N.G.O/releases/latest) — published releases
 
 ---
 
@@ -234,10 +193,6 @@ MIT — see [LICENSE.md](LICENSE.md).
 
 ## Author
 
-Sebastián Sánchez — [https://github.com/T4t4n32](https://github.com/T4t4n32)
+Sebastián Sánchez — [github.com/T4t4n32](https://github.com/T4t4n32)
 
----
-
-## Project Note
-
-This project began as a high-school degree research initiative and is currently developed independently by Sebastián Sánchez.
+This project began as a high-school degree research initiative and is currently developed independently.
