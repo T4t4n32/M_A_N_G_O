@@ -1,99 +1,188 @@
 # Contributing to M.A.N.G.O
 
 Thank you for your interest in contributing to M.A.N.G.O — Autonomous Monitoring of Oceanic Management Levels.
-This guide explains how you can help improve the project.
 
-Our goal is to keep the project clear, organized, and easy to understand for students, developers, researchers, and community members.
+This guide covers how to report issues, propose changes, set up a local environment, and submit a pull request. Read it before opening an issue or writing code.
 
-# Ways You Can Contribute
-## 1. Report Issues
+---
 
-If you find a bug, error, or something unclear:
-- Go to the Issues tab on GitHub
-- Click New Issue
-- Describe the problem clearly
-- Include steps to reproduce it (if possible)
-- Add screenshots or logs if useful
+## Table of Contents
 
-## 2. Suggest Improvements
+- [Ways to Contribute](#ways-to-contribute)
+- [Before You Start](#before-you-start)
+- [Local Environment Setup](#local-environment-setup)
+- [Branching and Commits](#branching-and-commits)
+- [Pull Request Process](#pull-request-process)
+- [Coding Standards](#coding-standards)
+- [Code of Conduct](#code-of-conduct)
 
-You can suggest:
-- Better sensor readings or calibration
-- Improvements in the Jetson TK1 code
-- Enhancements to the LoRa communication
-- New dashboard features
-- Documentation corrections
+---
 
-Use the Issues tab → “Feature Request”.
+## Ways to Contribute
 
-## Before You Start Coding
+**Report a bug.** Open an issue on GitHub. Include steps to reproduce, the expected result, the actual result, and any relevant logs or screenshots.
 
-Please make sure to:
-- Read the README.md to understand the project
-- Check existing Issues to avoid duplicates
-- Follow the folder structure already defined
-- Keep language clear and simple in comments
+**Suggest an improvement.** Open an issue labeled "enhancement." Describe the problem it solves, not just the solution.
 
-## How to Make a Pull Request
-### Step 1 — Fork the repository
+**Submit a fix or feature.** Fork the repository, make your changes on a branch, and open a pull request. See the process below.
 
-Click the Fork button in the top-right corner of the GitHub page.
+**Improve documentation.** Corrections to READMEs, inline comments, or this file are welcome. Apply the same PR process as code changes.
 
-### Step 2 — Create a new branch
+---
 
-``` bash
-git checkout -b feature-name
+## Before You Start
+
+- Read the [README.md](README.md) to understand the system architecture.
+- Check open issues and pull requests to avoid duplicating work.
+- For non-trivial changes, open an issue first and describe your intended approach. This avoids wasted effort if the direction is not aligned with the project.
+
+---
+
+## Local Environment Setup
+
+The project has four independent components. Set up only the ones relevant to your contribution.
+
+### Backend (Flask + PostgreSQL)
+
+Requires Python 3.10+, Docker, and Docker Compose.
+
+```bash
+cd backend
+python -m venv venv
+source venv/bin/activate        # Windows: venv\Scripts\activate
+pip install -r requirements.txt
 ```
-Use short and descriptive names:
 
-- `fix-lora-timeout`
-- `improve-temp-sensor`
-- `add-dashboard-widget`
+To run the full stack (database, Redis, backend, Nginx):
 
-### Step 3 — Add your changes
-
-Keep your code organized and documented.
-
-### Step 4 — Commit your changes
-``` bash
-git commit -m "Short description of what you changed"
+```bash
+cp .env.example .env            # fill in DB_PASSWORD, SECRET_KEY, INGEST_API_KEY
+docker compose up -d
 ```
-### Step 5 — Push your branch
-``` bash
-git push origin feature-name
+
+To run the Flask dev server directly (without Docker):
+
+```bash
+python main.py                  # starts on port 5000
 ```
-### Step 6 — Open a Pull Request
 
-- Go to “Pull Requests” → New Pull Request
-- Explain what you changed and why
-- Mention related Issues if applicable
+### Frontend (React + TypeScript)
 
-## Coding Guidelines
+Requires Node.js 18+.
 
-To keep the project clean and easy to maintain:
+```bash
+cd .lovable_ui/MANGO_PAGE_LOVABLE_V2.0
+npm install
+npm run dev                     # dev server on port 5173 or 8080
+npm run lint                    # run ESLint before committing
+npm run test                    # run Vitest
+npm run build                   # production build
+```
 
-- Use clear variable names
-- Add comments explaining important steps
-- Avoid adding unnecessary libraries
-- Do not upload heavy files or binaries
-- Keep each commit focused on one purpose
-- Do not break the existing folder structure
+### Gateway (Python serial bridge)
 
-## Respect and Collaboration
+```bash
+cd gateway
+pip install -r requirements.gateway.txt
+python rx_gateway.py
+```
 
-All contributors are expected to:
-- Be respectful
-- Use inclusive and simple language
-- Give constructive feedback
-- Avoid offensive or rude behavior
+### Firmware (Arduino / C++)
 
-We want M.A.N.G.O to be a safe and open project for everyone.
+Open sketches in Arduino IDE. Current LoRa implementation is under `firmware/LoRa/3th_test/`. Flash the transmitter sketch to the sensor node and the receiver sketch to the Heltec WiFi LoRa 32 V3.
 
-## Questions or Help
+---
 
-If you need assistance:
-- Open an issue
-- Tag the project owner
+## Branching and Commits
 
-## Author: Sebastián Sánchez
-## GitHub: https://github.com/T4t4n32
+### Branch names
+
+Use the format `<type>/<short-description>`:
+
+- `fix/ingest-auth-missing-key`
+- `feat/historical-range-endpoint`
+- `docs/contributing-setup`
+- `chore/remove-legacy-routes`
+
+Branch from `main`. Keep branches short-lived and focused on a single change.
+
+### Commit messages
+
+This project uses [Conventional Commits](https://www.conventionalcommits.org/):
+
+```
+<type>(<scope>): <short summary>
+```
+
+Common types:
+
+| Type | Use for |
+| ---- | ------- |
+| `feat` | New feature or endpoint |
+| `fix` | Bug fix |
+| `docs` | Documentation only |
+| `chore` | Build, config, or dependency changes |
+| `refactor` | Code restructure with no behavior change |
+| `test` | Adding or correcting tests |
+
+Examples:
+
+```
+fix(backend): raise on missing SECRET_KEY instead of using fallback
+feat(frontend): add historical range chart for turbidity
+docs(deploy): update VPS README frontend path to V2.0
+```
+
+Keep the summary under 72 characters. Use the body for context if needed.
+
+---
+
+## Pull Request Process
+
+1. Fork the repository and create a branch from `main`.
+2. Make your changes. Keep each commit focused on one purpose.
+3. Run the linter and tests for the component you changed:
+   - Frontend: `npm run lint && npm run test`
+   - Backend: verify the app starts and `GET /api/v1/health` returns `200`
+4. Update `CHANGELOG.md` under an `[Unreleased]` section at the top, using the [existing format](CHANGELOG.md).
+5. Open a pull request against `main`. In the description:
+   - Explain what changed and why.
+   - Reference any related issues (`Closes #N`).
+   - Note anything that requires a deploy step or environment variable change.
+6. Expect review from the maintainer. Address feedback before the PR is merged.
+
+Do not merge your own pull requests.
+
+---
+
+## Coding Standards
+
+### General
+
+- One logical change per commit.
+- Do not upload binaries, build artifacts, or files larger than necessary.
+- Do not break existing folder structure without prior discussion.
+
+### Backend (Python)
+
+- Follow the existing module structure under `backend/app/`.
+- Keep business logic in `services/`, route handlers thin.
+- Do not add auth logic to routes that are not auth routes.
+- All new routes must be registered explicitly in `backend/app/routes/__init__.py` — the auto-discovery path is for experimental use only.
+
+### Frontend (TypeScript / React)
+
+- Keep API calls in `src/lib/api.ts`. Do not fetch directly from components.
+- Keep auth logic server-side. Do not replicate credential or session handling in the frontend.
+- Run `npm run lint` before committing. Do not disable ESLint rules without explanation.
+
+### Firmware (C++ / Arduino)
+
+- Keep transmitter and receiver sketches in separate directories.
+- Do not hardcode credentials or server addresses — use constants defined at the top of the file.
+
+---
+
+## Code of Conduct
+
+All contributors are expected to communicate respectfully and give constructive feedback. See [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md).
