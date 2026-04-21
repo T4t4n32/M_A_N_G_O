@@ -1,1 +1,0 @@
-Mango toma los datos (pH, tempetaruta, trubidez) -> Empaqueta datos -> Apenas pueda los envia -> Receptor -> 

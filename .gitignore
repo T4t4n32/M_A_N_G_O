@@ -37,3 +37,6 @@ venv/
 .env.local
 deploy/**/.env
 .obsidian/
+
+# Lovable UI
+.lovable_ui/
