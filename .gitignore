@@ -1,54 +1,87 @@
-# Entornos virtuales
-backend/venv/
+# ==============================================================================
+# OS Generated Files
+# ==============================================================================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+ehthumbs_vista.db
+[Tt]humbs.db
+desktop.ini
+
+# ==============================================================================
+# IDEs, Editors & AI Assistants
+# ==============================================================================
+.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.obsidian/
+.claude/
+CLAUDE.local.md
+.lovable_ui/
+
+# ==============================================================================
+# Environments & Build directories
+# ==============================================================================
+node_modules/
+dist/
+build/
+out/
 venv/
 ENV/
-
-# Python cache
-**/__pycache__/
+backend/venv/
+__pycache__/
 *.py[cod]
 *$py.class
+*.egg-info/
+.pytest_cache/
+.coverage
 
-# Variables de entorno
+# ==============================================================================
+# Secrets and Credentials (CRITICAL)
+# ==============================================================================
 .env
+.env.*
+!.env.example
+!.env.*.example
+*.pem
+*.key
+*.cert
+*.crt
+*.p12
+*.pfx
+id_rsa*
+*.ovpn
+*.sqlite
+*.sqlite3
+*.db
+secrets.json
+credentials.json
+config.local.json
+oauth.json
+*.kdbx
+deploy/**/.env
 
-# Archivos temporales y logs
+# ==============================================================================
+# Logs and Temporary files
+# ==============================================================================
 logs/
 backup_*
 *.log
 *.tmp
-*.swp
-*.swn
 *.bak
 *.pid
 *.cache
-*.DS_Store
-
-# Directorios de entorno virtual
-venv/
-.env
-.env.local
-.env.production
-
-# Secrets — never commit real env files
-*.env.vps
-*.env.edge
-*.env.gateway
-.env.production
-.env.local
-deploy/**/.env
-.obsidian/
-
-# Lovable UI
-.lovable_ui/
-
-# Claude (Configuraciones locales, skills y logs)
-.claude/
-CLAUDE.local.md
-
-# Ignorar todos los archivos y carpetas que inician con punto (ocultos)
-.*
-
-# Excepciones vitales para Git
-!.gitignore
-!.gitattributes
-!.github/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*

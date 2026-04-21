@@ -1,5 +1,12 @@
+# ==============================================================================
+# Line Endings
+# ==============================================================================
+# Set default behavior to automatically handle line endings
+* text=auto
 
+# ==============================================================================
 # Archivos grandes controlados por Git LFS
+# ==============================================================================
 *.zip filter=lfs diff=lfs merge=lfs -text
 *.stl filter=lfs diff=lfs merge=lfs -text
 *.obj filter=lfs diff=lfs merge=lfs -text
@@ -17,11 +24,19 @@
 *.blend filter=lfs diff=lfs merge=lfs -text
 *.svg filter=lfs diff=lfs merge=lfs -text
 
+# ==============================================================================
+# Git behavior for specific files
+# ==============================================================================
 # Evitar que Git trate imágenes como texto
 *.png binary
 *.jpg binary
 *.jpeg binary
 *.svg binary
 
-# Evitar errores en Windows por rutas largas
-* -crlf
+# Scripts de shell para asegurar LF
+*.sh text eol=lf
+
+# Configuración de exportación (archivos ignorados al hacer 'git archive')
+.gitignore export-ignore
+.gitattributes export-ignore
+.github/ export-ignore
