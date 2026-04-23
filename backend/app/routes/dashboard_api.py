@@ -71,13 +71,14 @@ def _resolve_tables() -> dict[str, str | None]:
 
     Priority:
     - mango_compat_readings / mango_compat_stations (bridge/gateway compat layer)
-    - sensor_readings / sensor_stations
+    - sensor_data / sensor_stations (requires JOIN; not fully wired yet)
     - readings / stations
     """
     tables = _get_table_names()
     candidates = [
         ("mango_compat_readings", "mango_compat_stations"),
-        ("sensor_readings", "sensor_stations"),
+        # sensor_data has sensor_id FK (no direct type/station_id cols) — needs JOIN to be useful
+        ("sensor_data", "sensor_stations"),
         ("readings", "stations"),
     ]
     for readings, stations in candidates:
