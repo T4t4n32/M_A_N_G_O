@@ -1,0 +1,149 @@
+# M.A.N.G.O VPS — Docker Compose management
+#
+# Deploy:
+#   make up              Start the full stack (safe re-deploy, removes orphans)
+#   make down            Stop and remove containers (keeps volumes)
+#   make restart         down + up
+#
+# Observability:
+#   make status          Show running containers and their health
+#   make health          Hit the backend health endpoint
+#   make logs            Follow all service logs
+#   make logs-backend    Follow backend logs only
+#   make logs-db         Follow database logs only
+#   make routes          List all registered Flask API routes
+#   make db-tables       List all tables in the Postgres database
+#
+# Administration:
+#   make admin-cli       Open the admin CLI (users + subscriptions)
+#   make users-list      List all users with their active tier
+#   make subs-list       List all subscriptions
+#
+# Maintenance:
+#   make backup          Dump Postgres to backups/mango_YYYYMMDD_HHMMSS.sql
+#   make restore BACKUP=backups/mango_<ts>.sql   Restore from a dump file
+#   make shell-backend   Open a shell inside the backend container
+#   make shell-db        Open psql inside the db container
+#
+# Destructive:
+#   make nuke            Remove containers, volumes, and images (wipes all data)
+#
+# Requires: .env.vps in this directory (copy from .env.vps.example)
+
+COMPOSE  := docker compose
+FILE     := -f compose.vps.yml
+ENV_FILE := --env-file .env.vps
+
+# Read DB credentials from .env.vps for maintenance targets
+include .env.vps
+export
+
+# Containers defined in compose.vps.yml — used by nuke to force-remove strays
+CONTAINERS := mango_backend mango_db mango_db_init mango_redis
+IMAGES     := mango-backend:local
+
+.PHONY: up down restart logs logs-backend logs-db status health \
+        routes db-tables admin-cli users-list subs-list \
+        backup restore shell-backend shell-db nuke
+
+## Start the full stack.
+## --remove-orphans cleans up any stray container (including a leftover mango_redis)
+## before Docker creates the new ones — this is the fix for the "name already in use" conflict.
+up:
+	$(COMPOSE) $(FILE) $(ENV_FILE) down --remove-orphans
+	$(COMPOSE) $(FILE) $(ENV_FILE) up -d --build
+
+## Stop and remove containers; data volumes are preserved.
+down:
+	$(COMPOSE) $(FILE) $(ENV_FILE) down --remove-orphans
+
+## Full restart (down then up).
+restart: down up
+
+## Follow logs for all services. Ctrl-C to exit.
+logs:
+	$(COMPOSE) $(FILE) $(ENV_FILE) logs -f
+
+## Follow backend container logs. Ctrl-C to exit.
+logs-backend:
+	docker logs mango_backend --follow --tail 100
+
+## Follow database container logs. Ctrl-C to exit.
+logs-db:
+	docker logs mango_db --follow --tail 100
+
+## Show container status and health.
+status:
+	$(COMPOSE) $(FILE) $(ENV_FILE) ps
+
+## Hit the backend /api/v1/health endpoint and pretty-print the result.
+health:
+	@curl -fsS http://127.0.0.1:$(API_HOST_PORT)/api/v1/health 2>/dev/null \
+	  | python3 -m json.tool 2>/dev/null \
+	  || echo "ERROR: backend not reachable on port $(API_HOST_PORT)"
+
+## Dump Postgres to a timestamped SQL file under backups/.
+backup:
+	@mkdir -p backups
+	@TS=$$(date +%Y%m%d_%H%M%S); \
+	 docker exec mango_db pg_dump -U $(DB_USER) $(DB_NAME) \
+	   > backups/mango_$${TS}.sql && \
+	 echo "Backup saved: backups/mango_$${TS}.sql"
+
+## Restore Postgres from a dump file.
+## Usage: make restore BACKUP=backups/mango_<timestamp>.sql
+restore:
+	@test -n "$(BACKUP)" || (echo "Usage: make restore BACKUP=<path>"; exit 1)
+	@test -f "$(BACKUP)" || (echo "File not found: $(BACKUP)"; exit 1)
+	@echo "Restoring $(BACKUP) into $(DB_NAME)..."
+	@docker exec -i mango_db psql -U $(DB_USER) -d $(DB_NAME) < $(BACKUP)
+	@echo "Restore complete."
+
+## List all registered Flask API routes (method + path).
+routes:
+	@docker exec mango_backend python3 -c \
+	  "from app import create_app; app=create_app(); \
+	   rules=sorted(app.url_map.iter_rules(), key=lambda r: r.rule); \
+	   [print(f'{str(sorted(r.methods-{\"HEAD\",\"OPTIONS\"})):>20}  {r.rule}') for r in rules]"
+
+## List all Postgres tables in the mango database.
+db-tables:
+	@docker exec mango_db psql -U $(DB_USER) -d $(DB_NAME) -c \
+	  "SELECT tablename FROM pg_tables WHERE schemaname='public' ORDER BY tablename;"
+
+## Open the admin CLI inside the backend container (users + subscriptions).
+## Usage: make admin-cli
+## Then run commands like: python /app/scripts/admin_cli.py users list
+admin-cli:
+	docker exec -it mango_backend python /app/scripts/admin_cli.py $(ARGS)
+
+## List all registered users with their active tier.
+users-list:
+	@docker exec mango_backend python /app/scripts/admin_cli.py users list
+
+## List all subscriptions (add ARGS="--active" to filter active only).
+subs-list:
+	@docker exec mango_backend python /app/scripts/admin_cli.py subs list $(ARGS)
+
+## Open an interactive shell inside the backend container.
+shell-backend:
+	docker exec -it mango_backend sh
+
+## Open psql inside the database container.
+shell-db:
+	docker exec -it mango_db psql -U $(DB_USER) -d $(DB_NAME)
+
+## DESTRUCTIVE: Remove everything — containers, volumes, and local images.
+## This wipes all persistent data (Postgres + Redis). Use to start from scratch.
+nuke:
+	@echo "WARNING: This will delete all containers, volumes, and local images."
+	@echo "All database data will be permanently lost."
+	@read -r -p "Type YES to continue: " confirm && [ "$$confirm" = "YES" ]
+	$(COMPOSE) $(FILE) $(ENV_FILE) down --volumes --remove-orphans
+	@for c in $(CONTAINERS); do \
+		docker rm -f "$$c" 2>/dev/null && echo "Removed container: $$c" || true; \
+	done
+	@for img in $(IMAGES); do \
+		docker rmi -f "$$img" 2>/dev/null && echo "Removed image: $$img" || true; \
+	done
+	@echo "Done. Run 'make up' to redeploy from scratch."

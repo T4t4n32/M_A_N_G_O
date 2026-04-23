@@ -1,0 +1,19 @@
+[Unit]
+Description=MANGO RX Gateway — LoRa serial receiver → VPS backend
+Documentation=https://github.com/T4t4n32/M_A_N_G_O
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=mango
+WorkingDirectory=/opt/mango_gateway
+EnvironmentFile=/opt/mango_gateway/.env
+ExecStart=/usr/bin/python3 /opt/mango_gateway/rx_gateway.py
+Restart=on-failure
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

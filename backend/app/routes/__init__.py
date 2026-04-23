@@ -101,6 +101,20 @@ def register_routes(app) -> None:
     except Exception as e:
         log.exception("contact import/register failed: %s", e)
 
+    # Station + sensor registration/mapping (admin CRUD)
+    try:
+        from .stations import stations_mgmt_bp
+        safe_register(stations_mgmt_bp)
+    except Exception as e:
+        log.exception("stations import/register failed: %s", e)
+
+    # Subscription / tier management (admin CRUD)
+    try:
+        from .subscriptions import subscriptions_bp
+        safe_register(subscriptions_bp)
+    except Exception as e:
+        log.exception("subscriptions import/register failed: %s", e)
+
     # -----------------------
     # OPTIONAL (experimental)
     # -----------------------

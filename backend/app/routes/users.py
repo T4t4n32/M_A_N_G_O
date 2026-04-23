@@ -2,16 +2,19 @@
 API de usuarios M.A.N.G.O. — compatible con Lovable UI.
 
 Endpoints que el frontend consume:
-  GET   /api/v1/users/status     → estado de sesión actual
-  POST  /api/v1/users/login      → iniciar sesión
-  POST  /api/v1/users/logout     → cerrar sesión
-  POST  /api/v1/users/register   → crear cuenta
-  GET   /api/v1/users            → listar (admin)
-  GET   /api/v1/users/me         → perfil propio
-  GET   /api/v1/users/me/history → historial de logins
-  PATCH /api/v1/users/<id>/role   → cambiar rol (admin)
-  PATCH /api/v1/users/<id>/active → activar/desactivar (admin)
-  DELETE /api/v1/users/<id>      → eliminar usuario (admin)
+  GET   /api/v1/users/status            → estado de sesión actual
+  POST  /api/v1/users/login             → iniciar sesión
+  POST  /api/v1/users/logout            → cerrar sesión
+  POST  /api/v1/users/register          → crear cuenta
+  GET   /api/v1/users                   → listar (admin)
+  GET   /api/v1/users/me                → perfil propio (incluye rango activo)
+  GET   /api/v1/users/me/subscription   → suscripción activa propia
+  GET   /api/v1/users/me/history        → historial de logins
+  GET   /api/v1/users/<id>/subscription → suscripción de usuario (admin)
+  GET   /api/v1/users/<id>/subscriptions/history → historial de suscripciones (admin)
+  PATCH /api/v1/users/<id>/role         → cambiar rol (admin)
+  PATCH /api/v1/users/<id>/active       → activar/desactivar (admin)
+  DELETE /api/v1/users/<id>             → eliminar usuario (admin)
 """
 
 from __future__ import annotations
@@ -22,6 +25,7 @@ from functools import wraps
 from flask import Blueprint, jsonify, request, session
 
 from app.extensions import db
+from app.models.subscription import UserSubscription, tier_for_user
 from app.models.user import MangoLoginEvent, MangoUser
 
 users_bp = Blueprint("users", __name__, url_prefix="/api/v1/users")
@@ -70,12 +74,6 @@ def _first_user_exists() -> bool:
 
 @users_bp.get("/status")
 def status():
-    """
-    GET /api/v1/users/status
-    Devuelve si hay sesión activa y datos básicos del usuario.
-    El Lovable frontend llama esto al iniciar para decidir si mostrar
-    el dashboard o redirigir a /login.
-    """
     user = _current_user()
     if not user or not user.active:
         return jsonify({"authenticated": False}), 200
@@ -87,6 +85,7 @@ def status():
             "email": user.email,
             "name":  user.name or user.email.split("@")[0],
             "role":  user.role,
+            "tier":  tier_for_user(user),
         },
     }), 200
 
@@ -207,7 +206,23 @@ def logout():
 @users_bp.get("/me")
 @_require_auth
 def me():
-    return jsonify(_current_user().to_dict()), 200
+    user = _current_user()
+    data = user.to_dict()
+    data["tier"] = tier_for_user(user)
+    return jsonify(data), 200
+
+
+@users_bp.get("/me/subscription")
+@_require_auth
+def me_subscription():
+    user = _current_user()
+    sub  = UserSubscription.active_for_user(user.id)
+    if not sub:
+        return jsonify({
+            "active": False,
+            "tier":   tier_for_user(user),
+        }), 200
+    return jsonify({"active": True, **sub.to_dict()}), 200
 
 
 @users_bp.get("/me/history")
@@ -302,3 +317,37 @@ def delete_user(user_id: int):
     db.session.delete(user)
     db.session.commit()
     return jsonify({"ok": True, "deleted_id": user_id}), 200
+
+
+# ------------------------------------------------------------------
+# Admin: suscripciones por usuario
+# ------------------------------------------------------------------
+
+@users_bp.get("/<int:user_id>/subscription")
+@_require_admin
+def user_subscription(user_id: int):
+    user = db.get_or_404(MangoUser, user_id)
+    sub  = UserSubscription.active_for_user(user.id)
+    if not sub:
+        return jsonify({
+            "active": False,
+            "tier":   tier_for_user(user),
+            "user":   user.to_dict(),
+        }), 200
+    return jsonify({
+        "active": True,
+        "user":   user.to_dict(),
+        **sub.to_dict(),
+    }), 200
+
+
+@users_bp.get("/<int:user_id>/subscriptions/history")
+@_require_admin
+def user_subscription_history(user_id: int):
+    user  = db.get_or_404(MangoUser, user_id)
+    limit = min(int(request.args.get("limit", 50)), 200)
+    subs  = UserSubscription.history_for_user(user.id, limit=limit)
+    return jsonify({
+        "user":          user.to_dict(),
+        "subscriptions": [s.to_dict() for s in subs],
+    }), 200

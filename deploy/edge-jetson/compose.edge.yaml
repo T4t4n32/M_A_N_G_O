@@ -1,0 +1,39 @@
+services:
+  edge-serial:
+    image: python:3.11-slim
+    container_name: mango_edge_serial
+    working_dir: /opt/mango_node
+    volumes:
+      - /opt/mango_node:/opt/mango_node:ro
+    devices:
+      - "${SERIAL_PORT:-/dev/ttyUSB0}:${SERIAL_PORT:-/dev/ttyUSB0}"
+    environment:
+      SERIAL_PORT: "${SERIAL_PORT:-/dev/ttyUSB0}"
+      BAUDRATE: "${BAUDRATE:-115200}"
+      SPOOL_DB: "/data/spool.sqlite"
+    volumes:
+      - /opt/mango_node:/opt/mango_node:ro
+      - mango_edge_data:/data
+    command: ["python3", "-m", "mango_node.serial_acquire"]
+    restart: unless-stopped
+
+  edge-sync:
+    image: python:3.11-slim
+    container_name: mango_edge_sync
+    working_dir: /opt/mango_node
+    volumes:
+      - /opt/mango_node:/opt/mango_node:ro
+      - mango_edge_data:/data
+    environment:
+      BACKEND_URL: "${BACKEND_URL:-https://integramosoe.com/api/v1/ingest}"
+      INGEST_API_KEY: "${INGEST_API_KEY:-}"
+      STATION_NAME: "${STATION_NAME:-MANGO Jetson}"
+      SPOOL_DB: "/data/spool.sqlite"
+      SYNC_INTERVAL_S: "${SYNC_INTERVAL_S:-10}"
+    command: ["python3", "-m", "mango_node.sync_manager"]
+    depends_on:
+      - edge-serial
+    restart: unless-stopped
+
+volumes:
+  mango_edge_data:
