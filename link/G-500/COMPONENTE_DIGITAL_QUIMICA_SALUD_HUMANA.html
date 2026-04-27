@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tríptico - Métodos Anticonceptivos</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- html2canvas para exportar el folleto a imagen -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    
+    <!-- QRCode.js para generar el código QR localmente -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        tech: ['Space Grotesk', 'sans-serif'],
+                    },
+                    colors: {
+                        luxe: {
+                            base: '#0B0D14',     // Fondo principal oscuro/parco
+                            panel: '#131620',    // Fondo de paneles
+                            border: '#23283A',   // Bordes sutiles
+                            accent: '#D4AF37',   // Dorado/Champán para el toque de lujo
+                            accentMuted: 'rgba(212, 175, 55, 0.15)',
+                            textMain: '#E2E8F0', // Texto claro
+                            textMuted: '#94A3B8' // Texto secundario
+                        }
+                    },
+                    backgroundImage: {
+                        'tech-grid': 'linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px)',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #0B0D14;
+            color: #E2E8F0;
+            /* Fondo de cuadrícula sutil para el toque tecnológico */
+            background-image: 
+                linear-gradient(rgba(212, 175, 55, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(212, 175, 55, 0.03) 1px, transparent 1px);
+            background-size: 30px 30px;
+        }
+
+        /* Efecto de cristal y borde tecnológico en los paneles */
+        .panel-card {
+            background: linear-gradient(145deg, #131620, #0B0D14);
+            border: 1px solid #23283A;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+            transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .panel-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #D4AF37, transparent);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .panel-card:hover {
+            transform: translateY(-5px);
+            border-color: #D4AF37;
+            box-shadow: 0 10px 40px rgba(212, 175, 55, 0.1);
+        }
+
+        .panel-card:hover::before {
+            opacity: 1;
+        }
+
+        /* Barras de efectividad tecnológicas */
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background-color: #23283A;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background-color: #D4AF37;
+            box-shadow: 0 0 10px #D4AF37;
+            border-radius: 4px;
+        }
+
+        /* Separador decorativo */
+        .separator {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, #23283A, transparent);
+            margin: 1.5rem 0;
+        }
+
+        /* Estilos del Asistente de IA */
+        .ai-panel {
+            grid-column: 1 / -1; /* Hace que el panel ocupe todo el ancho en pantallas grandes */
+            margin-top: 1rem;
+        }
+        
+        .loader {
+            border: 3px solid #23283A;
+            border-top: 3px solid #D4AF37;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-center py-12 px-4 sm:px-6 lg:px-8 antialiased selection:bg-luxe-accent selection:text-luxe-base">
+
+    <!-- Header / Portada del Tríptico -->
+    <header class="w-full max-w-6xl mb-12 text-center relative z-10">
+        <div class="inline-flex items-center justify-center space-x-2 px-4 py-1.5 rounded-full bg-luxe-border/50 border border-luxe-border text-xs font-tech tracking-widest text-luxe-accent mb-6 uppercase">
+            <i data-lucide="shield" class="w-4 h-4"></i>
+            <span>Guía de Salud Reproductiva</span>
+        </div>
+        
+        <h1 class="text-4xl md:text-5xl font-tech font-bold tracking-tight mb-4 text-white">
+            MÉTODOS <span class="text-luxe-accent">ANTICONCEPTIVOS</span>
+        </h1>
+        
+        <div class="mt-8 pt-6 border-t border-luxe-border inline-block min-w-[300px]">
+            <p class="text-sm font-tech text-luxe-textMuted uppercase tracking-wider mb-2">Integrantes del Proyecto</p>
+            <div class="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-8 text-luxe-textMain font-medium">
+                <span class="flex items-center gap-2">
+                    <i data-lucide="user" class="w-4 h-4 text-luxe-accent"></i>
+                    Sebastián Sánchez Chacón
+                </span>
+                <span class="flex items-center gap-2">
+                    <i data-lucide="user" class="w-4 h-4 text-luxe-accent"></i>
+                    Juan David Cuartas Rendon
+                </span>
+            </div>
+            <div class="mt-3 inline-flex items-center justify-center px-3 py-1 rounded bg-luxe-panel border border-luxe-border text-sm font-tech text-luxe-accent">
+                Grado: 11-1
+            </div>
+        </div>
+
+        <!-- Botón de Descarga añadido -->
+        <div class="mt-8 flex justify-center">
+            <button onclick="downloadBrochure()" id="btn-download" class="bg-[#1A1D2D] border border-[#23283A] text-white font-tech tracking-wide px-6 py-3 rounded-xl flex items-center gap-3 hover:bg-[#23283A] hover:border-luxe-accent transition-all shadow-lg hover:shadow-luxe-accent/20">
+                <i data-lucide="download" class="w-5 h-5 text-luxe-accent"></i>
+                Descargar Folleto (Imágenes)
+            </button>
+        </div>
+    </header>
+
+    <!-- Contenedor Principal (Grid de 3 Columnas) -->
+    <main class="w-full max-w-7xl grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8 relative z-10">
+        
+        <!-- PANEL 1: Condón -->
+        <article class="panel-card rounded-2xl p-8 flex flex-col h-full">
+            <div class="flex items-start justify-between mb-6">
+                <div class="w-14 h-14 rounded-xl bg-luxe-accentMuted border border-luxe-accent/30 flex items-center justify-center text-luxe-accent">
+                    <i data-lucide="shield-check" class="w-8 h-8"></i>
+                </div>
+                <span class="text-xs font-tech px-3 py-1 rounded-full bg-luxe-border text-luxe-textMuted tracking-wider uppercase">
+                    Panel 1
+                </span>
+            </div>
+            
+            <h2 class="text-2xl font-tech font-bold text-white mb-2">Preservativo</h2>
+            <p class="text-luxe-accent text-sm font-medium tracking-wide uppercase mb-6">(Condón)</p>
+            
+            <div class="space-y-5 flex-grow text-sm leading-relaxed">
+                <div>
+                    <h3 class="text-white font-semibold flex items-center gap-2 mb-1">
+                        <i data-lucide="chevron-right" class="w-4 h-4 text-luxe-accent"></i> ¿Qué es?
+                    </h3>
+                    <p class="text-luxe-textMuted pl-6">Barrera física que impide el paso del esperma al útero.</p>
+                </div>
+                
+                <div>
+                    <h3 class="text-white font-semibold flex items-center gap-2 mb-1">
+                        <i data-lucide="chevron-right" class="w-4 h-4 text-luxe-accent"></i> ¿Cómo se usa?
+                    </h3>
+                    <p class="text-luxe-textMuted pl-6">Se coloca sobre el pene erecto antes de cualquier contacto sexual.</p>
+                </div>
+                
+                <div>
+                    <h3 class="text-white font-semibold flex items-center gap-2 mb-1">
+                        <i data-lucide="chevron-right" class="w-4 h-4 text-luxe-accent"></i> Ventaja extra
+                    </h3>
+                    <p class="text-luxe-textMuted pl-6">Es el único método que también protege contra ITS (VIH, gonorrea, sífilis).</p>
+                </div>
+
+                <div>
+                    <h3 class="text-white font-semibold flex items-center gap-2 mb-1">
+                        <i data-lucide="chevron-right" class="w-4 h-4 text-luxe-accent"></i> ¿Quién puede usarlo?
+                    </h3>
+                    <p class="text-luxe-textMuted pl-6">Cualquier persona sexualmente activa.</p>
+                </div>
+            </div>
+
+            <div class="separator"></div>
+
+            <div class="mt-auto">
+                <div class="flex justify-between items-end mb-2">
+                    <span class="text-xs font-tech text-luxe-textMuted uppercase tracking-wider">Efectividad</span>
+                    <span class="text-lg font-tech font-bold text-luxe-accent">98%</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 98%;"></div>
+                </div>
+                <p class="text-xs text-luxe-textMuted mt-2 text-right opacity-70">*Si se usa correctamente</p>
+            </div>
+            
+            <!-- Etiqueta inferior tecnológica -->
+            <div class="mt-6 pt-4 border-t border-luxe-border">
+                <p class="text-center font-tech text-xs tracking-widest text-luxe-textMuted uppercase">
+                    [ Método Moderno ]
+                </p>
+            </div>
+        </article>
+
+        <!-- PANEL 2: Píldora del día después -->
+        <article class="panel-card rounded-2xl p-8 flex flex-col h-full">
+            <div class="flex items-start justify-between mb-6">
+                <div class="w-14 h-14 rounded-xl bg-luxe-accentMuted border border-luxe-accent/30 flex items-center justify-center text-luxe-accent">
+                    <i data-lucide="pill" class="w-8 h-8"></i>
+                </div>
+                <span class="text-xs font-tech px-3 py-1 rounded-full bg-luxe-border text-luxe-textMuted tracking-wider uppercase">
+                    Panel 2
+                </span>
+            </div>
+            
+            <h2 class="text-2xl font-tech font-bold text-white mb-2">Píldora del día después</h2>
+            <p class="text-luxe-accent text-sm font-medium tracking-wide uppercase mb-6">(Levonorgestrel)</p>
+            
+            <div class="space-y-5 flex-grow text-sm leading-relaxed">
+                <div>
+                    <h3 class="text-white font-semibold flex items-center gap-2 mb-1">
+                        <i data-lucide="chevron-right" class="w-4 h-4 text-luxe-accent"></i> ¿Qué es?
+                    </h3>
+                    <p class="text-luxe-textMuted pl-6">Hormona que retrasa o impide la ovulación después de una relación sexual sin protección.</p>
+                </div>
+                
+                <div>
+                    <h3 class="text-white font-semibold flex items-center gap-2 mb-1">
+                        <i data-lucide="chevron-right" class="w-4 h-4 text-luxe-accent"></i> ¿Cuándo usarla?
+                    </h3>
+                    <p class="text-luxe-textMuted pl-6">Dentro de las 72 horas siguientes al acto sexual sin protección.</p>
+                </div>
+                
+                <div class="p-3 mt-2 rounded border border-luxe-accent/20 bg-luxe-accent/5">
+                    <h3 class="text-white font-semibold flex items-center gap-2 mb-1">
+                        <i data-lucide="alert-circle" class="w-4 h-4 text-luxe-accent"></i> Importante
+                    </h3>
+                    <p class="text-luxe-textMuted">No es un método de uso regular, solo de emergencia. No interrumpe un embarazo ya establecido.</p>
+                </div>
+            </div>
+
+            <div class="separator"></div>
+
+            <div class="mt-auto">
+                <div class="flex justify-between items-end mb-2">
+                    <span class="text-xs font-tech text-luxe-textMuted uppercase tracking-wider">Efectividad máx.</span>
+                    <span class="text-lg font-tech font-bold text-luxe-accent">95%</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 95%;"></div>
+                </div>
+                <p class="text-xs text-luxe-textMuted mt-2 text-right opacity-70">*Si se toma en las primeras 24 horas</p>
+            </div>
+
+            <!-- Etiqueta inferior tecnológica -->
+            <div class="mt-6 pt-4 border-t border-luxe-border">
+                <p class="text-center font-tech text-xs tracking-widest text-luxe-textMuted uppercase">
+                    [ Método de Emergencia ]
+                </p>
+            </div>
+        </article>
+
+        <!-- PANEL 3: DIU -->
+        <article class="panel-card rounded-2xl p-8 flex flex-col h-full">
+            <div class="flex items-start justify-between mb-6">
+                <div class="w-14 h-14 rounded-xl bg-luxe-accentMuted border border-luxe-accent/30 flex items-center justify-center text-luxe-accent">
+                    <i data-lucide="git-merge" class="w-8 h-8 transform rotate-180"></i>
+                </div>
+                <span class="text-xs font-tech px-3 py-1 rounded-full bg-luxe-border text-luxe-textMuted tracking-wider uppercase">
+                    Panel 3
+                </span>
+            </div>
+            
+            <h2 class="text-2xl font-tech font-bold text-white mb-2">DIU</h2>
+            <p class="text-luxe-accent text-sm font-medium tracking-wide uppercase mb-6">(Dispositivo Intrauterino)</p>
+            
+            <div class="space-y-5 flex-grow text-sm leading-relaxed">
+                <div>
+                    <h3 class="text-white font-semibold flex items-center gap-2 mb-1">
+                        <i data-lucide="chevron-right" class="w-4 h-4 text-luxe-accent"></i> ¿Qué es?
+                    </h3>
+                    <p class="text-luxe-textMuted pl-6">Pequeño dispositivo en forma de T que se inserta en el útero por un médico.</p>
+                </div>
+                
+                <div>
+                    <h3 class="text-white font-semibold flex items-center gap-2 mb-1">
+                        <i data-lucide="chevron-right" class="w-4 h-4 text-luxe-accent"></i> ¿Cuándo se usa?
+                    </h3>
+                    <p class="text-luxe-textMuted pl-6">Después de un parto, cesárea o aborto (pos evento obstétrico).</p>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4 mt-2">
+                    <div>
+                        <h3 class="text-white font-semibold flex items-center gap-2 mb-1 text-xs uppercase tracking-wider">
+                            <i data-lucide="clock" class="w-3 h-3 text-luxe-accent"></i> Duración
+                        </h3>
+                        <p class="text-luxe-textMuted text-xs">Protege entre 5 y 10 años según el tipo.</p>
+                    </div>
+                    <div>
+                        <h3 class="text-white font-semibold flex items-center gap-2 mb-1 text-xs uppercase tracking-wider">
+                            <i data-lucide="check-circle-2" class="w-3 h-3 text-luxe-accent"></i> Ventaja
+                        </h3>
+                        <p class="text-luxe-textMuted text-xs">No requiere recordar tomarlo diariamente y es reversible.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="separator"></div>
+
+            <div class="mt-auto">
+                <div class="flex justify-between items-end mb-2">
+                    <span class="text-xs font-tech text-luxe-textMuted uppercase tracking-wider">Efectividad</span>
+                    <span class="text-lg font-tech font-bold text-luxe-accent">>99%</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 99%;"></div>
+                </div>
+                <p class="text-xs text-luxe-textMuted mt-2 text-right opacity-70">*Alta protección a largo plazo</p>
+            </div>
+
+            <!-- Etiqueta inferior tecnológica -->
+            <div class="mt-6 pt-4 border-t border-luxe-border">
+                <p class="text-center font-tech text-xs tracking-widest text-luxe-textMuted uppercase">
+                    [ Método Pos Evento Obstétrico ]
+                </p>
+            </div>
+        </article>
+
+        <!-- SECCIÓN IA: Asistente Educativo -->
+        <article class="panel-card rounded-2xl p-8 flex flex-col h-full ai-panel">
+            <div class="flex flex-col md:flex-row items-start md:items-center justify-between mb-6 gap-4">
+                <div class="flex items-center gap-4">
+                    <div class="w-14 h-14 rounded-xl bg-luxe-accentMuted border border-luxe-accent/30 flex items-center justify-center text-luxe-accent">
+                        <i data-lucide="sparkles" class="w-8 h-8"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-2xl font-tech font-bold text-white mb-1">Asistente Virtual</h2>
+                        <p class="text-luxe-accent text-sm font-medium tracking-wide uppercase">Potenciado por Inteligencia Artificial</p>
+                    </div>
+                </div>
+                <span class="text-xs font-tech px-3 py-1 rounded-full bg-luxe-border text-luxe-textMuted tracking-wider uppercase">
+                    Módulo Interactivo
+                </span>
+            </div>
+
+            <div class="space-y-5">
+                <p class="text-luxe-textMuted text-sm">
+                    ¿Tienes alguna duda adicional sobre estos u otros métodos? Pregúntale a nuestro asistente educativo o descubre la verdad sobre creencias populares.
+                </p>
+                
+                <div class="flex flex-col sm:flex-row gap-3">
+                    <input type="text" id="ai-input" placeholder="Ej: ¿Cuáles son los efectos secundarios de la píldora?" class="flex-1 bg-[#0B0D14] border border-[#23283A] rounded-lg px-4 py-3 text-sm text-white placeholder-[#475569] focus:outline-none focus:border-[#D4AF37] transition-colors" onkeypress="if(event.key === 'Enter') askQuestion()">
+                    
+                    <button onclick="askQuestion()" id="ai-btn-ask" class="bg-luxe-accent text-[#0B0D14] font-semibold px-6 py-3 rounded-lg flex items-center justify-center gap-2 hover:bg-yellow-500 transition-colors shadow-lg shadow-luxe-accent/20">
+                        ✨ Consultar
+                    </button>
+                    
+                    <button onclick="generateMyth()" id="ai-btn-myth" class="bg-[#1A1D2D] text-white font-semibold px-6 py-3 rounded-lg flex items-center justify-center gap-2 hover:bg-[#23283A] border border-[#23283A] transition-colors hover:border-[#D4AF37]">
+                        ✨ Desmentir Mito
+                    </button>
+                </div>
+
+                <!-- Contenedor de la respuesta de la IA -->
+                <div id="ai-response-container" class="hidden mt-4 p-5 rounded-xl border border-luxe-accent/20 bg-luxe-accent/5 transition-all">
+                    <div class="flex items-center gap-2 mb-3 border-b border-luxe-accent/10 pb-2">
+                        <i data-lucide="bot" class="w-5 h-5 text-luxe-accent"></i>
+                        <h3 class="text-white font-tech font-semibold text-sm uppercase tracking-wider">Respuesta del Asistente</h3>
+                    </div>
+                    <div id="ai-response-content" class="text-luxe-textMuted text-sm leading-relaxed whitespace-pre-wrap">
+                        <!-- El texto cargará aquí -->
+                    </div>
+                </div>
+            </div>
+        </article>
+
+    </main>
+
+    <!-- ZONA OCULTA PARA EXPORTACIÓN DEL FOLLETO FÍSICO (Solo lo verá html2canvas) -->
+    <div style="position: absolute; left: -9999px; top: -9999px; opacity: 0; pointer-events: none;" aria-hidden="true">
+        
+        <!-- IMAGEN 1: PARTE TRASERA (Exterior del tríptico) -->
+        <div id="brochure-ext" style="width: 1500px; height: 1000px; display: flex; background-color: #0B0D14; color: #E2E8F0; font-family: 'Inter', sans-serif;">
+            
+            <!-- Izquierda: Solapa interior al doblar (Versión Interactiva) -->
+            <div style="width: 500px; height: 1000px; padding: 60px; border-right: 2px dashed #23283A; position: relative; background: linear-gradient(180deg, #0B0D14 0%, #131620 100%); display: flex; flex-direction: column;">
+                <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 25px;">
+                    <div style="background: rgba(212, 175, 55, 0.15); padding: 15px; border-radius: 12px; border: 1px solid rgba(212, 175, 55, 0.3);">
+                        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#D4AF37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+                    </div>
+                    <h3 style="font-family: 'Space Grotesk', sans-serif; font-size: 26px; color: #D4AF37; font-weight: bold; margin: 0;">Plataforma Digital</h3>
+                </div>
+                
+                <p style="font-size: 18px; color: #E2E8F0; line-height: 1.6; margin-bottom: 30px; font-weight: 300;">Escanea el código QR para acceder al recurso interactivo oficial (fuente de información) y usar nuestro asistente de IA.</p>
+                
+                <div style="flex-grow: 1; background: rgba(35, 40, 58, 0.4); border: 2px solid #23283A; border-radius: 20px; padding: 30px; display: flex; flex-direction: column; align-items: center; text-align: center; justify-content: center; position: relative; margin-bottom: 30px; overflow: hidden;">
+                    <div style="position: absolute; top: -50px; left: -50px; width: 150px; height: 150px; background: radial-gradient(circle, rgba(212,175,55,0.2) 0%, transparent 70%);"></div>
+                    
+                    <div style="background: #FFFFFF; padding: 15px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 10px 30px rgba(212, 175, 55, 0.2);">
+                        <!-- El QR dinámico se generará aquí -->
+                        <div id="qr-container"></div>
+                    </div>
+                    
+                    <h4 style="font-family: 'Space Grotesk', sans-serif; font-size: 22px; color: #FFFFFF; margin-bottom: 10px; font-weight: bold;">Acceder a Edpuzzle</h4>
+                    <p style="color: #94A3B8; font-size: 16px; line-height: 1.5; margin: 0;">Conéctate al material original.</p>
+                </div>
+
+                <div style="border: 1px dashed rgba(212, 175, 55, 0.4); border-radius: 15px; padding: 25px; background: rgba(212, 175, 55, 0.05);">
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#D4AF37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="9" y1="3" x2="9" y2="21"></line><line x1="15" y1="3" x2="15" y2="21"></line><line x1="3" y1="9" x2="21" y2="9"></line><line x1="3" y1="15" x2="21" y2="15"></line></svg>
+                        <h4 style="font-family: 'Space Grotesk', sans-serif; font-size: 18px; color: #FFFFFF; font-weight: bold; margin: 0;">Asistente IA Exclusivo</h4>
+                    </div>
+                    <p style="color: #94A3B8; font-size: 15px; line-height: 1.5; margin: 0;">En esta URL también encontrarás a nuestro asistente para resolver dudas y desmentir mitos en tiempo real.</p>
+                </div>
+            </div>
+            
+            <!-- Centro: Contraportada (Información de contacto/autores) -->
+            <div style="width: 500px; height: 1000px; padding: 60px; border-right: 2px dashed #23283A; background-color: #131620; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; position: relative;">
+                <!-- Fondo decorativo -->
+                <div style="position: absolute; width: 100%; height: 100%; background-image: linear-gradient(rgba(212, 175, 55, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(212, 175, 55, 0.03) 1px, transparent 1px); background-size: 40px 40px; top: 0; left: 0; pointer-events: none;"></div>
+
+                <div style="background: linear-gradient(135deg, rgba(212, 175, 55, 0.2), rgba(212, 175, 55, 0.05)); border: 1px solid rgba(212, 175, 55, 0.3); padding: 20px; border-radius: 50%; margin-bottom: 30px; z-index: 10;">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#D4AF37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                </div>
+                
+                <h3 style="font-family: 'Space Grotesk', sans-serif; font-size: 32px; color: #FFFFFF; margin-bottom: 50px; font-weight: bold; text-transform: uppercase; letter-spacing: 2px; z-index: 10;">Proyecto de Aula</h3>
+                
+                <div style="background: rgba(11, 13, 20, 0.8); border: 1px solid #23283A; width: 100%; padding: 25px; border-radius: 15px; margin-bottom: 20px; z-index: 10;">
+                    <p style="font-size: 24px; color: #E2E8F0; font-weight: 500; margin: 0;">Sebastián Sánchez C.</p>
+                </div>
+                <div style="background: rgba(11, 13, 20, 0.8); border: 1px solid #23283A; width: 100%; padding: 25px; border-radius: 15px; margin-bottom: 60px; z-index: 10;">
+                    <p style="font-size: 24px; color: #E2E8F0; font-weight: 500; margin: 0;">Juan David Cuartas R.</p>
+                </div>
+                
+                <div style="padding: 15px 40px; background: #D4AF37; border-radius: 10px; color: #0B0D14; font-family: 'Space Grotesk', sans-serif; font-weight: bold; font-size: 22px; z-index: 10; box-shadow: 0 10px 30px rgba(212, 175, 55, 0.3);">
+                    Grado: 11-1
+                </div>
+            </div>
+
+            <!-- Derecha: Portada principal -->
+            <div style="width: 500px; height: 1000px; padding: 60px; background: #0B0D14; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; position: relative; overflow: hidden;">
+                <!-- Luces de neón de fondo -->
+                <div style="position: absolute; width: 600px; height: 600px; background: radial-gradient(circle, rgba(212,175,55,0.15) 0%, transparent 60%); top: -200px; right: -200px;"></div>
+                <div style="position: absolute; width: 500px; height: 500px; background: radial-gradient(circle, rgba(212,175,55,0.1) 0%, transparent 60%); bottom: -150px; left: -150px;"></div>
+                
+                <div style="margin-bottom: 40px; border: 2px solid rgba(212, 175, 55, 0.5); border-radius: 50px; padding: 10px 25px; background: rgba(212, 175, 55, 0.1); z-index: 10;">
+                    <h4 style="font-family: 'Space Grotesk', sans-serif; font-size: 16px; color: #D4AF37; text-transform: uppercase; letter-spacing: 4px; margin: 0; font-weight: bold;">Guía de Salud Reproductiva</h4>
+                </div>
+                
+                <h1 style="font-family: 'Space Grotesk', sans-serif; font-size: 65px; color: #FFFFFF; font-weight: bold; line-height: 1; margin-bottom: 5px; z-index: 10; text-shadow: 0 4px 20px rgba(0,0,0,0.5);">MÉTODOS</h1>
+                <h1 style="font-family: 'Space Grotesk', sans-serif; font-size: 55px; color: #D4AF37; font-weight: bold; line-height: 1.1; margin-bottom: 80px; z-index: 10; text-shadow: 0 4px 30px rgba(212, 175, 55, 0.3);">ANTICONCEPTIVOS</h1>
+                
+                <div style="width: 140px; height: 140px; border-radius: 35px; background: linear-gradient(135deg, rgba(212,175,55,0.2), rgba(212,175,55,0.05)); border: 2px solid #D4AF37; display: flex; align-items: center; justify-content: center; color: #D4AF37; z-index: 10; box-shadow: 0 20px 50px rgba(212, 175, 55, 0.2);">
+                    <svg width="70" height="70" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><path d="M9 12l2 2 4-4"></path></svg>
+                </div>
+            </div>
+        </div>
+
+        <!-- IMAGEN 2: PARTE FRONTAL (Interior del tríptico) -->
+        <div id="brochure-int" style="width: 1500px; height: 1000px; display: flex; background-color: #0B0D14; color: #E2E8F0; font-family: 'Inter', sans-serif;">
+            
+            <!-- Izquierda: Panel 1 (Condón) -->
+            <div style="width: 500px; height: 1000px; padding: 50px; border-right: 2px dashed #23283A; display: flex; flex-direction: column;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 30px;">
+                    <div style="background: #131620; border: 1px solid #D4AF37; padding: 15px; border-radius: 12px;">
+                        <svg width="35" height="35" viewBox="0 0 24 24" fill="none" stroke="#D4AF37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                    </div>
+                    <span style="font-family: 'Space Grotesk', sans-serif; color: #D4AF37; font-size: 14px; text-transform: uppercase; letter-spacing: 2px; border: 1px solid rgba(212,175,55,0.3); padding: 5px 15px; border-radius: 20px;">Moderno</span>
+                </div>
+                
+                <h2 style="font-family: 'Space Grotesk', sans-serif; font-size: 42px; color: #FFFFFF; margin: 0 0 5px 0; font-weight: bold; line-height: 1;">Preservativo</h2>
+                <p style="color: #94A3B8; font-size: 20px; font-weight: 500; text-transform: uppercase; margin-bottom: 40px; letter-spacing: 1px;">(Condón)</p>
+                
+                <div style="background: rgba(35, 40, 58, 0.3); border-left: 4px solid #D4AF37; padding: 20px 25px; border-radius: 0 12px 12px 0; margin-bottom: 25px;">
+                    <strong style="color: #FFFFFF; font-size: 20px; display: block; margin-bottom: 8px;">¿Qué es?</strong>
+                    <p style="color: #E2E8F0; font-size: 16px; line-height: 1.6; margin: 0;">Barrera física que impide el paso del esperma al útero.</p>
+                </div>
+                <div style="background: rgba(35, 40, 58, 0.3); border-left: 4px solid #D4AF37; padding: 20px 25px; border-radius: 0 12px 12px 0; margin-bottom: 25px;">
+                    <strong style="color: #FFFFFF; font-size: 20px; display: block; margin-bottom: 8px;">¿Cómo se usa?</strong>
+                    <p style="color: #E2E8F0; font-size: 16px; line-height: 1.6; margin: 0;">Se coloca sobre el pene erecto antes de cualquier contacto sexual.</p>
+                </div>
+                <div style="background: linear-gradient(90deg, rgba(212,175,55,0.1) 0%, transparent 100%); border-left: 4px solid #D4AF37; padding: 20px 25px; border-radius: 0 12px 12px 0;">
+                    <strong style="color: #D4AF37; font-size: 20px; display: block; margin-bottom: 8px;">Ventaja Extra</strong>
+                    <p style="color: #E2E8F0; font-size: 16px; line-height: 1.6; margin: 0;">Es el único método que también protege contra ITS (VIH, gonorrea, sífilis).</p>
+                </div>
+                
+                <div style="margin-top: auto; background: #131620; padding: 30px; border-radius: 15px; border: 1px solid #23283A;">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 15px;">
+                        <span style="color: #94A3B8; font-family: 'Space Grotesk', sans-serif; font-size: 16px; text-transform: uppercase; letter-spacing: 1px;">Efectividad</span>
+                        <span style="color: #D4AF37; font-family: 'Space Grotesk', sans-serif; font-size: 38px; font-weight: bold; line-height: 1;">98%</span>
+                    </div>
+                    <div style="width: 100%; height: 12px; background-color: #0B0D14; border-radius: 6px; overflow: hidden; border: 1px solid #23283A;">
+                        <div style="width: 98%; height: 100%; background-color: #D4AF37; box-shadow: 0 0 15px #D4AF37;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Centro: Panel 2 (Píldora) -->
+            <div style="width: 500px; height: 1000px; padding: 50px; border-right: 2px dashed #23283A; background-color: #131620; display: flex; flex-direction: column;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 30px;">
+                    <div style="background: #0B0D14; border: 1px solid #D4AF37; padding: 15px; border-radius: 12px;">
+                        <svg width="35" height="35" viewBox="0 0 24 24" fill="none" stroke="#D4AF37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v16M4 12h16"></path><circle cx="12" cy="12" r="10"></circle></svg>
+                    </div>
+                    <span style="font-family: 'Space Grotesk', sans-serif; color: #D4AF37; font-size: 14px; text-transform: uppercase; letter-spacing: 2px; border: 1px solid rgba(212,175,55,0.3); padding: 5px 15px; border-radius: 20px;">Emergencia</span>
+                </div>
+                
+                <h2 style="font-family: 'Space Grotesk', sans-serif; font-size: 42px; color: #FFFFFF; margin: 0 0 5px 0; font-weight: bold; line-height: 1.1;">Píldora del día después</h2>
+                <p style="color: #94A3B8; font-size: 20px; font-weight: 500; text-transform: uppercase; margin-bottom: 40px; letter-spacing: 1px;">(Levonorgestrel)</p>
+                
+                <div style="background: rgba(11, 13, 20, 0.8); border-left: 4px solid #D4AF37; padding: 20px 25px; border-radius: 0 12px 12px 0; margin-bottom: 25px;">
+                    <strong style="color: #FFFFFF; font-size: 20px; display: block; margin-bottom: 8px;">¿Qué es?</strong>
+                    <p style="color: #E2E8F0; font-size: 16px; line-height: 1.6; margin: 0;">Hormona que retrasa o impide la ovulación después de una relación sexual sin protección.</p>
+                </div>
+                <div style="background: rgba(11, 13, 20, 0.8); border-left: 4px solid #D4AF37; padding: 20px 25px; border-radius: 0 12px 12px 0; margin-bottom: 25px;">
+                    <strong style="color: #FFFFFF; font-size: 20px; display: block; margin-bottom: 8px;">¿Cuándo usarla?</strong>
+                    <p style="color: #E2E8F0; font-size: 16px; line-height: 1.6; margin: 0;">Dentro de las 72 horas siguientes al acto sexual sin protección.</p>
+                </div>
+                <div style="background: rgba(212, 175, 55, 0.1); border: 1px solid rgba(212, 175, 55, 0.3); padding: 20px 25px; border-radius: 12px;">
+                    <strong style="color: #D4AF37; font-size: 20px; display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                        Importante
+                    </strong>
+                    <p style="color: #E2E8F0; font-size: 16px; line-height: 1.6; margin: 0;">No es de uso regular. No interrumpe un embarazo ya establecido.</p>
+                </div>
+                
+                <div style="margin-top: auto; background: #0B0D14; padding: 30px; border-radius: 15px; border: 1px solid #23283A;">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 15px;">
+                        <span style="color: #94A3B8; font-family: 'Space Grotesk', sans-serif; font-size: 16px; text-transform: uppercase; letter-spacing: 1px;">Efectividad Máx.</span>
+                        <span style="color: #D4AF37; font-family: 'Space Grotesk', sans-serif; font-size: 38px; font-weight: bold; line-height: 1;">95%</span>
+                    </div>
+                    <div style="width: 100%; height: 12px; background-color: #131620; border-radius: 6px; overflow: hidden; border: 1px solid #23283A;">
+                        <div style="width: 95%; height: 100%; background-color: #D4AF37; box-shadow: 0 0 15px #D4AF37;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Derecha: Panel 3 (DIU) -->
+            <div style="width: 500px; height: 1000px; padding: 50px; display: flex; flex-direction: column;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 30px;">
+                    <div style="background: #131620; border: 1px solid #D4AF37; padding: 15px; border-radius: 12px;">
+                        <svg width="35" height="35" viewBox="0 0 24 24" fill="none" stroke="#D4AF37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+                    </div>
+                    <span style="font-family: 'Space Grotesk', sans-serif; color: #D4AF37; font-size: 14px; text-transform: uppercase; letter-spacing: 2px; border: 1px solid rgba(212,175,55,0.3); padding: 5px 15px; border-radius: 20px;">Pos Evento</span>
+                </div>
+                
+                <h2 style="font-family: 'Space Grotesk', sans-serif; font-size: 42px; color: #FFFFFF; margin: 0 0 5px 0; font-weight: bold; line-height: 1;">DIU</h2>
+                <p style="color: #94A3B8; font-size: 20px; font-weight: 500; text-transform: uppercase; margin-bottom: 40px; letter-spacing: 1px;">(Dispositivo Intrauterino)</p>
+                
+                <div style="background: rgba(35, 40, 58, 0.3); border-left: 4px solid #D4AF37; padding: 20px 25px; border-radius: 0 12px 12px 0; margin-bottom: 25px;">
+                    <strong style="color: #FFFFFF; font-size: 20px; display: block; margin-bottom: 8px;">¿Qué es?</strong>
+                    <p style="color: #E2E8F0; font-size: 16px; line-height: 1.6; margin: 0;">Pequeño dispositivo en forma de T que se inserta en el útero por un médico.</p>
+                </div>
+                <div style="background: rgba(35, 40, 58, 0.3); border-left: 4px solid #D4AF37; padding: 20px 25px; border-radius: 0 12px 12px 0; margin-bottom: 25px;">
+                    <strong style="color: #FFFFFF; font-size: 20px; display: block; margin-bottom: 8px;">¿Cuándo se usa?</strong>
+                    <p style="color: #E2E8F0; font-size: 16px; line-height: 1.6; margin: 0;">Después de un parto, cesárea o aborto.</p>
+                </div>
+                <div style="background: rgba(35, 40, 58, 0.3); border-left: 4px solid #D4AF37; padding: 20px 25px; border-radius: 0 12px 12px 0;">
+                    <strong style="color: #FFFFFF; font-size: 20px; display: block; margin-bottom: 8px;">Duración y Ventajas</strong>
+                    <p style="color: #E2E8F0; font-size: 16px; line-height: 1.6; margin: 0;">Protege entre 5 y 10 años. No requiere recordatorios diarios y es totalmente reversible.</p>
+                </div>
+                
+                <div style="margin-top: auto; background: #131620; padding: 30px; border-radius: 15px; border: 1px solid #23283A;">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 15px;">
+                        <span style="color: #94A3B8; font-family: 'Space Grotesk', sans-serif; font-size: 16px; text-transform: uppercase; letter-spacing: 1px;">Efectividad</span>
+                        <span style="color: #D4AF37; font-family: 'Space Grotesk', sans-serif; font-size: 38px; font-weight: bold; line-height: 1;">>99%</span>
+                    </div>
+                    <div style="width: 100%; height: 12px; background-color: #0B0D14; border-radius: 6px; overflow: hidden; border: 1px solid #23283A;">
+                        <div style="width: 99%; height: 100%; background-color: #D4AF37; box-shadow: 0 0 15px #D4AF37;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Inicializar Iconos -->
+    <script>
+        lucide.createIcons();
+
+        // Generar el código QR automáticamente al cargar
+        window.addEventListener('DOMContentLoaded', () => {
+            new QRCode(document.getElementById("qr-container"), {
+                text: "https://edpuzzle.com/media/62814ff74ffbd94298ddc9c1",
+                width: 150,
+                height: 150,
+                colorDark : "#0B0D14",
+                colorLight : "#ffffff",
+                correctLevel : QRCode.CorrectLevel.H
+            });
+        });
+
+        // ==========================================
+        // INTEGRACIÓN DE GEMINI API
+        // ==========================================
+        const apiKey = ""; // La API Key es inyectada automáticamente por el entorno
+        
+        // Instrucción del sistema para darle personalidad y límites al LLM
+        const systemInstruction = "Eres un asistente médico virtual especializado en educación sexual y reproductiva. Responde preguntas sobre métodos anticonceptivos de forma clara, objetiva, respetuosa, concisa (máximo 2-3 párrafos) y basada en la ciencia. Advierte brevemente al final de tu respuesta que tu consejo es informativo y no sustituye a un profesional médico.";
+
+        // Función con exponential backoff para manejar los reintentos de la API
+        async function fetchWithRetry(url, options, maxRetries = 5) {
+            let delay = 1000;
+            for (let i = 0; i < maxRetries; i++) {
+                try {
+                    const response = await fetch(url, options);
+                    if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
+                    return await response.json();
+                } catch (e) {
+                    if (i === maxRetries - 1) throw e;
+                    await new Promise(res => setTimeout(res, delay));
+                    delay *= 2;
+                }
+            }
+        }
+
+        // Llamada principal a la API de Gemini
+        async function callGemini(promptText) {
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+            const payload = {
+                contents: [{ parts: [{ text: promptText }] }],
+                systemInstruction: { parts: [{ text: systemInstruction }] }
+            };
+
+            const result = await fetchWithRetry(url, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
+
+            if (result && result.candidates && result.candidates.length > 0) {
+                return result.candidates[0].content.parts[0].text;
+            } else {
+                throw new Error("Respuesta inválida de la API");
+            }
+        }
+
+        // Control de Interfaz de Usuario (Cargando)
+        function setAILoadingState(isLoading) {
+            const container = document.getElementById('ai-response-container');
+            const content = document.getElementById('ai-response-content');
+            const btnAsk = document.getElementById('ai-btn-ask');
+            const btnMyth = document.getElementById('ai-btn-myth');
+            const input = document.getElementById('ai-input');
+
+            if (isLoading) {
+                container.classList.remove('hidden');
+                content.innerHTML = '<div class="flex items-center gap-3 text-luxe-accent"><div class="loader"></div> <span class="animate-pulse">Analizando información médica...</span></div>';
+                btnAsk.disabled = true;
+                btnMyth.disabled = true;
+                input.disabled = true;
+                btnAsk.classList.add('opacity-50', 'cursor-not-allowed');
+                btnMyth.classList.add('opacity-50', 'cursor-not-allowed');
+            } else {
+                btnAsk.disabled = false;
+                btnMyth.disabled = false;
+                input.disabled = false;
+                btnAsk.classList.remove('opacity-50', 'cursor-not-allowed');
+                btnMyth.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+        }
+
+        // Acción 1: El usuario hace una pregunta
+        async function askQuestion() {
+            const input = document.getElementById('ai-input');
+            const question = input.value.trim();
+            if (!question) return;
+
+            setAILoadingState(true);
+            try {
+                const responseText = await callGemini(`El usuario pregunta: ${question}`);
+                document.getElementById('ai-response-content').innerHTML = responseText;
+            } catch (error) {
+                console.error(error);
+                document.getElementById('ai-response-content').innerHTML = '<span class="text-red-400">Hubo un error al conectar con el asistente médico. Por favor, intenta de nuevo más tarde.</span>';
+            } finally {
+                setAILoadingState(false);
+            }
+        }
+
+        // Acción 2: Generar y desmentir un mito aleatorio
+        async function generateMyth() {
+            const input = document.getElementById('ai-input');
+            input.value = ''; // Limpiar el input para enfocarse en el mito
+            
+            setAILoadingState(true);
+            try {
+                const prompt = "Genera un mito MUY común y popular sobre los métodos anticonceptivos o la sexualidad (ejemplo: que la píldora engorda muchísimo, o mitos sobre la primera vez). Descríbelo brevemente y luego desmiéntelo con datos científicos claros y directos. Estructura tu respuesta separando el 'Mito:' de la 'Verdad científica:'.";
+                const responseText = await callGemini(prompt);
+                
+                // Procesamos texto enriquecido usando etiquetas básicas para que se vea bien en el HTML
+                let formattedText = responseText.replace(/\*\*(.*?)\*\*/g, '<strong class="text-white">$1</strong>');
+                document.getElementById('ai-response-content').innerHTML = formattedText;
+                
+            } catch (error) {
+                console.error(error);
+                document.getElementById('ai-response-content').innerHTML = '<span class="text-red-400">Hubo un error al conectar con el asistente. Por favor, intenta de nuevo más tarde.</span>';
+            } finally {
+                setAILoadingState(false);
+            }
+        }
+
+        // ==========================================
+        // EXPORTACIÓN A IMÁGENES (TRÍPTICO FÍSICO)
+        // ==========================================
+        async function downloadBrochure() {
+            const btn = document.getElementById('btn-download');
+            const originalHTML = btn.innerHTML;
+            
+            // Estado de carga en el botón
+            btn.innerHTML = '<div class="loader mr-2 border-white border-top-transparent"></div> <span class="animate-pulse">Generando imágenes...</span>';
+            btn.disabled = true;
+            btn.classList.add('opacity-70', 'cursor-not-allowed');
+
+            try {
+                // Pequeña pausa para asegurar carga de fuentes
+                await new Promise(r => setTimeout(r, 300)); 
+
+                // Configuración de html2canvas para alta calidad
+                const config = { 
+                    scale: 2, // Aumenta la resolución
+                    backgroundColor: '#0B0D14',
+                    logging: false,
+                    useCORS: true
+                };
+
+                // 1. Generar Imagen: Parte Exterior (Trasera)
+                const extElement = document.getElementById('brochure-ext');
+                const canvasExt = await html2canvas(extElement, config);
+
+                // 2. Generar Imagen: Parte Interior (Frontal)
+                const intElement = document.getElementById('brochure-int');
+                const canvasInt = await html2canvas(intElement, config);
+
+                // Función auxiliar para forzar la descarga de la imagen
+                const triggerDownload = (canvas, filename) => {
+                    const link = document.createElement('a');
+                    link.download = filename;
+                    link.href = canvas.toDataURL('image/png');
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                };
+
+                // Descargamos la primera parte (Exterior)
+                triggerDownload(canvasExt, 'Triptico_Exterior.png');
+                
+                // Un pequeño retraso para evitar que el navegador bloquee múltiples descargas simultáneas
+                setTimeout(() => {
+                    triggerDownload(canvasInt, 'Triptico_Interior.png');
+                }, 800);
+
+            } catch (error) {
+                console.error("Error al exportar:", error);
+                alert("Hubo un problema al generar las imágenes. Intenta nuevamente.");
+            } finally {
+                // Restaurar el botón a su estado normal
+                btn.innerHTML = originalHTML;
+                btn.disabled = false;
+                btn.classList.remove('opacity-70', 'cursor-not-allowed');
+            }
+        }
+    </script>
+</body>
+</html>
