@@ -2,7 +2,7 @@
 
 **Project:** M.A.N.G.O — Autonomous Monitoring of Oceanic Management Levels  
 **Status:** Active Development  
-**Last update:** 2026-01-05  
+**Last update:** 2026-04-28  
 
 ---
 
@@ -52,20 +52,37 @@
 
 ---
 
+## 🟢 COMPLETED — 2026-04-28
+
+### Backend restructure
+- ✅ Full modular structure: `models/`, `routes/`, `middleware/`, `seeds/`
+- ✅ SQLite database via Flask-SQLAlchemy (upgradeable to PostgreSQL)
+- ✅ bcrypt password hashing (Flask-Bcrypt)
+- ✅ Session-based auth with HttpOnly + SameSite cookie flags
+- ✅ `/api/v1/users/login`, `/api/v1/users/status`, `/api/v1/users/logout`
+- ✅ Admin panel endpoints: media, docs, editable content (8 new routes)
+- ✅ `admin_required` middleware (role check server-side)
+- ✅ CORS configured with `credentials: true` and exact origin
+- ✅ File upload with mime-type + size validation
+- ✅ 70 demo users seeded from Excel (all roles and plans)
+- ✅ Super-admin account slot ready (credentials in `seeds/seed_demo.py`)
+- ✅ Editable content keys: `hero.title`, `hero.subtitle`, `about.intro`, `project.summary`
+- ✅ Environment-based secrets via `.env` (see `.env.example`)
+
+---
+
 ## 🔴 NOT IMPLEMENTED YET
 
 ### Persistence
-- ❌ No database enabled
-- ❌ No historical data storage
+- ❌ No historical sensor data storage (DB schema ready, reads still placeholder)
 - ❌ No export or logging system
 
 ### Authentication & Security
-- ❌ No auth system enabled
 - ❌ No rate limiting
-- ❌ No environment-based secrets enforcement
+- ❌ Demo passwords not rotated — CHANGE_BEFORE_PRODUCTION
 
 ### Deployment
-- ❌ No production WSGI server
+- ❌ No production WSGI server (gunicorn/waitress)
 - ❌ No containerization
 - ❌ No CI/CD pipeline
 

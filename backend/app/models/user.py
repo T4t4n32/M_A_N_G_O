@@ -1,91 +1,55 @@
-"""
-Modelo de usuarios para M.A.N.G.O.
+from datetime import datetime
+from app.database import db
 
-Tablas:
-- mango_users        → credenciales y perfil
-- mango_login_events → historial de accesos
-"""
+# Valid roles — ordered from least to most privileged.
+VALID_ROLES = [
+    "visitante",
+    "usuario_basico",
+    "documental_premium",
+    "dataline_low",
+    "dataline_high",
+    "institucional",
+    "admin",
+]
 
-from __future__ import annotations
+# Valid plans
+VALID_PLANS = [
+    "Publico",
+    "Registrado Basico",
+    "Documental Premium",
+    "DataLine Low",
+    "DataLine High",
+    "Institucional/Empresarial",
+    "Administrativo Interno",
+]
 
-from datetime import datetime, timezone
 
-from werkzeug.security import check_password_hash, generate_password_hash
+class User(db.Model):
+    __tablename__ = "users"
 
-from app.extensions import db
-
-
-def _utcnow():
-    return datetime.now(timezone.utc)
-
-
-class MangoUser(db.Model):
-    __tablename__ = "mango_users"
-
-    id         = db.Column(db.Integer, primary_key=True)
-    email      = db.Column(db.String(255), unique=True, nullable=False, index=True)
-    name       = db.Column(db.String(120), nullable=True, default="")
-    role       = db.Column(db.String(32),  nullable=False, default="viewer", index=True)
-    pw_hash    = db.Column(db.String(255), nullable=False)
-    active     = db.Column(db.Boolean,     nullable=False, default=True, index=True)
-
-    created_at   = db.Column(db.DateTime(timezone=True), nullable=False, default=_utcnow)
-    last_login   = db.Column(db.DateTime(timezone=True), nullable=True)
-    login_count  = db.Column(db.Integer, nullable=False, default=0)
-
-    login_events = db.relationship(
-        "MangoLoginEvent",
-        back_populates="user",
-        cascade="all, delete-orphan",
-        lazy="dynamic",
-        order_by="desc(MangoLoginEvent.ts)",
-    )
-
-    # ------------------------------------------------------------------
-    def set_password(self, password: str) -> None:
-        self.pw_hash = generate_password_hash(password)
-
-    def check_password(self, password: str) -> bool:
-        return check_password_hash(self.pw_hash, password)
-
-    def record_login(self, ip: str | None = None, user_agent: str | None = None) -> "MangoLoginEvent":
-        now = _utcnow()
-        self.last_login  = now
-        self.login_count = (self.login_count or 0) + 1
-        event = MangoLoginEvent(user_id=self.id, ip=ip, user_agent=user_agent, ts=now)
-        db.session.add(event)
-        return event
+    id = db.Column(db.Integer, primary_key=True)
+    demo_id = db.Column(db.Integer, unique=True, nullable=True)  # 1001-1070 from demo sheet
+    username = db.Column(db.String(64), unique=True, nullable=False)
+    email = db.Column(db.String(128), unique=True, nullable=False)
+    password_hash = db.Column(db.String(256), nullable=False)
+    full_name = db.Column(db.String(128), nullable=False)
+    role = db.Column(db.String(32), nullable=False, default="visitante")
+    plan = db.Column(db.String(64), nullable=True)
+    status = db.Column(db.String(16), nullable=False, default="Activo")
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     def to_dict(self) -> dict:
         return {
-            "id":          self.id,
-            "email":       self.email,
-            "name":        self.name,
-            "role":        self.role,
-            "active":      self.active,
-            "created_at":  self.created_at.isoformat() if self.created_at else None,
-            "last_login":  self.last_login.isoformat() if self.last_login else None,
-            "login_count": self.login_count,
+            "id": self.id,
+            "demo_id": self.demo_id,
+            "username": self.username,
+            "email": self.email,
+            "full_name": self.full_name,
+            "role": self.role,
+            "plan": self.plan,
+            "status": self.status,
+            "created_at": self.created_at.isoformat() + "Z",
         }
 
-
-class MangoLoginEvent(db.Model):
-    __tablename__ = "mango_login_events"
-
-    id         = db.Column(db.Integer, primary_key=True)
-    user_id    = db.Column(db.Integer, db.ForeignKey("mango_users.id"), nullable=False, index=True)
-    ts         = db.Column(db.DateTime(timezone=True), nullable=False, default=_utcnow, index=True)
-    ip         = db.Column(db.String(64),  nullable=True)
-    user_agent = db.Column(db.String(512), nullable=True)
-    success    = db.Column(db.Boolean, nullable=False, default=True)
-
-    user = db.relationship("MangoUser", back_populates="login_events")
-
-    def to_dict(self) -> dict:
-        return {
-            "id":         self.id,
-            "ts":         self.ts.isoformat() if self.ts else None,
-            "ip":         self.ip,
-            "user_agent": self.user_agent,
-            "success":    self.success,
-        }
+    def __repr__(self) -> str:
+        return f"<User {self.username} role={self.role}>"
