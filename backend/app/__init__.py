@@ -1,44 +1,32 @@
-from __future__ import annotations
-
-from flask import Flask, jsonify
+import os
+from flask import Flask, send_from_directory
 from flask_cors import CORS
-
-from .config import Config
-from .extensions import db, init_redis
-from .routes import register_routes
+from app.config import Config
+from app.database import init_db
+from app.api import register_routes
 
 
 def create_app() -> Flask:
     app = Flask(__name__)
-    app.config.from_object(Config())
+    app.config.from_object(Config)
 
-    # CORS — credentials: include para que las cookies de sesión funcionen
-    CORS(
-        app,
-        supports_credentials=True,
-        origins=[
-            "https://integramosoe.com",
-            "https://www.integramosoe.com",
-            "http://localhost:5173",   # Vite dev
-            "http://localhost:3000",
-            "http://localhost:8080",
-        ],
-    )
+    # CORS — frontend must send credentials: "include".
+    # CHANGE_BEFORE_PRODUCTION: FRONTEND_ORIGIN must be the exact production domain.
+    CORS(app, supports_credentials=True, origins=[app.config["FRONTEND_ORIGIN"]])
 
-    db.init_app(app)
-    init_redis(app)
+    # Database + ORM
+    init_db(app)
+
+    # Routes
     register_routes(app)
 
-    @app.errorhandler(404)
-    def not_found(e):
-        return jsonify({"error": "not_found", "message": str(e)}), 404
+    # Serve uploaded files statically under /uploads/...
+    @app.route("/uploads/media/<path:filename>")
+    def serve_media(filename):
+        return send_from_directory(app.config["UPLOAD_FOLDER_MEDIA"], filename)
 
-    @app.errorhandler(405)
-    def method_not_allowed(e):
-        return jsonify({"error": "method_not_allowed"}), 405
-
-    @app.errorhandler(500)
-    def internal_error(e):
-        return jsonify({"error": "internal_server_error"}), 500
+    @app.route("/uploads/docs/<path:filename>")
+    def serve_docs(filename):
+        return send_from_directory(app.config["UPLOAD_FOLDER_DOCS"], filename)
 
     return app
