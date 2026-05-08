@@ -43,10 +43,13 @@ ensure_serial_dependency() {
   fi
 }
 
-echo "[1/2] Ejecutando pruebas unitarias..."
+echo "[1/3] Verificando conflictos de merge..."
+./scripts/check-git-conflicts.sh
+
+echo "[2/3] Ejecutando pruebas unitarias..."
 python3 -m unittest tests/serial_ping_stop_test.py
 
-echo "[2/2] Ejecutando chequeo serial PING/STOP/STATUS..."
+echo "[3/3] Ejecutando chequeo serial PING/STOP/STATUS..."
 if [[ "$MODE" == "dry-run" ]]; then
   python3 -m bridge.jetson_serial.phase_a_check --dry-run
 elif [[ "$MODE" == "hardware" ]]; then
