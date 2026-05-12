@@ -1,1 +1,6 @@
-pyserial>=3.5
+# pyserial 3.5 — release oficial (2020-11-23). Compatible con Python 2.7 y 3.4+.
+# Esto es importante: la Jetson TK1 trae Ubuntu 14.04 con Python 3.4.3 por defecto;
+# 3.5 es la última versión que sigue siendo instalable allí, y también funciona
+# perfectamente en Python 3.6+ si se hace upgrade.
+# Doc oficial: https://pyserial.readthedocs.io/en/latest/
+pyserial==3.5
