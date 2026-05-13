@@ -55,10 +55,11 @@ def main() -> int:
     with app.app_context():
         # Cargar todos los módulos de modelos para que SQLAlchemy
         # registre sus tablas en metadata antes de create_all().
-        import app.models            # noqa: F401 — sensor_stations, sensors, sensor_data, mango_user_subscriptions
-        import app.models.user       # noqa: F401 — mango_users, mango_login_events
-        import app.models.access     # noqa: F401 — access_requests, api_keys, audit_logs
-        import app.models_compat     # noqa: F401 — mango_compat_stations, mango_compat_readings
+        import app.models            # noqa: F401 — sensor_stations, sensors, sensor_data, mango_users, site_content
+        try:
+            import app.models_compat  # noqa: F401 — mango_compat_stations, mango_compat_readings
+        except ImportError:
+            pass
 
         max_wait = int(os.getenv("DB_WAIT_S", "90"))
         print(f"[db_init] Waiting for DB up to {max_wait}s...")
