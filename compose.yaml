@@ -58,10 +58,20 @@ services:
       REDIS_URL: "redis://redis:6379/0"
       SECRET_KEY: "${SECRET_KEY:-local-dev-secret}"
 
-      # Optional Lovable auth
+      # Session security (set to "1" when HTTPS is active)
+      SESSION_SECURE: "${SESSION_SECURE:-1}"
+
+      # Optional Lovable auth (single admin via env, fallback)
       ADMIN_EMAIL: "${ADMIN_EMAIL:-}"
       ADMIN_PASSWORD_HASH: "${ADMIN_PASSWORD_HASH:-}"
       AUTH_DISABLED: "${AUTH_DISABLED:-0}"
+
+      # SMTP — contact form email delivery
+      SMTP_HOST:     "${SMTP_HOST:-smtp.gmail.com}"
+      SMTP_PORT:     "${SMTP_PORT:-587}"
+      SMTP_USER:     "${SMTP_USER:-}"
+      SMTP_PASSWORD: "${SMTP_PASSWORD:-}"
+      CONTACT_RECIPIENTS: "${CONTACT_RECIPIENTS:-histsoluciones@gmail.com}"
 
       # Gunicorn tuning
       GUNICORN_WORKERS: "${GUNICORN_WORKERS:-2}"
@@ -74,7 +84,7 @@ services:
       redis:
         condition: service_healthy
     ports:
-      - "${API_HOST_PORT:-8000}:5000"
+      - "127.0.0.1:${API_HOST_PORT:-8000}:5000"
     healthcheck:
       test: ["CMD-SHELL", "curl -fsS http://localhost:5000/api/v1/health || exit 1"]
       interval: 10s
