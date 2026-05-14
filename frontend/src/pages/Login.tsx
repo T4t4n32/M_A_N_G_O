@@ -102,16 +102,8 @@ export default function Login() {
 
     setLoading(true);
     try {
-      const res = await apiLogin({ email, password });
-      if (res.success) {
-        navigate("/dashboard", { replace: true });
-      } else {
-        setApiError({
-          code: 0,
-          message: res.message || "Credenciales inválidas. Verifique su email y contraseña.",
-          detail: "El servidor respondió exitosamente pero indicó que las credenciales no son correctas.",
-        });
-      }
+      await apiLogin({ email, password });
+      navigate("/dashboard", { replace: true });
     } catch (err: unknown) {
       // Centraliza el log técnico + toast consistente para 401/403/500/network.
       handleApiError(err, { context: "login" });

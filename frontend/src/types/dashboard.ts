@@ -90,11 +90,13 @@ export interface LoginRequest {
 }
 
 export interface LoginResponse {
-  success: boolean;
+  ok: boolean;
   message?: string;
   user?: {
+    id: string;
     email: string;
     name?: string;
+    role?: UserRole;
   };
 }
 
