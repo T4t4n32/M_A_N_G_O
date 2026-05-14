@@ -94,7 +94,7 @@ services:
     restart: unless-stopped
 
   grafana:
-    image: grafana/grafana:10.4-oss
+    image: grafana/grafana-oss:latest
     container_name: mango_grafana
     environment:
       GF_SERVER_ROOT_URL: "${GRAFANA_ROOT_URL:-http://localhost:8080/grafana/}"
