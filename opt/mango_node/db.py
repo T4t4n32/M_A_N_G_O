@@ -20,7 +20,7 @@ import json
 import os
 import sqlite3
 from datetime import datetime, timezone
-from typing import Iterable, List, Tuple
+from typing import Iterable, List, Optional, Tuple
 
 from .config import DB_PATH, VERBOSE
 
@@ -59,7 +59,8 @@ def init_db() -> None:
             sent INTEGER NOT NULL DEFAULT 0,
             sent_at TEXT,
             retry_count INTEGER NOT NULL DEFAULT 0,
-            last_error TEXT
+            last_error TEXT,
+            sms_sent INTEGER NOT NULL DEFAULT 0
         );
         """
     )
@@ -69,6 +70,17 @@ def init_db() -> None:
         ON measurements(sent, id);
         """
     )
+    cur.execute(
+        """
+        CREATE INDEX IF NOT EXISTS idx_measurements_alert
+        ON measurements(alert_level, sms_sent, id);
+        """
+    )
+    # Add sms_sent column to existing databases that predate this schema change.
+    try:
+        cur.execute("ALTER TABLE measurements ADD COLUMN sms_sent INTEGER NOT NULL DEFAULT 0")
+    except Exception:
+        pass  # column already exists
     con.commit()
     con.close()
 
@@ -150,3 +162,46 @@ def mark_failed(row_ids: Iterable[int], error: str) -> None:
     con.close()
     if VERBOSE:
         print(f"[db] marked {len(ids)} rows as failed error={error}")
+
+
+def fetch_unsent_alerts(limit: int) -> List[sqlite3.Row]:
+    """Return measurements with a non-normal alert level that have not been SMS-notified."""
+    con = get_connection()
+    cur = con.cursor()
+    rows = cur.execute(
+        """
+        SELECT id, measured_at, ph, turbidity, temperature, alert_level
+        FROM measurements
+        WHERE alert_level != 'normal'
+          AND sms_sent = 0
+        ORDER BY id ASC
+        LIMIT ?
+        """,
+        (limit,),
+    ).fetchall()
+    con.close()
+    return list(rows)
+
+
+def fetch_latest_readings() -> Optional[sqlite3.Row]:
+    """Return the most recent measurement row, or None if the table is empty."""
+    con = get_connection()
+    cur = con.cursor()
+    row = cur.execute(
+        "SELECT measured_at, ph, turbidity, temperature, alert_level FROM measurements ORDER BY id DESC LIMIT 1"
+    ).fetchone()
+    con.close()
+    return row
+
+
+def mark_sms_sent(row_id: int) -> None:
+    """Mark a measurement row as SMS-notified."""
+    con = get_connection()
+    con.execute(
+        "UPDATE measurements SET sms_sent = 1 WHERE id = ?",
+        (row_id,),
+    )
+    con.commit()
+    con.close()
+    if VERBOSE:
+        print(f"[db] marked row id={row_id} as sms_sent")

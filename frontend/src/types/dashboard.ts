@@ -132,6 +132,47 @@ export interface SystemAlert {
   warningCount: number;
 }
 
+// SMS alert system — backend-managed
+export interface AlertEvent {
+  id: number;
+  station_name: string | null;
+  sensor_type: string;
+  value: number | null;
+  alert_level: string;
+  message: string | null;
+  sms_sent: boolean;
+  sms_sent_at: string | null;
+  sms_error: string | null;
+  measured_at: string | null;
+  created_at: string;
+  contact_id: number | null;
+}
+
+export type MaintenanceAlertType =
+  | "no_data"
+  | "station_offline"
+  | "no_contacts"
+  | "no_rules"
+  | "calibration_due";
+
+export interface MaintenanceAlert {
+  type: MaintenanceAlertType;
+  level: "warning" | "critical";
+  message: string;
+}
+
+export interface AlertStatus {
+  last_sms: AlertEvent | null;
+  recent_events: AlertEvent[];
+  stats: {
+    sent_today: number;
+    sent_last_24h: number;
+    active_rules: number;
+    active_contacts: number;
+  };
+  maintenance_alerts: MaintenanceAlert[];
+}
+
 // IMU / BNO080 types (future)
 export type ImuState =
   | "not_configured"

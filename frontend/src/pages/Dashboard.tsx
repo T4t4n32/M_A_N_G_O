@@ -5,6 +5,7 @@ import { SensorChart } from "@/components/dashboard/SensorChart";
 import { ImuPanel } from "@/components/dashboard/ImuPanel";
 import { AlertPanel } from "@/components/dashboard/AlertPanel";
 import { SustainedAlertPanel } from "@/components/dashboard/SustainedAlertPanel";
+import { NotificationsPanel } from "@/components/dashboard/NotificationsPanel";
 import { GrafanaSection } from "@/components/dashboard/GrafanaSection";
 import { RestrictedDocsPanel } from "@/components/dashboard/RestrictedDocsPanel";
 import { useAuth } from "@/hooks/useAuth";
@@ -13,7 +14,7 @@ import { useSensorData } from "@/hooks/useSensorData";
 import { useSensorAlerts } from "@/hooks/useSensorAlerts";
 import { useSustainedAlerts } from "@/hooks/useSustainedAlerts";
 import type { SensorType } from "@/types/dashboard";
-import { Activity, BarChart3, Cpu, ShieldCheck, Clock, PanelTop, Lock } from "lucide-react";
+import { Activity, BarChart3, Cpu, ShieldCheck, Clock, PanelTop, Lock, Bell } from "lucide-react";
 import { motion } from "framer-motion";
 import BorderGlow from "@/components/effects/BorderGlow";
 import DecryptedText from "@/components/effects/DecryptedText";
@@ -61,6 +62,7 @@ const dashboardBubbleItems = [
   { label: "Gráficas", href: "#graficas", rotation: 6, hoverStyles: { bgColor: "hsl(204,70%,53%)", textColor: "#fff" } },
   { label: "IMU", href: "#imu", rotation: -4, hoverStyles: { bgColor: "hsl(50,90%,58%)", textColor: "hsl(205,40%,12%)" } },
   { label: "Alertas", href: "#alertas", rotation: 5, hoverStyles: { bgColor: "hsl(0,65%,51%)", textColor: "#fff" } },
+  { label: "Avisos", href: "#notificaciones", rotation: -3, hoverStyles: { bgColor: "hsl(38,90%,55%)", textColor: "#0b0b0b" } },
   { label: "Grafana", href: "#grafana", rotation: -6, hoverStyles: { bgColor: "hsl(180,55%,42%)", textColor: "#fff" } },
   { label: "Archivos", href: "#archivos-editables", rotation: 3, hoverStyles: { bgColor: "hsl(38,90%,55%)", textColor: "#0b0b0b" } },
   { label: "Inicio", href: "/", rotation: 4, hoverStyles: { bgColor: "hsl(195,70%,48%)", textColor: "#fff" } },
@@ -150,6 +152,18 @@ export default function Dashboard() {
         >
           <SectionTitle icon={Clock}>Alertas Sostenidas</SectionTitle>
           <SustainedAlertPanel alert={sustainedAlert} />
+        </motion.section>
+
+        {/* Notificaciones, mantenimiento y SMS */}
+        <motion.section
+          id="notificaciones"
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.2 }}
+          aria-label="Notificaciones y mantenimiento"
+        >
+          <SectionTitle icon={Bell}>Notificaciones y Mantenimiento</SectionTitle>
+          <NotificationsPanel />
         </motion.section>
 
         {/* Sensores en tiempo real - with BorderGlow */}

@@ -11,6 +11,7 @@ import type {
   ContactResponse,
   RegisterRequest,
   UserRecord,
+  AlertStatus,
 } from "@/types/dashboard";
 
 const API_BASE = "/api/v1";
@@ -192,3 +193,7 @@ export const sendContact = (data: ContactRequest) =>
     method: "POST",
     body: JSON.stringify(data),
   });
+
+// ─── Alerts & SMS notifications ──────────────────────────────
+export const getAlertStatus = () =>
+  request<AlertStatus>("/alerts/status");

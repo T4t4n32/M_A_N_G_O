@@ -1,3 +1,14 @@
+# M.A.N.G.O. — Jetson TK1 edge stack
+#
+# NOTE: Docker is not officially supported on the Jetson TK1 (Ubuntu 14/16,
+# ARM32).  This file is provided for reference and for future hardware that
+# does support Docker (e.g. Jetson Nano / Xavier).  On the TK1, use the
+# systemd services under deploy/edge-jetson/systemd/ instead.
+#
+# Usage (on compatible hardware):
+#   cp .env.edge.example .env
+#   docker compose -f compose.edge.yaml up -d
+
 services:
   edge-serial:
     image: python:3.11-slim
@@ -5,15 +16,12 @@ services:
     working_dir: /opt/mango_node
     volumes:
       - /opt/mango_node:/opt/mango_node:ro
-    devices:
-      - "${SERIAL_PORT:-/dev/ttyUSB0}:${SERIAL_PORT:-/dev/ttyUSB0}"
-    environment:
-      SERIAL_PORT: "${SERIAL_PORT:-/dev/ttyUSB0}"
-      BAUDRATE: "${BAUDRATE:-115200}"
-      SPOOL_DB: "/data/spool.sqlite"
-    volumes:
-      - /opt/mango_node:/opt/mango_node:ro
       - mango_edge_data:/data
+    devices:
+      - "${MANGO_SERIAL_PORT:-/dev/ttyUSB0}:${MANGO_SERIAL_PORT:-/dev/ttyUSB0}"
+    env_file: .env
+    environment:
+      MANGO_DB_PATH: /data/mango_node.db
     command: ["python3", "-m", "mango_node.serial_acquire"]
     restart: unless-stopped
 
@@ -24,13 +32,27 @@ services:
     volumes:
       - /opt/mango_node:/opt/mango_node:ro
       - mango_edge_data:/data
+    env_file: .env
     environment:
-      BACKEND_URL: "${BACKEND_URL:-https://integramosoe.com/api/v1/ingest}"
-      INGEST_API_KEY: "${INGEST_API_KEY:-}"
-      STATION_NAME: "${STATION_NAME:-MANGO Jetson}"
-      SPOOL_DB: "/data/spool.sqlite"
-      SYNC_INTERVAL_S: "${SYNC_INTERVAL_S:-10}"
+      MANGO_DB_PATH: /data/mango_node.db
     command: ["python3", "-m", "mango_node.sync_manager"]
+    depends_on:
+      - edge-serial
+    restart: unless-stopped
+
+  edge-sms:
+    image: python:3.11-slim
+    container_name: mango_edge_sms
+    working_dir: /opt/mango_node
+    volumes:
+      - /opt/mango_node:/opt/mango_node:ro
+      - mango_edge_data:/data
+    # The Huawei modem gateway (192.168.8.1) is on the host network.
+    network_mode: host
+    env_file: .env
+    environment:
+      MANGO_DB_PATH: /data/mango_node.db
+    command: ["python3", "-m", "mango_node.sms_dispatch"]
     depends_on:
       - edge-serial
     restart: unless-stopped
