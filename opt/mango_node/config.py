@@ -24,6 +24,8 @@ uses a serial reader to capture those frames; see
 ``serial_acquire.py`` for details.
 """
 
+from __future__ import annotations
+
 import os
 
 # Unique identifier for this station.  This name is sent to the
