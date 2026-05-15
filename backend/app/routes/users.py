@@ -12,8 +12,10 @@ Endpoints que el frontend consume:
   GET   /api/v1/users/me/history        → historial de logins
   GET   /api/v1/users/<id>/subscription → suscripción de usuario (admin)
   GET   /api/v1/users/<id>/subscriptions/history → historial de suscripciones (admin)
+  PATCH /api/v1/users/me/password        → cambiar password propio (autenticado)
   PATCH /api/v1/users/<id>/role         → cambiar rol (admin)
   PATCH /api/v1/users/<id>/active       → activar/desactivar (admin)
+  PATCH /api/v1/users/<id>/password     → resetear password de otro usuario (admin)
   DELETE /api/v1/users/<id>             → eliminar usuario (admin)
 """
 
@@ -317,6 +319,47 @@ def delete_user(user_id: int):
     db.session.delete(user)
     db.session.commit()
     return jsonify({"ok": True, "deleted_id": user_id}), 200
+
+
+# ------------------------------------------------------------------
+# Password management
+# ------------------------------------------------------------------
+
+@users_bp.patch("/me/password")
+@_require_auth
+def change_own_password():
+    user    = _current_user()
+    data    = request.get_json(silent=True) or {}
+    current_pw = data.get("current_password") or ""
+    new_pw     = data.get("new_password") or ""
+
+    if not current_pw or not new_pw:
+        return jsonify({"error": "current_password y new_password son requeridos"}), 400
+    if not user.check_password(current_pw):
+        return jsonify({"error": "La contraseña actual es incorrecta"}), 401
+    if len(new_pw) < 8:
+        return jsonify({"error": "La nueva contraseña debe tener al menos 8 caracteres"}), 400
+
+    user.set_password(new_pw)
+    db.session.commit()
+    return jsonify({"ok": True}), 200
+
+
+@users_bp.patch("/<int:user_id>/password")
+@_require_admin
+def reset_user_password(user_id: int):
+    user    = db.get_or_404(MangoUser, user_id)
+    data    = request.get_json(silent=True) or {}
+    new_pw  = data.get("new_password") or ""
+
+    if not new_pw:
+        return jsonify({"error": "new_password es requerido"}), 400
+    if len(new_pw) < 8:
+        return jsonify({"error": "El password debe tener al menos 8 caracteres"}), 400
+
+    user.set_password(new_pw)
+    db.session.commit()
+    return jsonify({"ok": True, "user_id": user_id}), 200
 
 
 # ------------------------------------------------------------------
