@@ -78,6 +78,20 @@ def register_routes(app) -> None:
     except Exception as e:
         log.exception("contact import failed: %s", e)
 
+    # Station management (/api/v1/stations/*)
+    try:
+        from .stations import stations_mgmt_bp
+        safe_register(stations_mgmt_bp)
+    except Exception as e:
+        log.warning("stations not loaded: %s", e)
+
+    # Alert rules, contacts, and event log (/api/v1/alerts/*)
+    try:
+        from .alerts import alerts_bp
+        safe_register(alerts_bp)
+    except Exception as e:
+        log.exception("alerts import failed: %s", e)
+
     # Lovable auth alias (/api/v1/auth/status|login|logout)
     try:
         from .lovable_auth import auth_bp
