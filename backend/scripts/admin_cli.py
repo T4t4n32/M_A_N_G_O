@@ -8,6 +8,7 @@ Runs inside the backend Docker container. Use from VPS:
 Commands:
   users list                        List all users with their active tier
   users create --email E --password P [--name N] [--role admin|viewer]
+  users passwd --email E --password P   Reset password for an existing user
   subs list   [--user-id ID] [--tier TIER] [--active]
   subs grant  --user-id ID --tier TIER [--expires YYYY-MM-DD] [--notes TEXT]
   subs revoke --id SUB_ID
@@ -109,6 +110,28 @@ def cmd_users_create(args) -> int:
     print(f"Created user id={user.id} email={user.email} role={user.role}")
     if is_first:
         print("(First user — promoted to admin automatically)")
+    return 0
+
+
+def cmd_users_passwd(args) -> int:
+    email    = (args.email or "").strip().lower()
+    password = args.password or ""
+
+    if not email or not password:
+        print("ERROR: --email and --password are required")
+        return 1
+    if len(password) < 8:
+        print("ERROR: password must be at least 8 characters")
+        return 1
+
+    user = MangoUser.query.filter_by(email=email).first()
+    if not user:
+        print(f"ERROR: no user found with email={email}")
+        return 1
+
+    user.set_password(password)
+    db.session.commit()
+    print(f"Password updated for user id={user.id} email={user.email}")
     return 0
 
 
@@ -238,6 +261,10 @@ def build_parser() -> argparse.ArgumentParser:
     create_p.add_argument("--name",     default="")
     create_p.add_argument("--role",     default="viewer", choices=["admin", "viewer"])
 
+    passwd_p = users_sub.add_parser("passwd", help="Reset password for an existing user")
+    passwd_p.add_argument("--email",    required=True)
+    passwd_p.add_argument("--password", required=True)
+
     # subs
     subs_p = sub.add_parser("subs", help="Subscription / tier management")
     subs_sub = subs_p.add_subparsers(dest="action")
@@ -279,6 +306,8 @@ def main() -> int:
                 return cmd_users_list(args)
             if args.action == "create":
                 return cmd_users_create(args)
+            if args.action == "passwd":
+                return cmd_users_passwd(args)
 
         if args.group == "subs":
             if not getattr(args, "action", None):
