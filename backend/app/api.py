@@ -6,6 +6,7 @@ from app.routes.subscriptions import subscriptions_bp
 from app.routes.admin_media import admin_media_bp
 from app.routes.admin_docs import admin_docs_bp
 from app.routes.admin_content import admin_content_bp
+from app.routes.alerts import alerts_bp
 
 
 def register_routes(app):
@@ -18,3 +19,4 @@ def register_routes(app):
     app.register_blueprint(admin_media_bp)
     app.register_blueprint(admin_docs_bp)
     app.register_blueprint(admin_content_bp)
+    app.register_blueprint(alerts_bp)

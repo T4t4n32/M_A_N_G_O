@@ -90,3 +90,26 @@ ENABLE_LORA: bool = os.getenv("MANGO_ENABLE_LORA", "0") in ("1", "true", "True",
 # stdout.  In production deployments you may prefer to let
 # systemd's journal capture logs.
 VERBOSE: bool = os.getenv("MANGO_VERBOSE", "1") in ("1", "true", "True", "yes", "YES")
+
+# ---------------------------------------------------------------------------
+# SMS alert dispatcher (sms_dispatch.py)
+# ---------------------------------------------------------------------------
+
+# Set to 0 to disable SMS sending without removing the service.
+SMS_ENABLED: bool = os.getenv("MANGO_SMS_ENABLED", "1") in ("1", "true", "True", "yes", "YES")
+
+# IP address of the Huawei E3372H-153 modem in HiLink mode.
+# The modem acts as a USB-Ethernet gateway; its default IP is 192.168.8.1.
+HUAWEI_GATEWAY: str = os.getenv("MANGO_HUAWEI_GATEWAY", "192.168.8.1")
+
+# Minimum seconds between consecutive SMS alerts for the same sensor
+# type and alert level.  Prevents flooding during sustained anomalies.
+SMS_COOLDOWN_S: float = float(os.getenv("MANGO_SMS_COOLDOWN_S", "1800"))
+
+# How often (seconds) the dispatcher refreshes alert rules and contacts
+# from the backend.  Rules are cached between refreshes.
+SMS_CONFIG_REFRESH_S: float = float(os.getenv("MANGO_SMS_CONFIG_REFRESH_S", "900"))
+
+# How often (seconds) the dispatcher polls the local SQLite database
+# for new unsent alert measurements.
+SMS_POLL_S: float = float(os.getenv("MANGO_SMS_POLL_S", "15"))
