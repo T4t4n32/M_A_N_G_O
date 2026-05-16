@@ -171,7 +171,10 @@ export const register = (data: RegisterRequest) =>
     body: JSON.stringify(data),
   });
 
-export const getUsers = () => request<UserRecord[]>("/users/");
+export const getUsers = () =>
+  request<UserRecord[] | { users: UserRecord[] }>("/users/").then((res) =>
+    Array.isArray(res) ? res : (res as { users: UserRecord[] }).users ?? []
+  );
 
 export const deleteUser = (userId: number) =>
   request<{ success: boolean }>(`/users/${userId}`, { method: "DELETE" });
