@@ -92,6 +92,13 @@ def register_routes(app) -> None:
     except Exception as e:
         log.exception("alerts import failed: %s", e)
 
+    # Admin terminal exec (/api/v1/admin/exec)
+    try:
+        from .admin_terminal import admin_terminal_bp
+        safe_register(admin_terminal_bp)
+    except Exception as e:
+        log.exception("admin_terminal import failed: %s", e)
+
     # Lovable auth alias (/api/v1/auth/status|login|logout)
     try:
         from .lovable_auth import auth_bp
