@@ -42,9 +42,19 @@ export
 CONTAINERS := mango_backend mango_db mango_db_init mango_redis
 IMAGES     := mango-backend:local
 
+# Frontend source and web root paths
+FRONTEND_DIST := ../../frontend/dist
+UI_WEBROOT    := /var/www/mango-ui
+
 .PHONY: up down restart logs logs-backend logs-db status health \
         routes db-tables admin-cli users-list subs-list \
-        backup restore shell-backend shell-db nuke
+        backup restore shell-backend shell-db nuke deploy-ui
+
+## Copy the built frontend dist to the nginx web root.
+## Run 'cd ../../frontend && npm run build' first, then this target.
+deploy-ui:
+	sudo rsync -a --delete $(FRONTEND_DIST)/ $(UI_WEBROOT)/
+	@echo "Frontend deployed to $(UI_WEBROOT)"
 
 ## Start the full stack.
 ## --remove-orphans cleans up any stray container (including a leftover mango_redis)

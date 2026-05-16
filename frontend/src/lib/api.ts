@@ -171,10 +171,16 @@ export const register = (data: RegisterRequest) =>
     body: JSON.stringify(data),
   });
 
-export const getUsers = () => request<UserRecord[]>("/users");
+export const getUsers = () => request<UserRecord[]>("/users/");
 
-export const deleteUser = (userId: string) =>
+export const deleteUser = (userId: number) =>
   request<{ success: boolean }>(`/users/${userId}`, { method: "DELETE" });
+
+export const execCommand = (command: string, target: "vps" | "jetson") =>
+  request<{ stdout: string; stderr: string; returncode: number }>("/admin/exec", {
+    method: "POST",
+    body: JSON.stringify({ command, target }),
+  });
 
 // ─── Health & Metrics ────────────────────────────────────────
 export const getHealth = () => request<HealthResponse>("/health");

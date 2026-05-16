@@ -77,11 +77,14 @@ export interface RegisterRequest {
 }
 
 export interface UserRecord {
-  id: string;
+  id: number;
   email: string;
   name?: string;
   role: UserRole;
+  active?: boolean;
+  login_count?: number;
   created_at?: string;
+  last_login?: string;
 }
 
 export interface LoginRequest {
