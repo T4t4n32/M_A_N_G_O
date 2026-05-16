@@ -260,11 +260,30 @@ export default function Admin() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.15 }}
         >
-          <div className="flex items-center gap-2 mb-4">
-            <Users className="h-4 w-4 text-[hsl(168,72%,42%)]" />
-            <h2 className="text-sm font-semibold tracking-wide uppercase text-white/70">
-              Usuarios Registrados
-            </h2>
+          <div className="flex items-center justify-between gap-2 mb-4">
+            <div className="flex items-center gap-2">
+              <Users className="h-4 w-4 text-[hsl(168,72%,42%)]" />
+              <h2 className="text-sm font-semibold tracking-wide uppercase text-white/70">
+                Usuarios Registrados
+              </h2>
+              {usersQuery.data && (
+                <span className="text-[11px] text-white/30 font-mono">
+                  ({usersQuery.data.length})
+                </span>
+              )}
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => usersQuery.refetch()}
+              disabled={usersQuery.isFetching}
+              className="text-white/30 hover:text-white/70 gap-1.5 text-xs"
+            >
+              {usersQuery.isFetching
+                ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                : <CheckCircle2 className="h-3.5 w-3.5" />}
+              Actualizar
+            </Button>
           </div>
 
           <BorderGlow
@@ -273,61 +292,95 @@ export default function Admin() {
             glowIntensity={0.5}
             colors={["#00c9a7", "#38bdf8", "#c084fc"]}
           >
-            <div className="p-4">
+            <div className="overflow-hidden rounded-xl">
               {usersQuery.isLoading ? (
-                <div className="flex items-center justify-center py-12 gap-3">
+                <div className="flex items-center justify-center py-14 gap-3">
                   <Loader2 className="h-5 w-5 animate-spin text-white/40" />
                   <span className="text-sm text-white/40">Cargando usuarios…</span>
                 </div>
               ) : usersQuery.isError ? (
-                <div className="flex items-center justify-center py-12 gap-2 text-white/40">
-                  <AlertCircle className="h-5 w-5" />
-                  <span className="text-sm">No se pudieron cargar los usuarios. El endpoint puede no estar disponible.</span>
+                <div className="flex flex-col items-center justify-center py-14 gap-3 px-6 text-center">
+                  <AlertCircle className="h-8 w-8 text-red-400/50" />
+                  <p className="text-sm text-white/50">No se pudieron cargar los usuarios.</p>
+                  <p className="text-xs text-white/30">
+                    {usersQuery.error instanceof Error ? usersQuery.error.message : "Error de red"}
+                  </p>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => usersQuery.refetch()}
+                    className="text-white/40 hover:text-white/70 mt-1"
+                  >
+                    Reintentar
+                  </Button>
                 </div>
               ) : !usersQuery.data || usersQuery.data.length === 0 ? (
-                <div className="text-center py-12 text-white/30 text-sm">
+                <div className="text-center py-14 text-white/30 text-sm">
                   No hay usuarios registrados.
                 </div>
               ) : (
                 <Table>
                   <TableHeader>
                     <TableRow className="border-white/[0.06] hover:bg-transparent">
-                      <TableHead className="text-white/50">Nombre</TableHead>
+                      <TableHead className="text-white/50 pl-5">Nombre</TableHead>
                       <TableHead className="text-white/50">Email</TableHead>
                       <TableHead className="text-white/50">Rol</TableHead>
-                      <TableHead className="text-white/50 text-right">Acciones</TableHead>
+                      <TableHead className="text-white/50">Accesos</TableHead>
+                      <TableHead className="text-white/50 text-right pr-5">Acciones</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {usersQuery.data.map((u) => (
-                      <TableRow key={u.id} className="border-white/[0.04] hover:bg-white/[0.02]">
-                        <TableCell className="text-white/80 font-medium">{u.name || "—"}</TableCell>
-                        <TableCell className="text-white/60 text-sm">{u.email}</TableCell>
-                        <TableCell>
-                          <span className="inline-flex items-center gap-1.5 text-xs font-medium capitalize">
-                            {roleIcon(u.role)}
-                            <span className="text-white/60">{u.role}</span>
-                          </span>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          {u.email !== user?.email && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => {
-                                if (confirm(`¿Eliminar al usuario ${u.email}?`)) {
-                                  deleteMutation.mutate(u.id);
-                                }
-                              }}
-                              disabled={deleteMutation.isPending}
-                              className="text-red-400/60 hover:text-red-400 hover:bg-red-400/10"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          )}
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                    {usersQuery.data.map((u) => {
+                      const isSelf = u.email === user?.email;
+                      const adminCount = usersQuery.data!.filter((x) => x.role === "admin").length;
+                      const isLastAdmin = u.role === "admin" && adminCount <= 1;
+                      const canDelete = !isSelf && !isLastAdmin;
+                      return (
+                        <TableRow key={u.id} className="border-white/[0.04] hover:bg-white/[0.02]">
+                          <TableCell className="text-white/80 font-medium pl-5">
+                            {u.name || <span className="text-white/30 italic">Sin nombre</span>}
+                            {isSelf && (
+                              <span className="ml-2 text-[10px] text-[hsl(168,72%,50%)] font-semibold uppercase tracking-wide">
+                                tú
+                              </span>
+                            )}
+                          </TableCell>
+                          <TableCell className="text-white/55 text-sm font-mono">{u.email}</TableCell>
+                          <TableCell>
+                            <span className="inline-flex items-center gap-1.5 text-xs font-medium">
+                              {roleIcon(u.role)}
+                              <span className={u.role === "admin" ? "text-amber-300" : "text-blue-300"}>
+                                {u.role}
+                              </span>
+                            </span>
+                          </TableCell>
+                          <TableCell className="text-white/35 text-xs tabular-nums">
+                            {u.login_count ?? 0}
+                          </TableCell>
+                          <TableCell className="text-right pr-5">
+                            {canDelete ? (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => {
+                                  if (confirm(`¿Eliminar al usuario ${u.email}?`)) {
+                                    deleteMutation.mutate(u.id);
+                                  }
+                                }}
+                                disabled={deleteMutation.isPending}
+                                className="text-red-400/50 hover:text-red-400 hover:bg-red-400/10"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            ) : (
+                              <span className="text-[10px] text-white/20 pr-2">
+                                {isSelf ? "—" : "protegido"}
+                              </span>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
                   </TableBody>
                 </Table>
               )}

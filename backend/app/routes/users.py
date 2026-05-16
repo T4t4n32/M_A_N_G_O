@@ -253,7 +253,7 @@ def my_history():
 @_require_admin
 def list_users():
     users = MangoUser.query.order_by(MangoUser.created_at.desc()).all()
-    return jsonify({"users": [u.to_dict() for u in users]}), 200
+    return jsonify([u.to_dict() for u in users]), 200
 
 
 @users_bp.get("/<int:user_id>/history")
