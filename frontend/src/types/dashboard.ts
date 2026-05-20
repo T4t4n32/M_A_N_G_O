@@ -60,13 +60,63 @@ export interface MetricsResponse {
 
 export type UserRole = "admin" | "viewer";
 
+export type TierName =
+  | "none"
+  | "registrado_basico"
+  | "documental_premium"
+  | "dataline_low"
+  | "dataline_high"
+  | "institutional"
+  | "admin";
+
+export const TIER_ORDER: Record<TierName, number> = {
+  none:              0,
+  registrado_basico: 1,
+  documental_premium: 2,
+  dataline_low:      3,
+  dataline_high:     4,
+  institutional:     5,
+  admin:             6,
+};
+
+export const TIER_LABELS: Record<TierName, string> = {
+  none:              "Público",
+  registrado_basico: "Registrado Básico",
+  documental_premium: "Documental Premium",
+  dataline_low:      "DataLine Low",
+  dataline_high:     "DataLine High",
+  institutional:     "Institucional",
+  admin:             "Administrativo Interno",
+};
+
 export interface AuthStatus {
   authenticated: boolean;
   user?: {
+    id?: number;
     email: string;
     name?: string;
     role?: UserRole;
+    tier?: TierName;
   };
+}
+
+export interface AccessRequestRecord {
+  id: number;
+  user_id: number;
+  user_email?: string;
+  user_name?: string;
+  requested_tier: TierName;
+  motivation?: string;
+  status: "pending" | "approved" | "rejected";
+  reviewed_by_id?: number;
+  reviewed_at?: string;
+  admin_note?: string;
+  created_at: string;
+}
+
+export interface SubmitAccessRequest {
+  requested_tier: TierName;
+  motivation?: string;
 }
 
 export interface RegisterRequest {
@@ -174,6 +224,95 @@ export interface AlertStatus {
     active_contacts: number;
   };
   maintenance_alerts: MaintenanceAlert[];
+}
+
+// ─── Protocol-aligned reading types (/api/v1/readings/*) ─────
+export type ConnectionStatus = "online" | "stale" | "offline" | "no_data";
+export type ValueStatus = "optimal" | "normal" | "warning" | "critical" | "unknown";
+
+export interface ReadingSensorEntry {
+  value: number | null;
+  unit: string;
+  timestamp: string | null;
+  status: ConnectionStatus;
+  value_status: ValueStatus;
+}
+
+export interface ReadingsLatestResponse {
+  status: ConnectionStatus | "no_data";
+  server_time: string;
+  sensors: Record<SensorType, ReadingSensorEntry | null>;
+}
+
+export interface ReadingsHistoryPoint {
+  ts: string;
+  value: number | null;
+}
+
+export interface ReadingsHistoryResponse {
+  type: SensorType;
+  minutes: number;
+  count: number;
+  series: ReadingsHistoryPoint[];
+}
+
+// ─── Sensors system status (/api/v1/sensors/status) ──────────
+export interface SensorsStatusResponse {
+  system_status: "online" | "stale" | "offline";
+  server_time: string;
+  sensors: Record<SensorType, {
+    status: ConnectionStatus;
+    value_status: ValueStatus;
+    value: number | null;
+    unit: string;
+    timestamp: string | null;
+  }>;
+}
+
+// ─── System status (/api/v1/status) ──────────────────────────
+export interface SystemStatusResponse {
+  status: "online" | "stale" | "offline";
+  db: "ok" | "error";
+  readings_total: number;
+  devices_registered: number;
+  last_reading_ts: string | null;
+  server_time: string;
+  version: string;
+}
+
+// ─── Version (/api/v1/version) ───────────────────────────────
+export interface VersionResponse {
+  project: string;
+  version: string;
+  protocol: string;
+  api_prefix: string;
+}
+
+// ─── Device registry (/api/v1/devices) ───────────────────────
+export type DeviceStatus = "online" | "stale" | "offline" | "maintenance" | "unknown";
+
+export interface DeviceRecord {
+  device_id: string;
+  station_name: string | null;
+  last_seen: string | null;
+  last_seq: number | null;
+  total_packets: number;
+  status: DeviceStatus;
+  age_seconds: number | null;
+  registered_at: string;
+}
+
+export interface DevicesResponse {
+  devices: DeviceRecord[];
+  count: number;
+}
+
+// ─── Sync status (/api/v1/sync/status) ───────────────────────
+export interface SyncStatusResponse {
+  server_time: string;
+  total_packets_received: number;
+  total_readings_stored: number;
+  devices: Array<DeviceRecord & { sync_state: string }>;
 }
 
 // IMU / BNO080 types (future)

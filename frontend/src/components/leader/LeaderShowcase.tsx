@@ -1,6 +1,6 @@
 import VisionHero from "./VisionHero";
+import PilaresSection from "./PilaresSection";
 import SeasonsGrid from "./SeasonsGrid";
-import MilestonesGrid from "./MilestonesGrid";
 
 function SectionDivider({ label }: { label: string }) {
   return (
@@ -19,10 +19,10 @@ export default function LeaderShowcase() {
   return (
     <div className="mb-12 space-y-2">
       <VisionHero />
-      <SectionDivider label="② Temporadas" />
+      <SectionDivider label="② Pilares Fundamentales" />
+      <PilaresSection />
+      <SectionDivider label="③ Los Comienzos en FLL" />
       <SeasonsGrid />
-      <SectionDivider label="③ Hitos" />
-      <MilestonesGrid />
     </div>
   );
 }

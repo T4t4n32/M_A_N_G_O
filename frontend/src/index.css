@@ -2,8 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@300;400;500;600;700;800&family=Merriweather:wght@400;700&display=swap');
-
 @layer base {
   :root {
     --background: 200 35% 96%;
@@ -64,7 +62,7 @@
     --sidebar: 0 0% 98%;
     --font-sans: "Source Sans 3", ui-sans-serif, system-ui, sans-serif;
     --font-serif: Merriweather, ui-serif, Georgia, serif;
-    --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
     --shadow-2xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
     --shadow-xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
     --shadow-sm: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 1px 2px -1px hsl(0 0% 0% / 0.1);
@@ -122,11 +120,11 @@
     --chart-3: 180 50% 45%;
     --chart-4: 215 50% 52%;
     --chart-5: 170 45% 40%;
-    --alert-normal: 160 55% 45%;
-    --alert-normal-foreground: 160 55% 90%;
-    --alert-warning: 42 90% 55%;
-    --alert-warning-foreground: 42 90% 12%;
-    --alert-critical: 0 65% 51%;
+    --alert-normal: 160 84% 39%;            /* #10B981 — emerald-500 */
+    --alert-normal-foreground: 160 60% 90%;
+    --alert-warning: 38 92% 50%;            /* #F59E0B — amber-500  */
+    --alert-warning-foreground: 38 92% 12%;
+    --alert-critical: 0 84% 60%;            /* #EF4444 — red-500    */
     --alert-critical-foreground: 0 0% 100%;
     --sidebar: 0 0% 14%;
     --shadow-2xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
@@ -193,4 +191,41 @@
   background-clip: text;
   -webkit-text-fill-color: transparent;
   animation: gradient-shift 8s linear infinite;
+}
+
+/* ── Mobile performance & UX ─────────────────────────────────────────────── */
+
+/* Eliminate 300ms tap delay on mobile browsers */
+button, a, [role="button"] {
+  touch-action: manipulation;
+}
+
+/* Momentum scrolling in overflow containers on iOS Safari */
+.overflow-y-auto, .overflow-y-scroll {
+  -webkit-overflow-scrolling: touch;
+}
+
+/* DomeGallery scroll lock — used by the gallery component when an image is opened */
+.dg-scroll-lock {
+  overflow: hidden !important;
+  touch-action: none;
+}
+
+/* Immersive panel sheet on mobile: smooth native scroll with no bounce leak */
+.panel-sheet {
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ── Industrial design-system utilities ─────────────────────────────────── */
+
+/* Warning state: very subtle diagonal stripe layered over existing bg-color */
+.warn-stripe {
+  background-image: repeating-linear-gradient(
+    -45deg,
+    transparent,
+    transparent 12px,
+    rgb(245 158 11 / 0.04) 12px,
+    rgb(245 158 11 / 0.04) 14px
+  );
 }

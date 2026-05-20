@@ -15,7 +15,7 @@ export function useSensorData() {
   const query = useQuery({
     queryKey: ["latest-by-type"],
     queryFn: getLatest,
-    refetchInterval: 30_000,
+    refetchInterval: 60_000,  // fallback poll — SSE (useSensorStream) drives updates
     retry: 2,
     retryDelay: 2000,
     refetchOnWindowFocus: true,

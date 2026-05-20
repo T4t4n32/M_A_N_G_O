@@ -23,6 +23,12 @@
     gap: 0.5rem;
     padding: 0.5rem;
   }
+
+  /* backdrop-filter + mask-image causes blank rendering on mobile browsers */
+  .chroma-overlay,
+  .chroma-fade {
+    display: none;
+  }
 }
 
 @media (max-width: 480px) {

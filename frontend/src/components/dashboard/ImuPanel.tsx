@@ -139,7 +139,7 @@ export function ImuPanel({ state, frame }: ImuPanelProps) {
             <Loader2 className="h-6 w-6 animate-spin text-white/20" />
           </div>
         }>
-          <Canvas shadows style={{ background: "transparent" }}>
+          <Canvas shadows style={{ background: "hsl(205, 35%, 10%)" }}>
             <Bno080Scene frame={frame} />
           </Canvas>
         </Suspense>

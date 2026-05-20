@@ -18,17 +18,36 @@ from sqlalchemy import or_
 
 from app.extensions import db
 
-VALID_TIERS = ("dataline_low", "dataline_high", "institutional")
+VALID_TIERS = (
+    "registrado_basico",
+    "documental_premium",
+    "dataline_low",
+    "dataline_high",
+    "institutional",
+)
 
 TIER_ORDER: dict[str, int] = {
-    "none":          0,
-    "dataline_low":  1,
-    "dataline_high": 2,
-    "institutional": 3,
-    "admin":         4,
+    "none":              0,
+    "registrado_basico": 1,
+    "documental_premium": 2,
+    "dataline_low":      3,
+    "dataline_high":     4,
+    "institutional":     5,
+    "admin":             6,
+}
+
+TIER_LABELS: dict[str, str] = {
+    "none":              "Público",
+    "registrado_basico": "Registrado Básico",
+    "documental_premium": "Documental Premium",
+    "dataline_low":      "DataLine Low",
+    "dataline_high":     "DataLine High",
+    "institutional":     "Institucional",
+    "admin":             "Administrativo Interno",
 }
 
 DATALINE_TIERS = {"dataline_low", "dataline_high"}
+MONTHLY_DAYS  = 30
 QUARTERLY_DAYS = 90
 
 
@@ -121,7 +140,17 @@ def tier_for_user(user) -> str:
 
 
 def default_expires_at(tier: str) -> datetime | None:
-    """DataLine tiers expire after QUARTERLY_DAYS; institutional never expires."""
+    """Return default expiry for a tier; None = never expires."""
+    if tier == "registrado_basico":
+        return _utcnow() + timedelta(days=MONTHLY_DAYS)
+    if tier == "documental_premium":
+        return _utcnow() + timedelta(days=QUARTERLY_DAYS)
     if tier in DATALINE_TIERS:
         return _utcnow() + timedelta(days=QUARTERLY_DAYS)
-    return None
+    return None  # institutional: no expiry
+
+
+def has_min_tier(user, min_tier: str) -> bool:
+    """Return True if user's effective tier is >= min_tier."""
+    effective = tier_for_user(user)
+    return TIER_ORDER.get(effective, 0) >= TIER_ORDER.get(min_tier, 0)
