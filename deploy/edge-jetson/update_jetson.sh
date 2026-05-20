@@ -50,21 +50,19 @@ if [ "$INIT_SYSTEM" = "systemd" ]; then
     done
 
 elif [ "$INIT_SYSTEM" = "upstart" ]; then
-    # En Upstart, sync y sms dependen de serial — reiniciar serial los detiene a todos.
-    # Reiniciar en orden inverso de dependencias.
-    for svc in mango-edge-sms mango-edge-sync mango-edge-api; do
-        if status "$svc" 2>/dev/null | grep -q "running"; then
-            stop "$svc" 2>/dev/null || true
-            start "$svc" 2>/dev/null || true
-            echo "  Reiniciado: $svc"
-        fi
-    done
-    # Serial al final para no interrumpir los dependientes innecesariamente
-    if status mango-edge-serial 2>/dev/null | grep -q "running"; then
-        stop mango-edge-serial 2>/dev/null || true
-        start mango-edge-serial 2>/dev/null || true
-        echo "  Reiniciado: mango-edge-serial"
-    fi
+    # Detener en orden inverso de dependencias, iniciar serial primero.
+    # initctl es explicito para no depender del PATH de sudo.
+    initctl stop mango-edge-sms    2>/dev/null || true
+    initctl stop mango-edge-sync   2>/dev/null || true
+    initctl stop mango-edge-api    2>/dev/null || true
+    initctl stop mango-edge-serial 2>/dev/null || true
+    echo "  Servicios detenidos."
+
+    initctl start mango-edge-serial 2>/dev/null || true
+    initctl start mango-edge-api    2>/dev/null || true
+    initctl start mango-edge-sync   2>/dev/null || true
+    initctl start mango-edge-sms    2>/dev/null || true
+    echo "  Servicios iniciados."
 
 else
     echo ""
@@ -78,7 +76,7 @@ echo "=== Actualizacion completa ==="
 if [ "$INIT_SYSTEM" = "upstart" ]; then
     echo "Estado de servicios:"
     for svc in "${SERVICES[@]}"; do
-        status "$svc" 2>/dev/null || true
+        initctl status "$svc" 2>/dev/null || true
     done
     echo ""
     echo "Logs:"
