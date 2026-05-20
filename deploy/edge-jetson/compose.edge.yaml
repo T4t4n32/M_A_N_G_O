@@ -1,13 +1,19 @@
-# M.A.N.G.O. — Jetson TK1 edge stack
+# M.A.N.G.O. — Jetson edge stack
 #
 # NOTE: Docker is not officially supported on the Jetson TK1 (Ubuntu 14/16,
-# ARM32).  This file is provided for reference and for future hardware that
-# does support Docker (e.g. Jetson Nano / Xavier).  On the TK1, use the
-# systemd services under deploy/edge-jetson/systemd/ instead.
+# ARM32).  This file is provided for future hardware that supports Docker
+# (Jetson Nano / Xavier / Orin).  On the TK1, use the systemd services
+# under deploy/edge-jetson/systemd/ instead.
 #
 # Usage (on compatible hardware):
 #   cp .env.edge.example .env
 #   docker compose -f compose.edge.yaml up -d
+#
+# Services:
+#   edge-serial   — reads ESP32 UART; writes to local SQLite outbox
+#   edge-sync     — flushes outbox to VPS via /api/v1/ingest/batch
+#   edge-sms      — sends SMS alerts via Huawei LTE modem
+#   edge-local-api — exposes local read-only HTTP API on port 9100
 
 services:
   edge-serial:
@@ -53,6 +59,24 @@ services:
     environment:
       MANGO_DB_PATH: /data/mango_node.db
     command: ["python3", "-m", "mango_node.sms_dispatch"]
+    depends_on:
+      - edge-serial
+    restart: unless-stopped
+
+  edge-local-api:
+    image: python:3.11-slim
+    container_name: mango_edge_local_api
+    working_dir: /opt/mango_node
+    volumes:
+      - /opt/mango_node:/opt/mango_node:ro
+      - mango_edge_data:/data
+    env_file: .env
+    environment:
+      MANGO_DB_PATH: /data/mango_node.db
+      MANGO_LOCAL_API_PORT: "${MANGO_LOCAL_API_PORT:-9100}"
+    ports:
+      - "${MANGO_LOCAL_API_PORT:-9100}:${MANGO_LOCAL_API_PORT:-9100}"
+    command: ["python3", "-m", "mango_node.local_api"]
     depends_on:
       - edge-serial
     restart: unless-stopped
