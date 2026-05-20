@@ -19,12 +19,16 @@ const PRESET_COMMANDS: { label: string; cmd: string }[] = [
   { label: "Logs del backend", cmd: "docker logs mango_backend --tail 30" },
 ];
 
-export function TerminalPanel() {
+interface TerminalPanelProps {
+  defaultOpen?: boolean;
+}
+
+export function TerminalPanel({ defaultOpen = false }: TerminalPanelProps) {
   const [target, setTarget] = useState<Target>("vps");
   const [command, setCommand] = useState("");
   const [output, setOutput] = useState<OutputLine[]>([]);
   const [loading, setLoading] = useState(false);
-  const [collapsed, setCollapsed] = useState(true);
+  const [collapsed, setCollapsed] = useState(!defaultOpen);
   const [history, setHistory] = useState<string[]>([]);
   const [histIdx, setHistIdx] = useState(-1);
   const outputRef = useRef<HTMLDivElement>(null);

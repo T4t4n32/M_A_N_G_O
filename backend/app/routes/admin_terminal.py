@@ -67,11 +67,12 @@ def _run_jetson(command: str) -> dict:
     if not host:
         return {
             "stdout": "",
-            "stderr": "JETSON_HOST no configurado — conecta el Jetson primero",
+            "stderr": "Jetson no alcanzable — el tunnel reverso no está activo (falta SIM o JETSON_HOST no configurado)",
             "returncode": 1,
         }
 
-    user = os.environ.get("JETSON_USER", "ubuntu")
+    port     = int(os.environ.get("JETSON_PORT", "9200"))
+    user     = os.environ.get("JETSON_USER", "ubuntu")
     key_path = os.environ.get("JETSON_SSH_KEY_PATH", "")
 
     try:
@@ -86,20 +87,25 @@ def _run_jetson(command: str) -> dict:
     client = paramiko.SSHClient()
     client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
     try:
-        connect_kwargs: dict = {"hostname": host, "username": user, "timeout": 10}
+        connect_kwargs: dict = {
+            "hostname": host,
+            "port": port,
+            "username": user,
+            "timeout": 10,
+        }
         if key_path and os.path.exists(key_path):
             connect_kwargs["key_filename"] = key_path
         client.connect(**connect_kwargs)
         _, stdout, stderr = client.exec_command(command, timeout=_TIMEOUT)
-        stdout.channel.recv_exit_status()
+        exit_code = stdout.channel.recv_exit_status()
         return {
             "stdout": stdout.read().decode("utf-8", errors="replace")[-_MAX_OUTPUT:],
             "stderr": stderr.read().decode("utf-8", errors="replace")[-_MAX_OUTPUT:],
-            "returncode": stdout.channel.recv_exit_status(),
+            "returncode": exit_code,
         }
     except Exception as e:
         log.exception("jetson ssh error: %s", e)
-        return {"stdout": "", "stderr": f"SSH error: {e}", "returncode": 1}
+        return {"stdout": "", "stderr": "SSH error: {}".format(e), "returncode": 1}
     finally:
         client.close()
 
