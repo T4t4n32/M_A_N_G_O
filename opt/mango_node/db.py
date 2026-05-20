@@ -3,19 +3,10 @@
 Implements the outbox pattern: every measurement is written locally first,
 then the sync_manager flushes pending rows to the VPS backend.
 
-Packet lifecycle states:
-  queued      — row inserted, waiting to be sent
-  sending     — picked up by sync_manager (in-memory only, not persisted)
-  sent        — VPS confirmed receipt
-  failed_retry — transient failure, will be retried
-  failed_final — exceeded max retries, needs manual review
-
 SQLite is used because it is in Python's stdlib and is suitable for
 embedded devices like the Jetson TK1. WAL mode reduces lock contention
 between the acquire and sync processes.
 """
-
-from __future__ import annotations
 
 import os
 import sqlite3
@@ -25,13 +16,13 @@ from typing import Iterable, List, Optional
 from .config import DB_PATH, VERBOSE
 
 
-def _ensure_directory(path: str) -> None:
+def _ensure_directory(path):
     directory = os.path.dirname(path)
     if directory and not os.path.exists(directory):
         os.makedirs(directory, exist_ok=True)
 
 
-def get_connection() -> sqlite3.Connection:
+def get_connection():
     con = sqlite3.connect(DB_PATH, timeout=5)
     con.execute("PRAGMA journal_mode=WAL;")
     con.execute("PRAGMA synchronous=NORMAL;")
@@ -39,7 +30,7 @@ def get_connection() -> sqlite3.Connection:
     return con
 
 
-def init_db() -> None:
+def init_db():
     """Initialise schema, adding columns that did not exist in older versions."""
     _ensure_directory(DB_PATH)
     con = get_connection()
@@ -78,7 +69,6 @@ def init_db() -> None:
         "WHERE packet_id IS NOT NULL;"
     )
 
-    # Additive migrations for existing databases
     _add_column_if_missing(cur, "measurements", "sms_sent",   "INTEGER NOT NULL DEFAULT 0")
     _add_column_if_missing(cur, "measurements", "packet_id",  "TEXT")
     _add_column_if_missing(cur, "measurements", "device_id",  "TEXT")
@@ -89,26 +79,26 @@ def init_db() -> None:
     con.close()
 
 
-def _add_column_if_missing(cur: sqlite3.Cursor, table: str, column: str, definition: str) -> None:
+def _add_column_if_missing(cur, table, column, definition):
     try:
-        cur.execute(f"ALTER TABLE {table} ADD COLUMN {column} {definition}")
+        cur.execute("ALTER TABLE {} ADD COLUMN {} {}".format(table, column, definition))
     except Exception:
-        pass  # column already exists
+        pass
 
 
-def _utc_now_iso() -> str:
+def _utc_now_iso():
     return datetime.now(timezone.utc).isoformat()
 
 
 def insert_measurement(
-    ph: float | None,
-    turbidity: float | None,
-    temperature: float | None,
-    alert_level: str,
-    packet_id: str | None = None,
-    device_id: str | None = None,
-    seq: int | None = None,
-) -> int:
+    ph,           # type: Optional[float]
+    turbidity,    # type: Optional[float]
+    temperature,  # type: Optional[float]
+    alert_level,  # type: str
+    packet_id=None,   # type: Optional[str]
+    device_id=None,   # type: Optional[str]
+    seq=None,         # type: Optional[int]
+):
     """Insert a new measurement row and return its row ID.
 
     Skips insertion if packet_id already exists (deduplication).
@@ -123,7 +113,7 @@ def insert_measurement(
         if existing:
             con.close()
             if VERBOSE:
-                print(f"[db] duplicate packet_id={packet_id}, skipping")
+                print("[db] duplicate packet_id={}, skipping".format(packet_id))
             return existing[0]
 
     cur.execute(
@@ -141,15 +131,13 @@ def insert_measurement(
     con.close()
 
     if VERBOSE:
-        print(
-            f"[db] inserted id={row_id} ph={ph} turb={turbidity} "
-            f"temp={temperature} alert={alert_level} pkt={packet_id}"
-        )
+        print("[db] inserted id={} ph={} turb={} temp={} alert={} pkt={}".format(
+            row_id, ph, turbidity, temperature, alert_level, packet_id))
     return row_id
 
 
-def fetch_unsent(limit: int) -> List[sqlite3.Row]:
-    """Return up to ``limit`` unsent rows ordered by ascending ID (oldest first)."""
+def fetch_unsent(limit):
+    """Return up to limit unsent rows ordered by ascending ID (oldest first)."""
     con = get_connection()
     cur = con.cursor()
     rows = cur.execute(
@@ -167,7 +155,7 @@ def fetch_unsent(limit: int) -> List[sqlite3.Row]:
     return list(rows)
 
 
-def mark_sent(row_ids: Iterable[int]) -> None:
+def mark_sent(row_ids):
     ids = list(row_ids)
     if not ids:
         return
@@ -180,10 +168,10 @@ def mark_sent(row_ids: Iterable[int]) -> None:
     con.commit()
     con.close()
     if VERBOSE:
-        print(f"[db] marked {len(ids)} rows as sent")
+        print("[db] marked {} rows as sent".format(len(ids)))
 
 
-def mark_failed(row_ids: Iterable[int], error: str) -> None:
+def mark_failed(row_ids, error):
     ids = list(row_ids)
     if not ids:
         return
@@ -204,10 +192,10 @@ def mark_failed(row_ids: Iterable[int], error: str) -> None:
     con.commit()
     con.close()
     if VERBOSE:
-        print(f"[db] marked {len(ids)} rows as failed: {error[:80]}")
+        print("[db] marked {} rows as failed: {}".format(len(ids), error[:80]))
 
 
-def fetch_unsent_alerts(limit: int) -> List[sqlite3.Row]:
+def fetch_unsent_alerts(limit):
     """Return non-normal measurements not yet SMS-notified."""
     con = get_connection()
     cur = con.cursor()
@@ -225,7 +213,7 @@ def fetch_unsent_alerts(limit: int) -> List[sqlite3.Row]:
     return list(rows)
 
 
-def fetch_latest_readings() -> Optional[sqlite3.Row]:
+def fetch_latest_readings():
     """Return the most recent measurement row, or None if the table is empty."""
     con = get_connection()
     cur = con.cursor()
@@ -236,7 +224,7 @@ def fetch_latest_readings() -> Optional[sqlite3.Row]:
     return row
 
 
-def get_queue_stats() -> dict:
+def get_queue_stats():
     """Return counts of rows in each status for the local API."""
     con = get_connection()
     cur = con.cursor()
@@ -263,10 +251,10 @@ def get_queue_stats() -> dict:
     }
 
 
-def mark_sms_sent(row_id: int) -> None:
+def mark_sms_sent(row_id):
     con = get_connection()
     con.execute("UPDATE measurements SET sms_sent = 1 WHERE id = ?", (row_id,))
     con.commit()
     con.close()
     if VERBOSE:
-        print(f"[db] marked row id={row_id} as sms_sent")
+        print("[db] marked row id={} as sms_sent".format(row_id))

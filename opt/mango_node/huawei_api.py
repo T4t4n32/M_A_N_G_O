@@ -1,42 +1,25 @@
 """HTTP client for the Huawei E3372H-153 HiLink modem web API.
 
 The E3372H in HiLink mode exposes a REST-like API at its default
-gateway (192.168.8.1).  Authentication uses a session cookie and a
+gateway (192.168.8.1). Authentication uses a session cookie and a
 CSRF token obtained from /api/webserver/SesTokInfo.
-
-SMS sending requires:
-  1. GET /api/webserver/SesTokInfo → SessionID cookie + TokInfo header
-  2. POST /api/sms/send-sms with XML body and both auth values
-
-References:
-  Huawei HiLink API — well-documented community reverse engineering.
-  The E3372H firmware version that ships with the -153 variant
-  supports both the legacy and v2 token APIs; this module uses the
-  legacy form for maximum compatibility.
 """
-
-from __future__ import annotations
 
 import xml.etree.ElementTree as ET
 from datetime import datetime, timezone
-from typing import Optional
 
 import requests
 
 _DEFAULT_GATEWAY = "192.168.8.1"
-_SESSION_TIMEOUT = 10  # seconds
+_SESSION_TIMEOUT = 10
 
 
-def _gateway_url(gateway: str, path: str) -> str:
-    return f"http://{gateway}{path}"
+def _gateway_url(gateway, path):
+    return "http://{}{}".format(gateway, path)
 
 
-def _get_session_token(gateway: str) -> tuple[str, str]:
-    """Return (SessionID, TokInfo) from the modem.
-
-    Raises requests.RequestException on network failure.
-    Raises ValueError if the response XML is malformed.
-    """
+def _get_session_token(gateway):
+    """Return (SessionID, TokInfo) from the modem."""
     url = _gateway_url(gateway, "/api/webserver/SesTokInfo")
     resp = requests.get(url, timeout=_SESSION_TIMEOUT)
     resp.raise_for_status()
@@ -45,45 +28,36 @@ def _get_session_token(gateway: str) -> tuple[str, str]:
     ses = root.findtext("SesInfo") or ""
     tok = root.findtext("TokInfo") or ""
     if not ses or not tok:
-        raise ValueError(f"unexpected SesTokInfo response: {resp.text[:200]}")
+        raise ValueError("unexpected SesTokInfo response: {}".format(resp.text[:200]))
     return ses, tok
 
 
-def _build_sms_xml(phone: str, message: str) -> str:
+def _build_sms_xml(phone, message):
     now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
     length = len(message)
     return (
         '<?xml version="1.0" encoding="UTF-8"?>'
         "<request>"
         "<Index>-1</Index>"
-        f"<Phones><Phone>{phone}</Phone></Phones>"
+        "<Phones><Phone>{}</Phone></Phones>".format(phone) +
         "<Sca></Sca>"
-        f"<Content>{message}</Content>"
-        f"<Length>{length}</Length>"
+        "<Content>{}</Content>".format(message) +
+        "<Length>{}</Length>".format(length) +
         "<Reserved>1</Reserved>"
-        f"<Date>{now}</Date>"
+        "<Date>{}</Date>".format(now) +
         "</request>"
     )
 
 
-def send_sms(phone: str, message: str, gateway: str = _DEFAULT_GATEWAY) -> tuple[bool, Optional[str]]:
+def send_sms(phone, message, gateway=_DEFAULT_GATEWAY):
     """Send an SMS via the Huawei HiLink API.
 
-    Returns (success, error_message).  error_message is None on success.
-
-    Parameters
-    ----------
-    phone:
-        Destination number in E.164 format, e.g. "+573001234567".
-    message:
-        SMS text, max 160 characters for single SMS.
-    gateway:
-        IP address of the Huawei modem. Default: 192.168.8.1.
+    Returns (success, error_message). error_message is None on success.
     """
     try:
         ses, tok = _get_session_token(gateway)
     except Exception as exc:
-        return False, f"token fetch failed: {exc}"
+        return False, "token fetch failed: {}".format(exc)
 
     url = _gateway_url(gateway, "/api/sms/send-sms")
     headers = {
@@ -97,21 +71,19 @@ def send_sms(phone: str, message: str, gateway: str = _DEFAULT_GATEWAY) -> tuple
         resp = requests.post(url, data=body, headers=headers, timeout=_SESSION_TIMEOUT)
         resp.raise_for_status()
     except Exception as exc:
-        return False, f"send request failed: {exc}"
+        return False, "send request failed: {}".format(exc)
 
-    # The modem returns <response>OK</response> on success.
     try:
         root = ET.fromstring(resp.text)
         if root.text and root.text.strip().upper() == "OK":
             return True, None
-        # Some firmware returns <error><code>...</code></error>
         err_code = root.findtext("code") or root.text or resp.text[:100]
-        return False, f"modem error: {err_code}"
+        return False, "modem error: {}".format(err_code)
     except ET.ParseError:
-        return False, f"unparseable modem response: {resp.text[:100]}"
+        return False, "unparseable modem response: {}".format(resp.text[:100])
 
 
-def modem_available(gateway: str = _DEFAULT_GATEWAY) -> bool:
+def modem_available(gateway=_DEFAULT_GATEWAY):
     """Return True if the modem web API is reachable."""
     try:
         requests.get(_gateway_url(gateway, "/api/device/basic_information"), timeout=3)
@@ -120,12 +92,8 @@ def modem_available(gateway: str = _DEFAULT_GATEWAY) -> bool:
         return False
 
 
-def get_inbox(gateway: str = _DEFAULT_GATEWAY) -> list[dict]:
-    """Return received SMS messages from the modem inbox.
-
-    Each item has keys: index (str), phone (str), content (str), date (str).
-    Returns an empty list on any error.
-    """
+def get_inbox(gateway=_DEFAULT_GATEWAY):
+    """Return received SMS messages from the modem inbox."""
     try:
         ses, tok = _get_session_token(gateway)
     except Exception:
@@ -142,7 +110,7 @@ def get_inbox(gateway: str = _DEFAULT_GATEWAY) -> list[dict]:
         "<request>"
         "<PageIndex>1</PageIndex>"
         "<ReadCount>20</ReadCount>"
-        "<BoxType>1</BoxType>"   # 1 = inbox
+        "<BoxType>1</BoxType>"
         "<SortType>0</SortType>"
         "<Ascending>0</Ascending>"
         "<UnreadPreferred>1</UnreadPreferred>"
@@ -163,13 +131,14 @@ def get_inbox(gateway: str = _DEFAULT_GATEWAY) -> list[dict]:
             content = msg.findtext("Content") or ""
             date = msg.findtext("Date") or ""
             if phone and content:
-                messages.append({"index": index, "phone": phone, "content": content.strip(), "date": date})
+                messages.append({"index": index, "phone": phone,
+                                  "content": content.strip(), "date": date})
     except ET.ParseError:
         pass
     return messages
 
 
-def delete_sms(index: str, gateway: str = _DEFAULT_GATEWAY) -> bool:
+def delete_sms(index, gateway=_DEFAULT_GATEWAY):
     """Delete a message from the modem by its index. Returns True on success."""
     try:
         ses, tok = _get_session_token(gateway)
@@ -184,7 +153,7 @@ def delete_sms(index: str, gateway: str = _DEFAULT_GATEWAY) -> bool:
     }
     body = (
         '<?xml version="1.0" encoding="UTF-8"?>'
-        f"<request><Index>{index}</Index></request>"
+        "<request><Index>{}</Index></request>".format(index)
     )
     try:
         resp = requests.post(url, data=body, headers=headers, timeout=_SESSION_TIMEOUT)

@@ -1,7 +1,7 @@
 """Local HTTP API for the M.A.N.G.O. edge node.
 
 Exposes a read-only API on port 9100 for local-network inspection
-without touching the VPS.  Uses only Python stdlib.
+without touching the VPS. Uses only Python stdlib.
 
 Endpoints:
   GET /health              — liveness check
@@ -9,35 +9,32 @@ Endpoints:
   GET /api/stats           — row counts: total / queued / sent / failed
   GET /api/queue           — up to 20 pending (unsent) rows
   GET /api/sync-status     — queue health + last successful sync info
-  GET /edge/health         — alias for /health (protocol-aligned name)
+  GET /edge/health         — alias for /health
   GET /edge/queue          — alias for /api/queue
   GET /edge/sync-status    — alias for /api/sync-status
-  GET /edge/imu/latest     — IMU placeholder (returns stub until BNO080 is wired)
+  GET /edge/imu/latest     — IMU placeholder (stub until BNO080 is wired)
 """
-
-from __future__ import annotations
 
 import json
 import os
 from datetime import datetime, timezone
 from http.server import BaseHTTPRequestHandler, HTTPServer
-from typing import Any, Dict
 
 from .config import DB_PATH, STATION_NAME, VERBOSE
 from .db import fetch_latest_readings, fetch_unsent, get_connection, get_queue_stats
 
-PORT: int = int(os.getenv("MANGO_LOCAL_API_PORT", "9100"))
+PORT = int(os.getenv("MANGO_LOCAL_API_PORT", "9100"))
 
 
-def _json(obj: Any) -> bytes:
+def _json(obj):
     return json.dumps(obj, default=str).encode()
 
 
-def _utc_now_iso() -> str:
+def _utc_now_iso():
     return datetime.now(timezone.utc).isoformat()
 
 
-def _get_sync_status() -> Dict[str, Any]:
+def _get_sync_status():
     stats = get_queue_stats()
     con = get_connection()
     cur = con.cursor()
@@ -62,7 +59,7 @@ def _get_sync_status() -> Dict[str, Any]:
     else:
         queue_state = "backlog"
 
-    return {
+    result = {
         "station": STATION_NAME,
         "server_time": _utc_now_iso(),
         "queue": {
@@ -84,9 +81,10 @@ def _get_sync_status() -> Dict[str, Any]:
         } if last_failure_row else None,
         "health": "ok" if queue_ok else "degraded",
     }
+    return result
 
 
-def _get_queue_rows() -> list:
+def _get_queue_rows():
     rows = fetch_unsent(20)
     return [
         {
@@ -102,8 +100,7 @@ def _get_queue_rows() -> list:
     ]
 
 
-def _get_imu_stub() -> Dict[str, Any]:
-    """IMU data stub. Replace with real BNO080 read when integrated."""
+def _get_imu_stub():
     return {
         "station": STATION_NAME,
         "source": "BNO080",
@@ -117,9 +114,9 @@ def _get_imu_stub() -> Dict[str, Any]:
 class _Handler(BaseHTTPRequestHandler):
     def log_message(self, fmt, *args):
         if VERBOSE:
-            super().log_message(fmt, *args)
+            super(_Handler, self).log_message(fmt, *args)
 
-    def _send(self, status: int, body: bytes, ct: str = "application/json") -> None:
+    def _send(self, status, body, ct="application/json"):
         self.send_response(status)
         self.send_header("Content-Type", ct)
         self.send_header("Content-Length", str(len(body)))
@@ -152,7 +149,9 @@ class _Handler(BaseHTTPRequestHandler):
                 }))
 
         elif path == "/api/stats":
-            self._send(200, _json({"station": STATION_NAME, **get_queue_stats()}))
+            stats = get_queue_stats()
+            stats["station"] = STATION_NAME
+            self._send(200, _json(stats))
 
         elif path in ("/api/queue", "/edge/queue"):
             rows = _get_queue_rows()
@@ -172,14 +171,14 @@ class _Handler(BaseHTTPRequestHandler):
             self._send(404, _json({"error": "not_found", "path": path}))
 
 
-def main() -> None:
+def main():
     from .db import init_db
     init_db()
 
     server = HTTPServer(("0.0.0.0", PORT), _Handler)
     if VERBOSE:
-        print(f"[local_api] Listening on :{PORT}  station={STATION_NAME}", flush=True)
-        print(f"[local_api] Endpoints: /health /api/latest /api/stats /edge/queue /edge/sync-status /edge/imu/latest")
+        print("[local_api] Listening on :{}  station={}".format(PORT, STATION_NAME), flush=True)
+        print("[local_api] Endpoints: /health /api/latest /api/stats /edge/queue /edge/sync-status /edge/imu/latest")
     server.serve_forever()
 
 
