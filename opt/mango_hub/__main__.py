@@ -10,13 +10,16 @@ if not os.path.exists(_env_path):
     _env_path = "/opt/mango_node/.env"
 
 if os.path.exists(_env_path):
-    with open(_env_path) as _f:
-        for _line in _f:
-            _line = _line.strip()
-            if not _line or _line.startswith("#") or "=" not in _line:
-                continue
-            _k, _v = _line.split("=", 1)
-            os.environ.setdefault(_k.strip(), _v.strip())
+    try:
+        with open(_env_path) as _f:
+            for _line in _f:
+                _line = _line.strip()
+                if not _line or _line.startswith("#") or "=" not in _line:
+                    continue
+                _k, _v = _line.split("=", 1)
+                os.environ.setdefault(_k.strip(), _v.strip())
+    except (IOError, OSError):
+        pass  # no read permission — hub runs with env defaults
 
 from .tui import run_tui
 
