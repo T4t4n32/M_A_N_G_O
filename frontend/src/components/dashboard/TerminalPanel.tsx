@@ -164,7 +164,7 @@ export function TerminalPanel() {
             {/* Output area */}
             <div
               ref={outputRef}
-              className="h-64 overflow-y-auto px-4 py-3 font-mono text-xs leading-relaxed space-y-0.5 bg-[hsl(205,40%,6%)]"
+              className="h-64 overflow-y-auto px-4 py-3 font-mono text-xs leading-relaxed space-y-0.5 bg-black"
               onClick={() => inputRef.current?.focus()}
             >
               {output.length === 0 && (
@@ -177,10 +177,10 @@ export function TerminalPanel() {
                     line.kind === "command"
                       ? "text-[hsl(168,72%,55%)]"
                       : line.kind === "stderr"
-                        ? "text-red-400/80"
+                        ? "text-red-400"
                         : line.kind === "meta"
-                          ? "text-white/25 italic"
-                          : "text-white/75"
+                          ? "text-white/30 italic"
+                          : "text-[#39d353]"
                   }
                 >
                   {line.text || " "}
@@ -195,7 +195,7 @@ export function TerminalPanel() {
             </div>
 
             {/* Input row */}
-            <div className="flex items-center gap-2 px-4 py-2.5 border-t border-white/[0.06] bg-[hsl(205,40%,7%)]">
+            <div className="flex items-center gap-2 px-4 py-2.5 border-t border-white/[0.08] bg-[#0a0a0a]">
               <span className="font-mono text-xs text-[hsl(168,72%,42%)] shrink-0">$</span>
               <input
                 ref={inputRef}

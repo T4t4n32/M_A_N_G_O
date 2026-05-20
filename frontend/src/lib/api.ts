@@ -12,6 +12,16 @@ import type {
   RegisterRequest,
   UserRecord,
   AlertStatus,
+  AccessRequestRecord,
+  SubmitAccessRequest,
+  ReadingsLatestResponse,
+  ReadingsHistoryResponse,
+  SensorsStatusResponse,
+  SystemStatusResponse,
+  VersionResponse,
+  DevicesResponse,
+  DeviceRecord,
+  SyncStatusResponse,
 } from "@/types/dashboard";
 
 const API_BASE = "/api/v1";
@@ -206,3 +216,62 @@ export const sendContact = (data: ContactRequest) =>
 // ─── Alerts & SMS notifications ──────────────────────────────
 export const getAlertStatus = () =>
   request<AlertStatus>("/alerts/status");
+
+// ─── Access requests (tier upgrade) ──────────────────────────
+export const submitAccessRequest = (data: SubmitAccessRequest) =>
+  request<{ ok: boolean; request: AccessRequestRecord }>("/access-requests", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+
+export const getMyAccessRequests = () =>
+  request<{ requests: AccessRequestRecord[] }>("/access-requests/mine");
+
+export const getAccessRequests = (status?: string) =>
+  request<{ requests: AccessRequestRecord[] }>(
+    `/access-requests${status ? `?status=${status}` : ""}`
+  );
+
+export const approveAccessRequest = (id: number, adminNote?: string) =>
+  request<{ ok: boolean; request: AccessRequestRecord }>(`/access-requests/${id}/approve`, {
+    method: "PATCH",
+    body: JSON.stringify({ admin_note: adminNote }),
+  });
+
+export const rejectAccessRequest = (id: number, adminNote: string) =>
+  request<{ ok: boolean; request: AccessRequestRecord }>(`/access-requests/${id}/reject`, {
+    method: "PATCH",
+    body: JSON.stringify({ admin_note: adminNote }),
+  });
+
+// ─── Protocol-aligned readings (/api/v1/readings/*) ──────────
+export const getReadingsLatest = () =>
+  request<ReadingsLatestResponse>("/readings/latest");
+
+export const getReadingsHistory = (type: SensorType, minutes = 60, limit = 360) =>
+  request<ReadingsHistoryResponse>(`/readings/history?type=${type}&minutes=${minutes}&limit=${limit}`);
+
+export const getReadingsExportUrl = (type: SensorType, hours = 24) =>
+  `${API_BASE}/readings/export?type=${type}&hours=${hours}`;
+
+// ─── Sensors system status (/api/v1/sensors/status) ──────────
+export const getSensorsStatus = () =>
+  request<SensorsStatusResponse>("/sensors/status");
+
+// ─── System status + version ──────────────────────────────────
+export const getSystemStatus = () =>
+  request<SystemStatusResponse>("/status");
+
+export const getVersion = () =>
+  request<VersionResponse>("/version");
+
+// ─── Device registry (/api/v1/devices) ───────────────────────
+export const getDevices = () =>
+  request<DevicesResponse>("/devices");
+
+export const getDevice = (deviceId: string) =>
+  request<DeviceRecord>(`/devices/${deviceId}`);
+
+// ─── Sync coordination (/api/v1/sync) ────────────────────────
+export const getSyncStatus = () =>
+  request<SyncStatusResponse>("/sync/status");

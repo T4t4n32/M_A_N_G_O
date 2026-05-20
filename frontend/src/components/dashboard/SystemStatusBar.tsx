@@ -121,7 +121,8 @@ export function SystemStatusBar({ systemAlert, sustainedAlert }: Props) {
     setOpen((prev) => (prev === panel ? null : panel));
 
   return (
-    <div className="space-y-2">
+    <div className="sticky top-0 z-50 -mx-4 sm:-mx-6 px-4 sm:px-6 py-2 bg-[hsl(205,35%,8%)] border-b border-white/[0.05] backdrop-blur-md">
+      <div className="max-w-7xl mx-auto space-y-2">
       {/* Compact status bar */}
       <div className={`flex flex-col sm:flex-row sm:items-center gap-2 rounded-xl border px-3 py-2.5 ${LEVEL[worstLevel].bg} ${LEVEL[worstLevel].border}`}>
 
@@ -205,6 +206,7 @@ export function SystemStatusBar({ systemAlert, sustainedAlert }: Props) {
           </motion.div>
         )}
       </AnimatePresence>
+      </div>
     </div>
   );
 }

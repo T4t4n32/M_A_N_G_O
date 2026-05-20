@@ -185,7 +185,7 @@ export const milestones: MilestoneData[] = [
     id: "internacional",
     title: "Representación Internacional",
     subtitle: "Colombia en Houston, Texas",
-    year: "2024",
+    year: "2025",
     description: "Un hito que llevó el trabajo del equipo a escala internacional, con representación de Colombia y una experiencia transformadora en innovación y competencia.",
     narrative: "Representar a Colombia en el FIRST Championship en Houston, Texas fue la culminación de años de esfuerzo. El equipo CALIBOTS compitió contra los mejores del mundo, recibió el premio Motivate Winner y vivió una experiencia que transformó su visión del impacto que la tecnología puede tener.",
     importance: "El momento más significativo — donde el trabajo local se convirtió en representación nacional e impacto global.",

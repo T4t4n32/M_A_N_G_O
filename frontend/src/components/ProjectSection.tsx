@@ -1,6 +1,6 @@
 import { lazy, Suspense, useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Activity, Cpu, FlaskConical, BarChart3, Globe, Lock, LogIn, Mail, ChevronLeft, ChevronRight, Box as BoxIcon } from "lucide-react";
+import { Activity, Cpu, FlaskConical, BarChart3, Globe, Lock, LogIn, Mail, ChevronLeft, ChevronRight, Box as BoxIcon, ExternalLink } from "lucide-react";
 import DecryptedText from "@/components/effects/DecryptedText";
 import GradientText from "@/components/effects/GradientText";
 import BorderGlow from "@/components/effects/BorderGlow";
@@ -210,6 +210,30 @@ export function ProjectSection() {
             );
           })}
         </Tabs>
+
+        {/* M.A.N.G.O. Videos — CTA audiovisual del proyecto */}
+        <div className="mt-14 pt-8 border-t border-white/[0.06] flex flex-col sm:flex-row items-center justify-between gap-5">
+          <div className="text-center sm:text-left">
+            <p className="text-white/25 text-[10px] font-semibold uppercase tracking-widest mb-1">
+              Documentación audiovisual
+            </p>
+            <p className="text-white/55 text-sm">
+              Registro en video del desarrollo y los avances del proyecto
+            </p>
+          </div>
+          <a
+            href="https://youtube.com/playlist?list=PLihEHjHiZwltNIlYLmrEdUG3jRNTNPq0M"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2.5 px-6 py-3 rounded-full bg-red-500/[0.08] border border-red-500/[0.15] text-red-400 text-sm font-semibold hover:bg-red-500/[0.14] hover:border-red-500/30 transition-all duration-300 whitespace-nowrap shadow-[0_0_20px_hsl(0_70%_50%/0.06)] flex-shrink-0"
+          >
+            <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d="M23.5 6.19a3.02 3.02 0 0 0-2.12-2.14C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.38.55A3.02 3.02 0 0 0 .5 6.19 31.6 31.6 0 0 0 0 12a31.6 31.6 0 0 0 .5 5.81 3.02 3.02 0 0 0 2.12 2.14c1.88.55 9.38.55 9.38.55s7.5 0 9.38-.55a3.02 3.02 0 0 0 2.12-2.14A31.6 31.6 0 0 0 24 12a31.6 31.6 0 0 0-.5-5.81zM9.75 15.02V8.98L15.5 12l-5.75 3.02z" />
+            </svg>
+            M.A.N.G.O. Videos
+            <ExternalLink className="h-3.5 w-3.5 opacity-60" />
+          </a>
+        </div>
       </div>
     </section>
   );

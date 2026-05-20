@@ -8,9 +8,11 @@ import { NotificationsPanel } from "@/components/dashboard/NotificationsPanel";
 import { GrafanaSection } from "@/components/dashboard/GrafanaSection";
 import { RestrictedDocsPanel } from "@/components/dashboard/RestrictedDocsPanel";
 import { TerminalPanel } from "@/components/dashboard/TerminalPanel";
+import { TierGate } from "@/components/dashboard/TierGate";
 import { useAuth } from "@/hooks/useAuth";
 import { useHealth } from "@/hooks/useHealth";
 import { useSensorData } from "@/hooks/useSensorData";
+import { useSensorStream } from "@/hooks/useSensorStream";
 import { useSensorAlerts } from "@/hooks/useSensorAlerts";
 import { useSustainedAlerts } from "@/hooks/useSustainedAlerts";
 import type { SensorType } from "@/types/dashboard";
@@ -90,9 +92,10 @@ const bubbleItems = [
 ];
 
 export default function Dashboard() {
-  const { user, role } = useAuth();
+  const { user, role, tier } = useAuth();
   const { isOffline, isDegraded } = useHealth();
   const { sensors, refetch } = useSensorData();
+  useSensorStream();
   const systemAlert = useSensorAlerts(sensors);
   const sustainedAlert = useSustainedAlerts();
   const navigate = useNavigate();
@@ -163,6 +166,7 @@ export default function Dashboard() {
         >
           <SectionTitle icon={Activity}>Sensores en Tiempo Real</SectionTitle>
 
+          <TierGate minTier="dataline_high" currentTier={tier} label="Sensores en tiempo real">
           <motion.div
             className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"
             variants={stagger}
@@ -212,6 +216,7 @@ export default function Dashboard() {
               </BorderGlow>
             </motion.div>
           </motion.div>
+          </TierGate>
         </motion.section>
 
         {/* ── SYSTEM STATUS BAR ───────────────────────────────────────────── */}
@@ -286,7 +291,9 @@ export default function Dashboard() {
           aria-label="Paneles Grafana"
         >
           <SectionTitle icon={PanelTop}>Grafana — Análisis Avanzado</SectionTitle>
-          <GrafanaSection />
+          <TierGate minTier="institutional" currentTier={tier} label="Grafana — Análisis Avanzado">
+            <GrafanaSection />
+          </TierGate>
         </motion.section>
 
         {/* ── RESTRICTED FILES — 3 ERAS ───────────────────────────────────── */}

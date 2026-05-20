@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getUsers, register, deleteUser, ApiError } from "@/lib/api";
+import { getUsers, register, deleteUser, getAccessRequests, approveAccessRequest, rejectAccessRequest, ApiError } from "@/lib/api";
 import { handleApiError } from "@/lib/errorHandler";
-import type { UserRecord, UserRole } from "@/types/dashboard";
+import type { UserRecord, UserRole, AccessRequestRecord, TierName } from "@/types/dashboard";
+import { TIER_LABELS } from "@/types/dashboard";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -32,12 +33,141 @@ import {
   ArrowLeft,
   Shield,
   Eye,
+  Inbox,
+  Check,
+  X,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import DecryptedText from "@/components/effects/DecryptedText";
 import GradientText from "@/components/effects/GradientText";
 import BorderGlow from "@/components/effects/BorderGlow";
+
+// ── Access Requests Panel ─────────────────────────────────────────────────────
+function statusBadge(status: AccessRequestRecord["status"]) {
+  if (status === "pending")  return <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-300 border border-amber-500/30">Pendiente</span>;
+  if (status === "approved") return <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">Aprobado</span>;
+  return <span className="text-[10px] px-1.5 py-0.5 rounded bg-red-500/15 text-red-300 border border-red-500/30">Rechazado</span>;
+}
+
+function AccessRequestsPanel() {
+  const queryClient = useQueryClient();
+  const [rejectNote, setRejectNote] = useState<Record<number, string>>({});
+
+  const requestsQuery = useQuery<{ requests: AccessRequestRecord[] }>({
+    queryKey: ["admin-access-requests"],
+    queryFn: () => getAccessRequests("pending"),
+    refetchOnWindowFocus: false,
+  });
+
+  const approveMutation = useMutation({
+    mutationFn: ({ id }: { id: number }) => approveAccessRequest(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin-access-requests"] }),
+    onError: (err) => handleApiError(err, { context: "admin/approve-request" }),
+  });
+
+  const rejectMutation = useMutation({
+    mutationFn: ({ id, note }: { id: number; note: string }) => rejectAccessRequest(id, note),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin-access-requests"] }),
+    onError: (err) => handleApiError(err, { context: "admin/reject-request" }),
+  });
+
+  const pending = requestsQuery.data?.requests ?? [];
+
+  return (
+    <motion.section
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, delay: 0.3 }}
+    >
+      <div className="flex items-center gap-2 mb-4">
+        <Inbox className="h-4 w-4 text-[hsl(168,72%,42%)]" />
+        <h2 className="text-sm font-semibold tracking-wide uppercase text-white/70">
+          Solicitudes de Acceso
+        </h2>
+        {pending.length > 0 && (
+          <span className="text-[11px] bg-amber-500/20 text-amber-300 px-1.5 py-0.5 rounded font-mono">
+            {pending.length} pendiente{pending.length !== 1 ? "s" : ""}
+          </span>
+        )}
+      </div>
+
+      <BorderGlow borderRadius={12} glowRadius={20} glowIntensity={0.5} colors={["#00c9a7", "#38bdf8", "#c084fc"]}>
+        <div className="p-1">
+          {requestsQuery.isLoading ? (
+            <div className="flex items-center justify-center py-10 gap-2">
+              <Loader2 className="h-5 w-5 animate-spin text-white/30" />
+              <span className="text-sm text-white/30">Cargando…</span>
+            </div>
+          ) : pending.length === 0 ? (
+            <div className="text-center py-10 text-white/25 text-sm">
+              Sin solicitudes pendientes
+            </div>
+          ) : (
+            <div className="divide-y divide-white/[0.04]">
+              {pending.map((req) => (
+                <div key={req.id} className="px-4 py-4 flex flex-col sm:flex-row sm:items-start gap-3">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <p className="text-sm font-medium text-white/80 truncate">
+                        {req.user_name || req.user_email}
+                      </p>
+                      <span className="text-[11px] text-white/35 font-mono">{req.user_email}</span>
+                      {statusBadge(req.status)}
+                    </div>
+                    <p className="text-xs text-white/50 mt-0.5">
+                      Solicita:{" "}
+                      <span className="text-[hsl(168,72%,55%)] font-medium">
+                        {TIER_LABELS[req.requested_tier as TierName] ?? req.requested_tier}
+                      </span>
+                      {" · "}
+                      <span className="text-white/30">{new Date(req.created_at).toLocaleDateString("es-ES")}</span>
+                    </p>
+                    {req.motivation && (
+                      <p className="text-[11px] text-white/40 mt-1 italic line-clamp-2">"{req.motivation}"</p>
+                    )}
+                    {req.status === "pending" && (
+                      <input
+                        type="text"
+                        placeholder="Nota de rechazo (opcional)"
+                        value={rejectNote[req.id] ?? ""}
+                        onChange={(e) => setRejectNote((prev) => ({ ...prev, [req.id]: e.target.value }))}
+                        className="mt-2 w-full max-w-xs bg-white/[0.04] border border-white/[0.08] rounded px-2 py-1 text-xs text-white/70 placeholder:text-white/25 outline-none focus:border-white/20"
+                      />
+                    )}
+                  </div>
+                  {req.status === "pending" && (
+                    <div className="flex gap-2 shrink-0">
+                      <Button
+                        size="sm"
+                        onClick={() => approveMutation.mutate({ id: req.id })}
+                        disabled={approveMutation.isPending}
+                        className="bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/30 gap-1"
+                      >
+                        <Check className="h-3.5 w-3.5" />
+                        Aprobar
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => rejectMutation.mutate({ id: req.id, note: rejectNote[req.id] ?? "" })}
+                        disabled={rejectMutation.isPending}
+                        className="text-red-400/60 hover:text-red-400 hover:bg-red-400/10 gap-1"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                        Rechazar
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </BorderGlow>
+    </motion.section>
+  );
+}
 
 export default function Admin() {
   const { user } = useAuth();
@@ -387,6 +517,9 @@ export default function Admin() {
             </div>
           </BorderGlow>
         </motion.section>
+
+        {/* Access Requests */}
+        <AccessRequestsPanel />
 
         {/* Footer */}
         <p className="text-center text-[11px] pb-6">

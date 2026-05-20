@@ -2,7 +2,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { RefreshCw, Thermometer, Droplets, FlaskConical, AlertCircle, WifiOff, Wrench, ShieldAlert, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { RefreshCw, Thermometer, Droplets, FlaskConical, AlertCircle, WifiOff, Wrench, OctagonX, AlertTriangle, CheckCircle2 } from "lucide-react";
 import type { SensorState, SensorReading, SensorType, AlertLevel } from "@/types/dashboard";
 import { SENSOR_THRESHOLDS } from "@/lib/sensorThresholds";
 
@@ -50,9 +50,9 @@ export function SensorCard({ type, state, reading, alertLevel = "normal", onRetr
   const threshold = SENSOR_THRESHOLDS[type];
 
   const alertBorder = alertLevel === "critical"
-    ? "ring-2 ring-[hsl(var(--alert-critical)/0.5)]"
+    ? "ring-2 ring-[hsl(var(--alert-critical)/0.55)] animate-pulse-critical"
     : alertLevel === "warning"
-    ? "ring-2 ring-[hsl(var(--alert-warning)/0.4)]"
+    ? "ring-2 ring-[hsl(var(--alert-warning)/0.45)] warn-stripe"
     : "";
 
   return (
@@ -71,7 +71,7 @@ export function SensorCard({ type, state, reading, alertLevel = "normal", onRetr
               <Icon className="h-5 w-5" />
             </div>
             <div>
-              <h3 className="font-semibold text-sm text-white">{config.label}</h3>
+              <h3 className="font-medium text-sm text-white">{config.label}</h3>
               <StateLabel state={state} />
             </div>
           </div>
@@ -96,18 +96,18 @@ export function SensorCard({ type, state, reading, alertLevel = "normal", onRetr
         {state === "has-data" && reading && (
           <div>
             <div className="flex items-center gap-2">
-              <p className="text-4xl font-mono font-bold tracking-tight">
+              <p className="text-[2.5rem] font-mono font-extrabold tracking-tight leading-none">
                 {reading.value.toFixed(2)}
                 <span className="text-base font-normal text-white/40 ml-1.5">{reading.unit}</span>
               </p>
               {alertLevel === "critical" && (
-                <ShieldAlert className="h-5 w-5 text-[hsl(var(--alert-critical))] animate-pulse" />
+                <OctagonX className="h-5 w-5 text-[hsl(var(--alert-critical))] shrink-0" />
               )}
               {alertLevel === "warning" && (
-                <AlertTriangle className="h-4 w-4 text-[hsl(var(--alert-warning))]" />
+                <AlertTriangle className="h-4 w-4 text-[hsl(var(--alert-warning))] shrink-0" />
               )}
               {alertLevel === "normal" && (
-                <CheckCircle2 className="h-4 w-4 text-[hsl(var(--alert-normal))]" />
+                <CheckCircle2 className="h-4 w-4 text-[hsl(var(--alert-normal))] shrink-0" />
               )}
             </div>
             <p className="text-xs text-white/30 mt-2">

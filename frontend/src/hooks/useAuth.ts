@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 import { checkAuth } from "@/lib/api";
 import { logApiError } from "@/lib/errorHandler";
-import type { AuthStatus, UserRole } from "@/types/dashboard";
+import type { AuthStatus, UserRole, TierName } from "@/types/dashboard";
 
 export function useAuth(redirectOnFail = true) {
   const navigate = useNavigate();
@@ -36,5 +36,6 @@ export function useAuth(redirectOnFail = true) {
     isLoading: query.isLoading,
     isError: query.isError,
     role: (query.data?.user?.role as UserRole) ?? null,
+    tier: (query.data?.user?.tier ?? "none") as TierName,
   };
 }
