@@ -23,6 +23,23 @@ else
 fi
 echo "Init:    $INIT_SYSTEM"
 
+# Eliminar instalacion pip antigua que shadowa /opt/mango_node
+for PYVER in python3 python3.4 python3.5 python3.6; do
+    DISTPKG=$(python3 -c "import site; print(site.getsitepackages()[0])" 2>/dev/null || true)
+    if [ -n "$DISTPKG" ] && [ -d "$DISTPKG/mango_node" ]; then
+        rm -rf "$DISTPKG/mango_node"
+        echo "  Eliminado: $DISTPKG/mango_node"
+    fi
+done
+for STALE in /usr/local/lib/python*/dist-packages/mango_node \
+             /usr/local/lib/python*/site-packages/mango_node \
+             /usr/lib/python*/dist-packages/mango_node; do
+    if [ -d "$STALE" ]; then
+        rm -rf "$STALE"
+        echo "  Eliminado: $STALE"
+    fi
+done
+
 # Copiar codigo preservando .env existente
 echo "Copiando codigo..."
 if [ -f "$INSTALL_DIR/.env" ]; then
@@ -50,8 +67,16 @@ if [ "$INIT_SYSTEM" = "systemd" ]; then
     done
 
 elif [ "$INIT_SYSTEM" = "upstart" ]; then
+    # Actualizar configs de Upstart en /etc/init/
+    UPSTART_DIR="$REPO_ROOT/deploy/edge-jetson/upstart"
+    for svc in mango-edge-serial mango-edge-sync mango-edge-api mango-edge-sms; do
+        if [ -f "$UPSTART_DIR/${svc}.conf" ]; then
+            cp "$UPSTART_DIR/${svc}.conf" "/etc/init/"
+        fi
+    done
+    initctl reload-configuration 2>/dev/null || true
+
     # Detener en orden inverso de dependencias, iniciar serial primero.
-    # initctl es explicito para no depender del PATH de sudo.
     initctl stop mango-edge-sms    2>/dev/null || true
     initctl stop mango-edge-sync   2>/dev/null || true
     initctl stop mango-edge-api    2>/dev/null || true
