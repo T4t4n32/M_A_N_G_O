@@ -99,9 +99,44 @@ def register_routes(app) -> None:
     except Exception as e:
         log.exception("admin_terminal import failed: %s", e)
 
+    # Access requests — tier upgrade flow (/api/v1/access-requests)
+    try:
+        from .access_requests import access_requests_bp
+        safe_register(access_requests_bp)
+    except Exception as e:
+        log.exception("access_requests import failed: %s", e)
+
+    # SSE real-time stream (/api/v1/stream)
+    try:
+        from .stream import stream_bp
+        safe_register(stream_bp)
+    except Exception as e:
+        log.exception("stream import failed: %s", e)
+
     # Lovable auth alias (/api/v1/auth/status|login|logout)
     try:
         from .lovable_auth import auth_bp
         safe_register(auth_bp)
     except Exception as e:
         log.warning("lovable_auth not loaded (optional): %s", e)
+
+    # Readings + sensor status (/api/v1/readings/*, /api/v1/sensors/status)
+    try:
+        from .readings import readings_bp
+        safe_register(readings_bp)
+    except Exception as e:
+        log.exception("readings import failed: %s", e)
+
+    # Device registry (/api/v1/devices/*)
+    try:
+        from .devices import devices_bp
+        safe_register(devices_bp)
+    except Exception as e:
+        log.exception("devices import failed: %s", e)
+
+    # Sync coordination (/api/v1/sync/*)
+    try:
+        from .sync_api import sync_bp
+        safe_register(sync_bp)
+    except Exception as e:
+        log.exception("sync_api import failed: %s", e)
