@@ -25,6 +25,8 @@ from . import config
 from .services import list_services, start_service, stop_service, restart_service, service_status
 from .system_info import get_system_stats
 
+_VPS_MODE = os.getenv("MANGO_HUB_MODE", "jetson") == "vps"
+
 # ─── color pair indices ───────────────────────────────────────────────────────
 C_HEADER = 1
 C_GREEN  = 2
@@ -656,60 +658,79 @@ def show_tunnel(stdscr):
         h, w = stdscr.getmaxyx()
         _draw_header(stdscr, "Tunnel")
 
-        status, pid = service_status("mango-tunnel")
-
         row = 2
         _safe_add(stdscr, row, 4,
-                  "Reverse SSH Tunnel — Jetson to VPS",
+                  "Reverse SSH Tunnel — Jetson <-> VPS",
                   curses.color_pair(C_HEADER) | curses.A_BOLD)
         row += 2
 
-        vps = config.VPS_HOST or "(not set — add MANGO_VPS_HOST to .env)"
-        _safe_add(stdscr, row, 4, "VPS Host     : {}".format(vps)); row += 1
-        _safe_add(stdscr, row, 4, "VPS SSH port : {}".format(config.VPS_SSH_PORT)); row += 1
-        _safe_add(stdscr, row, 4, "Remote port  : {}".format(config.TUNNEL_R_PORT)); row += 1
-        _safe_add(stdscr, row, 4, "SSH key      : {}".format(config.SSH_KEY)); row += 2
-
-        if status == "running":
-            sc = curses.color_pair(C_GREEN)
-            st = "RUNNING  (PID {})".format(pid or "?")
-        elif status == "stopped":
-            sc = curses.color_pair(C_RED)
-            st = "STOPPED"
+        if _VPS_MODE:
+            # On the VPS: show whether the Jetson is currently connected
+            from .services_docker import tunnel_jetson_connected
+            connected = tunnel_jetson_connected(config.TUNNEL_R_PORT)
+            sc = curses.color_pair(C_GREEN) if connected else curses.color_pair(C_RED)
+            st = "JETSON CONNECTED" if connected else "JETSON NOT CONNECTED"
+            _safe_add(stdscr, row, 4, "Tunnel port  : {}".format(config.TUNNEL_R_PORT)); row += 1
+            _safe_add(stdscr, row, 4, "Jetson status: ")
+            _safe_add(stdscr, row, 21, st, sc | curses.A_BOLD)
+            row += 2
+            if connected:
+                _safe_add(stdscr, row, 4,
+                          "Connect:  ssh -p {} ubuntu@localhost".format(
+                              config.TUNNEL_R_PORT),
+                          curses.color_pair(C_DIM))
+            _draw_footer(stdscr, "Auto-refresh on next key   q=back")
         else:
-            sc = curses.color_pair(C_YELLOW)
-            st = status.upper()
+            # On the Jetson: show tunnel service status + controls
+            status, pid = service_status("mango-tunnel")
+            vps = config.VPS_HOST or "(not set — add MANGO_VPS_HOST to .env)"
+            _safe_add(stdscr, row, 4, "VPS Host     : {}".format(vps)); row += 1
+            _safe_add(stdscr, row, 4, "VPS SSH port : {}".format(config.VPS_SSH_PORT)); row += 1
+            _safe_add(stdscr, row, 4, "Remote port  : {}".format(config.TUNNEL_R_PORT)); row += 1
+            _safe_add(stdscr, row, 4, "SSH key      : {}".format(config.SSH_KEY)); row += 2
 
-        _safe_add(stdscr, row, 4, "Status       : ")
-        _safe_add(stdscr, row, 21, st, sc | curses.A_BOLD)
-        row += 2
+            if status == "running":
+                sc = curses.color_pair(C_GREEN)
+                st = "RUNNING  (PID {})".format(pid or "?")
+            elif status == "stopped":
+                sc = curses.color_pair(C_RED)
+                st = "STOPPED"
+            else:
+                sc = curses.color_pair(C_YELLOW)
+                st = status.upper()
 
-        if config.VPS_HOST:
-            _safe_add(stdscr, row, 4,
-                      "From VPS:  ssh -p {} mango@localhost".format(
-                          config.TUNNEL_R_PORT),
-                      curses.color_pair(C_DIM))
-            row += 1
+            _safe_add(stdscr, row, 4, "Status       : ")
+            _safe_add(stdscr, row, 21, st, sc | curses.A_BOLD)
+            row += 2
+
+            if config.VPS_HOST:
+                _safe_add(stdscr, row, 4,
+                          "From VPS:  ssh -p {} ubuntu@localhost".format(
+                              config.TUNNEL_R_PORT),
+                          curses.color_pair(C_DIM))
+                row += 1
+
+            _draw_footer(stdscr, "S=start   s=stop   r=restart   q=back")
 
         if msg:
-            _safe_add(stdscr, row + 1, 4, msg[:w - 8],
+            _safe_add(stdscr, h - 2, 4, msg[:w - 8],
                       curses.color_pair(C_YELLOW))
             msg = ""
 
-        _draw_footer(stdscr, "S=start   s=stop   r=restart   q=back")
         stdscr.refresh()
 
         key = stdscr.getch()
-        if key == ord('S'):
-            _, out = start_service("mango-tunnel")
-            msg = out[:w - 10]
-        elif key == ord('s'):
-            _, out = stop_service("mango-tunnel")
-            msg = out[:w - 10]
-        elif key in (ord('r'), ord('R')):
-            _, out = restart_service("mango-tunnel")
-            msg = out[:w - 10]
-        elif key in (ord('q'), ord('b'), curses.ascii.ESC):
+        if not _VPS_MODE:
+            if key == ord('S'):
+                _, out = start_service("mango-tunnel")
+                msg = out[:w - 10]
+            elif key == ord('s'):
+                _, out = stop_service("mango-tunnel")
+                msg = out[:w - 10]
+            elif key in (ord('r'), ord('R')):
+                _, out = restart_service("mango-tunnel")
+                msg = out[:w - 10]
+        if key in (ord('q'), ord('b'), curses.ascii.ESC):
             return
 
 
