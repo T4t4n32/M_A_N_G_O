@@ -10,13 +10,24 @@ The Jetson TK1 is the primary edge processor of the M.A.N.G.O. mangrove monitori
 | `mango-edge-sync` | Forwards buffered readings to the backend VPS via LTE or Wi-Fi |
 | `mango-edge-sms` | Monitors alert levels and sends SMS via the Huawei E3372H-153 modem |
 
-The services are supervised by systemd and restart automatically on failure.
+---
+
+## Init system: Upstart vs systemd
+
+The Jetson TK1 ships with **Ubuntu 14.04 L4T**, which uses **Upstart** — not systemd. The `systemctl` command does not exist on this platform.
+
+| Platform | Ubuntu version | Init system | Service commands |
+|---|---|---|---|
+| Jetson TK1 | 14.04 L4T | Upstart | `sudo start/stop/status <name>` |
+| Jetson Nano / Xavier | 18.04+ L4T | systemd | `sudo systemctl start/stop/status <name>` |
+
+The installer (`install_jetson.sh`) detects the init system automatically and installs the correct files. **Do not copy systemd `.service` files on a TK1.**
 
 ---
 
 ## Hardware requirements
 
-- NVIDIA Jetson TK1 (ARM Cortex-A15, Ubuntu 14.04/16.04 L4T)
+- NVIDIA Jetson TK1 (ARM Cortex-A15, Ubuntu 14.04 L4T)
 - ESP32 connected to the PT100, pH probe, and turbidity sensor — USB serial to Jetson
 - Huawei E3372H-153 LTE modem — USB to Jetson
 - (Optional) Wi-Fi adapter on wlan0
@@ -35,17 +46,17 @@ The E3372H-153 operates in **HiLink mode**: it presents itself to the OS as a US
 
 ---
 
-## Installation
+## Installation (first time)
 
 ```bash
-# 1. Clone the repository onto the Jetson (or copy the files)
-git clone <repo_url> /home/mango/M_A_N_G_O
-cd /home/mango/M_A_N_G_O
+# 1. Clone the repository onto the Jetson
+git clone <repo_url> /home/ubuntu/M_A_N_G_O
+cd /home/ubuntu/M_A_N_G_O
 
 # 2. Configure the Huawei modem
 sudo bash deploy/edge-jetson/setup_huawei_lte.sh
 
-# 3. Run the installer
+# 3. Run the installer (detects Upstart automatically on TK1)
 sudo bash deploy/edge-jetson/install_jetson.sh
 
 # 4. Edit the configuration file
@@ -53,6 +64,23 @@ sudo nano /opt/mango_node/.env
 ```
 
 The `.env` file must be configured before services will work correctly. See `.env.edge.example` for all available variables.
+
+---
+
+## Updating (after git pull)
+
+Use the update script to deploy new code without re-running the full installer:
+
+```bash
+cd /home/ubuntu/M_A_N_G_O
+git pull
+sudo bash deploy/edge-jetson/update_jetson.sh
+```
+
+The update script:
+1. Copies `opt/mango_node/` to `/opt/mango_node/`
+2. Preserves the existing `.env` file
+3. Restarts all running services using the correct init system
 
 ---
 
@@ -119,22 +147,46 @@ Messages are capped at 160 characters (single SMS).
 
 ## Service management
 
+### Jetson TK1 — Ubuntu 14.04 — Upstart
+
 ```bash
 # Status of all services
-systemctl status mango-edge-serial mango-edge-sync mango-edge-sms
+sudo status mango-edge-serial
+sudo status mango-edge-sync
+sudo status mango-edge-api
+sudo status mango-edge-sms
+
+# Start services
+sudo start mango-edge-serial
+sudo start mango-edge-sync
+sudo start mango-edge-api
+
+# Stop services
+sudo stop mango-edge-serial    # also stops sync and sms (they depend on it)
+
+# Restart a service
+sudo stop mango-edge-serial && sudo start mango-edge-serial
+
+# Live logs
+sudo tail -f /var/log/upstart/mango-edge-serial.log
+sudo tail -f /var/log/upstart/mango-edge-sync.log
+sudo tail -f /var/log/upstart/mango-edge-api.log
+sudo tail -f /var/log/upstart/mango-edge-sms.log
+```
+
+### Jetson Nano / Xavier — Ubuntu 18.04+ — systemd
+
+```bash
+# Status
+sudo systemctl status mango-edge-serial mango-edge-sync mango-edge-api mango-edge-sms
+
+# Restart
+sudo systemctl restart mango-edge-serial mango-edge-sync mango-edge-api
 
 # Live logs
 journalctl -u mango-edge-serial -f
 journalctl -u mango-edge-sync -f
-journalctl -u mango-edge-sms -f
-
-# Restart a service
-sudo systemctl restart mango-edge-sms
-
-# Disable SMS temporarily
-sudo systemctl stop mango-edge-sms
-# Re-enable
-sudo systemctl start mango-edge-sms
+journalctl -u mango-edge-api -f
 ```
 
 ---
@@ -150,17 +202,21 @@ ip addr show lte0
 **SMS not sending:**
 ```bash
 curl http://192.168.8.1/api/device/basic_information
-journalctl -u mango-edge-sms -f
+sudo tail -f /var/log/upstart/mango-edge-sms.log
 ```
 
 **No data reaching the backend:**
 ```bash
-journalctl -u mango-edge-sync -f
+sudo tail -f /var/log/upstart/mango-edge-sync.log
 ping -c 3 8.8.8.8 -I lte0
 ```
 
 **Serial port errors:**
 ```bash
 ls -la /dev/ttyUSB*
-journalctl -u mango-edge-serial -f
+sudo tail -f /var/log/upstart/mango-edge-serial.log
 ```
+
+**`systemctl: command not found` — wrong init system:**
+The Jetson TK1 uses Upstart. Use `sudo start/stop/status <service>` instead of `systemctl`.
+See the "Service management" section above.
