@@ -1,46 +1,117 @@
-"""Local HTTP dashboard API for the M.A.N.G.O. edge node.
+"""Local HTTP API for the M.A.N.G.O. edge node.
 
-Exposes a minimal read-only API on port 9100 so operators can inspect the
-node state from the local network without touching the VPS.
+Exposes a read-only API on port 9100 for local-network inspection
+without touching the VPS.  Uses only Python stdlib.
 
 Endpoints:
-  GET /health          — liveness check (always 200 if process is alive)
-  GET /api/latest      — most recent measurement from local SQLite DB
-  GET /api/stats       — row counts: total / unsent / unsent-alerts
-
-Uses only Python stdlib so no extra packages are needed on the Jetson TK1.
-
-Usage::
-
-    python3 -m mango_node.local_api
+  GET /health              — liveness check
+  GET /api/latest          — most recent measurement from local SQLite
+  GET /api/stats           — row counts: total / queued / sent / failed
+  GET /api/queue           — up to 20 pending (unsent) rows
+  GET /api/sync-status     — queue health + last successful sync info
+  GET /edge/health         — alias for /health (protocol-aligned name)
+  GET /edge/queue          — alias for /api/queue
+  GET /edge/sync-status    — alias for /api/sync-status
+  GET /edge/imu/latest     — IMU placeholder (returns stub until BNO080 is wired)
 """
 
 from __future__ import annotations
 
 import json
 import os
+from datetime import datetime, timezone
 from http.server import BaseHTTPRequestHandler, HTTPServer
+from typing import Any, Dict
 
 from .config import DB_PATH, STATION_NAME, VERBOSE
-from .db import fetch_latest_readings, get_connection
+from .db import fetch_latest_readings, fetch_unsent, get_connection, get_queue_stats
 
 PORT: int = int(os.getenv("MANGO_LOCAL_API_PORT", "9100"))
 
 
-def _json(obj) -> bytes:
+def _json(obj: Any) -> bytes:
     return json.dumps(obj, default=str).encode()
 
 
-def _stats() -> dict:
+def _utc_now_iso() -> str:
+    return datetime.now(timezone.utc).isoformat()
+
+
+def _get_sync_status() -> Dict[str, Any]:
+    stats = get_queue_stats()
     con = get_connection()
     cur = con.cursor()
-    total        = cur.execute("SELECT COUNT(*) FROM measurements").fetchone()[0]
-    unsent       = cur.execute("SELECT COUNT(*) FROM measurements WHERE sent=0").fetchone()[0]
-    unsent_sms   = cur.execute(
-        "SELECT COUNT(*) FROM measurements WHERE alert_level != 'normal' AND sms_sent=0"
-    ).fetchone()[0]
+
+    last_sent_row = cur.execute(
+        "SELECT sent_at FROM measurements WHERE sent=1 ORDER BY sent_at DESC LIMIT 1"
+    ).fetchone()
+    last_sent_ts = last_sent_row[0] if last_sent_row else None
+
+    last_failure_row = cur.execute(
+        "SELECT last_error, measured_at FROM measurements WHERE status='failed_retry' ORDER BY id DESC LIMIT 1"
+    ).fetchone()
     con.close()
-    return {"total": total, "unsent": unsent, "unsent_alerts_sms": unsent_sms}
+
+    queue_ok = stats["failed_final"] == 0
+    if stats["queued"] == 0:
+        queue_state = "empty"
+    elif stats["queued"] < 10:
+        queue_state = "normal"
+    elif stats["queued"] < 100:
+        queue_state = "building"
+    else:
+        queue_state = "backlog"
+
+    return {
+        "station": STATION_NAME,
+        "server_time": _utc_now_iso(),
+        "queue": {
+            "state": queue_state,
+            "total": stats["total"],
+            "pending": stats["queued"],
+            "sent": stats["sent"],
+            "failed_retry": stats["failed_retry"],
+            "failed_final": stats["failed_final"],
+            "unsent_alerts": stats["unsent_alerts_sms"],
+        },
+        "last_sync": {
+            "sent_at": last_sent_ts,
+            "status": "ok" if last_sent_ts else "never",
+        },
+        "last_failure": {
+            "error": last_failure_row[1] if last_failure_row else None,
+            "measured_at": last_failure_row[0] if last_failure_row else None,
+        } if last_failure_row else None,
+        "health": "ok" if queue_ok else "degraded",
+    }
+
+
+def _get_queue_rows() -> list:
+    rows = fetch_unsent(20)
+    return [
+        {
+            "id": r["id"],
+            "measured_at": r["measured_at"],
+            "ph": r["ph"],
+            "turbidity": r["turbidity"],
+            "temperature": r["temperature"],
+            "alert_level": r["alert_level"],
+            "packet_id": r["packet_id"] if "packet_id" in r.keys() else None,
+        }
+        for r in rows
+    ]
+
+
+def _get_imu_stub() -> Dict[str, Any]:
+    """IMU data stub. Replace with real BNO080 read when integrated."""
+    return {
+        "station": STATION_NAME,
+        "source": "BNO080",
+        "status": "not_connected",
+        "message": "IMU data will appear here once BNO080 is wired to the Jetson via serial.",
+        "data": None,
+        "timestamp": _utc_now_iso(),
+    }
 
 
 class _Handler(BaseHTTPRequestHandler):
@@ -52,18 +123,22 @@ class _Handler(BaseHTTPRequestHandler):
         self.send_response(status)
         self.send_header("Content-Type", ct)
         self.send_header("Content-Length", str(len(body)))
+        self.send_header("Access-Control-Allow-Origin", "*")
         self.end_headers()
         self.wfile.write(body)
 
     def do_GET(self):
-        if self.path == "/health":
+        path = self.path.split("?")[0]
+
+        if path in ("/health", "/edge/health"):
             body = _json({"status": "ok", "station": STATION_NAME, "db": DB_PATH})
             self._send(200, body)
 
-        elif self.path == "/api/latest":
+        elif path == "/api/latest":
             row = fetch_latest_readings()
             if row is None:
-                self._send(200, _json({"station": STATION_NAME, "latest": None}))
+                self._send(200, _json({"station": STATION_NAME, "latest": None,
+                                       "message": "No data yet."}))
             else:
                 self._send(200, _json({
                     "station": STATION_NAME,
@@ -76,11 +151,25 @@ class _Handler(BaseHTTPRequestHandler):
                     },
                 }))
 
-        elif self.path == "/api/stats":
-            self._send(200, _json({"station": STATION_NAME, **_stats()}))
+        elif path == "/api/stats":
+            self._send(200, _json({"station": STATION_NAME, **get_queue_stats()}))
+
+        elif path in ("/api/queue", "/edge/queue"):
+            rows = _get_queue_rows()
+            self._send(200, _json({
+                "station": STATION_NAME,
+                "pending_count": len(rows),
+                "rows": rows,
+            }))
+
+        elif path in ("/api/sync-status", "/edge/sync-status"):
+            self._send(200, _json(_get_sync_status()))
+
+        elif path == "/edge/imu/latest":
+            self._send(200, _json(_get_imu_stub()))
 
         else:
-            self._send(404, _json({"error": "not_found"}))
+            self._send(404, _json({"error": "not_found", "path": path}))
 
 
 def main() -> None:
@@ -89,7 +178,8 @@ def main() -> None:
 
     server = HTTPServer(("0.0.0.0", PORT), _Handler)
     if VERBOSE:
-        print(f"[local_api] Listening on port {PORT}  station={STATION_NAME}", flush=True)
+        print(f"[local_api] Listening on :{PORT}  station={STATION_NAME}", flush=True)
+        print(f"[local_api] Endpoints: /health /api/latest /api/stats /edge/queue /edge/sync-status /edge/imu/latest")
     server.serve_forever()
 
 

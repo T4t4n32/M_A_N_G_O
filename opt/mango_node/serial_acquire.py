@@ -32,10 +32,11 @@ from typing import Any, Dict, Optional, Tuple
 import serial  # type: ignore
 
 from .config import (
-    SERIAL_PORT,
-    SERIAL_BAUDRATE,
-    SERIAL_TIMEOUT,
+    DEVICE_ID,
     READ_INTERVAL,
+    SERIAL_BAUDRATE,
+    SERIAL_PORT,
+    SERIAL_TIMEOUT,
     VERBOSE,
 )
 from .db import insert_measurement
@@ -151,6 +152,38 @@ def classify_alert(ph: Optional[float], turb: Optional[float], temp: Optional[fl
     return {0: "normal", 1: "warning", 2: "critical"}[severity]
 
 
+def _parse_seq(line: str) -> int | None:
+    """Extract seq number from MANGO_JSON line if present."""
+    prefix = "MANGO_JSON:"
+    if not line.startswith(prefix):
+        return None
+    try:
+        import json as _json
+        obj = _json.loads(line[len(prefix):].strip())
+        if isinstance(obj, dict):
+            seq = obj.get("seq")
+            if seq is not None:
+                return int(seq)
+    except Exception:
+        pass
+    return None
+
+
+def _parse_device_id(line: str) -> str | None:
+    """Extract device_id from MANGO_JSON line if present."""
+    prefix = "MANGO_JSON:"
+    if not line.startswith(prefix):
+        return None
+    try:
+        import json as _json
+        obj = _json.loads(line[len(prefix):].strip())
+        if isinstance(obj, dict):
+            return obj.get("device_id") or obj.get("did") or None
+    except Exception:
+        pass
+    return None
+
+
 def main() -> None:
     if VERBOSE:
         print(f"[serial] opening {SERIAL_PORT} @ {SERIAL_BAUDRATE}")
@@ -163,7 +196,6 @@ def main() -> None:
                     try:
                         raw = ser.readline()
                         if not raw:
-                            # no data within timeout; yield CPU
                             time.sleep(READ_INTERVAL)
                             continue
                         line = raw.decode(errors="ignore").strip()
@@ -177,14 +209,20 @@ def main() -> None:
                             continue
                         temp, ph, turb = parsed
                         alert_level = classify_alert(ph, turb, temp)
-                        insert_measurement(ph, turb, temp, alert_level)
+                        # Extract optional seq and device_id from JSON frames
+                        seq = _parse_seq(line)
+                        device_id = _parse_device_id(line) or DEVICE_ID
+                        # Build packet_id if seq is known
+                        packet_id = f"{device_id}-{int(seq):08d}" if seq is not None else None
+                        insert_measurement(ph, turb, temp, alert_level,
+                                           packet_id=packet_id,
+                                           device_id=device_id,
+                                           seq=seq)
                     except Exception as e:
                         if VERBOSE:
                             print(f"[serial] error: {e}")
-                        # brief pause to avoid tight error loop
                         time.sleep(READ_INTERVAL)
         except Exception as e:
-            # Could not open serial port; wait and retry.
             if VERBOSE:
                 print(f"[serial] serial port open failed: {e}")
             time.sleep(2)
