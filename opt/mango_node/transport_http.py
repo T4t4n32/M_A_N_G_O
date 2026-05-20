@@ -2,29 +2,12 @@
 
 Primary endpoint: POST /api/v1/ingest/batch
 Fallback:         POST /api/v1/ingest  (single packet, backward-compat)
-
-Each row is wrapped in the standard packet format:
-  {
-    "station":           {"name": "<STATION_NAME>"},
-    "device_id":         "<DEVICE_ID>",
-    "packet_id":         "<device_id>-<seq:08d>",
-    "seq":               <int or null>,
-    "created_at_device": "<ISO timestamp or null>",
-    "created_at_edge":   "<ISO timestamp>",
-    "readings":          [...]
-  }
-
-The packet_id allows the backend to deduplicate packets that are
-replayed by the store-and-forward mechanism.
 """
-
-from __future__ import annotations
 
 import json
 import urllib.error
 import urllib.request
 from datetime import datetime, timezone
-from typing import Iterable, List, Tuple
 
 from .config import API_URL, INGEST_API_KEY, STATION_NAME, VERBOSE
 
@@ -33,12 +16,12 @@ if not _BATCH_URL.endswith("/ingest/batch"):
     _BATCH_URL = API_URL.rstrip("/").rsplit("/ingest", 1)[0] + "/ingest/batch"
 
 
-def _utc_now_iso() -> str:
+def _utc_now_iso():
     return datetime.now(timezone.utc).isoformat()
 
 
-def _build_readings(row: dict) -> List[dict]:
-    readings: List[dict] = []
+def _build_readings(row):
+    readings = []
     ph = row.get("ph")
     if ph is not None:
         readings.append({"type": "ph", "value": ph, "unit": ""})
@@ -51,7 +34,7 @@ def _build_readings(row: dict) -> List[dict]:
     return readings
 
 
-def _build_packet(row: dict) -> dict | None:
+def _build_packet(row):
     readings = _build_readings(row)
     if not readings:
         return None
@@ -60,15 +43,13 @@ def _build_packet(row: dict) -> dict | None:
     seq = row.get("seq")
     packet_id = row.get("packet_id")
 
-    # Generate packet_id from device_id + seq if not already set
     if not packet_id:
         if seq is not None:
-            packet_id = f"{device_id}-{int(seq):08d}"
+            packet_id = "{}-{:08d}".format(device_id, int(seq))
         else:
-            # Use row id as fallback sequence
             rid = row.get("id")
             if rid is not None:
-                packet_id = f"{device_id}-row{int(rid):08d}"
+                packet_id = "{}-row{:08d}".format(device_id, int(rid))
 
     return {
         "station":           {"name": STATION_NAME},
@@ -81,31 +62,30 @@ def _build_packet(row: dict) -> dict | None:
     }
 
 
-def _post(url: str, data: bytes, headers: dict) -> Tuple[bool, str]:
+def _post(url, data, headers):
     req = urllib.request.Request(url, data=data, headers=headers, method="POST")
     try:
         with urllib.request.urlopen(req, timeout=15) as resp:
             status = resp.getcode()
             if 200 <= status < 300:
                 return True, ""
-            return False, f"HTTP {status}"
+            return False, "HTTP {}".format(status)
     except urllib.error.HTTPError as e:
-        return False, f"HTTPError {e.code}: {e.reason}"
+        return False, "HTTPError {}: {}".format(e.code, e.reason)
     except urllib.error.URLError as e:
         return False, str(e.reason)
     except Exception as e:
         return False, str(e)
 
 
-def send_batch(rows: Iterable[dict]) -> Tuple[bool, List[int], str]:
+def send_batch(rows):
     """Send a batch of measurement rows to the backend via /ingest/batch.
 
     Falls back to /ingest (single packet) if batch endpoint fails.
-
     Returns (ok, ids, error).
     """
     packets = []
-    ids: List[int] = []
+    ids = []
 
     for row in rows:
         try:
@@ -127,19 +107,17 @@ def send_batch(rows: Iterable[dict]) -> Tuple[bool, List[int], str]:
     if INGEST_API_KEY:
         headers["X-Api-Key"] = INGEST_API_KEY
 
-    # Try batch endpoint first
     batch_payload = json.dumps({"packets": packets}).encode("utf-8")
     ok, err = _post(_BATCH_URL, batch_payload, headers)
 
     if ok:
         if VERBOSE:
-            print(f"[http] batch POST {_BATCH_URL} packets={len(packets)}")
+            print("[http] batch POST {} packets={}".format(_BATCH_URL, len(packets)))
         return True, ids, ""
 
     if VERBOSE:
-        print(f"[http] batch failed ({err}), falling back to single /ingest")
+        print("[http] batch failed ({}), falling back to single /ingest".format(err))
 
-    # Fallback: send each packet individually to /ingest
     failed_ids = []
     for pkt, rid in zip(packets, ids):
         single_payload = json.dumps(pkt).encode("utf-8")
@@ -147,11 +125,12 @@ def send_batch(rows: Iterable[dict]) -> Tuple[bool, List[int], str]:
         if not pkt_ok:
             failed_ids.append(rid)
             if VERBOSE:
-                print(f"[http] single POST failed id={rid}: {pkt_err}")
+                print("[http] single POST failed id={}: {}".format(rid, pkt_err))
 
     if failed_ids:
-        return False, ids, f"batch failed ({err}); {len(failed_ids)}/{len(ids)} single posts also failed"
+        return False, ids, "batch failed ({}); {}/{} single posts also failed".format(
+            err, len(failed_ids), len(ids))
 
     if VERBOSE:
-        print(f"[http] fallback single POST: all {len(ids)} packets sent")
+        print("[http] fallback single POST: all {} packets sent".format(len(ids)))
     return True, ids, ""

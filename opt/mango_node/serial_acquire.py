@@ -1,33 +1,13 @@
 """Acquire sensor readings from the ESP32 via serial.
 
-The Jetson inside the M.A.N.G.O. node does not read the sensors
-directly.  Instead, an ESP32 board connected to the PT100,
-turbidity and pH probes collects measurements and prints them
-over its UART.  The firmware sends two kinds of messages:
-
-* Plain key–value lines, e.g. ``TEMP=24.36;PH=7.12;TURB=183.4;TS=170000``【525100557324170†L70-L77】.
-* JSON messages prefixed with ``MANGO_JSON:`` such as
-  ``MANGO_JSON:{"t":24.36,"ph":7.12,"tu":183.4,"ts":170000}``.
-
-This script opens the configured serial port and listens for such
-lines.  When a valid payload is parsed, it extracts the three
-primary sensor values (temperature in °C, pH, turbidity in NTU),
-determines an alert level based on threshold ranges, and stores
-the reading in the local SQLite database.  Logging is optional
-and controlled by ``config.VERBOSE``.
-
-Run this module as a long‑lived process.  It will keep reading
-lines until terminated.  A systemd unit file can supervise it
-and restart it automatically if it crashes.
+Reads MANGO_JSON:{...} or KEY=val;KEY=val lines from the configured
+serial port and stores each reading in the local SQLite database.
+Run as a long-lived process supervised by Upstart or systemd.
 """
 
-from __future__ import annotations
-
 import json
-import re
 import sys
 import time
-from typing import Any, Dict, Optional, Tuple
 
 import serial  # type: ignore
 
@@ -42,15 +22,8 @@ from .config import (
 from .db import insert_measurement
 
 
-def parse_kv_line(line: str) -> Optional[Tuple[Optional[float], Optional[float], Optional[float]]]:
-    """Parse a key–value semicolon separated line into sensor values.
-
-    Recognised keys are ``TEMP``/``T`` for temperature (°C), ``PH``
-    or ``pH`` for pH, and ``TURB``/``TU`` for turbidity (NTU).  The
-    function is case‑insensitive.  Returns a tuple
-    ``(temperature, ph, turbidity)`` where each value may be
-    ``None`` if not present or could not be converted to float.
-    """
+def parse_kv_line(line):
+    """Parse KEY=val;KEY=val line into (temperature, ph, turbidity) or None."""
     try:
         parts = [p.strip() for p in line.split(";") if p.strip()]
         t = None
@@ -79,13 +52,8 @@ def parse_kv_line(line: str) -> Optional[Tuple[Optional[float], Optional[float],
         return None
 
 
-def parse_json_line(line: str) -> Optional[Tuple[Optional[float], Optional[float], Optional[float]]]:
-    """Parse a JSON payload prefixed with ``MANGO_JSON:``.
-
-    The JSON object may contain keys ``t``, ``ph`` and ``tu``
-    corresponding to temperature (°C), pH and turbidity (NTU).  Returns
-    a tuple of floats or ``None`` when no recognised values are found.
-    """
+def parse_json_line(line):
+    """Parse MANGO_JSON:{...} line into (temperature, ph, turbidity) or None."""
     prefix = "MANGO_JSON:"
     if not line.startswith(prefix):
         return None
@@ -118,32 +86,19 @@ def parse_json_line(line: str) -> Optional[Tuple[Optional[float], Optional[float
     return (t, ph, turb)
 
 
-def classify_alert(ph: Optional[float], turb: Optional[float], temp: Optional[float]) -> str:
-    """Return an alert level based on sensor values.
-
-    Uses the threshold ranges defined in the frontend
-    ``sensorThresholds.ts``: optimal ranges are pH 6.5–8.5, turbidity
-    0–5 NTU and temperature 15–30 °C【780614701791613†L2-L35】.  Values outside the
-    warning ranges (pH <5.5 or >9.5, turbidity >10, temperature
-    <10 or >35) are considered warnings.  Values outside the
-    critical ranges (pH <4 or >10.5, turbidity >50, temperature
-    <5 or >40) are critical.  The most severe status across all
-    present values is returned.
-    """
-    severity = 0  # 0=normal, 1=warning, 2=critical
-    # pH thresholds
+def classify_alert(ph, turb, temp):
+    """Return 'normal', 'warning', or 'critical' based on sensor values."""
+    severity = 0
     if ph is not None:
         if ph < 4.0 or ph > 10.5:
             severity = max(severity, 2)
         elif ph < 5.5 or ph > 9.5:
             severity = max(severity, 1)
-    # Turbidity thresholds (NTU)
     if turb is not None:
         if turb > 50:
             severity = max(severity, 2)
         elif turb > 10:
             severity = max(severity, 1)
-    # Temperature thresholds (°C)
     if temp is not None:
         if temp < 5 or temp > 40:
             severity = max(severity, 2)
@@ -152,14 +107,13 @@ def classify_alert(ph: Optional[float], turb: Optional[float], temp: Optional[fl
     return {0: "normal", 1: "warning", 2: "critical"}[severity]
 
 
-def _parse_seq(line: str) -> int | None:
+def _parse_seq(line):
     """Extract seq number from MANGO_JSON line if present."""
     prefix = "MANGO_JSON:"
     if not line.startswith(prefix):
         return None
     try:
-        import json as _json
-        obj = _json.loads(line[len(prefix):].strip())
+        obj = json.loads(line[len(prefix):].strip())
         if isinstance(obj, dict):
             seq = obj.get("seq")
             if seq is not None:
@@ -169,14 +123,13 @@ def _parse_seq(line: str) -> int | None:
     return None
 
 
-def _parse_device_id(line: str) -> str | None:
+def _parse_device_id(line):
     """Extract device_id from MANGO_JSON line if present."""
     prefix = "MANGO_JSON:"
     if not line.startswith(prefix):
         return None
     try:
-        import json as _json
-        obj = _json.loads(line[len(prefix):].strip())
+        obj = json.loads(line[len(prefix):].strip())
         if isinstance(obj, dict):
             return obj.get("device_id") or obj.get("did") or None
     except Exception:
@@ -184,9 +137,9 @@ def _parse_device_id(line: str) -> str | None:
     return None
 
 
-def main() -> None:
+def main():
     if VERBOSE:
-        print(f"[serial] opening {SERIAL_PORT} @ {SERIAL_BAUDRATE}")
+        print("[serial] opening {} @ {}".format(SERIAL_PORT, SERIAL_BAUDRATE))
     while True:
         try:
             with serial.Serial(SERIAL_PORT, SERIAL_BAUDRATE, timeout=SERIAL_TIMEOUT) as ser:
@@ -201,7 +154,6 @@ def main() -> None:
                         line = raw.decode(errors="ignore").strip()
                         if not line:
                             continue
-                        # Try JSON first
                         parsed = parse_json_line(line)
                         if parsed is None:
                             parsed = parse_kv_line(line)
@@ -209,22 +161,23 @@ def main() -> None:
                             continue
                         temp, ph, turb = parsed
                         alert_level = classify_alert(ph, turb, temp)
-                        # Extract optional seq and device_id from JSON frames
                         seq = _parse_seq(line)
                         device_id = _parse_device_id(line) or DEVICE_ID
-                        # Build packet_id if seq is known
-                        packet_id = f"{device_id}-{int(seq):08d}" if seq is not None else None
+                        if seq is not None:
+                            packet_id = "{}-{:08d}".format(device_id, int(seq))
+                        else:
+                            packet_id = None
                         insert_measurement(ph, turb, temp, alert_level,
                                            packet_id=packet_id,
                                            device_id=device_id,
                                            seq=seq)
                     except Exception as e:
                         if VERBOSE:
-                            print(f"[serial] error: {e}")
+                            print("[serial] error: {}".format(e))
                         time.sleep(READ_INTERVAL)
         except Exception as e:
             if VERBOSE:
-                print(f"[serial] serial port open failed: {e}")
+                print("[serial] serial port open failed: {}".format(e))
             time.sleep(2)
 
 

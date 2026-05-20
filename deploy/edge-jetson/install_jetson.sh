@@ -42,8 +42,8 @@ chown -R "$USER:$USER" "$INSTALL_DIR"
 # 4. Instalar dependencias Python
 echo "Instalando dependencias Python..."
 apt-get install -y python3-pip python3-serial python3-requests 2>/dev/null || true
-pip3 install pyserial requests --break-system-packages 2>/dev/null || \
-  pip3 install pyserial requests 2>/dev/null || true
+pip3 install pyserial requests typing --break-system-packages 2>/dev/null || \
+  pip3 install pyserial requests typing 2>/dev/null || true
 
 # 5. Copiar archivo .env si no existe
 ENV_EXAMPLE="$REPO_ROOT/deploy/edge-jetson/.env.edge.example"
