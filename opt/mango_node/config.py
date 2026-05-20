@@ -33,6 +33,12 @@ import os
 # data from the same device are grouped together.
 STATION_NAME: str = os.getenv("MANGO_STATION_NAME", "MANGO-TK1-01")
 
+# Unique device identifier used in packet_id generation.
+# Format: mango-<role>-<unit>, e.g. mango-jetson-01 or mango-sensor-esp32-01
+# This is distinct from STATION_NAME: the station is the deployment location,
+# the device_id is the physical hardware unit.
+DEVICE_ID: str = os.getenv("MANGO_DEVICE_ID", STATION_NAME)
+
 # Full URL of the ingest endpoint on your backend.  Must include
 # the path, e.g. "http://localhost:8000/api/v1/ingest".  The
 # backend defined in ``backend/app/routes.py`` expects POST
