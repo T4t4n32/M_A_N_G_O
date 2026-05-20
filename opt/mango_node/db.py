@@ -11,7 +11,6 @@ between the acquire and sync processes.
 import os
 import sqlite3
 from datetime import datetime, timezone
-from typing import Iterable, List, Optional
 
 from .config import DB_PATH, VERBOSE
 
