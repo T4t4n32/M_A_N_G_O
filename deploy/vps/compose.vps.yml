@@ -61,6 +61,14 @@ services:
       ADMIN_EMAIL: "${ADMIN_EMAIL:-}"
       ADMIN_PASSWORD_HASH: "${ADMIN_PASSWORD_HASH:-}"
       AUTH_DISABLED: "${AUTH_DISABLED:-0}"
+
+      # Jetson TK1 — acceso via reverse SSH tunnel (puerto 9200 en localhost)
+      JETSON_HOST: "${JETSON_HOST:-localhost}"
+      JETSON_PORT: "${JETSON_PORT:-9200}"
+      JETSON_USER: "${JETSON_USER:-ubuntu}"
+      JETSON_SSH_KEY_PATH: "/run/secrets/jetson_key"
+    volumes:
+      - /home/mango/.ssh/id_ed25519:/run/secrets/jetson_key:ro
     depends_on:
       db_init:
         condition: service_completed_successfully

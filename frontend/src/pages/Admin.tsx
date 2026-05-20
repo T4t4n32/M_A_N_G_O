@@ -36,7 +36,9 @@ import {
   Inbox,
   Check,
   X,
+  Monitor,
 } from "lucide-react";
+import { DevicesPanel } from "@/components/admin/DevicesPanel";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import DecryptedText from "@/components/effects/DecryptedText";
@@ -169,10 +171,13 @@ function AccessRequestsPanel() {
   );
 }
 
+type AdminTab = "perfiles" | "dispositivos";
+
 export default function Admin() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const [activeTab, setActiveTab] = useState<AdminTab>("perfiles");
 
   // Registration form state
   const [regEmail, setRegEmail] = useState("");
@@ -271,23 +276,61 @@ export default function Admin() {
             </Button>
             <div className="h-5 w-px bg-white/10" />
             <h1 className="text-lg font-semibold text-white">
-              <DecryptedText
-                text="Gestión de Usuarios"
-                speed={35}
-                maxIterations={6}
-                animateOn="view"
-                className="text-white"
-                encryptedClassName="text-accent/30"
-              />
+              Panel Administrador
             </h1>
           </div>
+
+          {/* Tab selector */}
+          <div className="flex items-center gap-1 bg-white/[0.04] rounded-lg p-1">
+            <button
+              type="button"
+              onClick={() => setActiveTab("perfiles")}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
+                activeTab === "perfiles"
+                  ? "bg-white/[0.1] text-white"
+                  : "text-white/40 hover:text-white/70"
+              }`}
+            >
+              <Users className="h-3.5 w-3.5" />
+              Perfiles
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab("dispositivos")}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
+                activeTab === "dispositivos"
+                  ? "bg-white/[0.1] text-white"
+                  : "text-white/40 hover:text-white/70"
+              }`}
+            >
+              <Monitor className="h-3.5 w-3.5" />
+              Dispositivos
+            </button>
+          </div>
+
           <p className="text-xs text-white/40 hidden sm:block">
             {user?.email}
           </p>
         </div>
       </header>
 
-      <main className="max-w-5xl mx-auto px-4 sm:px-6 py-8 space-y-8 relative z-10">
+      <main className="max-w-5xl mx-auto px-4 sm:px-6 py-8 relative z-10">
+
+        {/* ── TAB: DISPOSITIVOS ─────────────────────────────────────────── */}
+        {activeTab === "dispositivos" && (
+          <motion.div
+            key="dispositivos"
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            <DevicesPanel />
+          </motion.div>
+        )}
+
+        {/* ── TAB: PERFILES ─────────────────────────────────────────────── */}
+        {activeTab === "perfiles" && (
+        <div className="space-y-8">
         {/* Registration Form */}
         <motion.section
           initial={{ opacity: 0, y: 16 }}
@@ -528,9 +571,11 @@ export default function Admin() {
             animationSpeed={10}
             className="text-[11px]"
           >
-            M.A.N.G.O · Gestión de Usuarios
+            M.A.N.G.O · Panel Administrador
           </GradientText>
         </p>
+        </div>
+        )}
       </main>
     </div>
   );
