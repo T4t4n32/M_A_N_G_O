@@ -182,6 +182,7 @@ def login():
     # Guardar en sesión — ambas claves para compatibilidad con lovable_auth
     session["user_id"] = user.id
     session["user"]    = user.email
+    session["role"]    = user.role
     session.permanent  = True
 
     return jsonify({
