@@ -13,7 +13,6 @@ from __future__ import annotations
 
 import logging
 import os
-import shlex
 import subprocess
 from functools import wraps
 
@@ -43,7 +42,9 @@ def _require_admin(f):
 def _run_local(command: str) -> dict:
     try:
         result = subprocess.run(
-            shlex.split(command),
+            command,
+            shell=True,
+            executable="/bin/bash",
             capture_output=True,
             text=True,
             timeout=_TIMEOUT,
@@ -55,8 +56,6 @@ def _run_local(command: str) -> dict:
         }
     except subprocess.TimeoutExpired:
         return {"stdout": "", "stderr": f"Timeout: el comando superó {_TIMEOUT}s", "returncode": 124}
-    except FileNotFoundError as e:
-        return {"stdout": "", "stderr": f"Comando no encontrado: {e}", "returncode": 127}
     except Exception as e:
         log.exception("local exec error: %s", e)
         return {"stdout": "", "stderr": str(e), "returncode": 1}
