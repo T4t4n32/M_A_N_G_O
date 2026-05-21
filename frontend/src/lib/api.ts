@@ -204,6 +204,12 @@ export const execCommand = (command: string, target: "vps" | "jetson") =>
 export const getJetsonStatus = () =>
   request<{ online: boolean }>("/admin/jetson/status");
 
+export const requestDocLink = (path: string) =>
+  request<{ url: string; expires_at: string; filename: string; ttl_minutes: number }>(
+    "/docs/link",
+    { method: "POST", body: JSON.stringify({ path }) },
+  );
+
 // ─── Health & Metrics ────────────────────────────────────────
 export const getHealth = () => request<HealthResponse>("/health");
 
