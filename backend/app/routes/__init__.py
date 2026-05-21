@@ -140,3 +140,10 @@ def register_routes(app) -> None:
         safe_register(sync_bp)
     except Exception as e:
         log.exception("sync_api import failed: %s", e)
+
+    # Secure temporary download links + activity log (/api/v1/docs/*)
+    try:
+        from .docs_download import docs_download_bp
+        safe_register(docs_download_bp)
+    except Exception as e:
+        log.exception("docs_download import failed: %s", e)
