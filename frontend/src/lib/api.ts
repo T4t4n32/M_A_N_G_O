@@ -201,6 +201,9 @@ export const execCommand = (command: string, target: "vps" | "jetson") =>
     body: JSON.stringify({ command, target }),
   });
 
+export const getJetsonStatus = () =>
+  request<{ online: boolean }>("/admin/jetson/status");
+
 // ─── Health & Metrics ────────────────────────────────────────
 export const getHealth = () => request<HealthResponse>("/health");
 

@@ -14,6 +14,7 @@ from __future__ import annotations
 import logging
 import os
 import subprocess
+import time
 from functools import wraps
 
 from flask import Blueprint, jsonify, request, session
@@ -121,6 +122,58 @@ def _run_jetson(command: str) -> dict:
     finally:
         jetson.close()
         jump.close()
+
+
+_jetson_status_cache: dict = {"online": False, "ts": 0.0}
+_JETSON_STATUS_TTL = 30  # seconds
+
+
+def _probe_jetson_tunnel() -> bool:
+    """Try to open a direct-tcpip channel through the VPS jump host to port 9200.
+    Returns True if the Jetson reverse tunnel is listening."""
+    key_path = os.environ.get("JETSON_SSH_KEY_PATH", "")
+    jetson_port = int(os.environ.get("JETSON_PORT", "9200"))
+    vps_host = os.environ.get("VPS_JUMP_HOST", "172.20.0.1")
+    vps_port = int(os.environ.get("VPS_SSH_PORT", "5972"))
+    vps_user = os.environ.get("VPS_JUMP_USER", "mango")
+
+    try:
+        import paramiko  # type: ignore
+    except ImportError:
+        return False
+
+    if not key_path or not os.path.exists(key_path):
+        return False
+
+    jump = paramiko.SSHClient()
+    jump.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    try:
+        jump.connect(vps_host, port=vps_port, username=vps_user,
+                     key_filename=key_path, timeout=5)
+        transport = jump.get_transport()
+        chan = transport.open_channel(
+            "direct-tcpip", ("127.0.0.1", jetson_port), ("127.0.0.1", 0), timeout=3,
+        )
+        chan.close()
+        return True
+    except Exception:
+        return False
+    finally:
+        try:
+            jump.close()
+        except Exception:
+            pass
+
+
+@admin_terminal_bp.get("/jetson/status")
+@_require_admin
+def jetson_status():
+    now = time.monotonic()
+    if now - _jetson_status_cache["ts"] > _JETSON_STATUS_TTL:
+        online = _probe_jetson_tunnel()
+        _jetson_status_cache["online"] = online
+        _jetson_status_cache["ts"] = now
+    return jsonify({"online": _jetson_status_cache["online"]}), 200
 
 
 @admin_terminal_bp.post("/exec")
