@@ -62,40 +62,53 @@ def _run_local(command: str) -> dict:
 
 
 def _run_jetson(command: str) -> dict:
-    host = os.environ.get("JETSON_HOST", "").strip()
-    if not host:
-        return {
-            "stdout": "",
-            "stderr": "Jetson no alcanzable — el tunnel reverso no está activo (falta SIM o JETSON_HOST no configurado)",
-            "returncode": 1,
-        }
+    """
+    Reach the Jetson via ProxyJump:
+      container → VPS sshd (172.20.0.1:5972) → 127.0.0.1:9200 (reverse tunnel) → Jetson
 
-    port     = int(os.environ.get("JETSON_PORT", "9200"))
-    user     = os.environ.get("JETSON_USER", "ubuntu")
+    The container can reach port 5972 (public SSH) but not the tunnel port (127.0.0.1:9200)
+    directly. We open a direct-tcpip channel from the VPS to its own loopback tunnel port.
+    """
     key_path = os.environ.get("JETSON_SSH_KEY_PATH", "")
+    jetson_user = os.environ.get("JETSON_USER", "ubuntu")
+    jetson_port = int(os.environ.get("JETSON_PORT", "9200"))
+
+    # VPS jump-host settings (reachable from Docker containers via public SSH port)
+    vps_host = os.environ.get("VPS_JUMP_HOST", "172.20.0.1")
+    vps_port = int(os.environ.get("VPS_SSH_PORT", "5972"))
+    vps_user = os.environ.get("VPS_JUMP_USER", "mango")
 
     try:
         import paramiko  # type: ignore
     except ImportError:
-        return {
-            "stdout": "",
-            "stderr": "paramiko no está instalado en el backend",
-            "returncode": 1,
-        }
+        return {"stdout": "", "stderr": "paramiko no instalado", "returncode": 1}
 
-    client = paramiko.SSHClient()
-    client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    if not key_path or not os.path.exists(key_path):
+        return {"stdout": "", "stderr": "Clave SSH no encontrada en {}".format(key_path), "returncode": 1}
+
+    jump = paramiko.SSHClient()
+    jump.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    jetson = paramiko.SSHClient()
+    jetson.set_missing_host_key_policy(paramiko.AutoAddPolicy())
     try:
-        connect_kwargs: dict = {
-            "hostname": host,
-            "port": port,
-            "username": user,
-            "timeout": 10,
-        }
-        if key_path and os.path.exists(key_path):
-            connect_kwargs["key_filename"] = key_path
-        client.connect(**connect_kwargs)
-        _, stdout, stderr = client.exec_command(command, timeout=_TIMEOUT)
+        # Step 1: SSH into VPS jump host
+        jump.connect(vps_host, port=vps_port, username=vps_user,
+                     key_filename=key_path, timeout=10)
+
+        # Step 2: Open a TCP channel from VPS → localhost:9200 (the reverse tunnel)
+        transport = jump.get_transport()
+        channel = transport.open_channel(
+            "direct-tcpip",
+            ("127.0.0.1", jetson_port),
+            ("127.0.0.1", 0),
+            timeout=10,
+        )
+
+        # Step 3: SSH to Jetson through the channel
+        jetson.connect("127.0.0.1", username=jetson_user,
+                       key_filename=key_path, sock=channel, timeout=10)
+
+        _, stdout, stderr = jetson.exec_command(command, timeout=_TIMEOUT)
         exit_code = stdout.channel.recv_exit_status()
         return {
             "stdout": stdout.read().decode("utf-8", errors="replace")[-_MAX_OUTPUT:],
@@ -103,10 +116,11 @@ def _run_jetson(command: str) -> dict:
             "returncode": exit_code,
         }
     except Exception as e:
-        log.exception("jetson ssh error: %s", e)
+        log.exception("jetson proxyjump error: %s", e)
         return {"stdout": "", "stderr": "SSH error: {}".format(e), "returncode": 1}
     finally:
-        client.close()
+        jetson.close()
+        jump.close()
 
 
 @admin_terminal_bp.post("/exec")
