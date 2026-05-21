@@ -141,3 +141,4 @@ volumes:
 networks:
   mango_net:
     name: mango_net
+    external: true
