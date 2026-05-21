@@ -7,7 +7,6 @@ import { SystemStatusBar } from "@/components/dashboard/SystemStatusBar";
 import { NotificationsPanel } from "@/components/dashboard/NotificationsPanel";
 import { GrafanaSection } from "@/components/dashboard/GrafanaSection";
 import { RestrictedDocsPanel } from "@/components/dashboard/RestrictedDocsPanel";
-import { TerminalPanel } from "@/components/dashboard/TerminalPanel";
 import { TierGate } from "@/components/dashboard/TierGate";
 import { useAuth } from "@/hooks/useAuth";
 import { useHealth } from "@/hooks/useHealth";
@@ -17,7 +16,7 @@ import { useSensorAlerts } from "@/hooks/useSensorAlerts";
 import { useSustainedAlerts } from "@/hooks/useSustainedAlerts";
 import type { SensorType } from "@/types/dashboard";
 import {
-  Activity, BarChart3, Bell, PanelTop, Lock, Terminal,
+  Activity, BarChart3, Bell, PanelTop, Lock,
   ExternalLink,
 } from "lucide-react";
 import { motion } from "framer-motion";
@@ -307,19 +306,6 @@ export default function Dashboard() {
           <SectionTitle icon={Lock}>Archivos — Acceso Restringido</SectionTitle>
           <RestrictedDocsPanel />
         </motion.section>
-
-        {/* ── ADMIN TERMINAL (admin only) ──────────────────────────────────── */}
-        {isAdmin && (
-          <motion.section
-            initial="hidden"
-            animate="show"
-            variants={sectionIn}
-            aria-label="Terminal remota de administrador"
-          >
-            <SectionTitle icon={Terminal}>Terminal Remota</SectionTitle>
-            <TerminalPanel />
-          </motion.section>
-        )}
 
       </main>
     </div>

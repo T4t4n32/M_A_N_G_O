@@ -189,6 +189,12 @@ export const getUsers = () =>
 export const deleteUser = (userId: number) =>
   request<{ success: boolean }>(`/users/${userId}`, { method: "DELETE" });
 
+export const changeUserPassword = (userId: number, password: string) =>
+  request<{ ok: boolean }>(`/users/${userId}/password`, {
+    method: "PATCH",
+    body: JSON.stringify({ new_password: password }),
+  });
+
 export const execCommand = (command: string, target: "vps" | "jetson") =>
   request<{ stdout: string; stderr: string; returncode: number }>("/admin/exec", {
     method: "POST",
