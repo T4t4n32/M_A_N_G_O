@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getUsers, register, deleteUser, getAccessRequests, approveAccessRequest, rejectAccessRequest, ApiError } from "@/lib/api";
+import { getUsers, register, deleteUser, changeUserPassword, getAccessRequests, approveAccessRequest, rejectAccessRequest, ApiError } from "@/lib/api";
 import { handleApiError } from "@/lib/errorHandler";
 import type { UserRecord, UserRole, AccessRequestRecord, TierName } from "@/types/dashboard";
 import { TIER_LABELS } from "@/types/dashboard";
@@ -33,6 +33,8 @@ import {
   ArrowLeft,
   Shield,
   Eye,
+  EyeOff,
+  KeyRound,
   Inbox,
   Check,
   X,
@@ -182,10 +184,41 @@ export default function Admin() {
   // Registration form state
   const [regEmail, setRegEmail] = useState("");
   const [regPassword, setRegPassword] = useState("");
+  const [regShowPw, setRegShowPw] = useState(false);
   const [regName, setRegName] = useState("");
   const [regRole, setRegRole] = useState<UserRole>("viewer");
   const [regError, setRegError] = useState<string | null>(null);
   const [regSuccess, setRegSuccess] = useState<string | null>(null);
+
+  // Password change state: userId → { open, value, show, loading, error, success }
+  const [pwState, setPwState] = useState<Record<number, {
+    open: boolean; value: string; show: boolean; error: string | null; success: boolean;
+  }>>({});
+
+  const togglePwRow = (id: number) =>
+    setPwState((prev) => ({
+      ...prev,
+      [id]: prev[id]?.open
+        ? { open: false, value: "", show: false, error: null, success: false }
+        : { open: true, value: "", show: false, error: null, success: false },
+    }));
+
+  const pwChangeMutation = useMutation({
+    mutationFn: ({ id, password }: { id: number; password: string }) =>
+      changeUserPassword(id, password),
+    onSuccess: (_, { id }) => {
+      setPwState((prev) => ({
+        ...prev,
+        [id]: { open: false, value: "", show: false, error: null, success: true },
+      }));
+      setTimeout(() =>
+        setPwState((prev) => ({ ...prev, [id]: { ...prev[id], success: false } })), 2500);
+    },
+    onError: (err, { id }) => {
+      const msg = err instanceof ApiError ? err.message : "Error al cambiar contraseña";
+      setPwState((prev) => ({ ...prev, [id]: { ...prev[id], error: msg } }));
+    },
+  });
 
   // Fetch users
   const usersQuery = useQuery<UserRecord[]>({
@@ -375,14 +408,24 @@ export default function Admin() {
                 </div>
                 <div className="space-y-1.5">
                   <Label className="text-white/60 text-xs">Contraseña</Label>
-                  <Input
-                    type="password"
-                    value={regPassword}
-                    onChange={(e) => setRegPassword(e.target.value)}
-                    placeholder="Mínimo 6 caracteres"
-                    className="h-10 bg-white/[0.05] border-white/[0.1] text-white placeholder:text-white/25 rounded-lg"
-                    disabled={registerMutation.isPending}
-                  />
+                  <div className="relative">
+                    <Input
+                      type={regShowPw ? "text" : "password"}
+                      value={regPassword}
+                      onChange={(e) => setRegPassword(e.target.value)}
+                      placeholder="Mínimo 6 caracteres"
+                      className="h-10 bg-white/[0.05] border-white/[0.1] text-white placeholder:text-white/25 rounded-lg pr-10"
+                      disabled={registerMutation.isPending}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setRegShowPw((v) => !v)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60 transition-colors"
+                      tabIndex={-1}
+                    >
+                      {regShowPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
                 </div>
                 <div className="space-y-1.5">
                   <Label className="text-white/60 text-xs">Rol</Label>
@@ -508,7 +551,9 @@ export default function Admin() {
                       const adminCount = usersQuery.data!.filter((x) => x.role === "admin").length;
                       const isLastAdmin = u.role === "admin" && adminCount <= 1;
                       const canDelete = !isSelf && !isLastAdmin;
+                      const pw = pwState[u.id];
                       return (
+                        <>
                         <TableRow key={u.id} className="border-white/[0.04] hover:bg-white/[0.02]">
                           <TableCell className="text-white/80 font-medium pl-5">
                             {u.name || <span className="text-white/30 italic">Sin nombre</span>}
@@ -531,27 +576,100 @@ export default function Admin() {
                             {u.login_count ?? 0}
                           </TableCell>
                           <TableCell className="text-right pr-5">
-                            {canDelete ? (
+                            <div className="flex items-center justify-end gap-1">
+                              {/* Change password button */}
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                onClick={() => {
-                                  if (confirm(`¿Eliminar al usuario ${u.email}?`)) {
-                                    deleteMutation.mutate(u.id);
-                                  }
-                                }}
-                                disabled={deleteMutation.isPending}
-                                className="text-red-400/50 hover:text-red-400 hover:bg-red-400/10"
+                                onClick={() => togglePwRow(u.id)}
+                                title="Cambiar contraseña"
+                                className={`${pw?.open ? "text-amber-400 bg-amber-400/10" : "text-white/30 hover:text-amber-400 hover:bg-amber-400/10"}`}
                               >
-                                <Trash2 className="h-4 w-4" />
+                                {pw?.success
+                                  ? <CheckCircle2 className="h-4 w-4 text-emerald-400" />
+                                  : <KeyRound className="h-4 w-4" />}
                               </Button>
-                            ) : (
-                              <span className="text-[10px] text-white/20 pr-2">
-                                {isSelf ? "—" : "protegido"}
-                              </span>
-                            )}
+                              {/* Delete button */}
+                              {canDelete ? (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => {
+                                    if (confirm(`¿Eliminar al usuario ${u.email}?`)) {
+                                      deleteMutation.mutate(u.id);
+                                    }
+                                  }}
+                                  disabled={deleteMutation.isPending}
+                                  className="text-red-400/50 hover:text-red-400 hover:bg-red-400/10"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              ) : (
+                                <span className="text-[10px] text-white/20 pr-2">
+                                  {isSelf ? "—" : "protegido"}
+                                </span>
+                              )}
+                            </div>
                           </TableCell>
                         </TableRow>
+                        {/* Inline password change row */}
+                        {pw?.open && (
+                          <TableRow key={`pw-${u.id}`} className="border-white/[0.04] bg-amber-500/[0.03]">
+                            <TableCell colSpan={5} className="px-5 py-3">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span className="text-[11px] text-amber-300/70 font-medium whitespace-nowrap">
+                                  Nueva contraseña para <span className="font-mono">{u.email}</span>:
+                                </span>
+                                <div className="relative flex-1 min-w-[200px] max-w-xs">
+                                  <input
+                                    type={pw.show ? "text" : "password"}
+                                    value={pw.value}
+                                    onChange={(e) =>
+                                      setPwState((prev) => ({
+                                        ...prev,
+                                        [u.id]: { ...prev[u.id], value: e.target.value, error: null },
+                                      }))
+                                    }
+                                    placeholder="Mínimo 8 caracteres"
+                                    className="w-full bg-white/[0.05] border border-white/[0.12] rounded px-3 py-1.5 pr-9 text-xs text-white font-mono placeholder:text-white/25 outline-none focus:border-amber-400/40"
+                                  />
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      setPwState((prev) => ({
+                                        ...prev,
+                                        [u.id]: { ...prev[u.id], show: !prev[u.id]?.show },
+                                      }))
+                                    }
+                                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60"
+                                    tabIndex={-1}
+                                  >
+                                    {pw.show ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                                  </button>
+                                </div>
+                                <Button
+                                  size="sm"
+                                  disabled={pwChangeMutation.isPending || (pw.value?.length ?? 0) < 8}
+                                  onClick={() => pwChangeMutation.mutate({ id: u.id, password: pw.value })}
+                                  className="bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/30 text-xs h-7 px-3"
+                                >
+                                  {pwChangeMutation.isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : "Guardar"}
+                                </Button>
+                                <button
+                                  type="button"
+                                  onClick={() => togglePwRow(u.id)}
+                                  className="text-white/25 hover:text-white/50 text-xs"
+                                >
+                                  <X className="h-3.5 w-3.5" />
+                                </button>
+                                {pw.error && (
+                                  <span className="text-[11px] text-red-400 w-full">{pw.error}</span>
+                                )}
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        )}
+                        </>
                       );
                     })}
                   </TableBody>
