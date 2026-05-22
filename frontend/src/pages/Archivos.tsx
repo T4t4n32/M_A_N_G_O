@@ -166,13 +166,20 @@ function FeaturedCard({ doc }: { doc: Doc }) {
         </div>
 
         {/* Description */}
-        <p className="text-[12px] text-white/45 leading-relaxed line-clamp-3 flex-1">{doc.desc}</p>
+        <p className="text-[12px] text-white/50 leading-relaxed line-clamp-4 flex-1">{doc.desc}</p>
 
-        {/* Formats */}
-        <div className="flex flex-wrap gap-2 pt-3 border-t border-white/[0.06]">
-          {doc.files.map((f) => (
-            <FormatBtn key={f.href} label={f.label} href={f.href} size="lg" />
-          ))}
+        {/* Date + Formats */}
+        <div className="space-y-2.5 pt-3 border-t border-white/[0.06]">
+          {doc.date && (
+            <p className="text-[10px] text-white/25 flex items-center gap-1.5">
+              <Clock className="h-3 w-3" /> {doc.date}
+            </p>
+          )}
+          <div className="flex flex-wrap gap-2">
+            {doc.files.map((f) => (
+              <FormatBtn key={f.href} label={f.label} href={f.href} size="lg" />
+            ))}
+          </div>
         </div>
       </div>
     </motion.div>
@@ -210,12 +217,19 @@ function RegularCard({ doc }: { doc: Doc }) {
           </div>
         </div>
 
-        <p className="text-[11px] text-white/38 leading-relaxed line-clamp-2 flex-1">{doc.desc}</p>
+        <p className="text-[11px] text-white/40 leading-relaxed line-clamp-2 flex-1">{doc.desc}</p>
 
-        <div className="flex flex-wrap gap-1.5 pt-2.5 border-t border-white/[0.05]">
-          {doc.files.map((f) => (
-            <FormatBtn key={f.href} label={f.label} href={f.href} size="sm" />
-          ))}
+        <div className="pt-2.5 border-t border-white/[0.05] space-y-2">
+          {doc.date && (
+            <p className="text-[10px] text-white/22 flex items-center gap-1">
+              <Clock className="h-2.5 w-2.5" /> {doc.date}
+            </p>
+          )}
+          <div className="flex flex-wrap gap-1.5">
+            {doc.files.map((f) => (
+              <FormatBtn key={f.href} label={f.label} href={f.href} size="sm" />
+            ))}
+          </div>
         </div>
       </div>
     </motion.div>
@@ -319,7 +333,7 @@ export default function Archivos() {
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-10 space-y-12 relative z-10">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-10 space-y-14 relative z-10">
 
         {/* ── Hero ───────────────────────────────────────────────────────────── */}
         <motion.div
@@ -346,13 +360,13 @@ export default function Archivos() {
           </p>
 
           {/* Stats */}
-          <div className="flex items-center justify-center gap-6 pt-2">
+          <div className="flex items-center justify-center gap-0 pt-2 divide-x divide-white/[0.08]">
             {[
               { value: allDocs.length, label: "documentos" },
               { value: categories.length, label: "categorías" },
               { value: [...new Set(allDocs.flatMap((d) => d.files.map((f) => f.label)))].length, label: "formatos" },
             ].map(({ value, label }) => (
-              <div key={label} className="text-center">
+              <div key={label} className="text-center px-6 first:pl-0 last:pr-0">
                 <p className="text-2xl font-black text-white">{value}</p>
                 <p className="text-[10px] text-white/30 uppercase tracking-wider">{label}</p>
               </div>
@@ -390,11 +404,14 @@ export default function Archivos() {
         >
           {/* Section header */}
           <div className="flex items-center gap-2 mb-5">
-            <BookOpen className="h-4 w-4 text-[hsl(168,72%,42%)]" />
+            <BookOpen className="h-4 w-4 text-teal-400" />
             <h2 className="text-sm font-bold uppercase tracking-widest text-white/60">
-              {isFiltering ? "Resultados" : "Todos los archivos"}
+              {isFiltering ? "Resultados" : featuredDocs.length > 0 ? "Más archivos" : "Todos los archivos"}
             </h2>
-            <div className="flex-1 h-px bg-gradient-to-r from-[hsl(168,72%,42%/0.2)] to-transparent ml-2" />
+            <span className="text-[10px] font-semibold text-white/25 bg-white/[0.05] px-2 py-0.5 rounded-full border border-white/[0.08]">
+              {(isFiltering ? filtered : regularDocs).length}
+            </span>
+            <div className="flex-1 h-px bg-gradient-to-r from-teal-500/20 to-transparent ml-1" />
             {isFiltering && (
               <button
                 type="button"
