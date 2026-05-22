@@ -6,7 +6,7 @@ import { ImuPanel } from "@/components/dashboard/ImuPanel";
 import { SystemStatusBar } from "@/components/dashboard/SystemStatusBar";
 import { NotificationsPanel } from "@/components/dashboard/NotificationsPanel";
 import { GrafanaSection } from "@/components/dashboard/GrafanaSection";
-import { RestrictedDocsPanel } from "@/components/dashboard/RestrictedDocsPanel";
+import { docs } from "@/components/DocumentationSection";
 import { TierGate } from "@/components/dashboard/TierGate";
 import { useAuth } from "@/hooks/useAuth";
 import { useHealth } from "@/hooks/useHealth";
@@ -81,12 +81,70 @@ function SectionTitle({
   );
 }
 
+function ArchivosSummaryCard({ navigate }: { navigate: (path: string) => void }) {
+  const totalDocs  = docs.length;
+  const categories = [...new Set(docs.map((d) => d.category))];
+  const formats    = [...new Set(docs.flatMap((d) => d.files.map((f) => f.label)))].slice(0, 4);
+
+  const FORMAT_COLOR: Record<string, string> = {
+    PDF:  "text-red-300 bg-red-500/10 border-red-500/25",
+    DOCX: "text-blue-300 bg-blue-500/10 border-blue-500/25",
+    XLSX: "text-emerald-300 bg-emerald-500/10 border-emerald-500/25",
+    PPTX: "text-orange-300 bg-orange-500/10 border-orange-500/25",
+    MD:   "text-purple-300 bg-purple-500/10 border-purple-500/25",
+  };
+
+  return (
+    <div
+      onClick={() => navigate("/archivos")}
+      role="link"
+      tabIndex={0}
+      onKeyDown={(e) => e.key === "Enter" && navigate("/archivos")}
+      className="group relative rounded-xl border border-white/[0.08] bg-[hsl(205,35%,9%)] hover:border-amber-500/25 hover:bg-[hsl(205,35%,10%)] transition-all duration-200 cursor-pointer overflow-hidden"
+    >
+      {/* top accent */}
+      <div className="h-0.5 w-full bg-gradient-to-r from-amber-500/60 via-orange-400/40 to-transparent" />
+
+      <div className="flex items-center justify-between gap-4 px-5 py-4">
+        {/* left: icon + text */}
+        <div className="flex items-center gap-4">
+          <div className="p-2.5 rounded-lg bg-amber-500/10 border border-amber-500/20 shrink-0">
+            <Lock className="h-5 w-5 text-amber-300" />
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-white/90">Biblioteca de Archivos</p>
+            <p className="text-[11px] text-white/35 mt-0.5">
+              {totalDocs} archivos · {categories.length} categorías · acceso restringido
+            </p>
+            <div className="flex gap-1.5 mt-2">
+              {formats.map((fmt) => (
+                <span
+                  key={fmt}
+                  className={`text-[10px] font-semibold px-1.5 py-0.5 rounded border ${FORMAT_COLOR[fmt] ?? "text-white/40 bg-white/[0.05] border-white/10"}`}
+                >
+                  .{fmt.toLowerCase()}
+                </span>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* right: CTA */}
+        <div className="flex items-center gap-1.5 shrink-0 px-4 py-2 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-300 text-xs font-semibold group-hover:bg-amber-500/18 transition-colors">
+          Explorar
+          <ExternalLink className="h-3.5 w-3.5" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 const bubbleItems = [
   { label: "Sensores",  href: "#sensores",           rotation: -5, hoverStyles: { bgColor: "hsl(168,72%,42%)",  textColor: "#fff" } },
   { label: "Historial", href: "#historial",          rotation:  6, hoverStyles: { bgColor: "hsl(204,70%,53%)",  textColor: "#fff" } },
   { label: "Avisos",    href: "#notificaciones",     rotation: -4, hoverStyles: { bgColor: "hsl(38,90%,55%)",   textColor: "#0b0b0b" } },
   { label: "Grafana",   href: "#grafana",            rotation:  5, hoverStyles: { bgColor: "hsl(180,55%,42%)",  textColor: "#fff" } },
-  { label: "Archivos",  href: "#archivos-editables", rotation: -3, hoverStyles: { bgColor: "hsl(38,90%,55%)",   textColor: "#0b0b0b" } },
+  { label: "Archivos",  href: "/archivos",            rotation: -3, hoverStyles: { bgColor: "hsl(38,90%,55%)",   textColor: "#0b0b0b" } },
   { label: "Inicio",    href: "/",                   rotation:  4, hoverStyles: { bgColor: "hsl(195,70%,48%)",  textColor: "#fff" } },
 ];
 
@@ -295,7 +353,7 @@ export default function Dashboard() {
           </TierGate>
         </motion.section>
 
-        {/* ── RESTRICTED FILES — 3 ERAS ───────────────────────────────────── */}
+        {/* ── ARCHIVOS — entry card linking to /archivos ───────────────────── */}
         <motion.section
           id="archivos-editables"
           initial="hidden"
@@ -304,7 +362,7 @@ export default function Dashboard() {
           aria-label="Archivos del proyecto"
         >
           <SectionTitle icon={Lock}>Archivos — Acceso Restringido</SectionTitle>
-          <RestrictedDocsPanel />
+          <ArchivosSummaryCard navigate={navigate} />
         </motion.section>
 
       </main>

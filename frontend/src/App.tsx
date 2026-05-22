@@ -11,6 +11,7 @@ import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
 import PanelEmmaLogin from "./pages/PanelEmmaLogin";
 import PanelEmmaDashboard from "./pages/PanelEmmaDashboard";
+import Archivos from "./pages/Archivos";
 import { useSecretShortcut } from "@/hooks/useSecretShortcut";
 
 const queryClient = new QueryClient();
@@ -47,6 +48,14 @@ const App = () => (
             }
           />
           {/* Hidden super-admin console — reachable only via Ctrl+Shift+M or direct URL */}
+          <Route
+            path="/archivos"
+            element={
+              <ProtectedRoute>
+                <Archivos />
+              </ProtectedRoute>
+            }
+          />
           <Route path="/panel-emma" element={<PanelEmmaLogin />} />
           <Route path="/panel-emma/dashboard" element={<PanelEmmaDashboard />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
