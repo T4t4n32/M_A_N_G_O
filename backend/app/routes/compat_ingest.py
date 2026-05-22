@@ -73,10 +73,117 @@ def _upsert_device(device_id: str, station_name: str, seq: int | None) -> None:
         dev.status = "online"
 
 
+def _process_new_sensor_reading(payload: dict, station_name: str, mission_id: str | None,
+                                 packet_id: str | None, now: datetime) -> int:
+    """Handle Sensors_V2 sensor_reading payload. Returns count of inserted rows."""
+    readings_dict = payload.get("readings") or {}
+    if not isinstance(readings_dict, dict):
+        return 0
+
+    st = _get_or_create_station(station_name)
+
+    # Unit map for well-known sensor types
+    UNIT_MAP = {
+        "ph": "pH",
+        "turbidity_ntu": "NTU",
+        "temperature_c": "°C",
+    }
+
+    inserted = 0
+    for key, val in readings_dict.items():
+        try:
+            value = float(val)
+        except (TypeError, ValueError):
+            continue
+        unit = UNIT_MAP.get(key)
+        row = CompatReading(
+            station_id=st.id,
+            type=key,
+            value=value,
+            unit=unit,
+            ts=now,
+            packet_id=packet_id,
+            mission_id=mission_id,
+        )
+        db.session.add(row)
+        inserted += 1
+    return inserted
+
+
+def _process_imu(payload: dict, station_name: str, mission_id: str | None,
+                 packet_id: str | None, now: datetime) -> int:
+    """Store IMU fields as individual CompatReading rows."""
+    st = _get_or_create_station(station_name)
+    fields = {
+        "imu_yaw": payload.get("yaw"),
+        "imu_pitch": payload.get("pitch"),
+        "imu_roll": payload.get("roll"),
+        "imu_qx": payload.get("qx"),
+        "imu_qy": payload.get("qy"),
+        "imu_qz": payload.get("qz"),
+        "imu_qw": payload.get("qw"),
+        "imu_calibration": payload.get("calibration"),
+    }
+    inserted = 0
+    for key, val in fields.items():
+        if val is None:
+            continue
+        try:
+            value = float(val)
+        except (TypeError, ValueError):
+            continue
+        db.session.add(CompatReading(
+            station_id=st.id,
+            type=key,
+            value=value,
+            unit=None,
+            ts=now,
+            packet_id=packet_id,
+            mission_id=mission_id,
+        ))
+        inserted += 1
+    return inserted
+
+
+def _process_pose(payload: dict, station_name: str, mission_id: str | None,
+                  packet_id: str | None, now: datetime) -> int:
+    """Store pose fields as CompatReading rows."""
+    st = _get_or_create_station(station_name)
+    fields = {
+        "pose_x": payload.get("x"),
+        "pose_y": payload.get("y"),
+        "pose_z": payload.get("z"),
+        "pose_yaw": payload.get("yaw"),
+        "pose_confidence": payload.get("confidence"),
+    }
+    inserted = 0
+    for key, val in fields.items():
+        if val is None:
+            continue
+        try:
+            value = float(val)
+        except (TypeError, ValueError):
+            continue
+        db.session.add(CompatReading(
+            station_id=st.id,
+            type=key,
+            value=value,
+            unit=None,
+            ts=now,
+            packet_id=packet_id,
+            mission_id=mission_id,
+        ))
+        inserted += 1
+    return inserted
+
+
 def _process_packet(payload: dict, now: datetime) -> dict:
-    """Process one ingest packet. Returns {inserted, duplicated, station_name}."""
-    station_name = (payload.get("station") or {}).get("name") or "MANGO Station"
-    readings = payload.get("readings") or []
+    """Process one ingest packet. Returns {inserted, duplicated, station_name}.
+
+    Supports two payload formats:
+    - Legacy: {station:{name}, readings:[{type,value,unit}], ...}
+    - Sensors_V2: {type:"sensor_reading"|"imu"|"pose", mission_id, station, readings:{...}}
+    """
     packet_id = (payload.get("packet_id") or "").strip() or None
     device_id = (payload.get("device_id") or "").strip() or None
     seq = payload.get("seq")
@@ -86,35 +193,60 @@ def _process_packet(payload: dict, now: datetime) -> dict:
         except (TypeError, ValueError):
             seq = None
 
+    payload_type = (payload.get("type") or "").strip()
+    mission_id = (payload.get("mission_id") or "").strip() or None
+
+    # Determine station name — new format has flat "station" string
+    raw_station = payload.get("station")
+    if isinstance(raw_station, dict):
+        station_name = raw_station.get("name") or "MANGO Station"
+    elif isinstance(raw_station, str) and raw_station:
+        station_name = raw_station
+    else:
+        station_name = "MANGO Station"
+
     # Deduplication: if packet_id already exists, skip readings insertion
     if packet_id:
         existing = IngestPacket.query.filter_by(packet_id=packet_id).first()
         if existing:
             return {"inserted": 0, "duplicated": True, "station_name": station_name}
 
-    st = _get_or_create_station(station_name)
-
     inserted = 0
-    for r in readings:
-        r_type = str(r.get("type", "")).strip()
-        if not r_type:
-            continue
-        try:
-            value = float(r.get("value"))
-        except (TypeError, ValueError):
-            continue
 
-        unit = r.get("unit")
-        row = CompatReading(
-            station_id=st.id,
-            type=r_type,
-            value=value,
-            unit=str(unit) if unit is not None else None,
-            ts=now,
-            packet_id=packet_id,
+    if payload_type == "sensor_reading":
+        # New Sensors_V2 format — readings is a dict, not a list
+        inserted = _process_new_sensor_reading(
+            payload, station_name, mission_id, packet_id, now
         )
-        db.session.add(row)
-        inserted += 1
+    elif payload_type == "imu":
+        inserted = _process_imu(payload, station_name, mission_id, packet_id, now)
+    elif payload_type == "pose":
+        inserted = _process_pose(payload, station_name, mission_id, packet_id, now)
+    else:
+        # Legacy format — readings is a list of {type, value, unit}
+        readings = payload.get("readings") or []
+        st = _get_or_create_station(station_name)
+        for r in readings:
+            r_type = str(r.get("type", "")).strip()
+            if not r_type:
+                continue
+            try:
+                value = float(r.get("value"))
+            except (TypeError, ValueError):
+                continue
+
+            unit = r.get("unit")
+            row = CompatReading(
+                station_id=st.id,
+                type=r_type,
+                value=value,
+                unit=str(unit) if unit is not None else None,
+                ts=now,
+                packet_id=packet_id,
+                mission_id=mission_id,
+            )
+            db.session.add(row)
+            inserted += 1
 
     # Register the packet for deduplication
     if packet_id and inserted > 0:

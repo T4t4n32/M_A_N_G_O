@@ -147,3 +147,17 @@ def register_routes(app) -> None:
         safe_register(docs_download_bp)
     except Exception as e:
         log.exception("docs_download import failed: %s", e)
+
+    # Mission lifecycle (/api/v1/missions/*)
+    try:
+        from .missions import missions_bp
+        safe_register(missions_bp)
+    except Exception as e:
+        log.exception("missions import failed: %s", e)
+
+    # Command queue (/api/v1/commands/*)
+    try:
+        from .commands import commands_bp
+        safe_register(commands_bp)
+    except Exception as e:
+        log.exception("commands import failed: %s", e)
