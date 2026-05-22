@@ -6,8 +6,6 @@ GET /missions/<mission_id>/summary   — mission summary
 GET /health                          — liveness check
 """
 
-from __future__ import annotations
-
 import logging
 import os
 from datetime import datetime, timezone
@@ -21,16 +19,15 @@ log = logging.getLogger("mango.edge.dashboard")
 dashboard_bp = Blueprint("dashboard", __name__)
 
 
-def _db_path() -> str:
+def _db_path():
     return current_app.config["DB_PATH"]
 
 
-def _now_iso() -> str:
+def _now_iso():
     return datetime.now(timezone.utc).isoformat()
 
 
-def _last_sensor_readings(db_path: str, n: int = 3) -> list[dict]:
-    """Return the most recent sensor readings from SQLite."""
+def _last_sensor_readings(db_path, n=3):
     try:
         with get_db(db_path) as conn:
             rows = conn.execute(
@@ -44,15 +41,14 @@ def _last_sensor_readings(db_path: str, n: int = 3) -> list[dict]:
         return []
 
 
-def _check_vps_reachable() -> bool:
-    """Lightweight connectivity check — just resolve the env var."""
+def _check_vps_reachable():
     import urllib.request
     vps_url = os.environ.get("VPS_URL", "").rstrip("/")
     if not vps_url:
         return False
     try:
         req = urllib.request.Request(
-            f"{vps_url}/api/v1/health",
+            vps_url + "/api/v1/health",
             headers={"Accept": "application/json"},
         )
         with urllib.request.urlopen(req, timeout=3) as resp:
@@ -61,7 +57,7 @@ def _check_vps_reachable() -> bool:
         return False
 
 
-@dashboard_bp.get("/status")
+@dashboard_bp.route("/status")
 def status():
     db_path = _db_path()
     mission = get_current_mission(db_path)
@@ -76,11 +72,11 @@ def status():
         "vps_reachable": vps_online,
         "current_mission": mission,
         "last_readings": last_readings,
-        "battery": None,  # placeholder — wire to hardware when available
+        "battery": None,
     }), 200
 
 
-@dashboard_bp.get("/missions")
+@dashboard_bp.route("/missions")
 def list_missions_route():
     try:
         limit = max(1, min(200, int(request.args.get("limit", 50))))
@@ -91,13 +87,12 @@ def list_missions_route():
     return jsonify({"missions": missions, "count": len(missions)}), 200
 
 
-@dashboard_bp.get("/missions/<string:mission_id>/summary")
-def mission_summary(mission_id: str):
+@dashboard_bp.route("/missions/<string:mission_id>/summary")
+def mission_summary(mission_id):
     mission = get_mission(_db_path(), mission_id)
     if not mission:
         return jsonify({"error": "mission not found"}), 404
 
-    # Count readings
     try:
         with get_db(_db_path()) as conn:
             readings_count = conn.execute(
@@ -126,6 +121,6 @@ def mission_summary(mission_id: str):
     }), 200
 
 
-@dashboard_bp.get("/health")
+@dashboard_bp.route("/health")
 def health():
     return jsonify({"ok": True, "ts": _now_iso()}), 200

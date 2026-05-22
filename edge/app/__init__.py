@@ -1,7 +1,5 @@
 """M.A.N.G.O. edge Flask app factory."""
 
-from __future__ import annotations
-
 import os
 
 from flask import Flask
@@ -11,7 +9,7 @@ from .routes.ingest import ingest_bp
 from .routes.dashboard_api import dashboard_bp
 
 
-def create_app(config: dict | None = None) -> Flask:
+def create_app(config=None):
     app = Flask(__name__)
 
     app.config["MISSION_DIR"] = os.environ.get("MISSION_DIR", "/opt/mango/missions")

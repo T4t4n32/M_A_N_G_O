@@ -10,14 +10,12 @@ Runs in a loop (default 30 s interval):
 6. Mark uploaded items as synced
 
 Environment variables:
-  VPS_URL          — e.g. https://mango.calibots.com
-  INGEST_API_KEY   — shared secret for ingest/command endpoints
-  DEVICE_ID        — e.g. mango-field-unit-01
-  DB_PATH          — path to edge.db (default /opt/mango/edge.db)
-  SYNC_INTERVAL    — seconds between cycles (default 30)
+  VPS_URL          -- e.g. https://mango.calibots.com
+  INGEST_API_KEY   -- shared secret for ingest/command endpoints
+  DEVICE_ID        -- e.g. mango-field-unit-01
+  DB_PATH          -- path to edge.db (default /opt/mango/edge.db)
+  SYNC_INTERVAL    -- seconds between cycles (default 30)
 """
-
-from __future__ import annotations
 
 import json
 import logging
@@ -57,12 +55,12 @@ DEVICE_ID = os.environ.get("DEVICE_ID", "mango-field-unit-01")
 DB_PATH = os.environ.get("DB_PATH", "/opt/mango/edge.db")
 SYNC_INTERVAL = int(os.environ.get("SYNC_INTERVAL", "30"))
 
-BATCH_SIZE = 100  # sensor readings per HTTP request
+BATCH_SIZE = 100
 
 
 # ─── HTTP helpers ─────────────────────────────────────────────────────────────
 
-def _headers() -> dict:
+def _headers():
     h = {
         "Content-Type": "application/json",
         "Accept": "application/json",
@@ -72,33 +70,33 @@ def _headers() -> dict:
     return h
 
 
-def _get(path: str, timeout: int = 5) -> dict | None:
+def _get(path, timeout=5):
     if not VPS_URL:
         return None
-    url = f"{VPS_URL}{path}"
+    url = VPS_URL + path
     try:
         req = urllib.request.Request(url, headers=_headers())
         with urllib.request.urlopen(req, timeout=timeout) as resp:
             return json.loads(resp.read().decode())
     except urllib.error.HTTPError as exc:
-        log.warning("GET %s → HTTP %d", path, exc.code)
+        log.warning("GET %s -> HTTP %d", path, exc.code)
         return None
     except Exception as exc:
         log.debug("GET %s failed: %s", path, exc)
         return None
 
 
-def _post(path: str, body: dict, timeout: int = 15) -> dict | None:
+def _post(path, body, timeout=15):
     if not VPS_URL:
         return None
-    url = f"{VPS_URL}{path}"
+    url = VPS_URL + path
     data = json.dumps(body).encode()
     try:
-        req = urllib.request.Request(url, data=data, headers=_headers(), method="POST")
+        req = urllib.request.Request(url, data=data, headers=_headers())
         with urllib.request.urlopen(req, timeout=timeout) as resp:
             return json.loads(resp.read().decode())
     except urllib.error.HTTPError as exc:
-        log.warning("POST %s → HTTP %d", path, exc.code)
+        log.warning("POST %s -> HTTP %d", path, exc.code)
         return None
     except Exception as exc:
         log.debug("POST %s failed: %s", path, exc)
@@ -107,23 +105,21 @@ def _post(path: str, body: dict, timeout: int = 15) -> dict | None:
 
 # ─── Sync steps ───────────────────────────────────────────────────────────────
 
-def check_vps_reachable() -> bool:
+def check_vps_reachable():
     result = _get("/api/v1/health", timeout=5)
     return result is not None
 
 
-def upload_sensor_readings() -> int:
-    """Upload unsynced sensor readings in batches. Returns total uploaded."""
+def upload_sensor_readings():
     total = 0
     while True:
         rows = get_unsynced_sensor_readings(DB_PATH, limit=BATCH_SIZE)
         if not rows:
             break
 
-        # Convert to ingest batch format (new Sensors_V2 packet per row)
         packets = []
         for r in rows:
-            readings: dict = {r["type"]: r["value"]}
+            readings = {r["type"]: r["value"]}
             pkt = {
                 "type": "sensor_reading",
                 "mission_id": r.get("mission_id"),
@@ -138,7 +134,7 @@ def upload_sensor_readings() -> int:
 
         result = _post("/api/v1/ingest/batch", {"packets": packets})
         if result is None:
-            log.warning("ingest/batch failed — will retry next cycle")
+            log.warning("ingest/batch failed -- will retry next cycle")
             break
 
         ids = [r["id"] for r in rows]
@@ -147,14 +143,13 @@ def upload_sensor_readings() -> int:
         log.info("Uploaded %d sensor readings", len(ids))
 
         if len(rows) < BATCH_SIZE:
-            break  # no more rows
+            break
 
     return total
 
 
-def poll_commands() -> int:
-    """Poll VPS for pending commands. Returns count of new commands stored."""
-    result = _get(f"/api/v1/commands/pending?device_id={DEVICE_ID}")
+def poll_commands():
+    result = _get("/api/v1/commands/pending?device_id=%s" % DEVICE_ID)
     if not result:
         return 0
 
@@ -173,17 +168,17 @@ def poll_commands() -> int:
             params=cmd.get("params"),
         )
         count += 1
-        # Acknowledge delivery
-        _post(f"/api/v1/commands/{remote_id}/ack",
-              {"status": "acknowledged", "device_id": DEVICE_ID})
+        _post(
+            "/api/v1/commands/%d/ack" % remote_id,
+            {"status": "acknowledged", "device_id": DEVICE_ID},
+        )
 
     if count:
         log.info("Received %d command(s) from VPS", count)
     return count
 
 
-def upload_finished_missions() -> int:
-    """Upload summary for missions that finished locally but not yet synced."""
+def upload_finished_missions():
     missions = get_unsynced_missions(DB_PATH)
     count = 0
     for m in missions:
@@ -206,13 +201,13 @@ def upload_finished_missions() -> int:
 
 # ─── Main loop ────────────────────────────────────────────────────────────────
 
-def run_cycle() -> None:
+def run_cycle():
     if not VPS_URL:
-        log.warning("VPS_URL not set — skipping sync cycle")
+        log.warning("VPS_URL not set -- skipping sync cycle")
         return
 
     if not check_vps_reachable():
-        log.info("VPS not reachable — skipping cycle")
+        log.info("VPS not reachable -- skipping cycle")
         return
 
     log.debug("VPS reachable, running sync cycle")
@@ -221,9 +216,9 @@ def run_cycle() -> None:
     upload_finished_missions()
 
 
-def main() -> None:
+def main():
     log.info(
-        "Sync worker starting — device=%s vps=%s interval=%ds",
+        "Sync worker starting -- device=%s vps=%s interval=%ds",
         DEVICE_ID, VPS_URL or "(not set)", SYNC_INTERVAL,
     )
 
