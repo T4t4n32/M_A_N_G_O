@@ -69,6 +69,20 @@ COMMAND_MAP = {
     "SYNC_DATA":   "SYNCING",
 }
 
+# Physical button transitions via ESP32 serial events
+# Key: (current_state, event_type)  Value: new_state or None (waypoint only)
+BUTTON_TRANSITIONS = {
+    ("IDLE",          "button_hold"):  "ARMED",
+    ("ARMED",         "button_press"): "FIELD_RUNNING",
+    ("ARMED",         "button_hold"):  "IDLE",            # cancel ARM
+    ("FIELD_RUNNING", "button_hold"):  "MISSION_FINISHED",
+    ("PAUSED",        "button_press"): "FIELD_RUNNING",   # resume
+    ("PAUSED",        "button_hold"):  "MISSION_FINISHED",
+    ("ERROR",         "button_hold"):  "IDLE",
+    ("STANDBY",       "button_hold"):  "IDLE",
+}
+# ("FIELD_RUNNING", "button_press") -> mark waypoint, no state change
+
 
 def _now_iso():
     return datetime.now(timezone.utc).isoformat()
@@ -114,6 +128,61 @@ def _poll_commands():
     except Exception as e:
         log.warning("DB command poll failed: %s", e)
         return []
+
+
+def _get_max_event_id():
+    """Return current max event id so we skip old events on startup."""
+    try:
+        import sqlite3
+        with sqlite3.connect(DB_PATH) as conn:
+            row = conn.execute("SELECT COALESCE(MAX(id), 0) FROM events").fetchone()
+            return row[0]
+    except Exception:
+        return 0
+
+
+def _poll_button_events(last_id):
+    """Return new button_press / button_hold events from the ESP32."""
+    try:
+        import sqlite3
+        with sqlite3.connect(DB_PATH) as conn:
+            conn.row_factory = sqlite3.Row
+            rows = conn.execute(
+                "SELECT id, event_type, data FROM events"
+                " WHERE id > ? AND event_type IN ('button_press', 'button_hold')"
+                " ORDER BY id ASC LIMIT 10",
+                (last_id,)
+            ).fetchall()
+        result = []
+        for r in rows:
+            d = dict(r)
+            if d.get("data"):
+                try:
+                    import json as _json
+                    d["data"] = _json.loads(d["data"])
+                except Exception:
+                    pass
+            result.append(d)
+        return result
+    except Exception as e:
+        log.warning("Button event poll failed: %s", e)
+        return []
+
+
+def _insert_waypoint(mission_id):
+    """Insert a waypoint event into the local DB."""
+    try:
+        import sqlite3, json as _json
+        now = _now_iso()
+        with sqlite3.connect(DB_PATH) as conn:
+            conn.execute(
+                "INSERT INTO events (mission_id, event_type, data, ts_local)"
+                " VALUES (?, ?, ?, ?)",
+                (mission_id, "waypoint", _json.dumps({"source": "button"}), now),
+            )
+        log.info("Waypoint marked for mission %s", mission_id)
+    except Exception as e:
+        log.warning("Waypoint insert failed: %s", e)
 
 
 def _mark_command_done(cmd_id):
@@ -185,6 +254,8 @@ class MissionSM(object):
         self.gpio        = _setup_gpio()
         self.gpio_pin    = int(BUTTON_GPIO) if BUTTON_GPIO else None
         self._btn_held_since = None
+        # Start from current max event id so we don't replay old button presses
+        self._last_button_event_id = _get_max_event_id()
 
     def _transition(self, new_state):
         allowed = TRANSITIONS.get(self.state, [])
@@ -242,6 +313,25 @@ class MissionSM(object):
                     log.info("Button: short press -> field event")
                     _post_state(self.mission_id, "FIELD_RUNNING")
 
+    def _handle_esp32_button(self):
+        """React to button_press / button_hold events sent by the ESP32 RX."""
+        events = _poll_button_events(self._last_button_event_id)
+        for ev in events:
+            self._last_button_event_id = ev["id"]
+            event_type = ev.get("event_type", "")
+
+            key = (self.state, event_type)
+            target = BUTTON_TRANSITIONS.get(key)
+
+            if target:
+                log.info("Button %s in %s -> %s", event_type, self.state, target)
+                self._transition(target)
+            elif self.state == "FIELD_RUNNING" and event_type == "button_press":
+                # Short press during field run = mark waypoint
+                _insert_waypoint(self.mission_id)
+            else:
+                log.debug("Button %s ignored in state %s", event_type, self.state)
+
     def run(self):
         log.info("Mission state machine starting (device=%s)", DEVICE_ID)
 
@@ -259,6 +349,7 @@ class MissionSM(object):
             try:
                 self._handle_commands()
                 self._handle_button()
+                self._handle_esp32_button()
             except Exception as e:
                 log.exception("SM loop error: %s", e)
             time.sleep(POLL_S)
