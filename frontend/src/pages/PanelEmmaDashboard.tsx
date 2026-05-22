@@ -121,6 +121,16 @@ function PanelHeader({ userName, onLogout }: { userName?: string; onLogout: () =
           {userName && (
             <span className="text-xs text-white/50 hidden sm:inline truncate max-w-[180px]">{userName}</span>
           )}
+          <a
+            href="/archivos"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hidden sm:flex items-center gap-1.5 text-[11px] font-semibold px-3 py-1.5 rounded-full border border-teal-500/30 text-teal-300 bg-teal-500/[0.08] hover:bg-teal-500/[0.14] transition-colors"
+          >
+            <Leaf className="h-3.5 w-3.5" />
+            /archivos
+            <ExternalLink className="h-3 w-3 opacity-60" />
+          </a>
           <span className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full border border-accent/40 text-accent bg-accent/10">
             super-admin
           </span>
@@ -1337,7 +1347,24 @@ export default function PanelEmmaDashboard() {
               emptyLabel="Aún no hay videos en esta categoría."
             />
           </TabsContent>
-          <TabsContent value="docs" className="mt-5">
+          <TabsContent value="docs" className="mt-5 space-y-4">
+            <div className="rounded-lg border border-teal-500/25 bg-teal-500/[0.06] p-3 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <Leaf className="h-4 w-4 text-teal-400 shrink-0" />
+                <p className="text-xs text-teal-100/80 leading-relaxed">
+                  Los documentos añadidos aquí aparecen <span className="font-semibold text-teal-200">automáticamente</span> en la Biblioteca de Archivos — sin necesidad de publicar.
+                </p>
+              </div>
+              <a
+                href="/archivos"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="shrink-0 flex items-center gap-1 text-[11px] font-semibold text-teal-300 hover:text-teal-200 border border-teal-500/25 rounded-lg px-2.5 py-1 bg-teal-500/[0.08] hover:bg-teal-500/[0.14] transition-colors"
+              >
+                Ver biblioteca
+                <ExternalLink className="h-3 w-3" />
+              </a>
+            </div>
             <ContentSection
               kind="document"
               accept=".pdf,.md,.txt,.doc,.docx,.xlsx,.pptx"
