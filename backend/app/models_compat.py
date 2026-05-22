@@ -48,6 +48,8 @@ class CompatReading(db.Model):
     )
     # Optional dedup reference — set when the reading arrived as part of a packet
     packet_id = db.Column(db.String(128), nullable=True, index=True)
+    # Mission reference — set when the reading is associated with a field mission
+    mission_id = db.Column(db.String(128), nullable=True, index=True)
 
 
 class IngestPacket(db.Model):

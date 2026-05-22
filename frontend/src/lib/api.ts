@@ -22,7 +22,14 @@ import type {
   DevicesResponse,
   DeviceRecord,
   SyncStatusResponse,
+  Mission,
+  MissionsResponse,
+  MissionResponse,
+  SendCommandRequest,
+  CommandResponse,
 } from "@/types/dashboard";
+
+export type { Mission };
 
 const API_BASE = "/api/v1";
 const REQUEST_TIMEOUT = 8000;
@@ -290,3 +297,22 @@ export const getDevice = (deviceId: string) =>
 // ─── Sync coordination (/api/v1/sync) ────────────────────────
 export const getSyncStatus = () =>
   request<SyncStatusResponse>("/sync/status");
+
+// ─── Mission system (/api/v1/missions) ───────────────────────
+export const getMissions = (params?: { device_id?: string; state?: string; limit?: number }) => {
+  const qs = new URLSearchParams();
+  if (params?.device_id) qs.set("device_id", params.device_id);
+  if (params?.state) qs.set("state", params.state);
+  if (params?.limit != null) qs.set("limit", String(params.limit));
+  const query = qs.toString() ? `?${qs.toString()}` : "";
+  return request<MissionsResponse>(`/missions${query}`);
+};
+
+export const getMission = (missionId: string) =>
+  request<MissionResponse>(`/missions/${encodeURIComponent(missionId)}`);
+
+export const sendCommand = (body: SendCommandRequest) =>
+  request<CommandResponse>("/commands", {
+    method: "POST",
+    body: JSON.stringify(body),
+  });

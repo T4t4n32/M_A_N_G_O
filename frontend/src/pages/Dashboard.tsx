@@ -6,6 +6,7 @@ import { ImuPanel } from "@/components/dashboard/ImuPanel";
 import { SystemStatusBar } from "@/components/dashboard/SystemStatusBar";
 import { NotificationsPanel } from "@/components/dashboard/NotificationsPanel";
 import { GrafanaSection } from "@/components/dashboard/GrafanaSection";
+import { MissionPanel } from "@/components/dashboard/MissionPanel";
 import { docs } from "@/components/DocumentationSection";
 import { TierGate } from "@/components/dashboard/TierGate";
 import { useAuth } from "@/hooks/useAuth";
@@ -17,7 +18,7 @@ import { useSustainedAlerts } from "@/hooks/useSustainedAlerts";
 import type { SensorType } from "@/types/dashboard";
 import {
   Activity, BarChart3, Bell, PanelTop, Lock,
-  ExternalLink,
+  ExternalLink, Target,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import BorderGlow from "@/components/effects/BorderGlow";
@@ -144,6 +145,7 @@ const bubbleItems = [
   { label: "Historial", href: "#historial",          rotation:  6, hoverStyles: { bgColor: "hsl(204,70%,53%)",  textColor: "#fff" } },
   { label: "Avisos",    href: "#notificaciones",     rotation: -4, hoverStyles: { bgColor: "hsl(38,90%,55%)",   textColor: "#0b0b0b" } },
   { label: "Grafana",   href: "#grafana",            rotation:  5, hoverStyles: { bgColor: "hsl(180,55%,42%)",  textColor: "#fff" } },
+  { label: "Misiones",  href: "#misiones",           rotation:  3, hoverStyles: { bgColor: "hsl(168,72%,42%)",  textColor: "#fff" } },
   { label: "Archivos",  href: "/archivos",            rotation: -3, hoverStyles: { bgColor: "hsl(38,90%,55%)",   textColor: "#0b0b0b" } },
   { label: "Inicio",    href: "/",                   rotation:  4, hoverStyles: { bgColor: "hsl(195,70%,48%)",  textColor: "#fff" } },
 ];
@@ -363,6 +365,18 @@ export default function Dashboard() {
         >
           <SectionTitle icon={Lock}>Archivos — Acceso Restringido</SectionTitle>
           <ArchivosSummaryCard navigate={navigate} />
+        </motion.section>
+
+        {/* ── MISSION CONTROL ─────────────────────────────────────────────── */}
+        <motion.section
+          id="misiones"
+          initial="hidden"
+          animate="show"
+          variants={sectionIn}
+          aria-label="Control de Misiones"
+        >
+          <SectionTitle icon={Target}>Control de Misiones</SectionTitle>
+          <MissionPanel isAdmin={isAdmin} />
         </motion.section>
 
       </main>

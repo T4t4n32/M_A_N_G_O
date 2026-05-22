@@ -315,6 +315,58 @@ export interface SyncStatusResponse {
   devices: Array<DeviceRecord & { sync_state: string }>;
 }
 
+// ─── Mission system ───────────────────────────────────────────
+export type MissionState =
+  | "BOOT" | "SELF_CHECK" | "IDLE" | "ARMED"
+  | "FIELD_RUNNING" | "PAUSED" | "RETURNING"
+  | "ERROR" | "MISSION_FINISHED" | "SYNCING" | "STANDBY";
+
+export interface Mission {
+  id: number;
+  mission_id: string;
+  device_id: string | null;
+  state: MissionState;
+  started_at: string | null;
+  ended_at: string | null;
+  duration_seconds: number | null;
+  summary: Record<string, unknown> | null;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface MissionsResponse {
+  missions: Mission[];
+}
+
+export interface MissionResponse {
+  mission: Mission;
+}
+
+export type MissionCommand =
+  | "ARM" | "START_FIELD" | "START_TEST"
+  | "PAUSE" | "RESUME" | "STOP"
+  | "SYNC_DATA" | "CALIBRATE_SENSOR";
+
+export interface SendCommandRequest {
+  device_id: string;
+  command: MissionCommand | string;
+  mission_id?: string;
+  params?: Record<string, unknown>;
+}
+
+export interface CommandResponse {
+  ok: boolean;
+  command: {
+    id: number;
+    device_id: string;
+    mission_id: string | null;
+    command: string;
+    status: string;
+    issued_at: string;
+  };
+}
+
 // IMU / BNO080 types (future)
 export type ImuState =
   | "not_configured"
