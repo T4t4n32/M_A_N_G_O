@@ -13,8 +13,6 @@ Expected ESP32 output (one JSON object per line):
   {"type":"event","mission_id":"...","event_type":"button_press","data":{...}}
 """
 
-from __future__ import annotations
-
 import json
 import logging
 import os
