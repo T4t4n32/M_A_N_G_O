@@ -58,7 +58,7 @@ def _require_admin(fn):
 # POST / — usuario envía solicitud
 # ------------------------------------------------------------------
 
-@access_requests_bp.post("/")
+@access_requests_bp.post("/", strict_slashes=False)
 @_require_auth
 def submit_request():
     user = _current_user()
@@ -116,7 +116,7 @@ def my_requests():
 # GET / — admin lista solicitudes (filtrable por status)
 # ------------------------------------------------------------------
 
-@access_requests_bp.get("/")
+@access_requests_bp.get("/", strict_slashes=False)
 @_require_admin
 def list_requests():
     status = request.args.get("status")  # pending | approved | rejected
