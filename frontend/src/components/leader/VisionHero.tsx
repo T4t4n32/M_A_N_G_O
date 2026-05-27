@@ -142,8 +142,9 @@ function MilestoneChipCard({
   const Icon = colors.Icon;
   return (
     <button
+      type="button"
       onClick={onClick}
-      className={`group relative rounded-xl overflow-hidden text-left cursor-pointer transition-all duration-300 hover:scale-[1.02] active:scale-100 ${fullWidth ? "w-full" : ""}`}
+      className={`group relative rounded-xl overflow-hidden text-left cursor-pointer transition-all duration-300 hover:scale-[1.02] active:scale-100 touch-manipulation select-none ${fullWidth ? "w-full" : ""}`}
       style={{
         border: `1px solid ${colors.border}`,
         background: colors.glow.replace("0.22", "0.05"),
@@ -272,6 +273,7 @@ export default function VisionHero() {
             )}
 
             <button
+              type="button"
               ref={cardRef}
               onClick={() => toggleFlip("click")}
               onKeyDown={(e) => {
@@ -449,6 +451,7 @@ export default function VisionHero() {
 
                 {/* INICIOS — expandable */}
                 <button
+                  type="button"
                   onClick={() => toggleChip("inicios")}
                   aria-expanded={expandedChip === "inicios"}
                   aria-controls="inicios-expansion"
@@ -484,6 +487,7 @@ export default function VisionHero() {
 
                 {/* VISIÓN — expandable */}
                 <button
+                  type="button"
                   onClick={() => toggleChip("vision")}
                   aria-expanded={expandedChip === "vision"}
                   aria-controls="vision-expansion"
