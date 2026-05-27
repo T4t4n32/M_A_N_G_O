@@ -98,26 +98,39 @@ function MobileLightbox({
 
 function MobileImageGrid({ images }: { images: { src: string; alt: string }[] }) {
   const [lightboxIdx, setLightboxIdx] = useState<number | null>(null);
+  const cols = images.length === 1 ? "grid-cols-1" : images.length === 2 ? "grid-cols-2" : "grid-cols-2 sm:grid-cols-3";
 
   return (
     <>
-      <div className="grid grid-cols-2 gap-2">
+      <div className={`grid ${cols} gap-2`}>
         {images.map((img, i) => (
           <button
             key={i}
+            type="button"
             onClick={() => setLightboxIdx(i)}
-            className="relative aspect-square rounded-xl overflow-hidden border border-white/[0.06] bg-black/30 group"
+            className="relative rounded-xl overflow-hidden border border-white/[0.06] bg-black/30
+                       group touch-manipulation select-none"
+            style={{ aspectRatio: images.length === 1 ? "16/9" : "1" }}
+            aria-label={img.alt || `Foto ${i + 1}`}
           >
             <img
               src={img.src}
               alt={img.alt}
               loading="lazy"
               decoding="async"
-              className="w-full h-full object-cover transition-transform duration-300 group-active:scale-95"
+              className="w-full h-full object-cover transition-transform duration-200 group-active:scale-[0.97]"
             />
-            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
-              <ZoomIn className="h-6 w-6 text-white/0 group-hover:text-white/80 transition-colors" />
+            <div className="absolute inset-0 bg-black/0 active:bg-black/25 transition-colors
+                            flex items-center justify-center pointer-events-none">
+              <ZoomIn className="h-5 w-5 text-white/0 group-hover:text-white/70 transition-colors" />
             </div>
+            {/* Photo counter badge */}
+            {i === 0 && images.length > 1 && (
+              <span className="absolute bottom-1.5 right-1.5 bg-black/60 text-white/80 text-[10px]
+                               px-1.5 py-0.5 rounded-full font-mono backdrop-blur-sm pointer-events-none">
+                {images.length}
+              </span>
+            )}
           </button>
         ))}
       </div>
@@ -233,7 +246,18 @@ export default function ImmersivePanel({
   }, [filteredMedia]);
 
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen) {
+      // Force-close any DomeGallery fullscreen that may have been left open —
+      // if not cleaned up the backdrop (z-index 99998) blocks all page clicks.
+      document.querySelectorAll('.dg-fullscreen-backdrop').forEach(el => el.remove());
+      const dg = document.querySelector('.dg-fullscreen-enlarge') as HTMLElement | null;
+      if (dg) {
+        dg.style.pointerEvents = 'none';
+        dg.remove();
+      }
+      document.body.classList.remove('dg-scroll-lock');
+      return;
+    }
     setActiveFilter(null);
     document.body.style.overflow = "hidden";
     const handler = (e: KeyboardEvent) => {
@@ -335,13 +359,14 @@ export default function ImmersivePanel({
 
                   {/* Subcategory filters */}
                   {hasFilters && (
-                    <div className="flex gap-1.5 flex-wrap mb-3">
+                    <div className="flex gap-2 flex-wrap mb-3 -mx-0.5">
                       <button
+                        type="button"
                         onClick={() => setActiveFilter(null)}
-                        className={`px-3 py-1 rounded-full text-xs font-medium transition-all border touch-manipulation ${
+                        className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all border touch-manipulation select-none ${
                           activeFilter === null
                             ? "bg-accent/20 border-accent/40 text-accent"
-                            : "bg-white/[0.04] border-white/[0.08] text-white/50"
+                            : "bg-white/[0.04] border-white/[0.08] text-white/50 active:bg-white/[0.08]"
                         }`}
                       >
                         Todas ({media.filter((m) => m.type === "image").length})
@@ -349,11 +374,12 @@ export default function ImmersivePanel({
                       {subcategories.map((sub) => (
                         <button
                           key={sub}
+                          type="button"
                           onClick={() => setActiveFilter(sub)}
-                          className={`px-3 py-1 rounded-full text-xs font-medium transition-all border touch-manipulation ${
+                          className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all border touch-manipulation select-none ${
                             activeFilter === sub
                               ? "bg-accent/20 border-accent/40 text-accent"
-                              : "bg-white/[0.04] border-white/[0.08] text-white/50"
+                              : "bg-white/[0.04] border-white/[0.08] text-white/50 active:bg-white/[0.08]"
                           }`}
                         >
                           {sub} ({media.filter((m) => m.subcategory === sub && m.type === "image").length})
@@ -420,7 +446,7 @@ export default function ImmersivePanel({
 
               {/* Narrative */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-4">
+                <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-4 sm:p-5">
                   <h3 className="text-white/35 text-[11px] font-semibold uppercase tracking-wider mb-2 text-center">
                     Historia
                   </h3>
@@ -430,7 +456,7 @@ export default function ImmersivePanel({
                 {extraContent}
 
                 {narrative !== description && description && (
-                  <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-4">
+                  <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-4 sm:p-5">
                     <h3 className="text-white/35 text-[11px] font-semibold uppercase tracking-wider mb-2 text-center">
                       Valor
                     </h3>

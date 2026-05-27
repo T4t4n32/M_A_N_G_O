@@ -608,7 +608,9 @@ export default function DomeGallery({
     // Close handler
     const closeFullscreen = () => {
       if (performance.now() - openStartedAtRef.current < 250) return;
-      
+
+      // Disable pointer events immediately so nothing under the overlay is blocked
+      backdrop.style.pointerEvents = 'none';
       overlay.style.opacity = '0';
       backdrop.style.opacity = '0';
 
@@ -687,10 +689,18 @@ export default function DomeGallery({
   // Scrim click no longer needed for close — fullscreen backdrop handles it
   // Keep scrim for visual consistency only
 
-  // Clean up on unmount
+  // Clean up on unmount — also remove any lingering fullscreen backdrop/overlay
   useEffect(() => {
     return () => {
       document.body.classList.remove('dg-scroll-lock');
+      // If the panel closes while a fullscreen image is open, the backdrop stays
+      // on document.body blocking all pointer events — force-remove it.
+      document.querySelectorAll('.dg-fullscreen-backdrop').forEach(el => el.remove());
+      const overlay = document.querySelector('.dg-fullscreen-enlarge') as HTMLElement | null;
+      if (overlay) {
+        overlay.style.pointerEvents = 'none';
+        overlay.remove();
+      }
     };
   }, []);
 

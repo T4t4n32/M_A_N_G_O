@@ -103,8 +103,9 @@ function PilarCard({
 
   return (
     <button
+      type="button"
       onClick={onClick}
-      className="group relative rounded-2xl overflow-hidden border bg-white/[0.02] hover:bg-white/[0.04] transition-all duration-500 cursor-pointer text-left w-full"
+      className="group relative rounded-2xl overflow-hidden border bg-white/[0.02] hover:bg-white/[0.04] active:bg-white/[0.06] transition-all duration-300 cursor-pointer text-left w-full touch-manipulation select-none"
       style={{
         borderColor: glowBorder,
         boxShadow: `0 0 28px ${glowFaint}`,
@@ -277,7 +278,7 @@ export default function PilaresSection() {
           Logros que definen el camino · Orden cronológico
         </p>
 
-        <div className="grid md:grid-cols-3 gap-4 md:gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
           {pilares.map((pilar, index) => (
             <PilarCard
               key={pilar.id}
