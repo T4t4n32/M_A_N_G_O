@@ -58,7 +58,7 @@ export interface MetricsResponse {
   available: SensorType[];
 }
 
-export type UserRole = "admin" | "viewer";
+export type UserRole = "admin" | "estudiante" | "institucional";
 
 export type TierName =
   | "none"
@@ -123,7 +123,7 @@ export interface RegisterRequest {
   email: string;
   password: string;
   name: string;
-  role: UserRole;
+  role: "estudiante" | "institucional";
 }
 
 export interface UserRecord {
