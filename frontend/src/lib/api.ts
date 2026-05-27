@@ -202,6 +202,18 @@ export const changeUserPassword = (userId: number, password: string) =>
     body: JSON.stringify({ new_password: password }),
   });
 
+export const updateUserName = (userId: number, name: string) =>
+  request<{ ok: boolean }>(`/users/${userId}/name`, {
+    method: "PATCH",
+    body: JSON.stringify({ name }),
+  });
+
+export const changeUserRole = (userId: number, role: string) =>
+  request<{ ok: boolean }>(`/users/${userId}/role`, {
+    method: "PATCH",
+    body: JSON.stringify({ role }),
+  });
+
 export const execCommand = (command: string, target: "vps" | "jetson") =>
   request<{ stdout: string; stderr: string; returncode: number }>("/admin/exec", {
     method: "POST",

@@ -32,6 +32,9 @@ from app.models.user import MangoLoginEvent, MangoUser
 
 users_bp = Blueprint("users", __name__, url_prefix="/api/v1/users")
 
+SUPER_ADMIN_EMAIL = "mangossc@gmail.com"
+ASSIGNABLE_ROLES  = ("estudiante", "institucional")
+
 
 def _utcnow() -> datetime:
     return datetime.now(timezone.utc)
@@ -44,6 +47,10 @@ def _current_user() -> MangoUser | None:
     return db.session.get(MangoUser, uid)
 
 
+def _is_super_admin(user: MangoUser) -> bool:
+    return user.role == "admin" and user.email == SUPER_ADMIN_EMAIL
+
+
 def _require_auth(fn):
     @wraps(fn)
     def wrapper(*args, **kwargs):
@@ -54,14 +61,14 @@ def _require_auth(fn):
     return wrapper
 
 
-def _require_admin(fn):
+def _require_super_admin(fn):
     @wraps(fn)
     def wrapper(*args, **kwargs):
         user = _current_user()
         if not user or not user.active:
             return jsonify({"error": "unauthorized"}), 401
-        if user.role != "admin":
-            return jsonify({"error": "forbidden", "message": "Solo administradores"}), 403
+        if not _is_super_admin(user):
+            return jsonify({"error": "forbidden", "message": "Acceso exclusivo al administrador principal"}), 403
         return fn(*args, **kwargs)
     return wrapper
 
@@ -102,7 +109,7 @@ def register():
     email    = (data.get("email") or "").strip().lower()
     password = data.get("password") or ""
     name     = (data.get("name") or "").strip()
-    role     = data.get("role", "viewer")
+    role     = data.get("role", "estudiante")
 
     if not email or not password:
         return jsonify({"error": "email y password son requeridos"}), 400
@@ -110,37 +117,35 @@ def register():
     if len(password) < 8:
         return jsonify({"error": "El password debe tener al menos 8 caracteres"}), 400
 
-    if role not in ("admin", "viewer"):
-        role = "viewer"
+    if role not in ASSIGNABLE_ROLES:
+        role = "estudiante"
 
     is_first = not _first_user_exists()
 
-    if not is_first:
-        current = _current_user()
-        if not current or current.role != "admin":
+    if is_first:
+        if email != SUPER_ADMIN_EMAIL:
             return jsonify({
                 "error": "forbidden",
-                "message": "Solo un administrador puede registrar nuevos usuarios",
+                "message": "El primer registro debe ser el administrador principal",
+            }), 403
+        role = "admin"
+    else:
+        current = _current_user()
+        if not current or not _is_super_admin(current):
+            return jsonify({
+                "error": "forbidden",
+                "message": "Solo el administrador principal puede registrar nuevos usuarios",
             }), 403
 
     if MangoUser.query.filter_by(email=email).first():
         return jsonify({"error": "El email ya está registrado"}), 409
 
-    user = MangoUser(
-        email=email,
-        name=name,
-        role="admin" if is_first else role,
-        active=True,
-    )
+    user = MangoUser(email=email, name=name, role=role, active=True)
     user.set_password(password)
     db.session.add(user)
     db.session.commit()
 
-    return jsonify({
-        "ok":       True,
-        "user":     user.to_dict(),
-        "is_first": is_first,
-    }), 201
+    return jsonify({"ok": True, "user": user.to_dict(), "is_first": is_first}), 201
 
 
 # ------------------------------------------------------------------
@@ -251,14 +256,14 @@ def my_history():
 # ------------------------------------------------------------------
 
 @users_bp.get("/")
-@_require_admin
+@_require_super_admin
 def list_users():
     users = MangoUser.query.order_by(MangoUser.created_at.desc()).all()
     return jsonify([u.to_dict() for u in users]), 200
 
 
 @users_bp.get("/<int:user_id>/history")
-@_require_admin
+@_require_super_admin
 def user_history(user_id: int):
     user  = db.get_or_404(MangoUser, user_id)
     limit = min(int(request.args.get("limit", 50)), 500)
@@ -276,17 +281,16 @@ def user_history(user_id: int):
 
 
 @users_bp.patch("/<int:user_id>/role")
-@_require_admin
+@_require_super_admin
 def change_role(user_id: int):
-    user    = db.get_or_404(MangoUser, user_id)
-    data    = request.get_json(silent=True) or {}
-    role    = data.get("role")
-    current = _current_user()
+    user = db.get_or_404(MangoUser, user_id)
+    data = request.get_json(silent=True) or {}
+    role = data.get("role")
 
-    if role not in ("admin", "viewer"):
-        return jsonify({"error": "role debe ser 'admin' o 'viewer'"}), 400
-    if user.id == current.id:
-        return jsonify({"error": "No puedes cambiar tu propio rol"}), 400
+    if role not in ASSIGNABLE_ROLES:
+        return jsonify({"error": f"role debe ser uno de: {', '.join(ASSIGNABLE_ROLES)}"}), 400
+    if user.email == SUPER_ADMIN_EMAIL:
+        return jsonify({"error": "No se puede cambiar el rol del administrador principal"}), 400
 
     user.role = role
     db.session.commit()
@@ -294,7 +298,7 @@ def change_role(user_id: int):
 
 
 @users_bp.patch("/<int:user_id>/active")
-@_require_admin
+@_require_super_admin
 def toggle_active(user_id: int):
     user    = db.get_or_404(MangoUser, user_id)
     data    = request.get_json(silent=True) or {}
@@ -302,6 +306,8 @@ def toggle_active(user_id: int):
 
     if user.id == current.id:
         return jsonify({"error": "No puedes desactivarte a ti mismo"}), 400
+    if user.email == SUPER_ADMIN_EMAIL:
+        return jsonify({"error": "No se puede desactivar al administrador principal"}), 400
 
     user.active = bool(data.get("active", not user.active))
     db.session.commit()
@@ -309,13 +315,12 @@ def toggle_active(user_id: int):
 
 
 @users_bp.delete("/<int:user_id>")
-@_require_admin
+@_require_super_admin
 def delete_user(user_id: int):
-    user    = db.get_or_404(MangoUser, user_id)
-    current = _current_user()
+    user = db.get_or_404(MangoUser, user_id)
 
-    if user.id == current.id:
-        return jsonify({"error": "No puedes eliminarte a ti mismo"}), 400
+    if user.email == SUPER_ADMIN_EMAIL:
+        return jsonify({"error": "No se puede eliminar al administrador principal"}), 400
 
     db.session.delete(user)
     db.session.commit()
@@ -346,8 +351,20 @@ def change_own_password():
     return jsonify({"ok": True}), 200
 
 
+@users_bp.patch("/<int:user_id>/name")
+@_require_super_admin
+def update_user_name(user_id: int):
+    user = db.get_or_404(MangoUser, user_id)
+    data = request.get_json(silent=True) or {}
+    name = (data.get("name") or "").strip()
+
+    user.name = name
+    db.session.commit()
+    return jsonify({"ok": True, "user": user.to_dict()}), 200
+
+
 @users_bp.patch("/<int:user_id>/password")
-@_require_admin
+@_require_super_admin
 def reset_user_password(user_id: int):
     user    = db.get_or_404(MangoUser, user_id)
     data    = request.get_json(silent=True) or {}
@@ -368,7 +385,7 @@ def reset_user_password(user_id: int):
 # ------------------------------------------------------------------
 
 @users_bp.get("/<int:user_id>/subscription")
-@_require_admin
+@_require_super_admin
 def user_subscription(user_id: int):
     user = db.get_or_404(MangoUser, user_id)
     sub  = UserSubscription.active_for_user(user.id)
@@ -386,7 +403,7 @@ def user_subscription(user_id: int):
 
 
 @users_bp.get("/<int:user_id>/subscriptions/history")
-@_require_admin
+@_require_super_admin
 def user_subscription_history(user_id: int):
     user  = db.get_or_404(MangoUser, user_id)
     limit = min(int(request.args.get("limit", 50)), 200)

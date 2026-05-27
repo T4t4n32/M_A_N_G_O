@@ -17,7 +17,7 @@ class MangoUser(db.Model):
     id         = db.Column(db.Integer, primary_key=True)
     email      = db.Column(db.String(255), unique=True, nullable=False, index=True)
     name       = db.Column(db.String(120), nullable=True, default="")
-    role       = db.Column(db.String(32),  nullable=False, default="viewer", index=True)
+    role       = db.Column(db.String(32),  nullable=False, default="estudiante", index=True)
     pw_hash    = db.Column(db.String(255), nullable=False)
     active     = db.Column(db.Boolean,     nullable=False, default=True, index=True)
 

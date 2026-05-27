@@ -80,7 +80,7 @@ def cmd_users_create(args) -> int:
     email    = (args.email or "").strip().lower()
     password = args.password or ""
     name     = (args.name or "").strip()
-    role     = args.role or "viewer"
+    role     = args.role or "estudiante"
 
     if not email or not password:
         print("ERROR: --email and --password are required")
@@ -88,8 +88,8 @@ def cmd_users_create(args) -> int:
     if len(password) < 8:
         print("ERROR: password must be at least 8 characters")
         return 1
-    if role not in ("admin", "viewer"):
-        print("ERROR: --role must be 'admin' or 'viewer'")
+    if role not in ("admin", "estudiante", "institucional"):
+        print("ERROR: --role must be 'admin', 'estudiante', or 'institucional'")
         return 1
 
     if MangoUser.query.filter_by(email=email).first():
@@ -259,7 +259,7 @@ def build_parser() -> argparse.ArgumentParser:
     create_p.add_argument("--email",    required=True)
     create_p.add_argument("--password", required=True)
     create_p.add_argument("--name",     default="")
-    create_p.add_argument("--role",     default="viewer", choices=["admin", "viewer"])
+    create_p.add_argument("--role",     default="estudiante", choices=["admin", "estudiante", "institucional"])
 
     passwd_p = users_sub.add_parser("passwd", help="Reset password for an existing user")
     passwd_p.add_argument("--email",    required=True)

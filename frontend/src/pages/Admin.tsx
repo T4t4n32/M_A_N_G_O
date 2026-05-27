@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getUsers, register, deleteUser, changeUserPassword, getAccessRequests, approveAccessRequest, rejectAccessRequest, ApiError } from "@/lib/api";
+import { getUsers, register, deleteUser, changeUserPassword, updateUserName, changeUserRole, getAccessRequests, approveAccessRequest, rejectAccessRequest, ApiError } from "@/lib/api";
 import { handleApiError } from "@/lib/errorHandler";
 import type { UserRecord, UserRole, AccessRequestRecord, TierName } from "@/types/dashboard";
 import { TIER_LABELS } from "@/types/dashboard";
+
+const SUPER_ADMIN_EMAIL = "mangossc@gmail.com";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -39,6 +41,9 @@ import {
   Check,
   X,
   Monitor,
+  GraduationCap,
+  Building2,
+  Pencil,
 } from "lucide-react";
 import { DevicesPanel } from "@/components/admin/DevicesPanel";
 import { motion } from "framer-motion";
@@ -186,13 +191,23 @@ export default function Admin() {
   const [regPassword, setRegPassword] = useState("");
   const [regShowPw, setRegShowPw] = useState(false);
   const [regName, setRegName] = useState("");
-  const [regRole, setRegRole] = useState<UserRole>("viewer");
+  const [regRole, setRegRole] = useState<"estudiante" | "institucional">("estudiante");
   const [regError, setRegError] = useState<string | null>(null);
   const [regSuccess, setRegSuccess] = useState<string | null>(null);
 
-  // Password change state: userId → { open, value, show, loading, error, success }
+  // Password change state: userId → { open, value, show, error, success }
   const [pwState, setPwState] = useState<Record<number, {
     open: boolean; value: string; show: boolean; error: string | null; success: boolean;
+  }>>({});
+
+  // Name edit state: userId → { open, value, error, success }
+  const [nameState, setNameState] = useState<Record<number, {
+    open: boolean; value: string; error: string | null; success: boolean;
+  }>>({});
+
+  // Role edit state: userId → { open, value, error, success }
+  const [roleState, setRoleState] = useState<Record<number, {
+    open: boolean; value: string; error: string | null; success: boolean;
   }>>({});
 
   const togglePwRow = (id: number) =>
@@ -202,6 +217,56 @@ export default function Admin() {
         ? { open: false, value: "", show: false, error: null, success: false }
         : { open: true, value: "", show: false, error: null, success: false },
     }));
+
+  const toggleNameRow = (id: number, currentName: string) =>
+    setNameState((prev) => ({
+      ...prev,
+      [id]: prev[id]?.open
+        ? { open: false, value: "", error: null, success: false }
+        : { open: true, value: currentName || "", error: null, success: false },
+    }));
+
+  const toggleRoleRow = (id: number, currentRole: string) =>
+    setRoleState((prev) => ({
+      ...prev,
+      [id]: prev[id]?.open
+        ? { open: false, value: "", error: null, success: false }
+        : { open: true, value: currentRole, error: null, success: false },
+    }));
+
+  const nameChangeMutation = useMutation({
+    mutationFn: ({ id, name }: { id: number; name: string }) => updateUserName(id, name),
+    onSuccess: (_, { id }) => {
+      setNameState((prev) => ({
+        ...prev,
+        [id]: { open: false, value: "", error: null, success: true },
+      }));
+      setTimeout(() =>
+        setNameState((prev) => ({ ...prev, [id]: { ...prev[id], success: false } })), 2500);
+      queryClient.invalidateQueries({ queryKey: ["admin-users"] });
+    },
+    onError: (err, { id }) => {
+      const msg = err instanceof ApiError ? err.message : "Error al actualizar nombre";
+      setNameState((prev) => ({ ...prev, [id]: { ...prev[id], error: msg } }));
+    },
+  });
+
+  const roleChangeMutation = useMutation({
+    mutationFn: ({ id, role }: { id: number; role: string }) => changeUserRole(id, role),
+    onSuccess: (_, { id }) => {
+      setRoleState((prev) => ({
+        ...prev,
+        [id]: { open: false, value: "", error: null, success: true },
+      }));
+      setTimeout(() =>
+        setRoleState((prev) => ({ ...prev, [id]: { ...prev[id], success: false } })), 2500);
+      queryClient.invalidateQueries({ queryKey: ["admin-users"] });
+    },
+    onError: (err, { id }) => {
+      const msg = err instanceof ApiError ? err.message : "Error al cambiar categoría";
+      setRoleState((prev) => ({ ...prev, [id]: { ...prev[id], error: msg } }));
+    },
+  });
 
   const pwChangeMutation = useMutation({
     mutationFn: ({ id, password }: { id: number; password: string }) =>
@@ -237,7 +302,7 @@ export default function Admin() {
       setRegEmail("");
       setRegPassword("");
       setRegName("");
-      setRegRole("viewer");
+      setRegRole("estudiante");
       queryClient.invalidateQueries({ queryKey: ["admin-users"] });
     },
     onError: (err: unknown) => {
@@ -282,12 +347,23 @@ export default function Admin() {
     });
   };
 
-  const roleIcon = (role: UserRole) =>
-    role === "admin" ? (
-      <Shield className="h-3.5 w-3.5 text-amber-400" />
-    ) : (
-      <Eye className="h-3.5 w-3.5 text-blue-400" />
-    );
+  const roleIcon = (role: UserRole) => {
+    if (role === "admin")         return <Shield         className="h-3.5 w-3.5 text-amber-400"  />;
+    if (role === "institucional") return <Building2      className="h-3.5 w-3.5 text-purple-400" />;
+    return                               <GraduationCap className="h-3.5 w-3.5 text-blue-400"   />;
+  };
+
+  const roleLabel = (role: UserRole) => {
+    if (role === "admin")         return "Administrador";
+    if (role === "institucional") return "Institucional";
+    return "Estudiante";
+  };
+
+  const roleColor = (role: UserRole) => {
+    if (role === "admin")         return "text-amber-300";
+    if (role === "institucional") return "text-purple-300";
+    return "text-blue-300";
+  };
 
   return (
     <div className="min-h-screen bg-[hsl(205,35%,8%)] relative">
@@ -428,18 +504,18 @@ export default function Admin() {
                   </div>
                 </div>
                 <div className="space-y-1.5">
-                  <Label className="text-white/60 text-xs">Rol</Label>
+                  <Label className="text-white/60 text-xs">Categoria</Label>
                   <Select
                     value={regRole}
-                    onValueChange={(v) => setRegRole(v as UserRole)}
+                    onValueChange={(v) => setRegRole(v as "estudiante" | "institucional")}
                     disabled={registerMutation.isPending}
                   >
                     <SelectTrigger className="h-10 bg-white/[0.05] border-white/[0.1] text-white rounded-lg">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="viewer">Viewer</SelectItem>
-                      <SelectItem value="admin">Admin</SelectItem>
+                      <SelectItem value="estudiante">Estudiante</SelectItem>
+                      <SelectItem value="institucional">Institucional</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -540,26 +616,27 @@ export default function Admin() {
                     <TableRow className="border-white/[0.06] hover:bg-transparent">
                       <TableHead className="text-white/50 pl-5">Nombre</TableHead>
                       <TableHead className="text-white/50">Email</TableHead>
-                      <TableHead className="text-white/50">Rol</TableHead>
+                      <TableHead className="text-white/50">Categoria</TableHead>
                       <TableHead className="text-white/50">Accesos</TableHead>
                       <TableHead className="text-white/50 text-right pr-5">Acciones</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {usersQuery.data.map((u) => {
-                      const isSelf = u.email === user?.email;
-                      const adminCount = usersQuery.data!.filter((x) => x.role === "admin").length;
-                      const isLastAdmin = u.role === "admin" && adminCount <= 1;
-                      const canDelete = !isSelf && !isLastAdmin;
-                      const pw = pwState[u.id];
+                      const isSuperAdmin = u.email === SUPER_ADMIN_EMAIL;
+                      const canDelete = !isSuperAdmin;
+                      const canEditRole = !isSuperAdmin;
+                      const pw   = pwState[u.id];
+                      const nm   = nameState[u.id];
+                      const rl   = roleState[u.id];
                       return (
                         <>
                         <TableRow key={u.id} className="border-white/[0.04] hover:bg-white/[0.02]">
                           <TableCell className="text-white/80 font-medium pl-5">
                             {u.name || <span className="text-white/30 italic">Sin nombre</span>}
-                            {isSelf && (
-                              <span className="ml-2 text-[10px] text-[hsl(168,72%,50%)] font-semibold uppercase tracking-wide">
-                                tú
+                            {isSuperAdmin && (
+                              <span className="ml-2 text-[10px] text-amber-400/80 font-semibold uppercase tracking-wide">
+                                principal
                               </span>
                             )}
                           </TableCell>
@@ -567,8 +644,8 @@ export default function Admin() {
                           <TableCell>
                             <span className="inline-flex items-center gap-1.5 text-xs font-medium">
                               {roleIcon(u.role)}
-                              <span className={u.role === "admin" ? "text-amber-300" : "text-blue-300"}>
-                                {u.role}
+                              <span className={roleColor(u.role)}>
+                                {roleLabel(u.role)}
                               </span>
                             </span>
                           </TableCell>
@@ -577,6 +654,32 @@ export default function Admin() {
                           </TableCell>
                           <TableCell className="text-right pr-5">
                             <div className="flex items-center justify-end gap-1">
+                              {/* Edit name button */}
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => toggleNameRow(u.id, u.name || "")}
+                                title="Editar nombre"
+                                className={`${nm?.open ? "text-teal-400 bg-teal-400/10" : "text-white/30 hover:text-teal-400 hover:bg-teal-400/10"}`}
+                              >
+                                {nm?.success
+                                  ? <CheckCircle2 className="h-4 w-4 text-emerald-400" />
+                                  : <Pencil className="h-4 w-4" />}
+                              </Button>
+                              {/* Edit category/role button */}
+                              {canEditRole && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => toggleRoleRow(u.id, u.role)}
+                                  title="Cambiar categoria"
+                                  className={`${rl?.open ? "text-purple-400 bg-purple-400/10" : "text-white/30 hover:text-purple-400 hover:bg-purple-400/10"}`}
+                                >
+                                  {rl?.success
+                                    ? <CheckCircle2 className="h-4 w-4 text-emerald-400" />
+                                    : <GraduationCap className="h-4 w-4" />}
+                                </Button>
+                              )}
                               {/* Change password button */}
                               <Button
                                 variant="ghost"
@@ -605,13 +708,99 @@ export default function Admin() {
                                   <Trash2 className="h-4 w-4" />
                                 </Button>
                               ) : (
-                                <span className="text-[10px] text-white/20 pr-2">
-                                  {isSelf ? "—" : "protegido"}
-                                </span>
+                                <span className="text-[10px] text-white/20 pr-2">protegido</span>
                               )}
                             </div>
                           </TableCell>
                         </TableRow>
+
+                        {/* Inline name edit row */}
+                        {nm?.open && (
+                          <TableRow key={`nm-${u.id}`} className="border-white/[0.04] bg-teal-500/[0.03]">
+                            <TableCell colSpan={5} className="px-5 py-3">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span className="text-[11px] text-teal-300/70 font-medium whitespace-nowrap">
+                                  Nombre para <span className="font-mono">{u.email}</span>:
+                                </span>
+                                <input
+                                  type="text"
+                                  value={nm.value}
+                                  onChange={(e) =>
+                                    setNameState((prev) => ({
+                                      ...prev,
+                                      [u.id]: { ...prev[u.id], value: e.target.value, error: null },
+                                    }))
+                                  }
+                                  placeholder="Nombre completo"
+                                  className="flex-1 min-w-[200px] max-w-xs bg-white/[0.05] border border-white/[0.12] rounded px-3 py-1.5 text-xs text-white placeholder:text-white/25 outline-none focus:border-teal-400/40"
+                                />
+                                <Button
+                                  size="sm"
+                                  disabled={nameChangeMutation.isPending}
+                                  onClick={() => nameChangeMutation.mutate({ id: u.id, name: nm.value })}
+                                  className="bg-teal-500/20 hover:bg-teal-500/30 text-teal-300 border border-teal-500/30 text-xs h-7 px-3"
+                                >
+                                  {nameChangeMutation.isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : "Guardar"}
+                                </Button>
+                                <button
+                                  type="button"
+                                  onClick={() => toggleNameRow(u.id, u.name || "")}
+                                  className="text-white/25 hover:text-white/50"
+                                >
+                                  <X className="h-3.5 w-3.5" />
+                                </button>
+                                {nm.error && (
+                                  <span className="text-[11px] text-red-400 w-full">{nm.error}</span>
+                                )}
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        )}
+
+                        {/* Inline role/category edit row */}
+                        {rl?.open && (
+                          <TableRow key={`rl-${u.id}`} className="border-white/[0.04] bg-purple-500/[0.03]">
+                            <TableCell colSpan={5} className="px-5 py-3">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span className="text-[11px] text-purple-300/70 font-medium whitespace-nowrap">
+                                  Categoria para <span className="font-mono">{u.email}</span>:
+                                </span>
+                                <select
+                                  value={rl.value}
+                                  onChange={(e) =>
+                                    setRoleState((prev) => ({
+                                      ...prev,
+                                      [u.id]: { ...prev[u.id], value: e.target.value, error: null },
+                                    }))
+                                  }
+                                  className="bg-white/[0.05] border border-white/[0.12] rounded px-3 py-1.5 text-xs text-white outline-none focus:border-purple-400/40"
+                                >
+                                  <option value="estudiante">Estudiante</option>
+                                  <option value="institucional">Institucional</option>
+                                </select>
+                                <Button
+                                  size="sm"
+                                  disabled={roleChangeMutation.isPending}
+                                  onClick={() => roleChangeMutation.mutate({ id: u.id, role: rl.value })}
+                                  className="bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 border border-purple-500/30 text-xs h-7 px-3"
+                                >
+                                  {roleChangeMutation.isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : "Guardar"}
+                                </Button>
+                                <button
+                                  type="button"
+                                  onClick={() => toggleRoleRow(u.id, u.role)}
+                                  className="text-white/25 hover:text-white/50"
+                                >
+                                  <X className="h-3.5 w-3.5" />
+                                </button>
+                                {rl.error && (
+                                  <span className="text-[11px] text-red-400 w-full">{rl.error}</span>
+                                )}
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        )}
+
                         {/* Inline password change row */}
                         {pw?.open && (
                           <TableRow key={`pw-${u.id}`} className="border-white/[0.04] bg-amber-500/[0.03]">
