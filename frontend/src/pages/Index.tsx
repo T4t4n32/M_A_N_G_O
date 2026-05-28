@@ -1,10 +1,12 @@
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import { Header } from "@/components/Header";
 import { HeroSection } from "@/components/HeroSection";
 import { ProjectSection } from "@/components/ProjectSection";
 import { Footer } from "@/components/Footer";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import { useSiteSeo } from "@/lib/siteSeo";
+import { syncFromPublished } from "@/lib/siteContent";
+import { useLiveEdit } from "@/contexts/LiveEditContext";
 
 // Lazy-load heavy sections (large image arrays, GSAP masonry, etc.)
 const DocumentationSection = lazy(() =>
@@ -55,6 +57,16 @@ const SectionFallback = () => (
 
 const Index = () => {
   useSiteSeo();
+  const { isEditMode } = useLiveEdit();
+
+  // Sync published content from backend into localStorage so all visitors
+  // see the latest text. Skip during live edit to preserve unsaved drafts.
+  useEffect(() => {
+    if (!isEditMode) {
+      syncFromPublished();
+    }
+  }, [isEditMode]);
+
   return (
     <main className="min-h-screen bg-mango-dark">
       <Header />
