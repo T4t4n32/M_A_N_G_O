@@ -50,7 +50,9 @@ import {
   GripVertical,
   XCircle,
   Type,
+  MonitorPlay,
 } from "lucide-react";
+import { useLiveEdit } from "@/contexts/LiveEditContext";
 import { useToast } from "@/hooks/use-toast";
 import {
   Dialog,
@@ -70,8 +72,8 @@ import {
   hasOverrides,
   clearOverrides,
   categoriesFor,
-  readFileAsDataURL,
   inferFormat,
+  uploadFileToBackend,
 } from "@/lib/panelEmmaContent";
 import {
   SECTIONS,
@@ -104,7 +106,15 @@ function IntegrationNotice({ what, endpoint }: { what: string; endpoint: string 
   );
 }
 
-function PanelHeader({ userName, onLogout }: { userName?: string; onLogout: () => void }) {
+function PanelHeader({
+  userName,
+  onLogout,
+  onLiveEdit,
+}: {
+  userName?: string;
+  onLogout: () => void;
+  onLiveEdit: () => void;
+}) {
   return (
     <header className="bg-white/[0.04] backdrop-blur-xl border-b border-white/10 px-4 sm:px-6 py-3 sticky top-0 z-30">
       <div className="max-w-7xl mx-auto flex items-center justify-between">
@@ -134,6 +144,16 @@ function PanelHeader({ userName, onLogout }: { userName?: string; onLogout: () =
           <span className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full border border-accent/40 text-accent bg-accent/10">
             super-admin
           </span>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onLiveEdit}
+            className="text-orange-300 hover:text-orange-200 hover:bg-orange-500/10 border border-orange-400/30 hover:border-orange-400/60"
+            title="Activar Modo Edición en Vivo"
+          >
+            <MonitorPlay className="h-4 w-4" />
+            <span className="hidden sm:inline ml-1 text-xs">Edición en Vivo</span>
+          </Button>
           <AlertDialog>
             <AlertDialogTrigger asChild>
               <Button variant="ghost" size="sm" className="text-white/50 hover:text-white hover:bg-white/[0.08]">
@@ -235,23 +255,6 @@ function UploadForm({
     if (input) input.value = "";
   };
 
-  /** Read a file with per-file progress reporting. */
-  const readWithProgress = (file: File, onProgress: (pct: number) => void): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const max = 2 * 1024 * 1024;
-      if (file.size > max) {
-        reject(new Error(`El archivo supera el límite local de ${(max / 1024 / 1024).toFixed(1)} MB.`));
-        return;
-      }
-      const reader = new FileReader();
-      reader.onprogress = (e) => {
-        if (e.lengthComputable) onProgress(Math.round((e.loaded / e.total) * 100));
-      };
-      reader.onload = () => { onProgress(100); resolve(reader.result as string); };
-      reader.onerror = () => reject(new Error("No se pudo leer el archivo."));
-      reader.readAsDataURL(file);
-    });
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -274,7 +277,7 @@ function UploadForm({
         if (p.status === "ok") continue;
         setPending((prev) => prev.map((x, j) => (j === i ? { ...x, status: "processing", progress: 0, error: undefined } : x)));
         try {
-          const src = await readWithProgress(p.file, (pct) =>
+          const result = await uploadFileToBackend(p.file, kind, (pct) =>
             setPending((prev) => prev.map((x, j) => (j === i ? { ...x, progress: pct } : x))),
           );
           addItem({
@@ -282,7 +285,7 @@ function UploadForm({
             title: p.title.trim(),
             description: description.trim(),
             category,
-            src,
+            src: result.url,
             format: inferFormat(p.file),
             size: p.file.size,
           });
@@ -1072,9 +1075,9 @@ function SiteFieldEditor({ field, version, onChanged }: { field: SiteField; vers
   const onImage = async (file?: File | null) => {
     if (!file) return;
     try {
-      const data = await readFileAsDataURL(file);
-      setSiteValue(field.key, data);
-      setValueLocal(data);
+      const result = await uploadFileToBackend(file, "image");
+      setSiteValue(field.key, result.url);
+      setValueLocal(result.url);
       setDirty(false);
       onChanged();
       toast({ title: "Imagen actualizada", description: field.label });
@@ -1256,12 +1259,27 @@ export default function PanelEmmaDashboard() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { user, isLoading, isAuthenticated, role } = useAuth(false);
+  const { activateLiveEdit } = useLiveEdit();
+  const { toast } = useToast();
 
   const handleLogout = useCallback(async () => {
     try { await logout(); } catch { /* ignore */ }
     queryClient.clear();
     navigate("/panel-emma", { replace: true });
   }, [navigate, queryClient]);
+
+  const handleLiveEdit = useCallback(async () => {
+    const ok = await activateLiveEdit();
+    if (ok) {
+      navigate("/");
+    } else {
+      toast({
+        title: "No autorizado",
+        description: "Se requiere sesión de admin activa.",
+        variant: "destructive",
+      });
+    }
+  }, [activateLiveEdit, navigate, toast]);
 
   if (isLoading) {
     return (
@@ -1281,6 +1299,7 @@ export default function PanelEmmaDashboard() {
       <PanelHeader
         userName={user?.name ?? user?.email}
         onLogout={handleLogout}
+        onLiveEdit={handleLiveEdit}
       />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-6">
