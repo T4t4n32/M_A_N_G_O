@@ -10,3 +10,4 @@ SQLAlchemy==2.0.32
 Werkzeug==3.0.3
 paramiko==3.4.0
 flask-sock==0.7.0
+Flask-Bcrypt==1.0.1
