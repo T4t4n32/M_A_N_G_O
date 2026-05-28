@@ -94,9 +94,14 @@ def admin_put_site_content():
 
     existing = record.get_content()
     if content is not None:
-        existing["content"] = content
+        # content is the complete flat key-value map from the frontend.
+        # Merge at top level — never wrap under a nested "content" key.
+        if isinstance(content, dict):
+            existing.update(content)
+        else:
+            return jsonify({"error": "'content' must be an object"}), 400
     if seo is not None:
-        existing["seo"] = seo
+        existing["__seo__"] = seo
 
     record.set_content(existing)
     db.session.commit()

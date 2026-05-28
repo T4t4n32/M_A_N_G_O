@@ -331,6 +331,10 @@ export async function publishSiteContent(): Promise<{ ok: boolean; status: numbe
 }
 
 /** Hydrate from the public endpoint. Silent failure → keeps local data. */
+/**
+ * Fetches published content from the backend and merges it with local drafts.
+ * Local edits take precedence — used by PublishBar to pull remote state into the editor.
+ */
 export async function hydrateFromBackend(): Promise<boolean> {
   try {
     const res = await fetch("/api/v1/site-content", { credentials: "include" });
@@ -344,6 +348,25 @@ export async function hydrateFromBackend(): Promise<boolean> {
       const local = load();
       const merged: Store = { ...remote, ...local };
       save(merged);
+      return true;
+    }
+    return false;
+  } catch { return false; }
+}
+
+/**
+ * Full replace of localStorage with published backend content.
+ * Used on public page load so all visitors see the latest published text.
+ * Must NOT be called while in live-edit mode (would overwrite unsaved drafts).
+ */
+export async function syncFromPublished(): Promise<boolean> {
+  try {
+    const res = await fetch("/api/v1/site-content");
+    if (!res.ok) return false;
+    const data = await res.json();
+    const remote = data?.content;
+    if (remote && typeof remote === "object" && Object.keys(remote).length > 0) {
+      save(remote as Store);
       return true;
     }
     return false;
