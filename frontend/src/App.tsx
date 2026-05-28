@@ -3,6 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { useEffect } from "react";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
@@ -13,13 +14,26 @@ import PanelEmmaLogin from "./pages/PanelEmmaLogin";
 import PanelEmmaDashboard from "./pages/PanelEmmaDashboard";
 import Archivos from "./pages/Archivos";
 import { useSecretShortcut } from "@/hooks/useSecretShortcut";
-import { LiveEditProvider } from "@/contexts/LiveEditContext";
+import { LiveEditProvider, useLiveEdit } from "@/contexts/LiveEditContext";
 import { LiveEditToolbar } from "@/components/editor/LiveEditToolbar";
 
 const queryClient = new QueryClient();
 
 function ShortcutMount() {
   useSecretShortcut("/panel-emma");
+  return null;
+}
+
+/** Activates live edit when ?live=1 is in the URL (e.g. opened from the panel via link). */
+function LiveEditUrlActivator() {
+  const { activateLiveEdit } = useLiveEdit();
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get("live") === "1") {
+      activateLiveEdit();
+    }
+  // Run once on mount — activateLiveEdit is stable (useCallback with no deps).
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   return null;
 }
 
@@ -31,6 +45,7 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <LiveEditToolbar />
+          <LiveEditUrlActivator />
           <ShortcutMount />
         <Routes>
           <Route path="/" element={<Index />} />

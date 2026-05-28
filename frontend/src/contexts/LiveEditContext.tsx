@@ -16,7 +16,8 @@ export interface EditTarget {
 
 interface LiveEditCtx {
   isEditMode: boolean;
-  activateLiveEdit: () => Promise<boolean>;
+  /** activateLiveEdit(true) skips the auth fetch — use when caller already verified admin role. */
+  activateLiveEdit: (preVerified?: boolean) => Promise<boolean>;
   deactivateLiveEdit: () => void;
   editTarget: EditTarget | null;
   openEdit: (target: EditTarget) => void;
@@ -36,12 +37,16 @@ export function LiveEditProvider({ children }: { children: ReactNode }) {
   const [isEditMode, setIsEditMode] = useState(false);
   const [editTarget, setEditTarget] = useState<EditTarget | null>(null);
 
-  const activateLiveEdit = useCallback(async (): Promise<boolean> => {
+  const activateLiveEdit = useCallback(async (preVerified = false): Promise<boolean> => {
+    if (preVerified) {
+      setIsEditMode(true);
+      return true;
+    }
     try {
       const res = await fetch("/api/v1/users/status", { credentials: "include" });
       if (!res.ok) return false;
       const data = await res.json();
-      if (data.role === "admin") {
+      if (data.user?.role === "admin") {
         setIsEditMode(true);
         return true;
       }

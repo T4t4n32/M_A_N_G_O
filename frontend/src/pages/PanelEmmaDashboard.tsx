@@ -1260,7 +1260,6 @@ export default function PanelEmmaDashboard() {
   const queryClient = useQueryClient();
   const { user, isLoading, isAuthenticated, role } = useAuth(false);
   const { activateLiveEdit } = useLiveEdit();
-  const { toast } = useToast();
 
   const handleLogout = useCallback(async () => {
     try { await logout(); } catch { /* ignore */ }
@@ -1269,17 +1268,10 @@ export default function PanelEmmaDashboard() {
   }, [navigate, queryClient]);
 
   const handleLiveEdit = useCallback(async () => {
-    const ok = await activateLiveEdit();
-    if (ok) {
-      navigate("/");
-    } else {
-      toast({
-        title: "No autorizado",
-        description: "Se requiere sesión de admin activa.",
-        variant: "destructive",
-      });
-    }
-  }, [activateLiveEdit, navigate, toast]);
+    // Already verified admin — skip redundant auth fetch.
+    await activateLiveEdit(true);
+    navigate("/");
+  }, [activateLiveEdit, navigate]);
 
   if (isLoading) {
     return (
