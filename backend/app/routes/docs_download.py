@@ -37,7 +37,7 @@ docs_download_bp = Blueprint("docs_download", __name__, url_prefix="/api/v1")
 _TOKEN_TTL = 15 * 60  # 15 minutes
 
 # Only allow paths that start with one of these prefixes.
-_ALLOWED_PREFIXES = ("/docs/", "/uploads/docs/")
+_ALLOWED_PREFIXES = ("/docs/", "/uploads/docs/", "/api/v1/uploads/")
 
 
 # ── Token helpers ────────────────────────────────────────────────────────────
