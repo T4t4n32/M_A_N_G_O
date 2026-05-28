@@ -55,7 +55,7 @@ export default function PanelEmmaLogin() {
     setLoading(true);
     try {
       const res = await apiLogin({ email, password });
-      if (!res.success) {
+      if (!res.ok) {
         setError({
           msg: res.message ?? "Credenciales inválidas.",
           detail: "El backend rechazó las credenciales del super-admin.",
