@@ -20,6 +20,7 @@ import {
   addItem,
   autoRoute,
   inferFormat,
+  uploadFileToBackend,
   type AutoRoute,
 } from "@/lib/panelEmmaContent";
 import { handleApiError } from "@/lib/errorHandler";
@@ -48,23 +49,6 @@ interface PendingItem {
   route: AutoRoute;
 }
 
-const MAX_BYTES = 5 * 1024 * 1024;
-
-function readWithProgress(file: File, onProgress: (pct: number) => void): Promise<string> {
-  return new Promise((resolve, reject) => {
-    if (file.size > MAX_BYTES) {
-      reject(new Error(`El archivo supera el límite local de ${(MAX_BYTES / 1024 / 1024).toFixed(1)} MB.`));
-      return;
-    }
-    const reader = new FileReader();
-    reader.onprogress = (e) => {
-      if (e.lengthComputable) onProgress(Math.round((e.loaded / e.total) * 100));
-    };
-    reader.onload = () => { onProgress(100); resolve(reader.result as string); };
-    reader.onerror = () => reject(new Error("No se pudo leer el archivo."));
-    reader.readAsDataURL(file);
-  });
-}
 
 function audienceBadge(route: AutoRoute) {
   if (route.audience === "public") {
@@ -127,7 +111,7 @@ export function SmartUploadForm({ onAdded }: { onAdded?: () => void }) {
           j === i ? { ...x, status: "processing", progress: 0, error: undefined } : x,
         ));
         try {
-          const src = await readWithProgress(p.file, (pct) =>
+          const result = await uploadFileToBackend(p.file, p.route.kind, (pct) =>
             setPending((prev) => prev.map((x, j) => (j === i ? { ...x, progress: pct } : x))),
           );
           addItem({
@@ -135,7 +119,7 @@ export function SmartUploadForm({ onAdded }: { onAdded?: () => void }) {
             title: p.title.trim() || p.file.name,
             description: description.trim(),
             category: p.route.suggestedCategory,
-            src,
+            src: result.url,
             format: inferFormat(p.file),
             size: p.file.size,
           });
@@ -205,7 +189,7 @@ export function SmartUploadForm({ onAdded }: { onAdded?: () => void }) {
         <UploadCloud className="h-7 w-7" aria-hidden />
         <span className="font-medium">Suelta archivos o haz click para seleccionar</span>
         <span className="text-[11px] text-white/40">
-          Acepta cualquier formato. Máximo {(MAX_BYTES / 1024 / 1024).toFixed(0)} MB por archivo.
+          Acepta cualquier formato. Imágenes 15 MB · Videos 500 MB · Docs 20 MB.
         </span>
         <input
           id="smart-upload-input"
@@ -264,7 +248,7 @@ export function SmartUploadForm({ onAdded }: { onAdded?: () => void }) {
                   )}
                   {p.status === "ok" && (
                     <p className="text-[11px] text-emerald-300 mt-1 flex items-center gap-1">
-                      <CheckCircle2 className="h-3 w-3" /> Publicado localmente
+                      <CheckCircle2 className="h-3 w-3" /> Subido al servidor
                     </p>
                   )}
                 </div>

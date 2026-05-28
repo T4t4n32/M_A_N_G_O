@@ -22,6 +22,8 @@ from flask import Blueprint, jsonify, request, session
 from app.extensions import db
 from app.models.site_content import SiteContent
 from app.models.user import MangoUser
+from app.models.media import Media, VALID_TYPES
+from app.models.document import Document
 
 admin_cms_bp = Blueprint("admin_cms", __name__, url_prefix="/api/v1")
 
@@ -106,10 +108,15 @@ def admin_put_site_content():
 @_require_admin
 def admin_list_media():
     media_type = request.args.get("type", "")
-    return jsonify({"media": [], "type": media_type or "all"}), 200
+    query = Media.query
+    if media_type in VALID_TYPES:
+        query = query.filter_by(media_type=media_type)
+    items = query.order_by(Media.uploaded_at.desc()).all()
+    return jsonify({"media": [m.to_dict() for m in items], "type": media_type or "all"}), 200
 
 
 @admin_cms_bp.get("/admin/docs")
 @_require_admin
 def admin_list_docs():
-    return jsonify({"docs": []}), 200
+    docs = Document.query.order_by(Document.uploaded_at.desc()).all()
+    return jsonify({"docs": [d.to_dict() for d in docs]}), 200

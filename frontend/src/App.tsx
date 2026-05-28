@@ -13,6 +13,8 @@ import PanelEmmaLogin from "./pages/PanelEmmaLogin";
 import PanelEmmaDashboard from "./pages/PanelEmmaDashboard";
 import Archivos from "./pages/Archivos";
 import { useSecretShortcut } from "@/hooks/useSecretShortcut";
+import { LiveEditProvider } from "@/contexts/LiveEditContext";
+import { LiveEditToolbar } from "@/components/editor/LiveEditToolbar";
 
 const queryClient = new QueryClient();
 
@@ -23,11 +25,13 @@ function ShortcutMount() {
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <ShortcutMount />
+    <LiveEditProvider>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <LiveEditToolbar />
+          <ShortcutMount />
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/login" element={<Login />} />
@@ -61,8 +65,9 @@ const App = () => (
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
+        </BrowserRouter>
+      </TooltipProvider>
+    </LiveEditProvider>
   </QueryClientProvider>
 );
 

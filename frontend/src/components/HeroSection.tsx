@@ -7,6 +7,7 @@ import GradientText from "@/components/effects/GradientText";
 import DecryptedText from "@/components/effects/DecryptedText";
 import LineWaves from "@/components/effects/LineWaves";
 import { useSiteValue } from "@/lib/siteContent";
+import { EditableField } from "@/components/editor/EditableField";
 
 const particles = Array.from({ length: 5 }, (_, i) => ({
   id: i,
@@ -107,14 +108,16 @@ export function HeroSection() {
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.6, ease: "easeOut" }}
         >
-          <GradientText
-            colors={['#00c9a7', '#38bdf8', '#c084fc', '#00c9a7']}
-            animationSpeed={6}
-            showBorder
-            className="text-xs font-semibold tracking-wider uppercase mb-6"
-          >
-            {eyebrow}
-          </GradientText>
+          <EditableField siteKey="hero.eyebrow">
+            <GradientText
+              colors={['#00c9a7', '#38bdf8', '#c084fc', '#00c9a7']}
+              animationSpeed={6}
+              showBorder
+              className="text-xs font-semibold tracking-wider uppercase mb-6"
+            >
+              {eyebrow}
+            </GradientText>
+          </EditableField>
         </motion.div>
 
         <motion.h1
@@ -124,7 +127,9 @@ export function HeroSection() {
           transition={{ duration: 0.7, delay: 0.15 }}
           style={{ textShadow: '0 2px 20px hsl(210 35% 6% / 0.8), 0 0 40px hsl(210 35% 6% / 0.5)' }}
         >
-          <span className="text-white block">{titleLine}</span>
+          <EditableField siteKey="hero.titleLine" as="span" className="text-white block">
+            {titleLine}
+          </EditableField>
           <span className="flex items-center justify-center gap-2 sm:gap-3 text-[1.15rem] sm:text-3xl md:text-4xl lg:text-5xl font-extrabold mt-3 mb-2 min-h-[3em] sm:min-h-[1.8em] px-2">
             <RotatingText
               texts={["Niveles y Gestión Oceánica", "Ecosistemas de Manglar", "Conservación Ambiental", "Datos en Tiempo Real"]}
@@ -142,14 +147,16 @@ export function HeroSection() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.35 }}
         >
-          <DecryptedText
-            text={description}
-            speed={25}
-            maxIterations={14}
-            animateOn="view"
-            className="text-white/90"
-            encryptedClassName="text-white/40"
-          />
+          <EditableField siteKey="hero.description">
+            <DecryptedText
+              text={description}
+              speed={25}
+              maxIterations={14}
+              animateOn="view"
+              className="text-white/90"
+              encryptedClassName="text-white/40"
+            />
+          </EditableField>
         </motion.p>
 
         <motion.div
@@ -163,14 +170,14 @@ export function HeroSection() {
             className="relative overflow-hidden bg-gradient-to-r from-[hsl(168,72%,42%)] to-[hsl(204,70%,53%)] text-white rounded-full px-10 text-base font-bold shadow-[0_0_30px_hsl(168_72%_42%/0.35)] hover:shadow-[0_0_50px_hsl(168_72%_42%/0.5)] transition-all duration-500 hover:scale-105 border-0"
             onClick={() => document.querySelector("#proyecto")?.scrollIntoView({ behavior: "smooth" })}
           >
-            {cta1}
+            <EditableField siteKey="hero.cta1">{cta1}</EditableField>
           </Button>
           <Button
             size="lg"
             className="bg-white/10 hover:bg-white/20 text-white border border-white/20 hover:border-white/40 rounded-full px-10 text-base font-semibold transition-all duration-300 backdrop-blur-md hover:scale-105"
             onClick={() => document.querySelector("#contacto")?.scrollIntoView({ behavior: "smooth" })}
           >
-            {cta2}
+            <EditableField siteKey="hero.cta2">{cta2}</EditableField>
           </Button>
         </motion.div>
       </div>

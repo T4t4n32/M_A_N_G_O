@@ -234,6 +234,69 @@ export function readFileAsDataURL(file: File, maxBytes = 2 * 1024 * 1024): Promi
   });
 }
 
+export interface UploadResult {
+  id: number;
+  url: string;
+  filename: string;
+}
+
+/**
+ * Upload a file to the backend and return the server URL.
+ * Uses XMLHttpRequest so upload progress can be tracked.
+ */
+export function uploadFileToBackend(
+  file: File,
+  kind: PanelKind,
+  onProgress?: (pct: number) => void,
+): Promise<UploadResult> {
+  return new Promise((resolve, reject) => {
+    const form = new FormData();
+    form.append("file", file);
+
+    let endpoint: string;
+    if (kind === "image") {
+      form.append("type", "image");
+      endpoint = "/api/v1/admin/media";
+    } else if (kind === "video") {
+      form.append("type", "video");
+      endpoint = "/api/v1/admin/media";
+    } else {
+      endpoint = "/api/v1/admin/docs";
+    }
+
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", endpoint);
+    xhr.withCredentials = true;
+
+    if (onProgress) {
+      xhr.upload.onprogress = (e) => {
+        if (e.lengthComputable) onProgress(Math.round((e.loaded / e.total) * 90));
+      };
+    }
+
+    xhr.onload = () => {
+      if (xhr.status === 201) {
+        onProgress?.(100);
+        try {
+          resolve(JSON.parse(xhr.responseText) as UploadResult);
+        } catch {
+          reject(new Error("Respuesta inválida del servidor."));
+        }
+      } else {
+        let msg = `Error del servidor (${xhr.status})`;
+        try {
+          const body = JSON.parse(xhr.responseText);
+          if (body?.error) msg = body.error;
+        } catch { /* ignore */ }
+        reject(new Error(msg));
+      }
+    };
+
+    xhr.onerror = () => reject(new Error("Error de red al subir el archivo."));
+    xhr.send(form);
+  });
+}
+
 export function inferFormat(file: File): string {
   const ext = file.name.split(".").pop()?.toUpperCase();
   return ext || file.type.split("/")[1]?.toUpperCase() || "FILE";
