@@ -1,0 +1,188 @@
+"""
+Unified file upload + serving for Panel Emma (super-admin).
+
+Admin (session role=admin):
+  POST   /api/v1/admin/upload            multipart: file, kind?, title, category, description
+  GET    /api/v1/admin/uploads           list all uploaded files  ?kind=image|video|document
+  PATCH  /api/v1/admin/uploads/<id>      update title/description/category
+  DELETE /api/v1/admin/uploads/<id>      delete file + DB record
+
+Public:
+  GET    /api/v1/uploads/<path:filename>  serve uploaded file
+"""
+from __future__ import annotations
+
+import os
+import uuid
+from functools import wraps
+
+from flask import Blueprint, current_app, jsonify, request, send_from_directory, session
+from werkzeug.utils import secure_filename
+
+from app.extensions import db
+from app.models.uploaded_file import UploadedFile
+from app.models.user import MangoUser
+
+uploads_bp = Blueprint("uploads", __name__, url_prefix="/api/v1")
+
+
+# ─── Auth ────────────────────────────────────────────────────────────────────
+
+def _current_user() -> MangoUser | None:
+    uid = session.get("user_id")
+    return db.session.get(MangoUser, uid) if uid else None
+
+
+def _require_admin(fn):
+    @wraps(fn)
+    def wrapper(*args, **kwargs):
+        u = _current_user()
+        if not u or not u.active:
+            return jsonify({"error": "authentication required"}), 401
+        if u.role != "admin":
+            return jsonify({"error": "forbidden"}), 403
+        return fn(*args, **kwargs)
+    return wrapper
+
+
+# ─── MIME / kind detection ───────────────────────────────────────────────────
+
+_IMAGE_MIMES = {
+    "image/jpeg", "image/png", "image/gif", "image/webp",
+    "image/svg+xml", "image/avif", "image/bmp", "image/tiff",
+}
+_VIDEO_MIMES = {
+    "video/mp4", "video/webm", "video/ogg", "video/quicktime",
+    "video/x-msvideo", "video/x-matroska", "video/3gpp",
+}
+_DOC_EXTS = {
+    "pdf", "doc", "docx", "xls", "xlsx", "ppt", "pptx",
+    "md", "txt", "csv", "zip", "rar", "7z", "odt", "ods", "odp",
+}
+
+
+def _detect_kind(file) -> str | None:
+    mime = (file.mimetype or "").lower()
+    if mime in _IMAGE_MIMES or mime.startswith("image/"):
+        return "image"
+    if mime in _VIDEO_MIMES or mime.startswith("video/"):
+        return "video"
+    ext = os.path.splitext(secure_filename(file.filename))[1].lstrip(".").lower()
+    if ext in _DOC_EXTS:
+        return "document"
+    if mime.startswith("application/") or mime.startswith("text/"):
+        return "document"
+    return None
+
+
+def _size_limit(kind: str) -> int:
+    cfg = current_app.config
+    return {
+        "image":    cfg.get("MAX_UPLOAD_IMAGE_BYTES",  20  * 1024 * 1024),
+        "video":    cfg.get("MAX_UPLOAD_VIDEO_BYTES",  500 * 1024 * 1024),
+        "document": cfg.get("MAX_UPLOAD_DOC_BYTES",    50  * 1024 * 1024),
+    }.get(kind, 20 * 1024 * 1024)
+
+
+# ─── Admin endpoints ─────────────────────────────────────────────────────────
+
+@uploads_bp.post("/admin/upload")
+@_require_admin
+def upload_file():
+    file = request.files.get("file")
+    if not file or file.filename == "":
+        return jsonify({"error": "no file provided"}), 400
+
+    kind = request.form.get("kind") or _detect_kind(file)
+    if kind not in ("image", "video", "document"):
+        return jsonify({"error": "cannot determine kind — pass kind=image|video|document"}), 400
+
+    # Size check
+    file.seek(0, 2)
+    size = file.tell()
+    file.seek(0)
+    limit = _size_limit(kind)
+    if size > limit:
+        mb = limit // (1024 * 1024)
+        return jsonify({"error": f"file exceeds {mb} MB limit for {kind}"}), 413
+
+    ext = os.path.splitext(secure_filename(file.filename))[1]
+    stored_name = f"{uuid.uuid4().hex}{ext}"
+    upload_dir = os.path.join(current_app.config.get("UPLOAD_FOLDER", "/app/uploads"), kind)
+    os.makedirs(upload_dir, exist_ok=True)
+    file.save(os.path.join(upload_dir, stored_name))
+
+    url = f"/api/v1/uploads/{kind}/{stored_name}"
+    record = UploadedFile(
+        stored_name=stored_name,
+        original_name=file.filename,
+        url=url,
+        kind=kind,
+        title=(request.form.get("title") or "").strip() or file.filename,
+        description=(request.form.get("description") or "").strip() or None,
+        category=(request.form.get("category") or "").strip() or None,
+        size=size,
+        mime_type=file.mimetype or None,
+    )
+    db.session.add(record)
+    db.session.commit()
+    return jsonify(record.to_dict()), 201
+
+
+@uploads_bp.get("/admin/uploads")
+@_require_admin
+def list_uploads():
+    kind = request.args.get("kind")
+    q = UploadedFile.query
+    if kind in ("image", "video", "document"):
+        q = q.filter_by(kind=kind)
+    items = q.order_by(UploadedFile.uploaded_at.desc()).all()
+    return jsonify({"items": [i.to_dict() for i in items], "total": len(items)}), 200
+
+
+@uploads_bp.patch("/admin/uploads/<int:upload_id>")
+@_require_admin
+def patch_upload(upload_id: int):
+    record = db.session.get(UploadedFile, upload_id)
+    if not record:
+        return jsonify({"error": "not found"}), 404
+    data = request.get_json(silent=True) or {}
+    if "title" in data:
+        record.title = str(data["title"]).strip()
+    if "description" in data:
+        record.description = str(data["description"]).strip() or None
+    if "category" in data:
+        record.category = str(data["category"]).strip() or None
+    db.session.commit()
+    return jsonify(record.to_dict()), 200
+
+
+@uploads_bp.delete("/admin/uploads/<int:upload_id>")
+@_require_admin
+def delete_upload(upload_id: int):
+    record = db.session.get(UploadedFile, upload_id)
+    if not record:
+        return jsonify({"error": "not found"}), 404
+    upload_dir = current_app.config.get("UPLOAD_FOLDER", "/app/uploads")
+    file_path = os.path.join(upload_dir, record.kind, record.stored_name)
+    if os.path.exists(file_path):
+        os.remove(file_path)
+    db.session.delete(record)
+    db.session.commit()
+    return jsonify({"ok": True}), 200
+
+
+# ─── Public file serving ─────────────────────────────────────────────────────
+
+@uploads_bp.get("/uploads/<path:filename>")
+def serve_upload(filename: str):
+    """Serve an uploaded file. Path format: <kind>/<stored_name>"""
+    upload_dir = current_app.config.get("UPLOAD_FOLDER", "/app/uploads")
+    parts = filename.split("/", 1)
+    if len(parts) == 2:
+        directory = os.path.join(upload_dir, parts[0])
+        fname     = parts[1]
+    else:
+        directory = upload_dir
+        fname     = parts[0]
+    return send_from_directory(directory, fname)

@@ -5,6 +5,7 @@ from .site_content import SiteContent                                # noqa: F40
 from .alert import AlertRule, AlertContact, AlertEvent               # noqa: F401
 from .download_log import DownloadLog                                # noqa: F401
 from .mission import Mission, MissionEvent, MissionCommand           # noqa: F401
+from .uploaded_file import UploadedFile                              # noqa: F401
 
 __all__ = [
     "SensorType", "SensorStation", "Sensor", "SensorData",
@@ -14,4 +15,5 @@ __all__ = [
     "AlertRule", "AlertContact", "AlertEvent",
     "DownloadLog",
     "Mission", "MissionEvent", "MissionCommand",
+    "UploadedFile",
 ]

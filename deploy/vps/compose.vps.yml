@@ -76,8 +76,10 @@ services:
       JETSON_PORT: "${JETSON_PORT:-9200}"
       JETSON_USER: "${JETSON_USER:-ubuntu}"
       JETSON_SSH_KEY_PATH: "/run/secrets/jetson_key"
+      UPLOAD_FOLDER: "${UPLOAD_FOLDER:-/app/uploads}"
     volumes:
       - /home/mango/.ssh/id_ed25519:/run/secrets/jetson_key:ro
+      - mango_uploads:/app/uploads
     networks:
       - mango_net
     depends_on:
@@ -140,6 +142,7 @@ volumes:
   mango_pg:
   mango_redis:
   grafana_data:
+  mango_uploads:
 
 networks:
   mango_net:
