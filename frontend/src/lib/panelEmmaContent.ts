@@ -237,7 +237,8 @@ export function readFileAsDataURL(file: File, maxBytes = 2 * 1024 * 1024): Promi
 export interface UploadResult {
   id: number;
   url: string;
-  filename: string;
+  original_name: string;
+  filename?: string;
 }
 
 /**
@@ -253,16 +254,8 @@ export function uploadFileToBackend(
     const form = new FormData();
     form.append("file", file);
 
-    let endpoint: string;
-    if (kind === "image") {
-      form.append("type", "image");
-      endpoint = "/api/v1/admin/media";
-    } else if (kind === "video") {
-      form.append("type", "video");
-      endpoint = "/api/v1/admin/media";
-    } else {
-      endpoint = "/api/v1/admin/docs";
-    }
+    form.append("kind", kind === "document" ? "document" : kind);
+    const endpoint = "/api/v1/admin/upload";
 
     const xhr = new XMLHttpRequest();
     xhr.open("POST", endpoint);

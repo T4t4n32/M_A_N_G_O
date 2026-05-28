@@ -328,3 +328,81 @@ export const sendCommand = (body: SendCommandRequest) =>
     method: "POST",
     body: JSON.stringify(body),
   });
+
+// ─── Panel Emma — file uploads (/api/v1/admin/upload*) ───────────────────────
+
+export interface UploadedFileRecord {
+  id: number;
+  stored_name: string;
+  original_name: string;
+  url: string;
+  kind: "image" | "video" | "document";
+  title: string;
+  description: string | null;
+  category: string | null;
+  size: number;
+  mime_type: string | null;
+  uploaded_at: string;
+}
+
+/**
+ * Upload a file to the backend via XHR for progress tracking.
+ * Returns the server record (with public URL) on success.
+ */
+export function uploadFile(
+  file: File,
+  opts: { kind?: string; title: string; category: string; description: string },
+  onProgress: (pct: number) => void,
+): Promise<UploadedFileRecord> {
+  return new Promise((resolve, reject) => {
+    const fd = new FormData();
+    fd.append("file", file);
+    fd.append("title", opts.title);
+    fd.append("category", opts.category);
+    fd.append("description", opts.description);
+    if (opts.kind) fd.append("kind", opts.kind);
+
+    const xhr = new XMLHttpRequest();
+    xhr.withCredentials = true;
+    xhr.upload.onprogress = (e) => {
+      if (e.lengthComputable) onProgress(Math.min(90, Math.round((e.loaded / e.total) * 90)));
+    };
+    xhr.onload = () => {
+      onProgress(100);
+      if (xhr.status >= 200 && xhr.status < 300) {
+        try {
+          resolve(JSON.parse(xhr.responseText) as UploadedFileRecord);
+        } catch {
+          reject(new Error("Respuesta inválida del servidor."));
+        }
+      } else {
+        let msg = `Error HTTP ${xhr.status} al subir el archivo.`;
+        try {
+          const j = JSON.parse(xhr.responseText);
+          if (j.error) msg = j.error;
+        } catch { /* ignore */ }
+        reject(new Error(msg));
+      }
+    };
+    xhr.onerror = () => reject(new Error("Error de red al subir el archivo."));
+    xhr.open("POST", `${API_BASE}/admin/upload`);
+    xhr.send(fd);
+  });
+}
+
+export const listServerUploads = (kind?: "image" | "video" | "document") =>
+  request<{ items: UploadedFileRecord[]; total: number }>(
+    `/admin/uploads${kind ? `?kind=${kind}` : ""}`,
+  );
+
+export const deleteServerUpload = (id: number) =>
+  request<{ ok: boolean }>(`/admin/uploads/${id}`, { method: "DELETE" });
+
+export const patchServerUpload = (
+  id: number,
+  patch: { title?: string; description?: string; category?: string },
+) =>
+  request<UploadedFileRecord>(`/admin/uploads/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify(patch),
+  });

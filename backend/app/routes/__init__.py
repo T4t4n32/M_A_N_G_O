@@ -161,3 +161,10 @@ def register_routes(app) -> None:
         safe_register(commands_bp)
     except Exception as e:
         log.exception("commands import failed: %s", e)
+
+    # File uploads + serving (/api/v1/admin/upload, /api/v1/uploads/*)
+    try:
+        from .uploads import uploads_bp
+        safe_register(uploads_bp)
+    except Exception as e:
+        log.exception("uploads import failed: %s", e)
