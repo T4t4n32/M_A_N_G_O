@@ -2,7 +2,13 @@ import { useState, useCallback, useMemo, useEffect } from "react";
 import { useNavigate, Navigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
-import { logout } from "@/lib/api";
+import {
+  logout,
+  listServerUploads,
+  deleteServerUpload,
+  patchServerUpload,
+  type UploadedFileRecord,
+} from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -65,12 +71,6 @@ import {
 import {
   PanelItem,
   PanelKind,
-  listItems,
-  addItem,
-  removeLocalItem,
-  updateItem,
-  hasOverrides,
-  clearOverrides,
   categoriesFor,
   inferFormat,
   uploadFileToBackend,
@@ -88,6 +88,24 @@ import { Progress } from "@/components/ui/progress";
 import { MediaField } from "@/components/editor/MediaField";
 import { PublishBar } from "@/components/editor/PublishBar";
 import { SmartUploadForm } from "@/components/editor/SmartUploadForm";
+
+/* ─────────────────────── API record → PanelItem ─────────────────── */
+
+function recordToPanelItem(r: UploadedFileRecord): PanelItem {
+  const ext = r.original_name.split(".").pop()?.toUpperCase() ?? "";
+  return {
+    id: String(r.id),
+    kind: r.kind,
+    title: r.title,
+    description: r.description ?? "",
+    category: r.category ?? "Sin categoría",
+    src: r.url,
+    existing: true,
+    format: ext,
+    size: r.size,
+    addedAt: r.uploaded_at,
+  };
+}
 
 /* ─────────────────────────── Helpers UI ─────────────────────────── */
 
@@ -277,18 +295,9 @@ function UploadForm({
         if (p.status === "ok") continue;
         setPending((prev) => prev.map((x, j) => (j === i ? { ...x, status: "processing", progress: 0, error: undefined } : x)));
         try {
-          const result = await uploadFileToBackend(p.file, kind, (pct) =>
+          await uploadFileToBackend(p.file, kind, (pct) =>
             setPending((prev) => prev.map((x, j) => (j === i ? { ...x, progress: pct } : x))),
           );
-          addItem({
-            kind,
-            title: p.title.trim(),
-            description: description.trim(),
-            category,
-            src: result.url,
-            format: inferFormat(p.file),
-            size: p.file.size,
-          });
           setPending((prev) => prev.map((x, j) => (j === i ? { ...x, status: "ok", progress: 100 } : x)));
           ok += 1;
         } catch (err) {
@@ -299,7 +308,7 @@ function UploadForm({
       }
       if (ok > 0) {
         toast({
-          title: ok === 1 ? "Añadido localmente" : `${ok} elementos añadidos`,
+          title: ok === 1 ? "Archivo subido" : `${ok} archivos subidos`,
           description: `Categoría: ${category}.${failed ? ` ${failed} fallidos en la cola.` : ""}`,
         });
       }
@@ -751,11 +760,13 @@ function EditDialog({
   open,
   onClose,
   onSaved,
+  onSave,
 }: {
   item: PanelItem | null;
   open: boolean;
   onClose: () => void;
   onSaved: () => void;
+  onSave?: (item: PanelItem, patch: { title: string; description: string; category: string }) => Promise<void>;
 }) {
   const { toast } = useToast();
   const [title, setTitle] = useState("");
@@ -773,17 +784,16 @@ function EditDialog({
   if (!item) return null;
   const cats = categoriesFor(item.kind);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!title.trim()) {
       toast({ title: "Falta el nombre", variant: "destructive" });
       return;
     }
-    updateItem(item.kind, item.id, {
-      title: title.trim(),
-      description: description.trim(),
-      category,
-    });
-    toast({ title: "Cambios guardados", description: `“${title.trim()}” actualizado.` });
+    const patch = { title: title.trim(), description: description.trim(), category };
+    if (onSave) {
+      await onSave(item, patch);
+    }
+    toast({ title: "Cambios guardados", description: `"${title.trim()}" actualizado.` });
     onSaved();
     onClose();
   };
@@ -841,7 +851,7 @@ function EditDialog({
           <Button variant="ghost" onClick={onClose} className="text-white/60 hover:text-white hover:bg-white/[0.08]">
             Cancelar
           </Button>
-          <Button onClick={handleSave} className="bg-accent hover:bg-accent/90 text-accent-foreground">
+          <Button onClick={() => void handleSave()} className="bg-accent hover:bg-accent/90 text-accent-foreground">
             Guardar cambios
           </Button>
         </DialogFooter>
@@ -870,7 +880,8 @@ function ContentSection({
   emptyLabel: string;
 }) {
   const cats = categoriesFor(kind);
-  const [items, setItems] = useState<PanelItem[]>(() => listItems(kind));
+  const [items, setItems] = useState<PanelItem[]>([]);
+  const [loadingItems, setLoadingItems] = useState(true);
   const [filter, setFilter] = useState<string>("Todas");
   const [query, setQuery] = useState("");
   const sortKey = `panel-emma::sort-${kind}`;
@@ -883,29 +894,42 @@ function ContentSection({
     if (typeof window !== "undefined") localStorage.setItem(sortKey, sort);
   }, [sort, sortKey]);
   const [editing, setEditing] = useState<PanelItem | null>(null);
-  const [hasHidden, setHasHidden] = useState<boolean>(() => hasOverrides(kind));
+  const { toast } = useToast();
 
-  const refresh = useCallback(() => {
-    setItems(listItems(kind));
-    setHasHidden(hasOverrides(kind));
+  const refresh = useCallback(async () => {
+    setLoadingItems(true);
+    try {
+      const { items: records } = await listServerUploads(kind as "image" | "video" | "document");
+      setItems(records.map(recordToPanelItem));
+    } catch {
+      // keep current items on fetch error
+    } finally {
+      setLoadingItems(false);
+    }
   }, [kind]);
 
-  // Re-sync when storage changes from another tab.
-  useEffect(() => {
-    const onStorage = () => refresh();
-    window.addEventListener("storage", onStorage);
-    return () => window.removeEventListener("storage", onStorage);
+  useEffect(() => { void refresh(); }, [refresh]);
+
+  const handleDelete = useCallback(async (it: PanelItem) => {
+    try {
+      await deleteServerUpload(Number(it.id));
+      void refresh();
+    } catch (err) {
+      toast({
+        title: "No se pudo eliminar",
+        description: err instanceof Error ? err.message : "Error desconocido",
+        variant: "destructive",
+      });
+    }
+  }, [refresh, toast]);
+
+  const handleSaveEdit = useCallback(async (
+    it: PanelItem,
+    patch: { title: string; description: string; category: string },
+  ) => {
+    await patchServerUpload(Number(it.id), patch);
+    void refresh();
   }, [refresh]);
-
-  const handleDelete = (it: PanelItem) => {
-    removeLocalItem(kind, it.id);
-    refresh();
-  };
-
-  const handleRestore = () => {
-    clearOverrides(kind);
-    refresh();
-  };
 
   const filtered = useMemo(() => {
     const base = items.filter((it) => {
@@ -928,11 +952,7 @@ function ContentSection({
       .map(({ it }) => it);
   }, [items, filter, query, sort]);
 
-  const counts = useMemo(() => {
-    const total = items.length;
-    const local = items.filter((i) => !i.existing).length;
-    return { total, local, existing: total - local };
-  }, [items]);
+  const counts = useMemo(() => ({ total: items.length }), [items]);
 
   return (
     <div className="space-y-5">
@@ -947,7 +967,7 @@ function ContentSection({
               Contenido en {kind === "image" ? "galerías" : kind === "video" ? "videos" : "documentación"}
             </h3>
             <p className="text-[11px] text-white/40 mt-0.5">
-              {counts.total} elementos · {counts.existing} publicados · {counts.local} locales
+              {loadingItems ? "Cargando…" : `${counts.total} archivos en el servidor`}
             </p>
           </div>
           <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
@@ -993,8 +1013,12 @@ function ContentSection({
 
         {filtered.length === 0 ? (
           <div className="text-center py-10 text-white/40 text-sm">
-            <EmptyIcon className="h-8 w-8 mx-auto mb-2 opacity-50" />
-            {emptyLabel}
+            {loadingItems ? (
+              <Loader2 className="h-8 w-8 mx-auto mb-2 animate-spin opacity-50" />
+            ) : (
+              <EmptyIcon className="h-8 w-8 mx-auto mb-2 opacity-50" />
+            )}
+            {loadingItems ? "Cargando archivos…" : emptyLabel}
           </div>
         ) : layout === "image-grid" ? (
           <div className="columns-1 sm:columns-2 lg:columns-3 xl:columns-4 gap-3 [column-fill:_balance]">
@@ -1016,27 +1040,14 @@ function ContentSection({
           </div>
         )}
 
-        {hasHidden && (
-          <div className="mt-4 pt-4 border-t border-white/[0.06] flex items-center justify-between gap-3 text-xs text-white/50">
-            <span>Hay elementos publicados ocultos o editados localmente.</span>
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={handleRestore}
-              className="text-white/60 hover:text-white hover:bg-white/[0.08] h-8"
-            >
-              <RotateCcw className="h-3.5 w-3.5 mr-1.5" />
-              Restaurar publicados
-            </Button>
-          </div>
-        )}
       </div>
 
       <EditDialog
         item={editing}
         open={editing !== null}
         onClose={() => setEditing(null)}
-        onSaved={refresh}
+        onSaved={() => { setEditing(null); void refresh(); }}
+        onSave={handleSaveEdit}
       />
     </div>
   );
@@ -1233,19 +1244,17 @@ function SiteContentEditor() {
   return (
     <div className="space-y-5">
       <PublishBar />
-      <IntegrationNotice
-        what="Los textos e imágenes editados aquí sustituyen los valores por defecto en la web pública para quien abra el sitio en este navegador. Cuando el backend exponga la persistencia, los cambios podrán aplicarse a todos los visitantes."
-        endpoint="GET /api/v1/admin/site-content · PUT /api/v1/admin/site-content"
-      />
       <div className="rounded-xl border border-accent/20 bg-accent/[0.04] p-4 text-xs text-white/70 leading-relaxed">
         <p className="font-semibold text-white mb-1 flex items-center gap-2">
           <Type className="h-4 w-4 text-accent" />
           Editor de textos e imágenes del sitio
         </p>
         <p>
-          Modifica los encabezados, descripciones e imágenes destacadas de cada sección de la página
-          de inicio. Los cambios se aplican al instante en la pestaña pública del sitio (recarga si
-          está abierta) y persisten al cerrar el navegador.
+          Edita los campos y pulsa <span className="font-semibold text-white">Guardar</span> en cada
+          campo para registrar el cambio localmente. Luego pulsa{" "}
+          <span className="font-semibold text-white">Publicar cambios</span> arriba para que
+          todos los visitantes vean la versión actualizada — sin publicar, los cambios solo
+          existen en este navegador.
         </p>
       </div>
       {SECTIONS.map((s) => (
@@ -1305,7 +1314,7 @@ export default function PanelEmmaDashboard() {
                 y documentos), añadir nuevo contenido y publicarlo a través de las rutas
                 {" "}<code className="text-white/80">/api/v1/admin/*</code>. Si una ruta del backend
                 no responde, los cambios quedan en cola local en este navegador hasta que vuelva
-                a estar disponible y se publican al pulsar “Publicar”.
+                a estar disponible y se publican al pulsar "Publicar".
               </p>
             </div>
           </div>
