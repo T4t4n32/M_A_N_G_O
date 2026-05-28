@@ -9,8 +9,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { docs, type Doc } from "@/components/DocumentationSection";
-import { listItems as listPanelItems } from "@/lib/panelEmmaContent";
-import { requestDocLink } from "@/lib/api";
+import { requestDocLink, listPublicDocs } from "@/lib/api";
 import DecryptedText from "@/components/effects/DecryptedText";
 import GradientText from "@/components/effects/GradientText";
 
@@ -241,36 +240,30 @@ const staticDocs: Doc[] = docs
   .map((d) => ({ ...d, files: d.files.filter((f) => EDITABLE_FORMATS.includes(f.label)) }))
   .filter((d) => d.files.length > 0);
 
-function buildDocs(): Doc[] {
-  const local = listPanelItems("document")
-    .filter((it) => EDITABLE_FORMATS.includes((it.format ?? "").toUpperCase()))
-    .map<Doc>((it) => ({
-      title: it.title, desc: it.description, category: it.category,
-      date: it.addedAt ? new Date(it.addedAt).toLocaleDateString() : "2025",
-      icon: FileText,
-      files: [{ label: (it.format ?? "FILE").toUpperCase(), href: it.src }],
-    }));
-  const seen = new Set(staticDocs.map((d) => d.title));
-  return [...local.filter((d) => !seen.has(d.title)), ...staticDocs];
-}
-
 // ── Page ──────────────────────────────────────────────────────────────────────
 export default function Archivos() {
   const navigate = useNavigate();
   const { user } = useAuth();
 
-  const [allDocs, setAllDocs]   = useState<Doc[]>(() => buildDocs());
+  const [allDocs, setAllDocs]   = useState<Doc[]>(staticDocs);
   const [search, setSearch]     = useState("");
   const [category, setCategory] = useState("Todos");
 
   useEffect(() => {
-    const refresh = () => setAllDocs(buildDocs());
-    window.addEventListener("storage", refresh);
-    window.addEventListener("panel-emma::content-changed", refresh);
-    return () => {
-      window.removeEventListener("storage", refresh);
-      window.removeEventListener("panel-emma::content-changed", refresh);
-    };
+    listPublicDocs()
+      .then(({ items }) => {
+        const seen = new Set(staticDocs.map((d) => d.title));
+        const apiDocs = items.map<Doc>((it) => ({
+          title: it.title,
+          desc: it.description ?? "",
+          category: it.category ?? "Investigación",
+          date: new Date(it.uploaded_at).toLocaleDateString(),
+          icon: FileText,
+          files: [{ label: "PDF", href: it.url }],
+        }));
+        setAllDocs([...apiDocs.filter((d) => !seen.has(d.title)), ...staticDocs]);
+      })
+      .catch(() => {});
   }, []);
 
   const featuredDocs = useMemo(() => allDocs.filter((d) => FEATURED_TITLES.has(d.title)), [allDocs]);

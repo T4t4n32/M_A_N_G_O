@@ -406,3 +406,7 @@ export const patchServerUpload = (
     method: "PATCH",
     body: JSON.stringify(patch),
   });
+
+/** Public — no auth required. Returns only PDF documents uploaded via Panel Emma. */
+export const listPublicDocs = () =>
+  request<{ items: UploadedFileRecord[]; total: number }>("/public/docs");

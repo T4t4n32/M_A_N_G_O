@@ -172,6 +172,21 @@ def delete_upload(upload_id: int):
     return jsonify({"ok": True}), 200
 
 
+# ─── Public document listing (PDFs only) ─────────────────────────────────────
+
+@uploads_bp.get("/public/docs")
+def public_docs():
+    """Lists only PDF documents — no auth required."""
+    items = UploadedFile.query.filter(
+        UploadedFile.kind == "document",
+        db.or_(
+            UploadedFile.mime_type == "application/pdf",
+            UploadedFile.original_name.ilike("%.pdf"),
+        ),
+    ).order_by(UploadedFile.uploaded_at.desc()).all()
+    return jsonify({"items": [i.to_dict() for i in items], "total": len(items)}), 200
+
+
 # ─── Public file serving ─────────────────────────────────────────────────────
 
 @uploads_bp.get("/uploads/<path:filename>")
