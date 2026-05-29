@@ -93,11 +93,12 @@ def _post_telemetry(snapshot: dict) -> None:
 def _usb_reset() -> bool:
     """Try to toggle the USB authorized flag to reset the Huawei device."""
     try:
-        result = subprocess.run(
+        proc = subprocess.Popen(
             ["find", "/sys/bus/usb/devices", "-maxdepth", "2", "-name", "idVendor"],
-            capture_output=True, text=True, timeout=5,
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE,
         )
-        for vp in result.stdout.splitlines():
+        stdout, _ = proc.communicate()
+        for vp in stdout.decode("utf-8", errors="replace").splitlines():
             try:
                 with open(vp) as fh:
                     if fh.read().strip().lower() != _HUAWEI_VID:
