@@ -6,7 +6,7 @@ After=local-fs.target
 
 [Service]
 Type=simple
-WorkingDirectory=/opt/mango_node
+WorkingDirectory=/opt
 EnvironmentFile=-/opt/mango_node/.env
 ExecStart=/usr/bin/python3 -m mango_node.serial_acquire
 Restart=always

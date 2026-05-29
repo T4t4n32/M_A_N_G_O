@@ -114,10 +114,11 @@ def _get_modem_status():
         sampled = data.get("sampled_at", "")
         if sampled:
             try:
-                from datetime import datetime, timezone
-                ts = datetime.fromisoformat(sampled.replace("Z", "+00:00"))
-                if ts.tzinfo is None:
-                    ts = ts.replace(tzinfo=timezone.utc)
+                import re as _re
+                # Python 3.4 compatible ISO-8601 parse (no fromisoformat)
+                _s = _re.sub(r'[+][0-9:]+$', '', sampled).rstrip('Z').split('.')[0]
+                ts = datetime.strptime(_s, "%Y-%m-%dT%H:%M:%S").replace(
+                    tzinfo=timezone.utc)
                 age = (datetime.now(timezone.utc) - ts).total_seconds()
                 data["age_seconds"] = int(age)
                 data["source"] = "sidecar"
