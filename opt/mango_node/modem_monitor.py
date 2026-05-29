@@ -131,7 +131,7 @@ def _signal_bar_desc(bars) -> str:
 
 
 def main():
-    _log("starting — station={} gateway={} poll={}s telemetry={}s".format(
+    _log("starting - station={} gateway={} poll={}s telemetry={}s".format(
         STATION_NAME, HUAWEI_GATEWAY, POLL_INTERVAL, TELEMETRY_INTERVAL,
     ))
 
@@ -148,7 +148,7 @@ def main():
             consecutive_failures += 1
             _log("modem unreachable (failure #{})".format(consecutive_failures))
             if consecutive_failures >= MAX_FAILURES:
-                _log("max failures reached — attempting USB reset")
+                _log("max failures reached - attempting USB reset")
                 _usb_reset()
                 time.sleep(RECONNECT_DELAY_S)
                 consecutive_failures = 0
@@ -168,7 +168,7 @@ def main():
             ))
 
             if not connected:
-                _log("not connected — requesting reconnect via HiLink")
+                _log("not connected - requesting reconnect via HiLink")
                 ok = reconnect(HUAWEI_GATEWAY)
                 _log("reconnect request: {}".format("accepted" if ok else "failed"))
                 time.sleep(RECONNECT_DELAY_S)

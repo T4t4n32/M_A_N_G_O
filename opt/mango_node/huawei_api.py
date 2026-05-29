@@ -167,8 +167,17 @@ def delete_sms(index, gateway=_DEFAULT_GATEWAY):
 # ── Monitoring / telemetry APIs ───────────────────────────────────────────────
 
 # Huawei E3372H-153 ConnectionStatus codes
+# Different firmware versions use different base values (0-based vs 900-based)
 _CONN_STATUS = {
-    "900": "idle",
+    # 0-based (some HiLink firmware versions)
+    "0":   "disconnected",
+    "1":   "connecting",
+    "2":   "connected",
+    "3":   "disconnected",
+    "4":   "disconnecting",
+    "5":   "connected",
+    # 900-based (most HiLink firmware versions)
+    "900": "disconnected",
     "901": "connecting",
     "902": "connected",
     "903": "disconnected",
@@ -176,11 +185,14 @@ _CONN_STATUS = {
     "905": "connected",
 }
 
+_CONN_CONNECTED = {"connected"}
+
 # /api/monitoring/status NetworkType codes
 _NETWORK_TYPE = {
     "0": "No Service", "1": "GSM", "2": "GPRS", "3": "EDGE",
     "4": "WCDMA", "5": "HSDPA", "6": "HSUPA", "7": "HSPA",
-    "9": "HSPA+", "19": "LTE", "41": "LTE+", "101": "LTE",
+    "8": "TD-SCDMA", "9": "HSPA+", "17": "HSPA+ 64QAM",
+    "18": "HSPA+ MIMO", "19": "LTE", "41": "LTE+", "101": "LTE",
 }
 
 
@@ -200,9 +212,13 @@ def get_connection_status(gateway=_DEFAULT_GATEWAY):
         net_code = (root.findtext("CurrentNetworkType") or "").strip()
         signal_icon = (root.findtext("SignalIcon") or "").strip()
 
-        connected = conn_code in ("902", "905")
-        status = _CONN_STATUS.get(conn_code, "unknown")
-        network_type = _NETWORK_TYPE.get(net_code, "Unknown ({})".format(net_code) if net_code else "Unknown")
+        status = _CONN_STATUS.get(conn_code, "disconnected" if conn_code else "no_sim")
+        connected = status == "connected"
+
+        if net_code:
+            network_type = _NETWORK_TYPE.get(net_code, "Unknown ({})".format(net_code))
+        else:
+            network_type = "No Service" if not connected else "Unknown"
 
         bars = None
         if signal_icon.isdigit():
