@@ -12,9 +12,10 @@ LOG_DIR        = os.getenv("MANGO_LOG_DIR",          "/var/log/upstart")
 EDITOR         = os.getenv("VISUAL", os.getenv("EDITOR", "nano"))
 
 MANAGED_SERVICES = [
-    "mango-edge-serial",
-    "mango-edge-sync",
-    "mango-edge-api",
-    "mango-edge-sms",
+    "mango-node-serial",
+    "mango-node-sync",
+    "mango-node-sms",
+    "mango-node-local",
+    "mango-node-modem",
     "mango-tunnel",
 ]

@@ -24,6 +24,21 @@ die()  { echo "[install]  ERROR: $*" >&2; exit 1; }
 
 [[ $EUID -eq 0 ]] || die "Run as root: sudo bash $0"
 
+# ── Stop old mango-edge-* services (previous naming convention) ───────────────
+OLD_SERVICES=(mango-edge-serial mango-edge-sync mango-edge-api mango-edge-sms mango-edge-lte)
+for OLD in "${OLD_SERVICES[@]}"; do
+    if initctl status "$OLD" 2>/dev/null | grep -q "running"; then
+        info "Stopping old service: $OLD"
+        initctl stop "$OLD" 2>/dev/null || true
+        ok "Stopped $OLD"
+    fi
+done
+
+# ── Stop new services that may already be running (clean restart) ─────────────
+for SVC in mango-node-serial mango-node-sync mango-node-sms mango-node-local mango-node-modem; do
+    initctl stop "$SVC" 2>/dev/null || true
+done
+
 # ── Detect init system ────────────────────────────────────────────────────────
 if command -v systemctl > /dev/null 2>&1 && systemctl --version > /dev/null 2>&1; then
     INIT_SYSTEM="systemd"
@@ -131,6 +146,22 @@ if python3 -c "import sys; sys.path.insert(0,'/opt'); from mango_node import con
     ok "mango_node package imports correctly from /opt"
 else
     warn "Import test failed — check PYTHONPATH or package layout"
+fi
+
+# ── Port 9100 availability check ──────────────────────────────────────────────
+info "Checking port 9100..."
+if command -v netstat > /dev/null 2>&1; then
+    OWNER=$(netstat -tlnp 2>/dev/null | grep ':9100 ' | awk '{print $NF}' || true)
+elif command -v ss > /dev/null 2>&1; then
+    OWNER=$(ss -tlnp 2>/dev/null | grep ':9100 ' | head -1 || true)
+else
+    OWNER=""
+fi
+if [[ -n "$OWNER" ]]; then
+    warn "Port 9100 already in use: $OWNER"
+    warn "mango-node-local will fail to bind — kill that process first"
+else
+    ok "Port 9100 is free"
 fi
 
 # ── Summary ───────────────────────────────────────────────────────────────────
