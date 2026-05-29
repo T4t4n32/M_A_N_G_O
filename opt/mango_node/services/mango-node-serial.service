@@ -6,12 +6,11 @@ After=local-fs.target
 
 [Service]
 Type=simple
-# Change the WorkingDirectory to the install location of the mango node
 WorkingDirectory=/opt/mango_node
+EnvironmentFile=-/opt/mango_node/.env
 ExecStart=/usr/bin/python3 -m mango_node.serial_acquire
 Restart=always
 RestartSec=3
-# Ensure output is not buffered so logs appear promptly
 Environment=PYTHONUNBUFFERED=1
 
 [Install]

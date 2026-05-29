@@ -12,6 +12,7 @@ Endpoints:
   GET /edge/health         — alias for /health
   GET /edge/queue          — alias for /api/queue
   GET /edge/sync-status    — alias for /api/sync-status
+  GET /edge/modem          — Huawei E3372H-153 live telemetry snapshot
   GET /edge/imu/latest     — IMU placeholder (stub until BNO080 is wired)
 """
 
@@ -20,10 +21,12 @@ import os
 from datetime import datetime, timezone
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
-from .config import DB_PATH, STATION_NAME, VERBOSE
+from .config import DB_PATH, STATION_NAME, VERBOSE, HUAWEI_GATEWAY
 from .db import fetch_latest_readings, fetch_unsent, get_connection, get_queue_stats
 
 PORT = int(os.getenv("MANGO_LOCAL_API_PORT", "9100"))
+MODEM_STATUS_FILE = os.getenv("MANGO_MODEM_STATUS_FILE",
+                               "/opt/mango_node/modem_status.json")
 
 
 def _json(obj):
@@ -100,6 +103,49 @@ def _get_queue_rows():
     ]
 
 
+def _get_modem_status():
+    """Return modem snapshot from the sidecar file written by modem_monitor.
+
+    Falls back to a live poll if the sidecar is absent or stale (>120s old).
+    """
+    try:
+        with open(MODEM_STATUS_FILE) as fh:
+            data = json.load(fh)
+        sampled = data.get("sampled_at", "")
+        if sampled:
+            try:
+                from datetime import datetime, timezone
+                ts = datetime.fromisoformat(sampled.replace("Z", "+00:00"))
+                if ts.tzinfo is None:
+                    ts = ts.replace(tzinfo=timezone.utc)
+                age = (datetime.now(timezone.utc) - ts).total_seconds()
+                data["age_seconds"] = int(age)
+                data["source"] = "sidecar"
+            except Exception:
+                data["age_seconds"] = None
+                data["source"] = "sidecar"
+        return data
+    except FileNotFoundError:
+        pass
+    except Exception:
+        pass
+
+    # Sidecar not available — do a live poll (blocks briefly)
+    try:
+        from .huawei_api import get_modem_snapshot
+        snap = get_modem_snapshot(HUAWEI_GATEWAY)
+        snap["source"] = "live"
+        snap["age_seconds"] = 0
+        return snap
+    except Exception as exc:
+        return {
+            "available": False,
+            "source": "error",
+            "error": str(exc),
+            "sampled_at": _utc_now_iso(),
+        }
+
+
 def _get_imu_stub():
     return {
         "station": STATION_NAME,
@@ -163,6 +209,10 @@ class _Handler(BaseHTTPRequestHandler):
 
         elif path in ("/api/sync-status", "/edge/sync-status"):
             self._send(200, _json(_get_sync_status()))
+
+        elif path == "/edge/modem":
+            modem = _get_modem_status()
+            self._send(200, _json({"station": STATION_NAME, "modem": modem}))
 
         elif path == "/edge/imu/latest":
             self._send(200, _json(_get_imu_stub()))

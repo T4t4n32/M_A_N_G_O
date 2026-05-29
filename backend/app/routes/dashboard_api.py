@@ -24,6 +24,7 @@ from flask import Blueprint, jsonify, request
 from sqlalchemy import inspect, text
 
 from app.extensions import db
+from app.models_compat import DeviceRegistry, MangoModemStatus
 
 dashboard_bp = Blueprint("dashboard_api", __name__, url_prefix="/api/v1")
 
@@ -334,3 +335,39 @@ def range_series():
         ), 200
     except Exception as e:
         return _json_error("QUERY_FAILED", "Failed to query time series.", 500, {"reason": str(e)})
+
+
+@dashboard_bp.get("/edge/status")
+def edge_status():
+    """Return connectivity status for all registered edge devices.
+
+    Merges DeviceRegistry (last seen, packet count) with MangoModemStatus
+    (LTE signal, operator, connected state) for each device.
+
+    Used by the dashboard DevicesPanel to show modem telemetry.
+    """
+    now = _now_utc()
+    try:
+        db.create_all()
+        devices = DeviceRegistry.query.order_by(DeviceRegistry.last_seen.desc()).all()
+        modem_map: dict[str, Any] = {}
+        try:
+            modems = MangoModemStatus.query.all()
+            modem_map = {m.device_id: m.to_dict() for m in modems}
+        except Exception:
+            pass
+
+        result = []
+        for dev in devices:
+            d = dev.to_dict()
+            d["modem"] = modem_map.get(dev.device_id)
+            result.append(d)
+
+        return jsonify({
+            "server_time": now.isoformat(),
+            "devices": result,
+            "count": len(result),
+        }), 200
+    except Exception as exc:
+        return _json_error("QUERY_FAILED", "Failed to query edge status.", 500,
+                           {"reason": str(exc)})

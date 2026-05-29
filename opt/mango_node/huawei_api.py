@@ -162,3 +162,205 @@ def delete_sms(index, gateway=_DEFAULT_GATEWAY):
         return (root.text or "").strip().upper() == "OK"
     except Exception:
         return False
+
+
+# ── Monitoring / telemetry APIs ───────────────────────────────────────────────
+
+# Huawei E3372H-153 ConnectionStatus codes
+_CONN_STATUS = {
+    "900": "idle",
+    "901": "connecting",
+    "902": "connected",
+    "903": "disconnected",
+    "904": "disconnecting",
+    "905": "connected",
+}
+
+# /api/monitoring/status NetworkType codes
+_NETWORK_TYPE = {
+    "0": "No Service", "1": "GSM", "2": "GPRS", "3": "EDGE",
+    "4": "WCDMA", "5": "HSDPA", "6": "HSUPA", "7": "HSPA",
+    "9": "HSPA+", "19": "LTE", "41": "LTE+", "101": "LTE",
+}
+
+
+def get_connection_status(gateway=_DEFAULT_GATEWAY):
+    """Return connection state from /api/monitoring/status.
+
+    Returns dict with keys: connected, status, network_type, signal_bars.
+    """
+    try:
+        resp = requests.get(
+            _gateway_url(gateway, "/api/monitoring/status"), timeout=_SESSION_TIMEOUT
+        )
+        resp.raise_for_status()
+        root = ET.fromstring(resp.text)
+
+        conn_code = (root.findtext("ConnectionStatus") or "").strip()
+        net_code = (root.findtext("CurrentNetworkType") or "").strip()
+        signal_icon = (root.findtext("SignalIcon") or "").strip()
+
+        connected = conn_code in ("902", "905")
+        status = _CONN_STATUS.get(conn_code, "unknown")
+        network_type = _NETWORK_TYPE.get(net_code, "Unknown ({})".format(net_code) if net_code else "Unknown")
+
+        bars = None
+        if signal_icon.isdigit():
+            bars = int(signal_icon)
+
+        return {
+            "connected": connected,
+            "status": status,
+            "network_type": network_type,
+            "signal_bars": bars,
+        }
+    except Exception as exc:
+        return {"connected": False, "status": "error", "error": str(exc)}
+
+
+def get_signal_info(gateway=_DEFAULT_GATEWAY):
+    """Return RF signal metrics from /api/device/signal.
+
+    Returns dict with keys: rssi, rsrp, rsrq, sinr, band, cell_id.
+    Values are integers (dBm / dB) or None when not reported.
+    """
+    def _int(root, tag):
+        val = root.findtext(tag)
+        if val is None:
+            return None
+        val = val.strip()
+        try:
+            return int(val)
+        except (ValueError, TypeError):
+            return None
+
+    try:
+        resp = requests.get(
+            _gateway_url(gateway, "/api/device/signal"), timeout=_SESSION_TIMEOUT
+        )
+        resp.raise_for_status()
+        root = ET.fromstring(resp.text)
+        return {
+            "rssi":    _int(root, "rssi"),
+            "rsrp":    _int(root, "rsrp"),
+            "rsrq":    _int(root, "rsrq"),
+            "sinr":    _int(root, "sinr"),
+            "band":    (root.findtext("band") or "").strip() or None,
+            "cell_id": (root.findtext("cell_id") or "").strip() or None,
+        }
+    except Exception as exc:
+        return {"error": str(exc)}
+
+
+def get_operator_info(gateway=_DEFAULT_GATEWAY):
+    """Return operator name and registration state from /api/net/current-plmn."""
+    try:
+        resp = requests.get(
+            _gateway_url(gateway, "/api/net/current-plmn"), timeout=_SESSION_TIMEOUT
+        )
+        resp.raise_for_status()
+        root = ET.fromstring(resp.text)
+        full = (root.findtext("FullName") or "").strip()
+        short = (root.findtext("ShortName") or "").strip()
+        return {
+            "operator": full or short,
+            "state":    (root.findtext("State") or "").strip(),
+        }
+    except Exception:
+        return {"operator": "", "state": ""}
+
+
+def get_traffic_stats(gateway=_DEFAULT_GATEWAY):
+    """Return cumulative traffic from /api/monitoring/traffic-statistics.
+
+    Returns dict with upload/download byte counts for current session and total.
+    """
+    def _int(root, tag):
+        val = root.findtext(tag)
+        if val is None:
+            return None
+        try:
+            return int(val.strip())
+        except (ValueError, TypeError):
+            return None
+
+    try:
+        resp = requests.get(
+            _gateway_url(gateway, "/api/monitoring/traffic-statistics"),
+            timeout=_SESSION_TIMEOUT,
+        )
+        resp.raise_for_status()
+        root = ET.fromstring(resp.text)
+        return {
+            "session_upload_bytes":   _int(root, "CurrentUpload"),
+            "session_download_bytes": _int(root, "CurrentDownload"),
+            "total_upload_bytes":     _int(root, "TotalUpload"),
+            "total_download_bytes":   _int(root, "TotalDownload"),
+            "session_seconds":        _int(root, "currentConnectTime"),
+        }
+    except Exception as exc:
+        return {"error": str(exc)}
+
+
+def get_modem_snapshot(gateway=_DEFAULT_GATEWAY):
+    """Return a combined telemetry snapshot of the modem.
+
+    Calls all monitoring endpoints and merges results into one dict.
+    Always includes 'available' and 'sampled_at'. Designed for the
+    modem_monitor watchdog and the local_api /edge/modem endpoint.
+    """
+    now = datetime.now(timezone.utc).isoformat()
+
+    if not modem_available(gateway):
+        return {"available": False, "sampled_at": now}
+
+    conn    = get_connection_status(gateway)
+    signal  = get_signal_info(gateway)
+    oper    = get_operator_info(gateway)
+    traffic = get_traffic_stats(gateway)
+
+    return {
+        "available":               True,
+        "connected":               conn.get("connected", False),
+        "status":                  conn.get("status", "unknown"),
+        "network_type":            conn.get("network_type", ""),
+        "signal_bars":             conn.get("signal_bars"),
+        "rssi":                    signal.get("rssi"),
+        "rsrp":                    signal.get("rsrp"),
+        "rsrq":                    signal.get("rsrq"),
+        "sinr":                    signal.get("sinr"),
+        "band":                    signal.get("band"),
+        "operator":                oper.get("operator", ""),
+        "session_upload_bytes":    traffic.get("session_upload_bytes"),
+        "session_download_bytes":  traffic.get("session_download_bytes"),
+        "total_upload_bytes":      traffic.get("total_upload_bytes"),
+        "total_download_bytes":    traffic.get("total_download_bytes"),
+        "session_seconds":         traffic.get("session_seconds"),
+        "sampled_at":              now,
+    }
+
+
+def reconnect(gateway=_DEFAULT_GATEWAY):
+    """Trigger LTE reconnection via HiLink dial API (Action=1).
+
+    Returns True if the API accepted the request.
+    """
+    try:
+        ses, tok = _get_session_token(gateway)
+    except Exception:
+        return False
+
+    url = _gateway_url(gateway, "/api/dialup/dial")
+    headers = {
+        "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+        "Cookie": ses,
+        "__RequestVerificationToken": tok,
+    }
+    body = '<?xml version="1.0" encoding="UTF-8"?><request><Action>1</Action></request>'
+    try:
+        resp = requests.post(url, data=body, headers=headers, timeout=_SESSION_TIMEOUT)
+        resp.raise_for_status()
+        root = ET.fromstring(resp.text)
+        return (root.text or "").strip().upper() == "OK"
+    except Exception:
+        return False
