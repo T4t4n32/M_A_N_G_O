@@ -5,6 +5,7 @@ Tables are separate from your main schema:
 - mango_compat_readings
 - mango_ingest_packets  (deduplication registry)
 - mango_devices         (edge device registry)
+- mango_modem_status    (Huawei E3372H-153 telemetry per device)
 
 Used by app.routes.compat_ingest and app.routes.readings.
 """
@@ -116,4 +117,63 @@ class DeviceRegistry(db.Model):
             "status": computed_status,
             "age_seconds": age_seconds,
             "registered_at": self.registered_at.isoformat(),
+        }
+
+
+class MangoModemStatus(db.Model):
+    """Modem telemetry reported by the Huawei E3372H-153 on each edge node.
+
+    One row per device_id, upserted on every POST /api/v1/sync/telemetry.
+    """
+    __tablename__ = "mango_modem_status"
+
+    id          = db.Column(db.Integer, primary_key=True)
+    device_id   = db.Column(db.String(64), nullable=False, unique=True, index=True)
+
+    available        = db.Column(db.Boolean, nullable=False, default=False)
+    connected        = db.Column(db.Boolean, nullable=False, default=False)
+    status           = db.Column(db.String(32), nullable=True)
+    network_type     = db.Column(db.String(32), nullable=True)
+    signal_bars      = db.Column(db.Integer, nullable=True)
+    rssi             = db.Column(db.Integer, nullable=True)
+    rsrp             = db.Column(db.Integer, nullable=True)
+    rsrq             = db.Column(db.Integer, nullable=True)
+    sinr             = db.Column(db.Integer, nullable=True)
+    band             = db.Column(db.String(32), nullable=True)
+    operator         = db.Column(db.String(64), nullable=True)
+    session_upload_bytes   = db.Column(db.BigInteger, nullable=True)
+    session_download_bytes = db.Column(db.BigInteger, nullable=True)
+    total_upload_bytes     = db.Column(db.BigInteger, nullable=True)
+    total_download_bytes   = db.Column(db.BigInteger, nullable=True)
+    session_seconds  = db.Column(db.Integer, nullable=True)
+    modem_sampled_at = db.Column(db.DateTime(timezone=True), nullable=True)
+    reported_at      = db.Column(db.DateTime(timezone=True), nullable=True)
+    updated_at       = db.Column(
+        db.DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc),
+    )
+
+    def to_dict(self) -> dict:
+        return {
+            "device_id":             self.device_id,
+            "available":             self.available,
+            "connected":             self.connected,
+            "status":                self.status,
+            "network_type":          self.network_type,
+            "signal_bars":           self.signal_bars,
+            "rssi":                  self.rssi,
+            "rsrp":                  self.rsrp,
+            "rsrq":                  self.rsrq,
+            "sinr":                  self.sinr,
+            "band":                  self.band,
+            "operator":              self.operator,
+            "session_upload_bytes":  self.session_upload_bytes,
+            "session_download_bytes": self.session_download_bytes,
+            "total_upload_bytes":    self.total_upload_bytes,
+            "total_download_bytes":  self.total_download_bytes,
+            "session_seconds":       self.session_seconds,
+            "modem_sampled_at":      self.modem_sampled_at.isoformat() if self.modem_sampled_at else None,
+            "reported_at":           self.reported_at.isoformat() if self.reported_at else None,
+            "updated_at":            self.updated_at.isoformat() if self.updated_at else None,
         }

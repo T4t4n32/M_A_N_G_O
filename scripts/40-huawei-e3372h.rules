@@ -1,0 +1,40 @@
+# udev rules for Huawei E3372H-153 LTE modem — MANGO project
+# Install: cp 40-huawei-e3372h.rules /etc/udev/rules.d/
+#          udevadm control --reload-rules && udevadm trigger
+#
+# The E3372H-153 ships in HiLink mode and enumerates as a USB Ethernet
+# adapter (cdc_ether driver, product ID 14dc). No usb_modeswitch is
+# required. The rule below prevents USB autosuspend, which can cause the
+# interface to silently drop while the system believes it is still up.
+#
+# If the device appears in storage/NDIS mode (product ID 1f01), usb_modeswitch
+# is triggered automatically to switch it to HiLink mode.
+
+# ── HiLink mode (USB Ethernet, idProduct=14dc) ──────────────────────────────
+
+# Prevent USB autosuspend — keeps the LTE connection stable
+ACTION=="add", SUBSYSTEM=="usb", \
+    ATTRS{idVendor}=="12d1", ATTRS{idProduct}=="14dc", \
+    RUN+="/bin/sh -c 'echo -1 > /sys%p/power/autosuspend_delay_ms'"
+
+# Force USB power control to 'on' (no automatic suspend)
+ACTION=="add", SUBSYSTEM=="usb", \
+    ATTRS{idVendor}=="12d1", ATTRS{idProduct}=="14dc", \
+    RUN+="/bin/sh -c 'echo on > /sys%p/power/control'"
+
+# ── Storage/NDIS mode (idProduct=1f01) — trigger modeswitch ─────────────────
+
+ACTION=="add", SUBSYSTEM=="usb", \
+    ATTRS{idVendor}=="12d1", ATTRS{idProduct}=="1f01", \
+    RUN+="/usr/sbin/usb_modeswitch --huawei-new-mode -v 12d1 -p 1f01"
+
+ACTION=="add", SUBSYSTEM=="usb", \
+    ATTRS{idVendor}=="12d1", ATTRS{idProduct}=="1f01", \
+    RUN+="/bin/sh -c 'echo -1 > /sys%p/power/autosuspend_delay_ms'"
+
+# ── Network interface — tag for NetworkManager and journald ─────────────────
+
+SUBSYSTEM=="net", ACTION=="add", \
+    ATTRS{idVendor}=="12d1", ATTRS{idProduct}=="14dc", \
+    ENV{ID_MM_DEVICE_PROCESS}="0", \
+    TAG+="systemd", ENV{SYSTEMD_WANTS}=""

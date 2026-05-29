@@ -291,6 +291,28 @@ export interface VersionResponse {
 // ─── Device registry (/api/v1/devices) ───────────────────────
 export type DeviceStatus = "online" | "stale" | "offline" | "maintenance" | "unknown";
 
+export interface ModemSnapshot {
+  available: boolean;
+  connected: boolean;
+  status: string | null;
+  network_type: string | null;
+  signal_bars: number | null;
+  rssi: number | null;
+  rsrp: number | null;
+  rsrq: number | null;
+  sinr: number | null;
+  band: string | null;
+  operator: string | null;
+  session_upload_bytes: number | null;
+  session_download_bytes: number | null;
+  total_upload_bytes: number | null;
+  total_download_bytes: number | null;
+  session_seconds: number | null;
+  modem_sampled_at: string | null;
+  reported_at: string | null;
+  updated_at: string | null;
+}
+
 export interface DeviceRecord {
   device_id: string;
   station_name: string | null;
@@ -300,9 +322,16 @@ export interface DeviceRecord {
   status: DeviceStatus;
   age_seconds: number | null;
   registered_at: string;
+  modem?: ModemSnapshot | null;
 }
 
 export interface DevicesResponse {
+  devices: DeviceRecord[];
+  count: number;
+}
+
+export interface EdgeStatusResponse {
+  server_time: string;
   devices: DeviceRecord[];
   count: number;
 }

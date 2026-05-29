@@ -22,6 +22,7 @@ import type {
   DevicesResponse,
   DeviceRecord,
   SyncStatusResponse,
+  EdgeStatusResponse,
   Mission,
   MissionsResponse,
   MissionResponse,
@@ -222,6 +223,9 @@ export const execCommand = (command: string, target: "vps" | "jetson") =>
 
 export const getJetsonStatus = () =>
   request<{ online: boolean }>("/admin/jetson/status");
+
+export const getEdgeStatus = () =>
+  request<EdgeStatusResponse>("/edge/status");
 
 export const requestDocLink = (path: string) =>
   request<{ url: string; expires_at: string; filename: string; ttl_minutes: number }>(

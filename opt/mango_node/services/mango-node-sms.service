@@ -1,0 +1,16 @@
+[Unit]
+Description=MANGO Node: SMS alert dispatcher via Huawei E3372H-153
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/mango_node
+EnvironmentFile=-/opt/mango_node/.env
+ExecStart=/usr/bin/python3 -m mango_node.sms_dispatch
+Restart=always
+RestartSec=10
+Environment=PYTHONUNBUFFERED=1
+
+[Install]
+WantedBy=multi-user.target

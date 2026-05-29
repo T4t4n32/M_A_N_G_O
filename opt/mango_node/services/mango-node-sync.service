@@ -7,8 +7,8 @@ Wants=network-online.target
 
 [Service]
 Type=simple
-# Adjust to the install location of the mango node
 WorkingDirectory=/opt/mango_node
+EnvironmentFile=-/opt/mango_node/.env
 ExecStart=/usr/bin/python3 -m mango_node.sync_manager
 Restart=always
 RestartSec=3

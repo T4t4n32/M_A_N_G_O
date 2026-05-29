@@ -1,0 +1,15 @@
+[Unit]
+Description=MANGO Node: local HTTP API on port 9100
+After=local-fs.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/mango_node
+EnvironmentFile=-/opt/mango_node/.env
+ExecStart=/usr/bin/python3 -m mango_node.local_api
+Restart=always
+RestartSec=5
+Environment=PYTHONUNBUFFERED=1
+
+[Install]
+WantedBy=multi-user.target
