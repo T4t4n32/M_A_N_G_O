@@ -189,7 +189,7 @@ export function SmartUploadForm({ onAdded }: { onAdded?: () => void }) {
         <UploadCloud className="h-7 w-7" aria-hidden />
         <span className="font-medium">Suelta archivos o haz click para seleccionar</span>
         <span className="text-[11px] text-white/40">
-          Acepta cualquier formato. Imágenes 15 MB · Videos 500 MB · Docs 20 MB.
+          Acepta cualquier formato. Imágenes 50 MB · Videos 500 MB · Docs 100 MB.
         </span>
         <input
           id="smart-upload-input"
