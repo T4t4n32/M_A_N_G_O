@@ -77,6 +77,14 @@ services:
       JETSON_USER: "${JETSON_USER:-ubuntu}"
       JETSON_SSH_KEY_PATH: "/run/secrets/jetson_key"
       UPLOAD_FOLDER: "${UPLOAD_FOLDER:-/app/uploads}"
+
+      # Upload size limits (override via .env if needed)
+      MAX_UPLOAD_IMAGE_MB:  "${MAX_UPLOAD_IMAGE_MB:-200}"
+      MAX_UPLOAD_VIDEO_MB:  "${MAX_UPLOAD_VIDEO_MB:-2000}"
+      MAX_UPLOAD_DOC_MB:    "${MAX_UPLOAD_DOC_MB:-500}"
+
+      # Gunicorn — long timeout required for large file uploads (videos up to 2 GB)
+      GUNICORN_TIMEOUT: "1800"
     volumes:
       - /home/mango/.ssh/id_ed25519:/run/secrets/jetson_key:ro
       - mango_uploads:/app/uploads

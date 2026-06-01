@@ -92,6 +92,15 @@ def modem_available(gateway=_DEFAULT_GATEWAY):
         return False
 
 
+def _modem_reachable(gateway=_DEFAULT_GATEWAY):
+    """Return (reachable: bool, error: str|None)."""
+    try:
+        requests.get(_gateway_url(gateway, "/api/device/basic_information"), timeout=3)
+        return True, None
+    except Exception as exc:
+        return False, str(exc)
+
+
 def get_inbox(gateway=_DEFAULT_GATEWAY):
     """Return received SMS messages from the modem inbox."""
     try:
@@ -327,15 +336,22 @@ def get_modem_snapshot(gateway=_DEFAULT_GATEWAY):
     """
     now = datetime.now(timezone.utc).isoformat()
 
-    if not modem_available(gateway):
-        return {"available": False, "sampled_at": now}
+    reachable, reach_err = _modem_reachable(gateway)
+    if not reachable:
+        return {
+            "available": False,
+            "connected": False,
+            "status": "unreachable",
+            "error": reach_err,
+            "sampled_at": now,
+        }
 
     conn    = get_connection_status(gateway)
     signal  = get_signal_info(gateway)
     oper    = get_operator_info(gateway)
     traffic = get_traffic_stats(gateway)
 
-    return {
+    snap = {
         "available":               True,
         "connected":               conn.get("connected", False),
         "status":                  conn.get("status", "unknown"),
@@ -354,6 +370,10 @@ def get_modem_snapshot(gateway=_DEFAULT_GATEWAY):
         "session_seconds":         traffic.get("session_seconds"),
         "sampled_at":              now,
     }
+    # Surface connection-status error so modem_monitor can log it
+    if conn.get("error"):
+        snap["conn_error"] = conn["error"]
+    return snap
 
 
 def reconnect(gateway=_DEFAULT_GATEWAY):
@@ -380,3 +400,40 @@ def reconnect(gateway=_DEFAULT_GATEWAY):
         return (root.text or "").strip().upper() == "OK"
     except Exception:
         return False
+
+
+# ── CLI diagnostic ────────────────────────────────────────────────────────────
+
+def diagnose(gateway=_DEFAULT_GATEWAY):
+    """Print raw modem API responses for debugging.
+
+    Run directly:  python -m mango_node.huawei_api [gateway-ip]
+    """
+    endpoints = [
+        "/api/device/basic_information",
+        "/api/monitoring/status",
+        "/api/device/signal",
+        "/api/net/current-plmn",
+        "/api/webserver/SesTokInfo",
+    ]
+    print("Modem diagnostic — gateway: {}".format(gateway))
+    print("=" * 60)
+    for path in endpoints:
+        url = _gateway_url(gateway, path)
+        print("\n[GET] {}".format(url))
+        try:
+            resp = requests.get(url, timeout=5)
+            print("  HTTP {}".format(resp.status_code))
+            print("  Body: {}".format(resp.text[:400]))
+        except Exception as exc:
+            print("  ERROR: {}".format(exc))
+    print("\n[SNAPSHOT]")
+    import json
+    snap = get_modem_snapshot(gateway)
+    print(json.dumps(snap, indent=2))
+
+
+if __name__ == "__main__":
+    import sys
+    gw = sys.argv[1] if len(sys.argv) > 1 else _DEFAULT_GATEWAY
+    diagnose(gw)
