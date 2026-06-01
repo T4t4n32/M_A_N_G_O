@@ -7,6 +7,7 @@ import {
   listServerUploads,
   deleteServerUpload,
   patchServerUpload,
+  uploadFile,
   type UploadedFileRecord,
 } from "@/lib/api";
 import { Button } from "@/components/ui/button";
@@ -35,30 +36,25 @@ import {
 import {
   Image as ImageIcon,
   Video,
-  FileText,
+  FolderOpen,
   Upload,
   Trash2,
   LogOut,
   ShieldCheck,
   Loader2,
-  PlugZap,
   Leaf,
   Sparkles,
   CheckCircle2,
   Lock,
   Search,
-  Play,
   ExternalLink,
   Pencil,
-  RotateCcw,
   ArrowDownWideNarrow,
   ArrowUpWideNarrow,
   GripVertical,
   XCircle,
-  Type,
-  MonitorPlay,
+  FileText,
 } from "lucide-react";
-import { useLiveEdit } from "@/contexts/LiveEditContext";
 import { useToast } from "@/hooks/use-toast";
 import {
   Dialog,
@@ -68,28 +64,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  PanelItem,
-  PanelKind,
-  categoriesFor,
-  inferFormat,
-  uploadFileToBackend,
-} from "@/lib/panelEmmaContent";
-import {
-  SECTIONS,
-  SiteField,
-  SiteSection,
-  getValue as getSiteValue,
-  setValue as setSiteValue,
-  clearSection as clearSiteSection,
-  hasSectionOverrides,
-} from "@/lib/siteContent";
+import { PanelItem, PanelKind, categoriesFor } from "@/lib/panelEmmaContent";
 import { Progress } from "@/components/ui/progress";
-import { MediaField } from "@/components/editor/MediaField";
-import { PublishBar } from "@/components/editor/PublishBar";
-import { SmartUploadForm } from "@/components/editor/SmartUploadForm";
 
-/* ─────────────────────── API record → PanelItem ─────────────────── */
+/* ─────────────────────── API record → PanelItem ─────────────── */
 
 function recordToPanelItem(r: UploadedFileRecord): PanelItem {
   const ext = r.original_name.split(".").pop()?.toUpperCase() ?? "";
@@ -107,31 +85,14 @@ function recordToPanelItem(r: UploadedFileRecord): PanelItem {
   };
 }
 
-/* ─────────────────────────── Helpers UI ─────────────────────────── */
-
-function IntegrationNotice({ what, endpoint }: { what: string; endpoint: string }) {
-  return (
-    <div className="rounded-lg border border-amber-500/30 bg-amber-500/[0.06] p-3 flex gap-3">
-      <PlugZap className="h-4 w-4 text-amber-400 shrink-0 mt-0.5" />
-      <div className="text-xs text-amber-100/80 leading-relaxed flex-1">
-        <p className="font-semibold text-amber-300 mb-0.5">Persistencia local · sin backend</p>
-        <p>{what}</p>
-        <code className="block mt-1.5 text-[11px] font-mono text-amber-200/90 bg-black/30 rounded px-2 py-1 break-all">
-          {endpoint}
-        </code>
-      </div>
-    </div>
-  );
-}
+/* ─────────────────────────── Header ─────────────────────────── */
 
 function PanelHeader({
   userName,
   onLogout,
-  onLiveEdit,
 }: {
   userName?: string;
   onLogout: () => void;
-  onLiveEdit: () => void;
 }) {
   return (
     <header className="bg-white/[0.04] backdrop-blur-xl border-b border-white/10 px-4 sm:px-6 py-3 sticky top-0 z-30">
@@ -162,16 +123,6 @@ function PanelHeader({
           <span className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full border border-accent/40 text-accent bg-accent/10">
             super-admin
           </span>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onLiveEdit}
-            className="text-orange-300 hover:text-orange-200 hover:bg-orange-500/10 border border-orange-400/30 hover:border-orange-400/60"
-            title="Activar Modo Edición en Vivo"
-          >
-            <MonitorPlay className="h-4 w-4" />
-            <span className="hidden sm:inline ml-1 text-xs">Edición en Vivo</span>
-          </Button>
           <AlertDialog>
             <AlertDialogTrigger asChild>
               <Button variant="ghost" size="sm" className="text-white/50 hover:text-white hover:bg-white/[0.08]">
@@ -207,6 +158,29 @@ function PanelHeader({
 
 /* ─────────────────────────── Upload form ─────────────────────────── */
 
+const KIND_SIZE_LABELS: Record<PanelKind, string> = {
+  image: "200 MB",
+  video: "2 GB",
+  document: "500 MB",
+};
+
+// Persist the last selected category per kind so it survives tab switches
+// (Radix UI Tabs unmounts inactive content, resetting React state).
+function usePersistedCategory(kind: PanelKind): [string, (c: string) => void] {
+  const cats = categoriesFor(kind);
+  const storageKey = `panel-emma::cat-${kind}`;
+  const [category, setCategory] = useState<string>(() => {
+    if (typeof window === "undefined") return cats[0];
+    const saved = localStorage.getItem(storageKey);
+    return saved && cats.includes(saved) ? saved : cats[0];
+  });
+  const setAndPersist = useCallback((c: string) => {
+    setCategory(c);
+    localStorage.setItem(storageKey, c);
+  }, [storageKey]);
+  return [category, setAndPersist];
+}
+
 function UploadForm({
   kind,
   accept,
@@ -224,7 +198,7 @@ function UploadForm({
   const [dragIdx, setDragIdx] = useState<number | null>(null);
   const [overIdx, setOverIdx] = useState<number | null>(null);
   const [description, setDescription] = useState("");
-  const [category, setCategory] = useState<string>(cats[0]);
+  const [category, setCategory] = usePersistedCategory(kind);
   const [busy, setBusy] = useState(false);
   const [dragOver, setDragOver] = useState(false);
 
@@ -268,11 +242,10 @@ function UploadForm({
   const reset = () => {
     setPending([]);
     setDescription("");
-    setCategory(cats[0]);
+    setCategory(cats[0]); // also persists to localStorage via setAndPersist
     const input = document.getElementById(`file-input-${kind}`) as HTMLInputElement | null;
     if (input) input.value = "";
   };
-
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -289,14 +262,22 @@ function UploadForm({
     let ok = 0;
     let failed = 0;
     try {
-      // Process strictly in queue order so the user-defined sequence is honored.
       for (let i = 0; i < pending.length; i++) {
         const p = pending[i];
         if (p.status === "ok") continue;
-        setPending((prev) => prev.map((x, j) => (j === i ? { ...x, status: "processing", progress: 0, error: undefined } : x)));
+        setPending((prev) =>
+          prev.map((x, j) => (j === i ? { ...x, status: "processing", progress: 0, error: undefined } : x)),
+        );
         try {
-          await uploadFileToBackend(p.file, kind, (pct) =>
-            setPending((prev) => prev.map((x, j) => (j === i ? { ...x, progress: pct } : x))),
+          await uploadFile(
+            p.file,
+            {
+              kind,
+              title: p.title.trim() || p.file.name,
+              category,
+              description: description.trim(),
+            },
+            (pct) => setPending((prev) => prev.map((x, j) => (j === i ? { ...x, progress: pct } : x))),
           );
           setPending((prev) => prev.map((x, j) => (j === i ? { ...x, status: "ok", progress: 100 } : x)));
           ok += 1;
@@ -309,17 +290,16 @@ function UploadForm({
       if (ok > 0) {
         toast({
           title: ok === 1 ? "Archivo subido" : `${ok} archivos subidos`,
-          description: `Categoría: ${category}.${failed ? ` ${failed} fallidos en la cola.` : ""}`,
+          description: `Categoría: ${category}.${failed ? ` ${failed} fallidos.` : ""}`,
         });
       }
       if (failed > 0) {
         toast({
-          title: "Algunos archivos no se pudieron añadir",
-          description: "Revisa los archivos en rojo en la cola y vuelve a intentarlo.",
+          title: "Algunos archivos no se pudieron subir",
+          description: "Revisa los archivos en rojo e intenta de nuevo.",
           variant: "destructive",
         });
       }
-      // Keep only failed items in the queue so the user can retry them.
       setPending((prev) => prev.filter((x) => x.status === "error"));
       onAdded();
     } finally {
@@ -327,8 +307,6 @@ function UploadForm({
     }
   };
 
-  const dropZoneId = `dropzone-${kind}`;
-  const dropHelpId = `dropzone-help-${kind}`;
   const openPicker = () => {
     const input = document.getElementById(`file-input-${kind}`) as HTMLInputElement | null;
     input?.click();
@@ -368,33 +346,24 @@ function UploadForm({
       className={`rounded-xl border bg-white/[0.03] p-5 space-y-4 transition-colors ${
         dragOver ? "border-accent bg-accent/[0.06] ring-2 ring-accent/40" : "border-white/10"
       }`}
-      aria-label={`Formulario para añadir ${kind === "image" ? "imágenes" : kind === "video" ? "videos" : "documentos"}`}
     >
       <div className="flex items-center gap-2 text-white/80">
         <Sparkles className="h-4 w-4 text-accent" />
-        <h3 className="text-sm font-semibold">Añadir nuevo contenido</h3>
+        <h3 className="text-sm font-semibold">Añadir archivos</h3>
         <span className="text-[11px] text-white/40 ml-auto hidden sm:inline">
-          Arrastra y suelta uno o varios archivos
+          Máx {KIND_SIZE_LABELS[kind]} por archivo
         </span>
       </div>
 
       <div className="grid sm:grid-cols-2 gap-4">
         <div className="space-y-2 sm:col-span-2">
-          <span id={`dropzone-label-${kind}`} className="text-xs text-white/60 block">
-            Archivos <span className="text-white/30">(máx 2 MB cada uno · puedes seleccionar varios)</span>
-          </span>
+          <span className="text-xs text-white/60 block">Archivos</span>
           <div
-            id={dropZoneId}
             role="button"
             tabIndex={0}
-            aria-labelledby={`dropzone-label-${kind}`}
-            aria-describedby={dropHelpId}
             onClick={openPicker}
             onKeyDown={(e) => {
-              if (e.key === "Enter" || e.key === " ") {
-                e.preventDefault();
-                openPicker();
-              }
+              if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openPicker(); }
             }}
             className={`flex flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed px-4 py-6 cursor-pointer transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
               dragOver
@@ -402,18 +371,20 @@ function UploadForm({
                 : "border-white/15 bg-white/[0.02] text-white/60 hover:border-accent/50 hover:text-white"
             }`}
           >
-            <Upload className="h-5 w-5" aria-hidden="true" />
+            <Upload className="h-5 w-5" />
             <span className="text-xs text-center">
-              <span className="font-semibold">Haz clic o pulsa Enter</span> para elegir, o arrastra y suelta uno o varios archivos aquí
+              <span className="font-semibold">Haz clic</span> para elegir, o arrastra y suelta archivos aquí
             </span>
-            <span id={dropHelpId} className="text-[10px] text-white/40">
-              Formatos admitidos: {accept}
-            </span>
+            {accept && (
+              <span className="text-[10px] text-white/40 text-center max-w-xs">
+                {accept}
+              </span>
+            )}
           </div>
           <Input
             id={`file-input-${kind}`}
             type="file"
-            accept={accept}
+            accept={accept || undefined}
             multiple
             onChange={(e) => handleFiles(e.target.files)}
             className="hidden"
@@ -421,10 +392,7 @@ function UploadForm({
             tabIndex={-1}
           />
           {pending.length > 0 && (
-            <ul
-              className="mt-2 space-y-1.5 rounded-md border border-white/10 bg-black/20 p-2"
-              aria-label={`${pending.length} archivos en cola`}
-            >
+            <ul className="mt-2 space-y-1.5 rounded-md border border-white/10 bg-black/20 p-2">
               {pending.map((p, idx) => {
                 const isOver = overIdx === idx && dragIdx !== null && dragIdx !== idx;
                 const statusColor =
@@ -454,7 +422,6 @@ function UploadForm({
                     <div className="flex items-center gap-2">
                       <button
                         type="button"
-                        aria-label={`Reordenar ${p.file.name}. Mantén pulsadas las flechas izquierda o derecha del teclado.`}
                         title="Arrastrar para reordenar"
                         onKeyDown={(e) => {
                           if (e.key === "ArrowUp") { e.preventDefault(); moveItem(idx, Math.max(0, idx - 1)); }
@@ -475,7 +442,7 @@ function UploadForm({
                         disabled={busy && p.status === "processing"}
                         className="bg-white/[0.04] border-white/10 text-white h-8 text-xs flex-1"
                       />
-                      <span className={`inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider ${statusColor}`} aria-live="polite">
+                      <span className={`inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider ${statusColor}`}>
                         {p.status === "ok" && <CheckCircle2 className="h-3 w-3" />}
                         {p.status === "error" && <XCircle className="h-3 w-3" />}
                         {p.status === "processing" && <Loader2 className="h-3 w-3 animate-spin" />}
@@ -488,7 +455,7 @@ function UploadForm({
                         type="button"
                         onClick={() => setPending((prev) => prev.filter((_, i) => i !== idx))}
                         disabled={busy && p.status === "processing"}
-                        aria-label={`Quitar ${p.file.name} de la cola`}
+                        aria-label={`Quitar ${p.file.name}`}
                         className="h-7 w-7 rounded-md text-white/50 hover:text-white hover:bg-white/[0.08] flex items-center justify-center disabled:opacity-30"
                       >
                         <Trash2 className="h-3.5 w-3.5" />
@@ -513,7 +480,7 @@ function UploadForm({
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor={`category-${kind}`} className="text-xs text-white/60">Categoría / Galería</Label>
+          <Label htmlFor={`category-${kind}`} className="text-xs text-white/60">Categoría</Label>
           <Select value={category} onValueChange={setCategory}>
             <SelectTrigger id={`category-${kind}`} className="bg-white/[0.04] border-white/10 text-white">
               <SelectValue />
@@ -530,13 +497,13 @@ function UploadForm({
 
         <div className="space-y-2">
           <Label htmlFor={`desc-${kind}`} className="text-xs text-white/60">
-            Descripción <span className="text-white/30">(se aplica a todos los archivos en cola)</span>
+            Descripción <span className="text-white/30">(aplica a todos los archivos en cola)</span>
           </Label>
           <Textarea
             id={`desc-${kind}`}
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            placeholder="Texto que se mostrará junto al elemento en la galería pública."
+            placeholder="Descripción opcional para la galería pública."
             className="bg-white/[0.04] border-white/10 text-white min-h-[70px] text-sm"
           />
         </div>
@@ -559,10 +526,10 @@ function UploadForm({
         >
           {busy ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Upload className="h-4 w-4 mr-2" />}
           {busy
-            ? "Añadiendo…"
+            ? "Subiendo…"
             : (() => {
                 const remaining = pending.filter((p) => p.status !== "ok").length;
-                return remaining > 1 ? `Añadir ${remaining} archivos` : "Añadir a la galería";
+                return remaining > 1 ? `Subir ${remaining} archivos` : "Subir archivo";
               })()}
         </Button>
       </div>
@@ -570,7 +537,7 @@ function UploadForm({
   );
 }
 
-/* ─────────────────────── Item card variants ─────────────────────── */
+/* ─────────────────── Badges / Card actions ─────────────────── */
 
 function ItemBadge({ existing }: { existing: boolean }) {
   return existing ? (
@@ -601,7 +568,6 @@ function CardActions({
         <button
           onClick={() => onEdit(item)}
           aria-label="Editar"
-          title="Editar nombre y descripción"
           className="h-7 w-7 rounded-full bg-black/60 hover:bg-accent hover:text-accent-foreground text-white flex items-center justify-center transition"
         >
           <Pencil className="h-3.5 w-3.5" />
@@ -610,8 +576,7 @@ function CardActions({
       {onDelete && (
         <button
           onClick={() => onDelete(item)}
-          aria-label={item.existing ? "Ocultar de la galería" : "Eliminar elemento local"}
-          title={item.existing ? "Ocultar (se puede restaurar)" : "Eliminar"}
+          aria-label="Eliminar"
           className="h-7 w-7 rounded-full bg-black/60 hover:bg-destructive text-white flex items-center justify-center transition"
         >
           <Trash2 className="h-3.5 w-3.5" />
@@ -620,6 +585,8 @@ function CardActions({
     </div>
   );
 }
+
+/* ─────────────────────────── Cards ─────────────────────────── */
 
 function ImageCard({
   item,
@@ -630,15 +597,33 @@ function ImageCard({
   onEdit?: (item: PanelItem) => void;
   onDelete?: (item: PanelItem) => void;
 }) {
+  const [imgError, setImgError] = useState(false);
+
   return (
     <div className="group mb-3 break-inside-avoid rounded-xl overflow-hidden bg-white/[0.04] border border-white/10 flex flex-col">
       <div className="relative bg-black/40 overflow-hidden">
-        <img
-          src={item.src}
-          alt={item.title}
-          loading="lazy"
-          className="w-full h-auto block group-hover:scale-[1.02] transition-transform duration-500"
-        />
+        {imgError ? (
+          <div className="w-full h-32 flex flex-col items-center justify-center gap-2 text-white/30">
+            <ImageIcon className="h-8 w-8" />
+            <span className="text-[10px]">Vista previa no disponible</span>
+            <a
+              href={item.src}
+              target="_blank"
+              rel="noreferrer"
+              className="text-[10px] text-accent underline"
+            >
+              Abrir archivo
+            </a>
+          </div>
+        ) : (
+          <img
+            src={item.src}
+            alt={item.title}
+            loading="lazy"
+            onError={() => setImgError(true)}
+            className="w-full h-auto block group-hover:scale-[1.02] transition-transform duration-500"
+          />
+        )}
         <div className="absolute top-2 left-2"><ItemBadge existing={item.existing} /></div>
         <CardActions
           item={item}
@@ -687,7 +672,7 @@ function VideoCard({
   );
 }
 
-function DocRow({
+function FileRow({
   item,
   onEdit,
   onDelete,
@@ -722,17 +707,15 @@ function DocRow({
           href={item.src}
           target="_blank"
           rel="noreferrer"
-          download={!item.existing ? item.title : undefined}
           className="h-8 w-8 rounded-md bg-white/[0.04] border border-white/10 hover:bg-white/[0.10] text-white/70 flex items-center justify-center"
-          aria-label="Abrir documento"
+          aria-label="Abrir archivo"
         >
           <ExternalLink className="h-3.5 w-3.5" />
         </a>
         {onEdit && (
           <button
             onClick={() => onEdit(item)}
-            aria-label="Editar documento"
-            title="Editar nombre y descripción"
+            aria-label="Editar"
             className="h-8 w-8 rounded-md bg-white/[0.04] border border-white/10 hover:bg-accent hover:border-accent hover:text-accent-foreground text-white/70 flex items-center justify-center"
           >
             <Pencil className="h-3.5 w-3.5" />
@@ -741,8 +724,7 @@ function DocRow({
         {onDelete && (
           <button
             onClick={() => onDelete(item)}
-            aria-label={item.existing ? "Ocultar documento" : "Eliminar documento"}
-            title={item.existing ? "Ocultar (se puede restaurar)" : "Eliminar"}
+            aria-label="Eliminar"
             className="h-8 w-8 rounded-md bg-white/[0.04] border border-white/10 hover:bg-destructive hover:border-destructive text-white/70 hover:text-white flex items-center justify-center"
           >
             <Trash2 className="h-3.5 w-3.5" />
@@ -773,11 +755,16 @@ function EditDialog({
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState("");
 
+  const [saving, setSaving] = useState(false);
+
   useEffect(() => {
     if (item) {
       setTitle(item.title);
       setDescription(item.description ?? "");
-      setCategory(item.category);
+      const cats = categoriesFor(item.kind);
+      // Keep existing category if valid; otherwise default to first option
+      const validCat = cats.includes(item.category) ? item.category : cats[0];
+      setCategory(validCat);
     }
   }, [item]);
 
@@ -789,13 +776,22 @@ function EditDialog({
       toast({ title: "Falta el nombre", variant: "destructive" });
       return;
     }
-    const patch = { title: title.trim(), description: description.trim(), category };
-    if (onSave) {
-      await onSave(item, patch);
+    setSaving(true);
+    try {
+      const patch = { title: title.trim(), description: description.trim(), category };
+      if (onSave) await onSave(item, patch);
+      toast({ title: "Cambios guardados", description: `Categoría: ${category}` });
+      onSaved();
+      onClose();
+    } catch (err) {
+      toast({
+        title: "No se pudo guardar",
+        description: err instanceof Error ? err.message : "Error desconocido.",
+        variant: "destructive",
+      });
+    } finally {
+      setSaving(false);
     }
-    toast({ title: "Cambios guardados", description: `"${title.trim()}" actualizado.` });
-    onSaved();
-    onClose();
   };
 
   return (
@@ -807,9 +803,7 @@ function EditDialog({
             Editar elemento
           </DialogTitle>
           <DialogDescription className="text-white/50 text-xs">
-            {item.existing
-              ? "Este elemento es publicado: los cambios se guardan como ajuste local en este navegador."
-              : "Edita los datos del elemento añadido localmente."}
+            Los cambios se guardan en el servidor.
           </DialogDescription>
         </DialogHeader>
 
@@ -848,11 +842,11 @@ function EditDialog({
         </div>
 
         <DialogFooter>
-          <Button variant="ghost" onClick={onClose} className="text-white/60 hover:text-white hover:bg-white/[0.08]">
+          <Button variant="ghost" onClick={onClose} disabled={saving} className="text-white/60 hover:text-white hover:bg-white/[0.08]">
             Cancelar
           </Button>
-          <Button onClick={() => void handleSave()} className="bg-accent hover:bg-accent/90 text-accent-foreground">
-            Guardar cambios
+          <Button onClick={() => void handleSave()} disabled={saving} className="bg-accent hover:bg-accent/90 text-accent-foreground">
+            {saving ? <><Loader2 className="h-4 w-4 animate-spin mr-2" />Guardando…</> : "Guardar cambios"}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -865,23 +859,20 @@ function EditDialog({
 function ContentSection({
   kind,
   accept,
-  endpoint,
-  noticeWhat,
   layout,
   emptyIcon: EmptyIcon,
   emptyLabel,
 }: {
   kind: PanelKind;
   accept: string;
-  endpoint: string;
-  noticeWhat: string;
-  layout: "image-grid" | "video-grid" | "doc-list";
+  layout: "image-grid" | "video-grid" | "file-list";
   emptyIcon: typeof ImageIcon;
   emptyLabel: string;
 }) {
   const cats = categoriesFor(kind);
   const [items, setItems] = useState<PanelItem[]>([]);
   const [loadingItems, setLoadingItems] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [filter, setFilter] = useState<string>("Todas");
   const [query, setQuery] = useState("");
   const sortKey = `panel-emma::sort-${kind}`;
@@ -898,15 +889,18 @@ function ContentSection({
 
   const refresh = useCallback(async () => {
     setLoadingItems(true);
+    setLoadError(null);
     try {
       const { items: records } = await listServerUploads(kind as "image" | "video" | "document");
       setItems(records.map(recordToPanelItem));
-    } catch {
-      // keep current items on fetch error
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Error desconocido al cargar archivos.";
+      setLoadError(msg);
+      toast({ title: "Error al cargar", description: msg, variant: "destructive" });
     } finally {
       setLoadingItems(false);
     }
-  }, [kind]);
+  }, [kind, toast]);
 
   useEffect(() => { void refresh(); }, [refresh]);
 
@@ -937,37 +931,25 @@ function ContentSection({
       if (query && !`${it.title} ${it.description}`.toLowerCase().includes(query.toLowerCase())) return false;
       return true;
     });
-    // Stable rank: locals get their addedAt timestamp (newest = larger).
-    // Existing items get a baseline rank derived from their position
-    // in the original list so order stays deterministic.
-    const rankFor = (it: PanelItem, idx: number) => {
-      if (it.addedAt) return new Date(it.addedAt).getTime();
-      // Existing: keep original ordering, stamped well below any real date
-      // so locals always sort as newer.
-      return -idx;
-    };
-    return [...base]
-      .map((it, idx) => ({ it, r: rankFor(it, idx) }))
-      .sort((a, b) => (sort === "newest" ? b.r - a.r : a.r - b.r))
-      .map(({ it }) => it);
+    const rankFor = (it: PanelItem) =>
+      it.addedAt ? new Date(it.addedAt).getTime() : 0;
+    return [...base].sort((a, b) =>
+      sort === "newest" ? rankFor(b) - rankFor(a) : rankFor(a) - rankFor(b),
+    );
   }, [items, filter, query, sort]);
-
-  const counts = useMemo(() => ({ total: items.length }), [items]);
 
   return (
     <div className="space-y-5">
-      <IntegrationNotice what={noticeWhat} endpoint={endpoint} />
-
       <UploadForm kind={kind} accept={accept} onAdded={refresh} />
 
       <div className="rounded-xl border border-white/10 bg-white/[0.03] p-5">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
           <div>
-            <h3 className="text-sm font-semibold text-white flex items-center gap-2">
-              Contenido en {kind === "image" ? "galerías" : kind === "video" ? "videos" : "documentación"}
+            <h3 className="text-sm font-semibold text-white">
+              {kind === "image" ? "Imágenes subidas" : kind === "video" ? "Videos subidos" : "Archivos subidos"}
             </h3>
             <p className="text-[11px] text-white/40 mt-0.5">
-              {loadingItems ? "Cargando…" : `${counts.total} archivos en el servidor`}
+              {loadingItems ? "Cargando…" : `${items.length} archivos en el servidor`}
             </p>
           </div>
           <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
@@ -986,6 +968,7 @@ function ContentSection({
               </SelectTrigger>
               <SelectContent className="bg-[hsl(205,35%,12%)] border-white/10 text-white">
                 <SelectItem value="Todas" className="focus:bg-white/[0.08] focus:text-white">Todas las categorías</SelectItem>
+                <SelectItem value="Sin categoría" className="focus:bg-white/[0.08] focus:text-white">Sin categoría</SelectItem>
                 {cats.map((c) => (
                   <SelectItem key={c} value={c} className="focus:bg-white/[0.08] focus:text-white">{c}</SelectItem>
                 ))}
@@ -1011,7 +994,18 @@ function ContentSection({
           </div>
         </div>
 
-        {filtered.length === 0 ? (
+        {loadError ? (
+          <div className="text-center py-10">
+            <XCircle className="h-8 w-8 mx-auto mb-2 text-destructive opacity-70" />
+            <p className="text-sm text-white/60 mb-3">{loadError}</p>
+            <button
+              onClick={() => void refresh()}
+              className="text-xs text-accent underline hover:no-underline"
+            >
+              Reintentar
+            </button>
+          </div>
+        ) : filtered.length === 0 ? (
           <div className="text-center py-10 text-white/40 text-sm">
             {loadingItems ? (
               <Loader2 className="h-8 w-8 mx-auto mb-2 animate-spin opacity-50" />
@@ -1035,11 +1029,10 @@ function ContentSection({
         ) : (
           <div className="space-y-2">
             {filtered.map((it) => (
-              <DocRow key={it.id} item={it} onEdit={setEditing} onDelete={handleDelete} />
+              <FileRow key={it.id} item={it} onEdit={setEditing} onDelete={handleDelete} />
             ))}
           </div>
         )}
-
       </div>
 
       <EditDialog
@@ -1055,232 +1048,21 @@ function ContentSection({
 
 /* ─────────────────────────── Page ─────────────────────────── */
 
-/* ──────────────────────── Site text editor ──────────────────────── */
-
-function SiteFieldEditor({ field, version, onChanged }: { field: SiteField; version: number; onChanged: () => void }) {
-  const { toast } = useToast();
-  const [value, setValueLocal] = useState<string>(() => getSiteValue(field.key, field.default));
-  const [dirty, setDirty] = useState(false);
-
-  useEffect(() => {
-    setValueLocal(getSiteValue(field.key, field.default));
-    setDirty(false);
-  }, [field.key, field.default, version]);
-
-  const isOverride = getSiteValue(field.key, "") !== "";
-
-  const save = () => {
-    setSiteValue(field.key, value);
-    setDirty(false);
-    onChanged();
-    toast({ title: "Texto actualizado", description: field.label });
-  };
-
-  const reset = () => {
-    setSiteValue(field.key, "");
-    setValueLocal(field.default);
-    setDirty(false);
-    onChanged();
-  };
-
-  const onImage = async (file?: File | null) => {
-    if (!file) return;
-    try {
-      const result = await uploadFileToBackend(file, "image");
-      setSiteValue(field.key, result.url);
-      setValueLocal(result.url);
-      setDirty(false);
-      onChanged();
-      toast({ title: "Imagen actualizada", description: field.label });
-    } catch (err) {
-      toast({
-        title: "No se pudo subir la imagen",
-        description: err instanceof Error ? err.message : "Error desconocido.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  return (
-    <div className="space-y-2 rounded-lg border border-white/10 bg-white/[0.02] p-3">
-      <div className="flex items-center gap-2">
-        <Label htmlFor={`field-${field.key}`} className="text-xs text-white/70 flex-1">
-          {field.label}
-        </Label>
-        {isOverride && (
-          <span className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded border border-accent/40 text-accent bg-accent/10">
-            <Sparkles className="h-2.5 w-2.5" /> Editado
-          </span>
-        )}
-      </div>
-      {field.type === "textarea" && (
-        <Textarea
-          id={`field-${field.key}`}
-          value={value}
-          onChange={(e) => { setValueLocal(e.target.value); setDirty(true); }}
-          className="bg-white/[0.04] border-white/10 text-white text-sm min-h-[80px]"
-        />
-      )}
-      {field.type === "text" && (
-        <Input
-          id={`field-${field.key}`}
-          value={value}
-          onChange={(e) => { setValueLocal(e.target.value); setDirty(true); }}
-          className="bg-white/[0.04] border-white/10 text-white text-sm"
-        />
-      )}
-      {field.type === "image" && (
-        <div className="space-y-2">
-          {value ? (
-            <div className="flex items-center gap-3">
-              <img src={value} alt={field.label} className="h-16 w-24 object-cover rounded border border-white/10" />
-              <span className="text-[11px] text-white/50">Imagen activa</span>
-            </div>
-          ) : (
-            <p className="text-[11px] text-white/40">Sin imagen — se mostrará el visual original.</p>
-          )}
-          <Input
-            id={`field-${field.key}`}
-            type="file"
-            accept="image/*"
-            onChange={(e) => onImage(e.target.files?.[0])}
-            className="bg-white/[0.04] border-white/10 text-white text-xs file:text-white file:bg-white/10 file:border-0 file:rounded file:px-2 file:py-1 file:mr-2"
-          />
-        </div>
-      )}
-      {field.type === "media" && (
-        <MediaField
-          fieldKey={field.key}
-          label={field.label}
-          accept={field.accept ?? "any"}
-          multiple={field.multiple ?? false}
-          aspect={field.aspect}
-          onChanged={onChanged}
-        />
-      )}
-      {field.hint && <p className="text-[10px] text-white/40">{field.hint}</p>}
-      {field.type !== "image" && field.type !== "media" && (
-        <div className="flex items-center justify-end gap-2 pt-1">
-          {isOverride && (
-            <Button
-              type="button"
-              size="sm"
-              variant="ghost"
-              onClick={reset}
-              className="h-7 text-xs text-white/50 hover:text-white hover:bg-white/[0.08]"
-            >
-              <RotateCcw className="h-3 w-3 mr-1" /> Restaurar
-            </Button>
-          )}
-          <Button
-            type="button"
-            size="sm"
-            disabled={!dirty}
-            onClick={save}
-            className="h-7 text-xs bg-accent hover:bg-accent/90 text-accent-foreground disabled:opacity-40"
-          >
-            Guardar
-          </Button>
-        </div>
-      )}
-    </div>
-  );
-}
-
-function SiteSectionEditor({ section }: { section: SiteSection }) {
-  const [version, setVersion] = useState(0);
-  const [open, setOpen] = useState(false);
-  const overridden = hasSectionOverrides(section.id);
-  const bump = () => setVersion((v) => v + 1);
-  return (
-    <div className="rounded-xl border border-white/10 bg-white/[0.03]">
-      <button
-        type="button"
-        onClick={() => setOpen((o) => !o)}
-        aria-expanded={open}
-        className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-white/[0.04] transition rounded-xl"
-      >
-        <Type className="h-4 w-4 text-accent shrink-0" />
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 flex-wrap">
-            <h3 className="text-sm font-semibold text-white">{section.label}</h3>
-            {overridden && (
-              <span className="text-[10px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded border border-accent/40 text-accent bg-accent/10">
-                Con cambios
-              </span>
-            )}
-          </div>
-          <p className="text-[11px] text-white/40 mt-0.5">{section.description}</p>
-        </div>
-        <span className="text-[11px] text-white/40">{section.fields.length} campos</span>
-        <ArrowDownWideNarrow className={`h-4 w-4 text-white/40 transition-transform ${open ? "rotate-180" : ""}`} />
-      </button>
-      {open && (
-        <div className="border-t border-white/10 p-4 space-y-3">
-          {section.fields.map((f) => (
-            <SiteFieldEditor key={f.key} field={f} version={version} onChanged={bump} />
-          ))}
-          {overridden && (
-            <div className="pt-2 flex justify-end">
-              <Button
-                type="button"
-                size="sm"
-                variant="ghost"
-                onClick={() => { clearSiteSection(section.id); bump(); }}
-                className="text-white/60 hover:text-white hover:bg-white/[0.08] h-8"
-              >
-                <RotateCcw className="h-3.5 w-3.5 mr-1.5" />
-                Restaurar valores originales de la sección
-              </Button>
-            </div>
-          )}
-        </div>
-      )}
-    </div>
-  );
-}
-
-function SiteContentEditor() {
-  return (
-    <div className="space-y-5">
-      <PublishBar />
-      <div className="rounded-xl border border-accent/20 bg-accent/[0.04] p-4 text-xs text-white/70 leading-relaxed">
-        <p className="font-semibold text-white mb-1 flex items-center gap-2">
-          <Type className="h-4 w-4 text-accent" />
-          Editor de textos e imágenes del sitio
-        </p>
-        <p>
-          Edita los campos y pulsa <span className="font-semibold text-white">Guardar</span> en cada
-          campo para registrar el cambio localmente. Luego pulsa{" "}
-          <span className="font-semibold text-white">Publicar cambios</span> arriba para que
-          todos los visitantes vean la versión actualizada — sin publicar, los cambios solo
-          existen en este navegador.
-        </p>
-      </div>
-      {SECTIONS.map((s) => (
-        <SiteSectionEditor key={s.id} section={s} />
-      ))}
-    </div>
-  );
-}
+const IMAGE_ACCEPT = "image/*,.heic,.heif,.tiff,.tif";
+const VIDEO_ACCEPT = "video/*,.mkv,.avi,.mov,.m4v,.3gp,.wmv,.flv";
+// Empty = no restriction on the file picker, accepts all
+const FILE_ACCEPT = "";
 
 export default function PanelEmmaDashboard() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { user, isLoading, isAuthenticated, role } = useAuth(false);
-  const { activateLiveEdit } = useLiveEdit();
 
   const handleLogout = useCallback(async () => {
     try { await logout(); } catch { /* ignore */ }
     queryClient.clear();
     navigate("/panel-emma", { replace: true });
   }, [navigate, queryClient]);
-
-  const handleLiveEdit = useCallback(async () => {
-    // Already verified admin — skip redundant auth fetch.
-    await activateLiveEdit(true);
-    navigate("/");
-  }, [activateLiveEdit, navigate]);
 
   if (isLoading) {
     return (
@@ -1300,7 +1082,6 @@ export default function PanelEmmaDashboard() {
       <PanelHeader
         userName={user?.name ?? user?.email}
         onLogout={handleLogout}
-        onLiveEdit={handleLiveEdit}
       />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-6">
@@ -1308,71 +1089,54 @@ export default function PanelEmmaDashboard() {
           <div className="flex gap-3">
             <ShieldCheck className="h-5 w-5 text-accent shrink-0 mt-0.5" />
             <div className="text-sm text-white/70 leading-relaxed">
-              <p className="font-semibold text-white mb-1">Consola privada de gestión de contenido</p>
+              <p className="font-semibold text-white mb-1">Consola de gestión de contenido</p>
               <p className="text-xs">
-                Aquí puedes ver lo que ya está publicado en la web pública (imágenes, videos
-                y documentos), añadir nuevo contenido y publicarlo a través de las rutas
-                {" "}<code className="text-white/80">/api/v1/admin/*</code>. Si una ruta del backend
-                no responde, los cambios quedan en cola local en este navegador hasta que vuelva
-                a estar disponible y se publican al pulsar "Publicar".
+                Sube imágenes, videos y archivos. Todo el contenido se guarda en el servidor
+                y queda disponible de inmediato.
               </p>
             </div>
           </div>
         </div>
 
-        <Tabs defaultValue="auto" className="w-full">
-          <TabsList className="bg-white/[0.04] border border-white/10 grid grid-cols-2 sm:grid-cols-5 w-full h-auto p-1">
-            <TabsTrigger value="auto" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground text-white/60 gap-1.5 py-2">
-              <Sparkles className="h-4 w-4" /> Auto
-            </TabsTrigger>
+        <Tabs defaultValue="images" className="w-full">
+          <TabsList className="bg-white/[0.04] border border-white/10 grid grid-cols-3 w-full h-auto p-1">
             <TabsTrigger value="images" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground text-white/60 gap-1.5 py-2">
               <ImageIcon className="h-4 w-4" /> Imágenes
             </TabsTrigger>
             <TabsTrigger value="videos" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground text-white/60 gap-1.5 py-2">
               <Video className="h-4 w-4" /> Videos
             </TabsTrigger>
-            <TabsTrigger value="docs" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground text-white/60 gap-1.5 py-2">
-              <FileText className="h-4 w-4" /> Documentos
-            </TabsTrigger>
-            <TabsTrigger value="texts" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground text-white/60 gap-1.5 py-2">
-              <Type className="h-4 w-4" /> Textos
+            <TabsTrigger value="files" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground text-white/60 gap-1.5 py-2">
+              <FolderOpen className="h-4 w-4" /> Archivos
             </TabsTrigger>
           </TabsList>
-
-          <TabsContent value="auto" className="mt-5">
-            <div className="rounded-xl border border-white/10 bg-white/[0.03] p-5">
-              <SmartUploadForm />
-            </div>
-          </TabsContent>
 
           <TabsContent value="images" className="mt-5">
             <ContentSection
               kind="image"
-              accept="image/*"
-              endpoint="GET /api/v1/admin/media?type=image · POST /api/v1/admin/media (multipart)"
-              noticeWhat="Las imágenes añadidas aquí aparecen en este panel y permiten previsualizar dónde quedarían en la galería pública. La publicación real requiere el endpoint backend."
+              accept={IMAGE_ACCEPT}
               layout="image-grid"
               emptyIcon={ImageIcon}
-              emptyLabel="No hay imágenes en esta categoría todavía."
+              emptyLabel="No hay imágenes subidas todavía."
             />
           </TabsContent>
+
           <TabsContent value="videos" className="mt-5">
             <ContentSection
               kind="video"
-              accept="video/*"
-              endpoint="GET /api/v1/admin/media?type=video · POST /api/v1/admin/media (multipart)"
-              noticeWhat="Los videos cargados localmente sirven como previsualización. El sitio público sólo mostrará videos publicados a través del backend."
+              accept={VIDEO_ACCEPT}
               layout="video-grid"
               emptyIcon={Video}
-              emptyLabel="Aún no hay videos en esta categoría."
+              emptyLabel="No hay videos subidos todavía."
             />
           </TabsContent>
-          <TabsContent value="docs" className="mt-5 space-y-4">
-            <div className="rounded-lg border border-teal-500/25 bg-teal-500/[0.06] p-3 flex items-center justify-between gap-3">
+
+          <TabsContent value="files" className="mt-5">
+            <div className="mb-4 rounded-lg border border-teal-500/25 bg-teal-500/[0.06] p-3 flex items-center justify-between gap-3">
               <div className="flex items-center gap-2.5 min-w-0">
                 <Leaf className="h-4 w-4 text-teal-400 shrink-0" />
                 <p className="text-xs text-teal-100/80 leading-relaxed">
-                  Los documentos añadidos aquí aparecen <span className="font-semibold text-teal-200">automáticamente</span> en la Biblioteca de Archivos — sin necesidad de publicar.
+                  Los PDFs subidos aquí aparecen automáticamente en la Biblioteca de Archivos pública.
                 </p>
               </div>
               <a
@@ -1387,16 +1151,11 @@ export default function PanelEmmaDashboard() {
             </div>
             <ContentSection
               kind="document"
-              accept=".pdf,.md,.txt,.doc,.docx,.xlsx,.pptx"
-              endpoint="GET /api/v1/admin/docs · POST /api/v1/admin/docs (multipart)"
-              noticeWhat="El listado refleja los documentos ya publicados en la sección Documentación. Los documentos añadidos aquí quedan disponibles para descarga local hasta que el backend los persista."
-              layout="doc-list"
-              emptyIcon={FileText}
-              emptyLabel="No hay documentos en esta categoría."
+              accept={FILE_ACCEPT}
+              layout="file-list"
+              emptyIcon={FolderOpen}
+              emptyLabel="No hay archivos subidos todavía."
             />
-          </TabsContent>
-          <TabsContent value="texts" className="mt-5">
-            <SiteContentEditor />
           </TabsContent>
         </Tabs>
 

@@ -48,31 +48,66 @@ def _require_admin(fn):
 # ─── MIME / kind detection ───────────────────────────────────────────────────
 
 _IMAGE_MIMES = {
-    "image/jpeg", "image/png", "image/gif", "image/webp",
+    "image/jpeg", "image/jpg", "image/png", "image/gif", "image/webp",
     "image/svg+xml", "image/avif", "image/bmp", "image/tiff",
+    "image/heic", "image/heif", "image/x-icon", "image/vnd.microsoft.icon",
+    "image/ico", "image/x-rgb", "image/x-bmp", "image/x-ms-bmp",
+}
+_IMAGE_EXTS = {
+    "jpg", "jpeg", "png", "gif", "webp", "svg", "avif", "bmp", "tiff",
+    "tif", "heic", "heif", "ico", "jfif", "pjpeg", "pjp",
 }
 _VIDEO_MIMES = {
     "video/mp4", "video/webm", "video/ogg", "video/quicktime",
-    "video/x-msvideo", "video/x-matroska", "video/3gpp",
+    "video/x-msvideo", "video/x-matroska", "video/3gpp", "video/3gpp2",
+    "video/x-flv", "video/x-ms-wmv", "video/mpeg", "video/x-m4v",
+    "video/mp2t",
+}
+_VIDEO_EXTS = {
+    "mp4", "webm", "ogg", "ogv", "mov", "m4v", "avi", "mkv",
+    "3gp", "3g2", "flv", "wmv", "mpeg", "mpg", "ts",
 }
 _DOC_EXTS = {
+    # Office documents
     "pdf", "doc", "docx", "xls", "xlsx", "ppt", "pptx",
-    "md", "txt", "csv", "zip", "rar", "7z", "odt", "ods", "odp",
+    "odt", "ods", "odp", "odg", "odf",
+    # Text / markup
+    "txt", "md", "rst", "csv", "tsv", "html", "htm", "xml",
+    "json", "yaml", "yml", "toml", "ini", "cfg", "conf",
+    # Archives
+    "zip", "rar", "7z", "tar", "gz", "bz2", "xz", "zst",
+    # Code / scripts (for sharing)
+    "py", "js", "ts", "sh", "bat", "rb", "go", "rs", "cpp",
+    "c", "h", "java", "kt", "swift", "php", "sql",
+    # Design / misc
+    "epub", "rtf", "tex",
 }
 
 
 def _detect_kind(file) -> str | None:
     mime = (file.mimetype or "").lower()
+    ext = os.path.splitext(secure_filename(file.filename or ""))[1].lstrip(".").lower()
+
+    # Image detection: MIME first, then extension
     if mime in _IMAGE_MIMES or mime.startswith("image/"):
         return "image"
+    if ext in _IMAGE_EXTS:
+        return "image"
+
+    # Video detection
     if mime in _VIDEO_MIMES or mime.startswith("video/"):
         return "video"
-    ext = os.path.splitext(secure_filename(file.filename))[1].lstrip(".").lower()
+    if ext in _VIDEO_EXTS:
+        return "video"
+
+    # Document / file detection
     if ext in _DOC_EXTS:
         return "document"
     if mime.startswith("application/") or mime.startswith("text/"):
         return "document"
-    return None
+
+    # Unknown types fall through to document so nothing is rejected silently
+    return "document"
 
 
 def _size_limit(kind: str) -> int:
@@ -106,7 +141,11 @@ def upload_file():
         mb = limit // (1024 * 1024)
         return jsonify({"error": f"file exceeds {mb} MB limit for {kind}"}), 413
 
-    ext = os.path.splitext(secure_filename(file.filename))[1]
+    raw_ext = os.path.splitext(secure_filename(file.filename))[1].lower()
+    # Normalize .jpg → .jpeg so nginx's static-file regex doesn't intercept the URL.
+    # The regex matches .jpg/.png/.webp but not .jpeg/.jfif, so we canonicalize here.
+    _EXT_REMAP = {".jpg": ".jpeg"}
+    ext = _EXT_REMAP.get(raw_ext, raw_ext) or raw_ext
     stored_name = f"{uuid.uuid4().hex}{ext}"
     upload_dir = os.path.join(current_app.config.get("UPLOAD_FOLDER", "/app/uploads"), kind)
     os.makedirs(upload_dir, exist_ok=True)

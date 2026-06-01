@@ -146,7 +146,9 @@ def main():
 
         if not available:
             consecutive_failures += 1
-            _log("modem unreachable (failure #{})".format(consecutive_failures))
+            reach_err = snapshot.get("error", "")
+            _log("modem unreachable (failure #{}) - {}".format(
+                consecutive_failures, reach_err or "no detail"))
             if consecutive_failures >= MAX_FAILURES:
                 _log("max failures reached - attempting USB reset")
                 _usb_reset()
@@ -168,7 +170,11 @@ def main():
             ))
 
             if not connected:
-                _log("not connected - requesting reconnect via HiLink")
+                conn_err = snapshot.get("conn_error", "")
+                _log("not connected (status={}{}) - requesting reconnect via HiLink".format(
+                    snapshot.get("status", "?"),
+                    " err={}".format(conn_err) if conn_err else "",
+                ))
                 ok = reconnect(HUAWEI_GATEWAY)
                 _log("reconnect request: {}".format("accepted" if ok else "failed"))
                 time.sleep(RECONNECT_DELAY_S)
