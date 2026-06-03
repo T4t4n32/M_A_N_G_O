@@ -1,0 +1,68 @@
+name: Bug Report
+description: Report a bug in M.A.N.G.O
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug. Please fill in as much detail as possible.
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: Component
+      description: Which part of the system is affected?
+      options:
+        - Backend API (Flask)
+        - Frontend (React dashboard)
+        - Panel Emma (admin panel)
+        - Edge application (Jetson TK1)
+        - Firmware (ESP32 / LoRa)
+        - Deployment / Docker / nginx
+        - Grafana dashboards
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: A clear description of the bug.
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Go to ...
+        2. Send request to ...
+        3. See error
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      placeholder: |
+        - OS: Ubuntu 22.04
+        - Docker version: 24.x
+        - Browser (if frontend): Chrome 120
+        - Backend version / commit: v2.0.0 / abc1234
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs
+      description: Paste any relevant log output (docker logs, browser console, etc.)
+      render: shell
