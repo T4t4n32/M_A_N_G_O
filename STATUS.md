@@ -1,116 +1,120 @@
-# 📊 PROJECT STATUS — M.A.N.G.O.
+# Project Status — M.A.N.G.O
 
-**Project:** M.A.N.G.O — Autonomous Monitoring of Oceanic Management Levels  
-**Status:** Active Development  
-**Last update:** 2026-04-28  
-
----
-
-## 🟢 CURRENT STATE (WHAT WORKS)
-
-### Backend (Flask API)
-- ✅ Flask backend runs correctly on `0.0.0.0:5000`
-- ✅ API structure stabilized under `/api/*`
-- ✅ Health check endpoint operational
-- ✅ Sensor endpoints operational:
-  - `/api/ph/latest`
-  - `/api/temperature/latest`
-  - `/api/turbidity/latest`
-- ✅ JSON responses correctly formatted
-- ✅ No HTML served from backend (API-only design)
-
-### Serial Communication
-- ✅ Serial device detected (`/dev/ttyACM0`)
-- ✅ Serial connection established from backend
-- ✅ Sensor data is received from microcontroller
-- ✅ Data ingestion pipeline active
-- ✅ Serial access centralized (single access point)
-
-### Internal Architecture
-- ✅ Clear separation of concerns:
-  - `routes/` → API endpoints
-  - `services/` → serial + data logic
-  - `models/` → reserved for future persistence
-- ✅ Circular imports resolved
-- ✅ Duplicate blueprints removed
-- ✅ Runtime errors significantly reduced
+**Project:** M.A.N.G.O — Autonomous Monitoring of Oceanic Management Levels
+**Version:** v2.0.0
+**Last updated:** 2026-06-03
+**Deployment:** https://integramosoe.com — Live
 
 ---
 
-## 🟡 PARTIALLY WORKING / IN PROGRESS
+## Production Stack
 
-### Data Flow
-- ⚠️ Sensor data is received but not always reflected in the dashboard
-- ⚠️ Some serial read errors still appear under heavy polling
-- ⚠️ No buffering or smoothing applied yet
+| Service        | Status  | Notes                                              |
+|----------------|---------|-----------------------------------------------------|
+| nginx (host)   | Running | TLS via Let's Encrypt, routes API + SPA + Grafana  |
+| mango_backend  | Healthy | Flask + Gunicorn, port 8000 (internal)             |
+| mango_db       | Healthy | PostgreSQL 16, volume `mango_pg`                   |
+| mango_redis    | Healthy | Redis 7, session store                             |
+| mango_grafana  | Healthy | Embedded at /grafana/                              |
+| Frontend (SPA) | Live    | React build at /var/www/mango-ui                   |
 
-### Frontend (Dashboard)
-- ⚠️ Dashboard exists but is not fully connected to the API
-- ⚠️ Root URL (`/`) returns 404 (expected behavior)
-- ⚠️ Offline/online status handling not implemented yet
-- ⚠️ No automatic refresh or error state UI
-
----
-
-## 🟢 COMPLETED — 2026-04-28
-
-### Backend restructure
-- ✅ Full modular structure: `models/`, `routes/`, `middleware/`, `seeds/`
-- ✅ SQLite database via Flask-SQLAlchemy (upgradeable to PostgreSQL)
-- ✅ bcrypt password hashing (Flask-Bcrypt)
-- ✅ Session-based auth with HttpOnly + SameSite cookie flags
-- ✅ `/api/v1/users/login`, `/api/v1/users/status`, `/api/v1/users/logout`
-- ✅ Admin panel endpoints: media, docs, editable content (8 new routes)
-- ✅ `admin_required` middleware (role check server-side)
-- ✅ CORS configured with `credentials: true` and exact origin
-- ✅ File upload with mime-type + size validation
-- ✅ 70 demo users seeded from Excel (all roles and plans)
-- ✅ Super-admin account slot ready (credentials in `seeds/seed_demo.py`)
-- ✅ Editable content keys: `hero.title`, `hero.subtitle`, `about.intro`, `project.summary`
-- ✅ Environment-based secrets via `.env` (see `.env.example`)
+Stack managed from `deploy/vps/` with `make up`.
 
 ---
 
-## 🔴 NOT IMPLEMENTED YET
+## Backend API
 
-### Persistence
-- ❌ No historical sensor data storage (DB schema ready, reads still placeholder)
-- ❌ No export or logging system
-
-### Authentication & Security
-- ❌ No rate limiting
-- ❌ Demo passwords not rotated — CHANGE_BEFORE_PRODUCTION
-
-### Deployment
-- ❌ No production WSGI server (gunicorn/waitress)
-- ❌ No containerization
-- ❌ No CI/CD pipeline
-
----
-
-## 📌 TECHNICAL DECISIONS (CONFIRMED)
-
-- Backend serves **API only**, never frontend
-- Frontend uses **HTML + CSS + Vanilla JS**
-- React or SPA frameworks are **not used at this stage**
-- Serial access must remain **single-owner**
-- Database is deferred to a later phase
-- Project structure prioritized over premature optimization
+| Endpoint group                 | Status   | Notes                                            |
+|-------------------------------|----------|--------------------------------------------------|
+| `/api/v1/health`              | Working  | DB status + timestamp                            |
+| `/api/v1/users/*`             | Working  | Login, logout, session status, user management  |
+| `/api/v1/ingest/batch`        | Working  | Edge ingestion with packet_id dedup              |
+| `/api/v1/readings/*`          | Working  | Sensor data queries                              |
+| `/api/v1/devices`             | Working  | Device registry                                  |
+| `/api/v1/missions/*`          | Working  | Mission lifecycle: create, start, cancel         |
+| `/api/v1/admin/upload`        | Working  | File upload up to 2 GB (streaming)               |
+| `/api/v1/uploads/*`           | Working  | File serving (proxied through nginx)             |
+| `/api/v1/admin/terminal/*`    | Working  | WebSocket PTY for VPS and Jetson                 |
+| `/api/v1/stream`              | Working  | SSE real-time feed                               |
+| `/api/v1/admin/content`       | Working  | Editable site content                            |
+| `/api/v1/admin/docs`          | Working  | Document management                              |
+| `/api/v1/admin/media`         | Working  | Media gallery (images and videos)                |
+| `/api/v1/alerts/*`            | Working  | Alert rules and events                           |
+| `/api/v1/subscriptions`       | Working  | User subscription management                     |
+| `/api/v1/contact`             | Working  | Contact form with SMTP delivery                  |
+| `/api/v1/grafana/*`           | Working  | Grafana proxy health                             |
 
 ---
 
-## 🎯 CURRENT FOCUS
+## Frontend
 
-1. Stabilize serial ingestion
-2. Connect dashboard to live API data
-3. Implement clear ONLINE / OFFLINE logic
-4. Document architecture and roadmap
-5. Prepare first clean release
+| Page / Feature              | Status   | Notes                                            |
+|-----------------------------|----------|--------------------------------------------------|
+| Homepage (`/`)              | Working  | Editable content hydrated from backend           |
+| Dashboard (`/dashboard`)    | Working  | Core sensor panels, SSE stream, Grafana embed    |
+| Login (`/login`)            | Working  | Session-based auth, bcrypt                       |
+| Archivos (`/archivos`)      | Working  | Public document library, category filter         |
+| Admin (`/admin`)            | Working  | User management, subscription controls           |
+| Panel Emma (`/panel-emma`)  | Working  | Full super-admin panel (see below)               |
+
+### Panel Emma
+
+| Feature                    | Status   | Notes                                             |
+|----------------------------|----------|---------------------------------------------------|
+| Live content editing       | Working  | All editable sections saved to backend            |
+| Media library              | Working  | Upload, preview, delete images and videos        |
+| Document library           | Working  | Upload, categorize, signed download links         |
+| User management            | Working  | Inline role editing, super-admin lock             |
+| Device cards               | Working  | Real Jetson probe, modem signal, LTE status       |
+| VPS terminal               | Working  | WebSocket PTY in-browser                          |
+| Jetson terminal            | Working  | Via reverse SSH tunnel through VPS                |
+| Mission management         | Working  | Create, start, cancel field missions              |
 
 ---
 
-## 🧠 NOTES
+## Edge (Jetson TK1)
 
-This project is transitioning from experimental development to
-a structured, documented, and versioned system suitable for
-academic presentation and real-world prototyping.
+| Component                  | Status      | Notes                                           |
+|----------------------------|-------------|------------------------------------------------|
+| mango-node (serial ingest) | Operational | Reads ESP32 serial, stores locally             |
+| mango-sync (uplink)        | Operational | Batch POST to /api/v1/ingest/batch             |
+| mango-mission              | Operational | Mission state machine                          |
+| LTE modem (E3372H-153)     | Operational | HiLink API polling, dashboard integration      |
+| Reverse SSH tunnel         | Operational | Jetson reachable from VPS sshd via ProxyJump   |
+| Local API (:9100)          | Operational | Diagnostics and health during field sessions   |
+| Python 3.4 compatibility   | Confirmed   | Full stack runs on Ubuntu 14.04 Jetson         |
+
+---
+
+## Hardware / Firmware
+
+| Component                  | Status      | Notes                                           |
+|----------------------------|-------------|------------------------------------------------|
+| LoRa TX (ESP32 + RA-02)    | Validated   | 433 MHz packet transmission confirmed          |
+| LoRa RX (ESP32 + RA-02)    | Validated   | Packet reception and serial forwarding         |
+| Temperature (PT100/MAX31865)| Validated  | Stable SPI readings, repeatable               |
+| pH sensor                  | In progress | Analog output, calibration pending             |
+| Turbidity sensor           | In progress | Analog output, calibration pending             |
+| Physical button (ESP32 RX) | Operational | button_press / button_hold events to Jetson    |
+
+---
+
+## Known Gaps
+
+| Area                          | Notes                                                    |
+|-------------------------------|----------------------------------------------------------|
+| pH and turbidity calibration  | Sensors functional; quantitative calibration not finalized |
+| Rate limiting                 | No per-IP or per-user rate limiting on API endpoints     |
+| CI/CD pipeline                | No automated build or deployment pipeline                |
+| End-to-end sensor tests       | Field data integration test pending full sensor calibration |
+
+---
+
+## Architecture Decisions
+
+- Backend serves API only — never renders HTML.
+- Frontend is a compiled static SPA deployed to `/var/www/mango-ui`.
+- Docker stack always managed from `deploy/vps/` via `make up`, not from the repository root.
+- File uploads use streaming (`proxy_request_buffering off`) to handle large videos without memory pressure.
+- Jetson runs Python 3.4 (Ubuntu 14.04 constraint) — no f-strings, no union types, no `asyncio`.
+- Packet deduplication by `packet_id` prevents duplicate readings from retry storms.
