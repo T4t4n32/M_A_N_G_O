@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Live platform
+    url: https://integramosoe.com
+    about: Visit the live deployment of M.A.N.G.O
+  - name: Architecture documentation
+    url: https://github.com/T4t4n32/M_A_N_G_O/blob/main/ARCHITECTURE.md
+    about: Read the system architecture documentation
