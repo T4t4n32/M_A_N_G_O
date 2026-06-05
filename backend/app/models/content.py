@@ -1,7 +1,6 @@
-from datetime import datetime
-from app.database import db
+from datetime import datetime, timezone
+from app.extensions import db
 
-# Initial editable content keys loaded at seed time.
 DEFAULT_CONTENT = {
     "hero.title": "M.A.N.G.O.",
     "hero.subtitle": "Autonomous Monitoring of Oceanic Management Levels",
@@ -10,12 +9,16 @@ DEFAULT_CONTENT = {
 }
 
 
+def _utcnow():
+    return datetime.now(timezone.utc)
+
+
 class EditableContent(db.Model):
     __tablename__ = "editable_content"
 
     key = db.Column(db.String(128), primary_key=True)
     value = db.Column(db.Text, nullable=False)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=_utcnow, onupdate=_utcnow)
 
     def to_dict(self) -> dict:
         return {

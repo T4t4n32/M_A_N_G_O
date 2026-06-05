@@ -71,6 +71,13 @@ def register_routes(app) -> None:
     except Exception as e:
         log.exception("admin_cms import failed: %s", e)
 
+    # Editable content keys (/api/v1/admin/content/*)
+    try:
+        from .admin_content import admin_content_bp
+        safe_register(admin_content_bp)
+    except Exception as e:
+        log.exception("admin_content import failed: %s", e)
+
     # Contact form (/api/v1/contact)
     try:
         from .contact import contact_bp

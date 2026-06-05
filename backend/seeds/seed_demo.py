@@ -21,9 +21,11 @@ import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from app import create_app
-from app.database import db, bcrypt
-from app.models.user import User
+from app.extensions import db
 from app.models.content import EditableContent, DEFAULT_CONTENT
+
+# NOTE: This seed script targets a legacy User schema. If the DB is already
+# running MangoUser (current schema), rewrite seed_users() to use MangoUser.
 
 # ============================================================
 # CHANGE_BEFORE_PRODUCTION: Set real super-admin credentials.

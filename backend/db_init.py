@@ -53,11 +53,17 @@ def main() -> int:
     app = create_app()
 
     with app.app_context():
-        # Cargar todos los módulos de modelos para que SQLAlchemy
-        # registre sus tablas en metadata antes de create_all().
-        import app.models            # noqa: F401 — sensor_stations, sensors, sensor_data, mango_users, site_content
+        # Load all model modules so SQLAlchemy registers their tables in
+        # metadata before create_all() runs.
+        import app.models             # noqa: F401 — core models
         try:
             import app.models_compat  # noqa: F401 — mango_compat_stations, mango_compat_readings
+        except ImportError:
+            pass
+        try:
+            from app.models.media import Media          # noqa: F401
+            from app.models.document import Document    # noqa: F401
+            from app.models.content import EditableContent  # noqa: F401
         except ImportError:
             pass
 
