@@ -18,13 +18,7 @@ def create_app() -> Flask:
     CORS(
         app,
         supports_credentials=True,
-        origins=[
-            "https://integramosoe.com",
-            "https://www.integramosoe.com",
-            "http://localhost:5173",
-            "http://localhost:3000",
-            "http://localhost:8080",
-        ],
+        origins=app.config["CORS_ORIGINS"],
     )
 
     db.init_app(app)

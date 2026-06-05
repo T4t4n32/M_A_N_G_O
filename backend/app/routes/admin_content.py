@@ -1,6 +1,6 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from flask import Blueprint, request, jsonify
-from app.database import db
+from app.extensions import db
 from app.models.content import EditableContent
 from app.middleware.admin_required import admin_required
 
@@ -30,7 +30,7 @@ def update_content(key: str):
         return jsonify({"error": f"key '{key}' not found"}), 404
 
     record.value = str(data["value"])
-    record.updated_at = datetime.utcnow()
+    record.updated_at = datetime.now(timezone.utc)
     db.session.commit()
 
     return jsonify(record.to_dict()), 200

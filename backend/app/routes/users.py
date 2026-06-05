@@ -24,7 +24,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from functools import wraps
 
-from flask import Blueprint, jsonify, request, session
+from flask import Blueprint, current_app, jsonify, request, session
 
 from app.extensions import db
 from app.models.subscription import UserSubscription, tier_for_user
@@ -32,8 +32,11 @@ from app.models.user import MangoLoginEvent, MangoUser
 
 users_bp = Blueprint("users", __name__, url_prefix="/api/v1/users")
 
-SUPER_ADMIN_EMAIL = "mangossc@gmail.com"
-ASSIGNABLE_ROLES  = ("estudiante", "institucional")
+ASSIGNABLE_ROLES = ("estudiante", "institucional")
+
+
+def _super_admin_email() -> str:
+    return current_app.config.get("SUPER_ADMIN_EMAIL", "mangossc@gmail.com")
 
 
 def _utcnow() -> datetime:
@@ -48,7 +51,7 @@ def _current_user() -> MangoUser | None:
 
 
 def _is_super_admin(user: MangoUser) -> bool:
-    return user.role == "admin" and user.email == SUPER_ADMIN_EMAIL
+    return user.role == "admin" and user.email == _super_admin_email()
 
 
 def _require_auth(fn):
@@ -123,7 +126,7 @@ def register():
     is_first = not _first_user_exists()
 
     if is_first:
-        if email != SUPER_ADMIN_EMAIL:
+        if email != _super_admin_email():
             return jsonify({
                 "error": "forbidden",
                 "message": "El primer registro debe ser el administrador principal",
@@ -289,7 +292,7 @@ def change_role(user_id: int):
 
     if role not in ASSIGNABLE_ROLES:
         return jsonify({"error": f"role debe ser uno de: {', '.join(ASSIGNABLE_ROLES)}"}), 400
-    if user.email == SUPER_ADMIN_EMAIL:
+    if user.email == _super_admin_email():
         return jsonify({"error": "No se puede cambiar el rol del administrador principal"}), 400
 
     user.role = role
@@ -306,7 +309,7 @@ def toggle_active(user_id: int):
 
     if user.id == current.id:
         return jsonify({"error": "No puedes desactivarte a ti mismo"}), 400
-    if user.email == SUPER_ADMIN_EMAIL:
+    if user.email == _super_admin_email():
         return jsonify({"error": "No se puede desactivar al administrador principal"}), 400
 
     user.active = bool(data.get("active", not user.active))
@@ -319,7 +322,7 @@ def toggle_active(user_id: int):
 def delete_user(user_id: int):
     user = db.get_or_404(MangoUser, user_id)
 
-    if user.email == SUPER_ADMIN_EMAIL:
+    if user.email == _super_admin_email():
         return jsonify({"error": "No se puede eliminar al administrador principal"}), 400
 
     db.session.delete(user)

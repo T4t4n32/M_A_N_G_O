@@ -22,8 +22,7 @@ from flask import Blueprint, jsonify, request, session
 from app.extensions import db
 from app.models.site_content import SiteContent
 from app.models.user import MangoUser
-from app.models.media import Media, VALID_TYPES
-from app.models.document import Document
+from app.models.uploaded_file import UploadedFile
 
 admin_cms_bp = Blueprint("admin_cms", __name__, url_prefix="/api/v1")
 
@@ -112,16 +111,21 @@ def admin_put_site_content():
 @admin_cms_bp.get("/admin/media")
 @_require_admin
 def admin_list_media():
-    media_type = request.args.get("type", "")
-    query = Media.query
-    if media_type in VALID_TYPES:
-        query = query.filter_by(media_type=media_type)
-    items = query.order_by(Media.uploaded_at.desc()).all()
-    return jsonify({"media": [m.to_dict() for m in items], "type": media_type or "all"}), 200
+    kind = request.args.get("type", "")
+    query = UploadedFile.query.filter(UploadedFile.kind.in_(["image", "video"]))
+    if kind in ("image", "video"):
+        query = query.filter_by(kind=kind)
+    items = query.order_by(UploadedFile.uploaded_at.desc()).all()
+    return jsonify({"media": [i.to_dict() for i in items], "type": kind or "all"}), 200
 
 
 @admin_cms_bp.get("/admin/docs")
 @_require_admin
 def admin_list_docs():
-    docs = Document.query.order_by(Document.uploaded_at.desc()).all()
+    docs = (
+        UploadedFile.query
+        .filter_by(kind="document")
+        .order_by(UploadedFile.uploaded_at.desc())
+        .all()
+    )
     return jsonify({"docs": [d.to_dict() for d in docs]}), 200

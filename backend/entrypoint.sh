@@ -7,6 +7,7 @@ set -e
 : "${GUNICORN_WORKERS:=2}"
 : "${GUNICORN_THREADS:=4}"
 : "${GUNICORN_TIMEOUT:=60}"
+: "${GUNICORN_KEEPALIVE:=5}"
 : "${GUNICORN_PRELOAD:=true}"
 
 PRELOAD_FLAG=""
@@ -19,5 +20,9 @@ exec gunicorn "$GUNICORN_APP" \
   --workers "$GUNICORN_WORKERS" \
   --threads "$GUNICORN_THREADS" \
   --timeout "$GUNICORN_TIMEOUT" \
+  --keep-alive "$GUNICORN_KEEPALIVE" \
   --worker-class gthread \
+  --log-level info \
+  --access-logfile - \
+  --error-logfile - \
   $PRELOAD_FLAG
