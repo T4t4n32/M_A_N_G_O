@@ -58,6 +58,9 @@ jobs:
           DATABASE_URL: postgresql+psycopg2://mango:test@localhost:5432/mango_test
           REDIS_URL: redis://localhost:6379/0
           SECRET_KEY: ci-test-secret
+          SUPER_ADMIN_EMAIL: ci-admin@mango.test
+          CORS_ORIGINS: http://localhost:5173
+          INGEST_API_KEY: ci-ingest-key
         run: |
           python -c "from app import create_app; app = create_app(); print('App factory OK')"
 
@@ -66,6 +69,7 @@ jobs:
           DATABASE_URL: postgresql+psycopg2://mango:test@localhost:5432/mango_test
           REDIS_URL: redis://localhost:6379/0
           SECRET_KEY: ci-test-secret
+          SUPER_ADMIN_EMAIL: ci-admin@mango.test
           DB_WAIT_S: "30"
         run: python db_init.py
 
@@ -74,6 +78,7 @@ jobs:
           DATABASE_URL: postgresql+psycopg2://mango:test@localhost:5432/mango_test
           REDIS_URL: redis://localhost:6379/0
           SECRET_KEY: ci-test-secret
+          SUPER_ADMIN_EMAIL: ci-admin@mango.test
         run: |
           if [ -d "../tests" ] && ls ../tests/test_*.py 1>/dev/null 2>&1; then
             pip install pytest
