@@ -84,10 +84,18 @@ services:
       MAX_UPLOAD_DOC_MB:    "${MAX_UPLOAD_DOC_MB:-500}"
 
       # Gunicorn — long timeout required for large file uploads (videos up to 2 GB)
-      GUNICORN_TIMEOUT: "1800"
+      GUNICORN_TIMEOUT:  "1800"
+      GUNICORN_WORKERS:  "${GUNICORN_WORKERS:-4}"
+      GUNICORN_THREADS:  "${GUNICORN_THREADS:-4}"
+      # Worker heartbeat files go to RAM — avoids disk I/O for Gunicorn internals
+      GUNICORN_WORKER_TMP_DIR: "/dev/shm"
     volumes:
       - /home/mango/.ssh/id_ed25519:/run/secrets/jetson_key:ro
-      - mango_uploads:/app/uploads
+      # Bind mount so nginx can serve uploaded files directly without going through Python.
+      # Migration: if upgrading from the named volume, run:
+      #   docker run --rm -v mango_uploads:/src -v /var/www/mango-uploads:/dst \
+      #     alpine sh -c "cp -a /src/. /dst/"
+      - /var/www/mango-uploads:/app/uploads
     networks:
       - mango_net
     depends_on:
@@ -150,7 +158,6 @@ volumes:
   mango_pg:
   mango_redis:
   grafana_data:
-  mango_uploads:
 
 networks:
   mango_net:

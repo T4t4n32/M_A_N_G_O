@@ -44,9 +44,12 @@ export const IMAGE_CATEGORIES = [
 ] as const;
 
 export const VIDEO_CATEGORIES = [
+  "Campo",
+  "Pruebas",
+  "Hardware",
+  "Demostración",
   "Competencias",
   "Líder",
-  "Demostración",
 ] as const;
 
 export const DOC_CATEGORIES = [
