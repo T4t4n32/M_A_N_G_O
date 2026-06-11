@@ -48,7 +48,30 @@ UI_WEBROOT    := /var/www/mango-ui
 
 .PHONY: up down restart logs logs-backend logs-db status health \
         routes db-tables admin-cli users-list subs-list \
-        backup restore shell-backend shell-db nuke deploy-ui
+        backup restore shell-backend shell-db nuke deploy-ui \
+        setup-uploads migrate-uploads
+
+## Create /var/www/mango-uploads with correct ownership for the bind mount.
+## Run once on a fresh VPS before the first 'make up'.
+setup-uploads:
+	sudo mkdir -p /var/www/mango-uploads/image \
+	              /var/www/mango-uploads/video \
+	              /var/www/mango-uploads/document
+	sudo chown -R root:www-data /var/www/mango-uploads
+	sudo chmod -R 775 /var/www/mango-uploads
+	@echo "Upload directory ready at /var/www/mango-uploads"
+
+## One-time migration: copy files from the old Docker named volume (mango_uploads)
+## to the new bind-mount path (/var/www/mango-uploads).
+## Run this ONCE before switching to the bind-mount compose.
+migrate-uploads:
+	@echo "Migrating uploads from Docker volume mango_uploads → /var/www/mango-uploads ..."
+	sudo mkdir -p /var/www/mango-uploads
+	docker run --rm \
+	  -v mango_uploads:/src:ro \
+	  -v /var/www/mango-uploads:/dst \
+	  alpine sh -c "cp -a /src/. /dst/ && echo 'Migration complete.'"
+	@echo "Verify with: ls -lh /var/www/mango-uploads/"
 
 ## Copy the built frontend dist to the nginx web root.
 ## Run 'cd ../../frontend && npm run build' first, then this target.

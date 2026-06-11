@@ -54,6 +54,7 @@ import {
   GripVertical,
   XCircle,
   FileText,
+  LayoutGrid,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -1046,6 +1047,179 @@ function ContentSection({
   );
 }
 
+/* ─────────────────────── All-content library view ─────────────────────── */
+
+function AllLibrarySection() {
+  const { toast } = useToast();
+  const [images, setImages] = useState<PanelItem[]>([]);
+  const [videos, setVideos] = useState<PanelItem[]>([]);
+  const [docs, setDocs] = useState<PanelItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [typeFilter, setTypeFilter] = useState<"all" | "image" | "video" | "document">("all");
+  const [query, setQuery] = useState("");
+  const [editing, setEditing] = useState<PanelItem | null>(null);
+
+  const refresh = useCallback(async () => {
+    setLoading(true);
+    try {
+      const [imgRes, vidRes, docRes] = await Promise.all([
+        listServerUploads("image"),
+        listServerUploads("video"),
+        listServerUploads("document"),
+      ]);
+      setImages(imgRes.items.map(recordToPanelItem));
+      setVideos(vidRes.items.map(recordToPanelItem));
+      setDocs(docRes.items.map(recordToPanelItem));
+    } catch (err) {
+      toast({ title: "Error al cargar", description: err instanceof Error ? err.message : "Error desconocido", variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
+  }, [toast]);
+
+  useEffect(() => { void refresh(); }, [refresh]);
+
+  const handleDelete = useCallback(async (it: PanelItem) => {
+    try {
+      await deleteServerUpload(Number(it.id));
+      void refresh();
+    } catch (err) {
+      toast({ title: "No se pudo eliminar", description: err instanceof Error ? err.message : "Error desconocido", variant: "destructive" });
+    }
+  }, [refresh, toast]);
+
+  const handleSaveEdit = useCallback(async (it: PanelItem, patch: { title: string; description: string; category: string }) => {
+    await patchServerUpload(Number(it.id), patch);
+    void refresh();
+  }, [refresh]);
+
+  const allItems = useMemo(() => {
+    const combined = [...images, ...videos, ...docs];
+    return combined.filter((it) => {
+      if (typeFilter !== "all" && it.kind !== typeFilter) return false;
+      if (query && !`${it.title} ${it.description} ${it.category}`.toLowerCase().includes(query.toLowerCase())) return false;
+      return true;
+    });
+  }, [images, videos, docs, typeFilter, query]);
+
+  const typeLabel: Record<string, string> = { image: "Imagen", video: "Video", document: "Archivo" };
+  const typeColor: Record<string, string> = {
+    image: "text-sky-300 border-sky-500/40 bg-sky-500/[0.08]",
+    video: "text-purple-300 border-purple-500/40 bg-purple-500/[0.08]",
+    document: "text-amber-300 border-amber-500/40 bg-amber-500/[0.08]",
+  };
+
+  return (
+    <div className="space-y-5">
+      {/* Stats */}
+      <div className="grid grid-cols-3 gap-3">
+        {([["image", images.length, ImageIcon, "text-sky-300", "border-sky-500/20 bg-sky-500/[0.06]"],
+           ["video", videos.length, Video, "text-purple-300", "border-purple-500/20 bg-purple-500/[0.06]"],
+           ["document", docs.length, FileText, "text-amber-300", "border-amber-500/20 bg-amber-500/[0.06]"]] as const).map(([kind, count, Icon, textColor, bg]) => (
+          <button
+            key={kind}
+            type="button"
+            onClick={() => setTypeFilter(typeFilter === kind ? "all" : kind)}
+            className={`rounded-xl border p-3 flex items-center gap-3 transition-all ${bg} ${typeFilter === kind ? "ring-2 ring-white/20" : "opacity-70 hover:opacity-100"}`}
+          >
+            <Icon className={`h-5 w-5 ${textColor} shrink-0`} />
+            <div className="text-left">
+              <p className={`text-lg font-bold ${textColor} leading-none`}>{loading ? "—" : count}</p>
+              <p className="text-[11px] text-white/50 mt-0.5">{kind === "image" ? "Imágenes" : kind === "video" ? "Videos" : "Archivos"}</p>
+            </div>
+          </button>
+        ))}
+      </div>
+
+      {/* Filters */}
+      <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-4">
+          <p className="text-sm font-semibold text-white flex-1">
+            {loading ? "Cargando…" : `${allItems.length} elemento${allItems.length !== 1 ? "s" : ""}`}
+            {typeFilter !== "all" && <span className="ml-2 text-white/40 font-normal">· filtrado por {typeLabel[typeFilter]}</span>}
+          </p>
+          <div className="relative">
+            <Search className="h-3.5 w-3.5 text-white/40 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <Input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Buscar…"
+              className="bg-white/[0.04] border-white/10 text-white pl-8 h-9 w-full sm:w-52"
+            />
+          </div>
+        </div>
+
+        {loading ? (
+          <div className="text-center py-12">
+            <Loader2 className="h-8 w-8 mx-auto mb-2 animate-spin text-white/30" />
+            <p className="text-sm text-white/40">Cargando librería…</p>
+          </div>
+        ) : allItems.length === 0 ? (
+          <div className="text-center py-12 text-white/40">
+            <LayoutGrid className="h-8 w-8 mx-auto mb-2 opacity-40" />
+            <p className="text-sm">{query || typeFilter !== "all" ? "Sin resultados para ese filtro." : "No hay contenido subido todavía."}</p>
+          </div>
+        ) : (
+          <div className="columns-1 sm:columns-2 lg:columns-3 xl:columns-4 gap-3 [column-fill:_balance]">
+            {allItems.map((it) => {
+              if (it.kind === "image") {
+                return (
+                  <div key={it.id} className="mb-3 break-inside-avoid">
+                    <ImageCard item={it} onEdit={setEditing} onDelete={handleDelete} />
+                  </div>
+                );
+              }
+              if (it.kind === "video") {
+                return (
+                  <div key={it.id} className="mb-3 break-inside-avoid">
+                    <VideoCard item={it} onEdit={setEditing} onDelete={handleDelete} />
+                  </div>
+                );
+              }
+              return (
+                <div key={it.id} className="mb-3 break-inside-avoid">
+                  <div className="group rounded-xl bg-white/[0.04] border border-white/10 p-3 flex items-start gap-3 hover:bg-white/[0.06] transition">
+                    <div className="h-9 w-9 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 shrink-0">
+                      <FileText className="h-4 w-4" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h4 className="text-sm font-semibold text-white leading-tight truncate">{it.title}</h4>
+                      {it.description && <p className="text-xs text-white/50 mt-0.5 line-clamp-2">{it.description}</p>}
+                      <div className="mt-1.5 flex items-center gap-2 flex-wrap">
+                        <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded border ${typeColor[it.kind]}`}>{it.format ?? "FILE"}</span>
+                        <span className="text-[10px] text-white/40">{it.category}</span>
+                      </div>
+                    </div>
+                    <div className="flex flex-col gap-1 shrink-0">
+                      <a href={it.src} target="_blank" rel="noreferrer" className="h-7 w-7 rounded-md bg-white/[0.04] border border-white/10 hover:bg-white/10 text-white/60 flex items-center justify-center" aria-label="Abrir">
+                        <ExternalLink className="h-3.5 w-3.5" />
+                      </a>
+                      <button onClick={() => setEditing(it)} className="h-7 w-7 rounded-md bg-white/[0.04] border border-white/10 hover:bg-accent hover:border-accent hover:text-accent-foreground text-white/60 flex items-center justify-center" aria-label="Editar">
+                        <Pencil className="h-3.5 w-3.5" />
+                      </button>
+                      <button onClick={() => handleDelete(it)} className="h-7 w-7 rounded-md bg-white/[0.04] border border-white/10 hover:bg-destructive hover:border-destructive text-white/60 hover:text-white flex items-center justify-center" aria-label="Eliminar">
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      <EditDialog
+        item={editing}
+        open={editing !== null}
+        onClose={() => setEditing(null)}
+        onSaved={() => { setEditing(null); void refresh(); }}
+        onSave={handleSaveEdit}
+      />
+    </div>
+  );
+}
+
 /* ─────────────────────────── Page ─────────────────────────── */
 
 const IMAGE_ACCEPT = "image/*,.heic,.heif,.tiff,.tif";
@@ -1089,17 +1263,20 @@ export default function PanelEmmaDashboard() {
           <div className="flex gap-3">
             <ShieldCheck className="h-5 w-5 text-accent shrink-0 mt-0.5" />
             <div className="text-sm text-white/70 leading-relaxed">
-              <p className="font-semibold text-white mb-1">Consola de gestión de contenido</p>
+              <p className="font-semibold text-white mb-1">Librería de medios — M.A.N.G.O</p>
               <p className="text-xs">
-                Sube imágenes, videos y archivos. Todo el contenido se guarda en el servidor
-                y queda disponible de inmediato.
+                Sube cualquier contenido audiovisual: imágenes, videos, documentos, evidencias de campo.
+                Todo queda almacenado en el servidor y visible en la pestaña <strong className="text-white/80">Todos</strong>.
               </p>
             </div>
           </div>
         </div>
 
-        <Tabs defaultValue="images" className="w-full">
-          <TabsList className="bg-white/[0.04] border border-white/10 grid grid-cols-3 w-full h-auto p-1">
+        <Tabs defaultValue="all" className="w-full">
+          <TabsList className="bg-white/[0.04] border border-white/10 grid grid-cols-4 w-full h-auto p-1">
+            <TabsTrigger value="all" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground text-white/60 gap-1.5 py-2">
+              <LayoutGrid className="h-4 w-4" /> Todos
+            </TabsTrigger>
             <TabsTrigger value="images" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground text-white/60 gap-1.5 py-2">
               <ImageIcon className="h-4 w-4" /> Imágenes
             </TabsTrigger>
@@ -1110,6 +1287,10 @@ export default function PanelEmmaDashboard() {
               <FolderOpen className="h-4 w-4" /> Archivos
             </TabsTrigger>
           </TabsList>
+
+          <TabsContent value="all" className="mt-5">
+            <AllLibrarySection />
+          </TabsContent>
 
           <TabsContent value="images" className="mt-5">
             <ContentSection
