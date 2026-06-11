@@ -65,10 +65,10 @@ setup-uploads:
 ## to the new bind-mount path (/var/www/mango-uploads).
 ## Run this ONCE before switching to the bind-mount compose.
 migrate-uploads:
-	@echo "Migrating uploads from Docker volume mango_uploads → /var/www/mango-uploads ..."
+	@echo "Migrating uploads from Docker volume vps_mango_uploads → /var/www/mango-uploads ..."
 	sudo mkdir -p /var/www/mango-uploads
 	docker run --rm \
-	  -v mango_uploads:/src:ro \
+	  -v vps_mango_uploads:/src:ro \
 	  -v /var/www/mango-uploads:/dst \
 	  alpine sh -c "cp -a /src/. /dst/ && echo 'Migration complete.'"
 	@echo "Verify with: ls -lh /var/www/mango-uploads/"
