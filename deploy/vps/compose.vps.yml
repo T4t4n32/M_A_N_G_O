@@ -68,6 +68,10 @@ services:
       ADMIN_PASSWORD_HASH: "${ADMIN_PASSWORD_HASH:-}"
       AUTH_DISABLED: "${AUTH_DISABLED:-0}"
 
+      # Super-admin identity — login accepted by username (preferred) or email
+      SUPER_ADMIN_USERNAME: "${SUPER_ADMIN_USERNAME:-}"
+      SUPER_ADMIN_EMAIL: "${SUPER_ADMIN_EMAIL:-}"
+
       # Ingest API key — required by edge sync_worker and ESP32 bridge
       INGEST_API_KEY: "${INGEST_API_KEY:-}"
 
