@@ -171,12 +171,29 @@ def upload_file():
 @uploads_bp.get("/admin/uploads")
 @_require_admin
 def list_uploads():
-    kind = request.args.get("kind")
+    kind     = request.args.get("kind")
+    page     = max(1, request.args.get("page",     1, type=int))
+    per_page = request.args.get("per_page", 0, type=int)  # 0 = all (legacy)
+
     q = UploadedFile.query
     if kind in ("image", "video", "document"):
         q = q.filter_by(kind=kind)
+    total = q.count()
+
+    if per_page > 0:
+        per_page = min(per_page, 200)
+        items    = q.order_by(UploadedFile.uploaded_at.desc()).offset((page - 1) * per_page).limit(per_page).all()
+        pages    = (total + per_page - 1) // per_page
+        return jsonify({
+            "items":    [i.to_dict() for i in items],
+            "total":    total,
+            "page":     page,
+            "per_page": per_page,
+            "pages":    pages,
+        }), 200
+
     items = q.order_by(UploadedFile.uploaded_at.desc()).all()
-    return jsonify({"items": [i.to_dict() for i in items], "total": len(items)}), 200
+    return jsonify({"items": [i.to_dict() for i in items], "total": total, "pages": 1}), 200
 
 
 @uploads_bp.patch("/admin/uploads/<int:upload_id>")
@@ -209,6 +226,32 @@ def delete_upload(upload_id: int):
     db.session.delete(record)
     db.session.commit()
     return jsonify({"ok": True}), 200
+
+
+# ─── Public media listing (images + videos, no auth) ─────────────────────────
+
+@uploads_bp.get("/public/media")
+def public_media():
+    """Lists uploaded images and videos — no auth required."""
+    kind     = request.args.get("kind")
+    page     = max(1, request.args.get("page",     1, type=int))
+    per_page = min(100, max(1, request.args.get("per_page", 50, type=int)))
+
+    q = UploadedFile.query.filter(UploadedFile.kind.in_(["image", "video"]))
+    if kind in ("image", "video"):
+        q = q.filter_by(kind=kind)
+
+    total = q.count()
+    items = q.order_by(UploadedFile.uploaded_at.desc()).offset((page - 1) * per_page).limit(per_page).all()
+    pages = (total + per_page - 1) // per_page if per_page else 1
+
+    return jsonify({
+        "items":    [i.to_dict() for i in items],
+        "total":    total,
+        "page":     page,
+        "per_page": per_page,
+        "pages":    pages,
+    }), 200
 
 
 # ─── Public document listing (PDFs only) ─────────────────────────────────────

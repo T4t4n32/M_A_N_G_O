@@ -4,7 +4,8 @@ import { login as apiLogin, checkAuth, ApiError } from "@/lib/api";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Lock, User, Loader2, AlertCircle, Eye, EyeOff, ShieldAlert } from "lucide-react";
+import { Lock, User, Loader2, AlertCircle, Eye, EyeOff, ShieldAlert, ArrowLeft } from "lucide-react";
+import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 
 /**
@@ -184,6 +185,16 @@ export default function PanelEmmaLogin() {
             Esta vista no está enlazada desde la web pública.
             <br />Solo el super-administrador autorizado puede continuar.
           </p>
+
+          <div className="mt-4 flex justify-center">
+            <Link
+              to="/"
+              className="inline-flex items-center gap-1.5 text-xs text-white/40 hover:text-white/70 transition-colors"
+            >
+              <ArrowLeft className="h-3.5 w-3.5" />
+              Volver al inicio
+            </Link>
+          </div>
         </div>
       </motion.div>
     </div>

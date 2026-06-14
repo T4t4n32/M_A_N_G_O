@@ -165,6 +165,8 @@ const KIND_SIZE_LABELS: Record<PanelKind, string> = {
   document: "500 MB",
 };
 
+const PAGE_SIZE = 48;
+
 // Persist the last selected category per kind so it survives tab switches
 // (Radix UI Tabs unmounts inactive content, resetting React state).
 function usePersistedCategory(kind: PanelKind): [string, (c: string) => void] {
@@ -873,7 +875,11 @@ function ContentSection({
   const cats = categoriesFor(kind);
   const [items, setItems] = useState<PanelItem[]>([]);
   const [loadingItems, setLoadingItems] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
   const [filter, setFilter] = useState<string>("Todas");
   const [query, setQuery] = useState("");
   const sortKey = `panel-emma::sort-${kind}`;
@@ -891,9 +897,16 @@ function ContentSection({
   const refresh = useCallback(async () => {
     setLoadingItems(true);
     setLoadError(null);
+    setCurrentPage(1);
     try {
-      const { items: records } = await listServerUploads(kind as "image" | "video" | "document");
+      const { items: records, total, pages = 1 } = await listServerUploads(
+        kind as "image" | "video" | "document",
+        1,
+        PAGE_SIZE,
+      );
       setItems(records.map(recordToPanelItem));
+      setTotalCount(total);
+      setTotalPages(pages);
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Error desconocido al cargar archivos.";
       setLoadError(msg);
@@ -902,6 +915,29 @@ function ContentSection({
       setLoadingItems(false);
     }
   }, [kind, toast]);
+
+  const loadMore = useCallback(async () => {
+    const nextPage = currentPage + 1;
+    setLoadingMore(true);
+    try {
+      const { items: records, pages = 1 } = await listServerUploads(
+        kind as "image" | "video" | "document",
+        nextPage,
+        PAGE_SIZE,
+      );
+      setItems((prev) => [...prev, ...records.map(recordToPanelItem)]);
+      setCurrentPage(nextPage);
+      setTotalPages(pages);
+    } catch (err) {
+      toast({
+        title: "Error al cargar más",
+        description: err instanceof Error ? err.message : "Error desconocido",
+        variant: "destructive",
+      });
+    } finally {
+      setLoadingMore(false);
+    }
+  }, [currentPage, kind, toast]);
 
   useEffect(() => { void refresh(); }, [refresh]);
 
@@ -950,7 +986,7 @@ function ContentSection({
               {kind === "image" ? "Imágenes subidas" : kind === "video" ? "Videos subidos" : "Archivos subidos"}
             </h3>
             <p className="text-[11px] text-white/40 mt-0.5">
-              {loadingItems ? "Cargando…" : `${items.length} archivos en el servidor`}
+              {loadingItems ? "Cargando…" : `${items.length} cargados · ${totalCount} en servidor`}
             </p>
           </div>
           <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
@@ -1034,6 +1070,20 @@ function ContentSection({
             ))}
           </div>
         )}
+
+        {/* Load more */}
+        {!loadingItems && currentPage < totalPages && (
+          <div className="flex justify-center pt-4">
+            <button
+              onClick={() => void loadMore()}
+              disabled={loadingMore}
+              className="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-white/[0.06] border border-white/10 text-sm text-white/70 hover:text-white hover:bg-white/[0.10] disabled:opacity-50 transition-all"
+            >
+              {loadingMore && <Loader2 className="h-4 w-4 animate-spin" />}
+              {loadingMore ? "Cargando…" : `Cargar más (${totalCount - items.length} restantes)`}
+            </button>
+          </div>
+        )}
       </div>
 
       <EditDialog
@@ -1059,17 +1109,24 @@ function AllLibrarySection() {
   const [query, setQuery] = useState("");
   const [editing, setEditing] = useState<PanelItem | null>(null);
 
+  const [totalImages, setTotalImages] = useState(0);
+  const [totalVideos, setTotalVideos] = useState(0);
+  const [totalDocs, setTotalDocs] = useState(0);
+
   const refresh = useCallback(async () => {
     setLoading(true);
     try {
       const [imgRes, vidRes, docRes] = await Promise.all([
-        listServerUploads("image"),
-        listServerUploads("video"),
-        listServerUploads("document"),
+        listServerUploads("image",    1, PAGE_SIZE),
+        listServerUploads("video",    1, 50),
+        listServerUploads("document", 1, 100),
       ]);
       setImages(imgRes.items.map(recordToPanelItem));
       setVideos(vidRes.items.map(recordToPanelItem));
       setDocs(docRes.items.map(recordToPanelItem));
+      setTotalImages(imgRes.total);
+      setTotalVideos(vidRes.total);
+      setTotalDocs(docRes.total);
     } catch (err) {
       toast({ title: "Error al cargar", description: err instanceof Error ? err.message : "Error desconocido", variant: "destructive" });
     } finally {
@@ -1113,9 +1170,9 @@ function AllLibrarySection() {
     <div className="space-y-5">
       {/* Stats */}
       <div className="grid grid-cols-3 gap-3">
-        {([["image", images.length, ImageIcon, "text-sky-300", "border-sky-500/20 bg-sky-500/[0.06]"],
-           ["video", videos.length, Video, "text-purple-300", "border-purple-500/20 bg-purple-500/[0.06]"],
-           ["document", docs.length, FileText, "text-amber-300", "border-amber-500/20 bg-amber-500/[0.06]"]] as const).map(([kind, count, Icon, textColor, bg]) => (
+        {([["image", totalImages, ImageIcon, "text-sky-300", "border-sky-500/20 bg-sky-500/[0.06]"],
+           ["video", totalVideos, Video, "text-purple-300", "border-purple-500/20 bg-purple-500/[0.06]"],
+           ["document", totalDocs, FileText, "text-amber-300", "border-amber-500/20 bg-amber-500/[0.06]"]] as const).map(([kind, count, Icon, textColor, bg]) => (
           <button
             key={kind}
             type="button"
