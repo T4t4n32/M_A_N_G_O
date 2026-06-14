@@ -16,6 +16,7 @@ class MangoUser(db.Model):
 
     id         = db.Column(db.Integer, primary_key=True)
     email      = db.Column(db.String(255), unique=True, nullable=False, index=True)
+    username   = db.Column(db.String(64),  unique=True, nullable=True,  index=True)
     name       = db.Column(db.String(120), nullable=True, default="")
     role       = db.Column(db.String(32),  nullable=False, default="estudiante", index=True)
     pw_hash    = db.Column(db.String(255), nullable=False)
@@ -51,6 +52,7 @@ class MangoUser(db.Model):
         return {
             "id":          self.id,
             "email":       self.email,
+            "username":    self.username,
             "name":        self.name,
             "role":        self.role,
             "active":      self.active,

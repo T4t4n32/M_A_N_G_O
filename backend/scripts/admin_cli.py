@@ -135,6 +135,54 @@ def cmd_users_passwd(args) -> int:
     return 0
 
 
+def cmd_users_update(args) -> int:
+    """Update username, name, and/or password for an existing user (lookup by email)."""
+    email = (args.email or "").strip().lower()
+    if not email:
+        print("ERROR: --email is required to identify the user")
+        return 1
+
+    user = MangoUser.query.filter_by(email=email).first()
+    if not user:
+        print(f"ERROR: no user found with email={email}")
+        return 1
+
+    changed = []
+
+    if args.username is not None:
+        new_uname = args.username.strip()
+        if new_uname:
+            collision = MangoUser.query.filter(
+                MangoUser.username == new_uname,
+                MangoUser.id != user.id,
+            ).first()
+            if collision:
+                print(f"ERROR: username '{new_uname}' is already taken by user id={collision.id}")
+                return 1
+            user.username = new_uname
+            changed.append(f"username={new_uname}")
+
+    if args.name is not None:
+        user.name = args.name.strip()
+        changed.append(f"name={user.name}")
+
+    if args.password is not None:
+        pwd = args.password
+        if len(pwd) < 8:
+            print("ERROR: password must be at least 8 characters")
+            return 1
+        user.set_password(pwd)
+        changed.append("password=<updated>")
+
+    if not changed:
+        print("Nothing to update — pass --username, --name, or --password")
+        return 1
+
+    db.session.commit()
+    print(f"Updated user id={user.id} email={user.email}: {', '.join(changed)}")
+    return 0
+
+
 def cmd_subs_list(args) -> int:
     q = UserSubscription.query
     if args.user_id:
@@ -265,6 +313,12 @@ def build_parser() -> argparse.ArgumentParser:
     passwd_p.add_argument("--email",    required=True)
     passwd_p.add_argument("--password", required=True)
 
+    update_p = users_sub.add_parser("update", help="Update username / name / password for an existing user")
+    update_p.add_argument("--email",    required=True, help="Email to identify the user")
+    update_p.add_argument("--username", default=None,  help="New username (non-email login identifier)")
+    update_p.add_argument("--name",     default=None,  help="New display name")
+    update_p.add_argument("--password", default=None,  help="New password (min 8 chars)")
+
     # subs
     subs_p = sub.add_parser("subs", help="Subscription / tier management")
     subs_sub = subs_p.add_subparsers(dest="action")
@@ -308,6 +362,8 @@ def main() -> int:
                 return cmd_users_create(args)
             if args.action == "passwd":
                 return cmd_users_passwd(args)
+            if args.action == "update":
+                return cmd_users_update(args)
 
         if args.group == "subs":
             if not getattr(args, "action", None):

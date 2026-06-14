@@ -847,6 +847,85 @@ function buildPublicDocs(): Doc[] {
   return [...dedupedLocal, ...staticPublicDocs];
 }
 
+/* ─── DocCard ───────────────────────────────────────────────────────────────── */
+
+function DocCard({ doc, index }: { doc: Doc; index: number }) {
+  const Icon = doc.icon;
+  const fmt = doc.files[0]?.label ?? "PDF";
+  const fmtStyle = formatIcons[fmt] ?? formatIcons.PDF;
+
+  return (
+    <SpotlightCard
+      className="rounded-xl h-full"
+      spotlightColor="rgba(56, 189, 248, 0.10)"
+    >
+      <a
+        href={doc.files[0]?.href}
+        download
+        aria-label={`Descargar ${doc.title} en PDF`}
+        className="block h-full focus:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(195,70%,48%)]/60 rounded-xl"
+      >
+        <GlareHover
+          glareColor="#38bdf8"
+          glareOpacity={0.08}
+          glareSize={200}
+          className="group h-full bg-white/[0.03] backdrop-blur-sm rounded-xl border border-white/[0.07] p-4 hover:bg-white/[0.06] hover:border-white/[0.14] hover:-translate-y-0.5 hover:shadow-lg hover:shadow-[hsl(195,70%,48%)]/5 transition-all duration-300 cursor-pointer flex flex-col gap-3"
+        >
+          {/* Top row: format badge + title + lang */}
+          <div className="flex items-start gap-3">
+            {/* Format block */}
+            <div
+              className={`shrink-0 w-10 h-10 rounded-lg ${fmtStyle.bg} border ${fmtStyle.border} flex flex-col items-center justify-center gap-0.5`}
+            >
+              <Icon className={`h-4 w-4 ${fmtStyle.color}`} />
+              <span className={`text-[8px] font-black tracking-wider ${fmtStyle.color} leading-none`}>
+                {fmt}
+              </span>
+            </div>
+
+            {/* Title + lang */}
+            <div className="flex-1 min-w-0 pt-0.5">
+              <div className="flex items-start gap-1.5 flex-wrap">
+                <h3 className={`font-semibold text-sm leading-snug text-white/85 group-hover:text-white transition-colors line-clamp-2`}>
+                  {doc.title}
+                </h3>
+                {doc.lang && (
+                  <span className="shrink-0 text-[9px] font-black px-1.5 py-0.5 rounded bg-[hsl(50,90%,58%)]/15 text-[hsl(50,90%,68%)] border border-[hsl(50,90%,58%)]/20 leading-none mt-0.5">
+                    {doc.lang}
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Description */}
+          <p className="text-[11px] text-white/35 leading-relaxed line-clamp-2 flex-1">
+            {doc.desc}
+          </p>
+
+          {/* Footer: category + date + download CTA */}
+          <div className="flex items-center justify-between pt-2.5 border-t border-white/[0.06]">
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-medium text-white/35 bg-white/[0.05] px-2 py-0.5 rounded-full">
+                {doc.category}
+              </span>
+              <span className="text-[10px] text-white/20">{doc.date}</span>
+            </div>
+            <span
+              className={`inline-flex items-center gap-1 text-[11px] font-semibold ${fmtStyle.color} opacity-60 group-hover:opacity-100 transition-opacity`}
+            >
+              <Download className="h-3 w-3" />
+              PDF
+            </span>
+          </div>
+        </GlareHover>
+      </a>
+    </SpotlightCard>
+  );
+}
+
+/* ─── DocumentationSection ──────────────────────────────────────────────────── */
+
 export function DocumentationSection() {
   const heading = useSiteValue("doc.heading", "Documentación");
   const subheading = useSiteValue("doc.subheading", "Recursos, informes y documentos del proyecto");
@@ -855,6 +934,7 @@ export function DocumentationSection() {
 
   const [catOpen, setCatOpen] = useState(false);
   const [publicDocs, setPublicDocs] = useState<Doc[]>(() => buildPublicDocs());
+
   // Persistimos la preferencia "ver todos / colapsado" en localStorage para
   // que el usuario no tenga que volver a desplegar la lista en cada visita.
   const SHOW_ALL_KEY = "mango.docs.showAll";
@@ -878,7 +958,6 @@ export function DocumentationSection() {
       window.removeEventListener("panel-emma::content-changed", refresh);
     };
   }, []);
-
 
   const filtered = useMemo(() => {
     let result = active === "Todos" ? publicDocs : publicDocs.filter((d) => d.category === active);
@@ -916,236 +995,175 @@ export function DocumentationSection() {
     }))
     .filter((c) => c.label === "Todos" || c.count > 0);
 
+  const featuredDownloads = [
+    { label: "Documento", desc: "Investigación completa", href: "/docs/MANGO.pdf" },
+    { label: "English", desc: "International version", href: "/docs/MANGO_English.pdf" },
+    { label: "Pitch", desc: "Para jurados y convocatorias", href: "/docs/PITCH.pdf" },
+    { label: "Bitácora", desc: "Última bitácora SENA", href: "/docs/BITACORA_6_SEBASTIAN_SANCHEZ_CHACON.pdf" },
+  ];
+
   return (
     <section id="documentacion" className="py-20 md:py-28 bg-mango-dark relative overflow-hidden">
-      <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_20%_60%,hsl(168_72%_42%/0.04),transparent_50%)]" />
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
-        <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold"><DecryptedText text={heading} speed={40} maxIterations={8} animateOn="view" className="text-white" encryptedClassName="text-accent/40" /></h2>
-          <p className="mt-3 text-white/50 max-w-2xl mx-auto">
-            {subheading} — {publicDocs.length} documentos públicos disponibles
-          </p>
-          <p className="mt-2 text-xs text-white/35 max-w-xl mx-auto">
-            Los archivos editables (DOCX, XLSX, PPTX, MD, TXT) sólo están disponibles desde el panel
-            autenticado.{" "}
-            <Link to="/login" className="underline text-white/70 hover:text-white font-semibold">
-              Iniciar sesión
-            </Link>.
-          </p>
-        </div>
+      {/* Ambient background glow */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-0 left-[15%] w-[500px] h-[400px] bg-[hsl(168,72%,42%)] opacity-[0.03] blur-[120px] rounded-full" />
+        <div className="absolute bottom-0 right-[10%] w-[400px] h-[300px] bg-[hsl(195,70%,48%)] opacity-[0.03] blur-[100px] rounded-full" />
+      </div>
 
-        {/* Search bar */}
-        <div className="max-w-md mx-auto mb-8">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/30" />
-            <input
-              type="text"
-              placeholder="Buscar documentos..."
-              value={search}
-              onChange={(e) => {
-                setSearch(e.target.value);
-              }}
-              className="w-full pl-10 pr-9 py-2.5 rounded-full bg-white/[0.06] border border-white/[0.1] text-sm text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-[hsl(195,70%,48%)]/40 transition-all" />
-            
-            {search &&
-            <button
-              onClick={() => setSearch("")}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-white transition-colors">
-              
-                <X className="h-4 w-4" />
-              </button>
-            }
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+
+        {/* ── Header ── */}
+        <div className="text-center mb-10">
+          <h2 className="text-3xl md:text-4xl font-bold">
+            <DecryptedText
+              text={heading}
+              speed={40}
+              maxIterations={8}
+              animateOn="view"
+              className="text-white"
+              encryptedClassName="text-accent/40"
+            />
+          </h2>
+          <div className="mt-3 flex items-center justify-center gap-3 flex-wrap">
+            <p className="text-white/45 text-sm">{subheading}</p>
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/[0.06] border border-white/[0.1] text-xs text-white/40">
+              <File className="h-3 w-3" />
+              {publicDocs.length} PDFs públicos
+            </span>
           </div>
         </div>
 
-        {/* Main file downloads — key project files */}
-        <div className="max-w-4xl mx-auto mb-8">
-          <p className="text-xs font-semibold text-white/40 uppercase tracking-wider mb-4 px-1">📌 Archivos principales del proyecto</p>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-white/50">
-            {[
-            { label: "Documento", desc: "Investigación completa en PDF", ext: ".pdf", icon: File, href: "/docs/MANGO.pdf", style: formatIcons.PDF, gradient: "from-red-500/20 to-red-600/5" },
-            { label: "English", desc: "Versión internacional del proyecto", ext: ".pdf", icon: File, href: "/docs/MANGO_English.pdf", style: formatIcons.PDF, gradient: "from-red-500/20 to-red-600/5" },
-            { label: "Pitch", desc: "Pitch para jurados y convocatorias", ext: ".pdf", icon: File, href: "/docs/PITCH.pdf", style: formatIcons.PDF, gradient: "from-red-500/20 to-red-600/5" },
-            { label: "Bitácora", desc: "Última bitácora SENA en PDF", ext: ".pdf", icon: File, href: "/docs/BITACORA_6_SEBASTIAN_SANCHEZ_CHACON.pdf", style: formatIcons.PDF, gradient: "from-red-500/20 to-red-600/5" }].
-            map(({ label, desc, ext, icon: FmtIcon, href, style, gradient }) =>
-            <a
-              key={label}
-              href={href}
-              download
-              className="group/card relative overflow-hidden rounded-2xl">
-              <GlareHover
-                glareColor={style.color.includes('red') ? '#ef4444' : style.color.includes('blue') ? '#3b82f6' : style.color.includes('emerald') ? '#10b981' : '#f97316'}
-                glareOpacity={0.15}
-                glareSize={200}
-                className={`flex flex-col items-center gap-3 p-6 rounded-2xl border-2 transition-all duration-300 bg-gradient-to-b ${gradient} ${style.border} hover:shadow-xl hover:shadow-current/5 hover:scale-[1.05] hover:border-opacity-60 cursor-pointer h-full`}
+        {/* ── Featured downloads ── */}
+        <div className="max-w-3xl mx-auto mb-10">
+          <p className="text-[10px] font-semibold text-white/25 uppercase tracking-[0.15em] text-center mb-4">
+            Acceso directo
+          </p>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            {featuredDownloads.map(({ label, desc, href }) => (
+              <a
+                key={label}
+                href={href}
+                download
+                className="group relative rounded-xl border border-red-500/20 bg-red-500/[0.05] hover:bg-red-500/[0.10] hover:border-red-500/35 transition-all duration-200 p-3 flex flex-col gap-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-400/50"
               >
-                {/* Glow effect on hover */}
-                <div className={`absolute inset-0 opacity-0 group-hover/card:opacity-100 transition-opacity duration-500 bg-gradient-to-t ${gradient} blur-xl`} />
-                
-                <div className={`relative z-10 p-3 rounded-xl ${style.bg} border ${style.border} group-hover/card:scale-110 transition-transform duration-300`}>
-                  <FmtIcon className={`h-8 w-8 ${style.color}`} />
+                <div className="flex items-center justify-between">
+                  <div className="h-7 w-7 rounded-lg bg-red-500/15 border border-red-500/25 flex items-center justify-center">
+                    <File className="h-3.5 w-3.5 text-red-400" />
+                  </div>
+                  <Download className="h-3.5 w-3.5 text-red-400/40 group-hover:text-red-400 group-hover:translate-y-0.5 transition-all duration-200" />
                 </div>
-                <span className={`relative z-10 text-sm font-bold ${style.color}`}>{label}</span>
-                <span className="relative z-10 text-[11px] text-white/40 text-center leading-tight">{desc}</span>
-                <span className={`relative z-10 inline-flex items-center gap-1.5 text-[11px] font-semibold mt-auto px-3 py-1.5 rounded-full ${style.bg} ${style.color} border ${style.border} group-hover/card:shadow-sm transition-all`}>
-                  <Download className="h-3 w-3 group-hover/card:animate-bounce" /> Descargar {ext}
-                </span>
-              </GlareHover>
+                <div>
+                  <p className="text-xs font-bold text-red-300 leading-none">{label}</p>
+                  <p className="text-[10px] text-white/30 mt-0.5 leading-tight">{desc}</p>
+                </div>
               </a>
+            ))}
+          </div>
+        </div>
+
+        {/* ── Search + Category bar ── */}
+        <div className="max-w-4xl mx-auto mb-8 space-y-4">
+          {/* Search */}
+          <div className="relative max-w-sm mx-auto">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-white/25 pointer-events-none" />
+            <input
+              type="text"
+              placeholder="Buscar en la biblioteca..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full pl-9 pr-8 py-2 rounded-full bg-white/[0.05] border border-white/[0.09] text-sm text-white placeholder:text-white/25 focus:outline-none focus:ring-2 focus:ring-[hsl(195,70%,48%)]/35 focus:border-[hsl(195,70%,48%)]/40 transition-all"
+            />
+            {search && (
+              <button
+                onClick={() => setSearch("")}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-white/25 hover:text-white/60 transition-colors"
+                aria-label="Limpiar búsqueda"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
             )}
           </div>
 
-          {/* Aviso: archivos editables sólo desde el panel */}
-          <div className="mt-4 flex justify-center">
-            <Link
-              to="/login"
-              className="group flex items-center gap-2.5 px-5 py-2.5 rounded-xl border border-white/10 text-sm bg-white/[0.04] text-white/60 hover:text-white hover:bg-white/[0.08] transition-all">
-              <FileType className="h-4 w-4" />
-              <span>Acceder a los archivos editables y PDFs (panel autenticado)</span>
-            </Link>
-          </div>
-        </div>
-
-        {/* Collapsible categories */}
-        <div className="max-w-4xl mx-auto mb-10 bg-white/[0.04] backdrop-blur-sm rounded-xl border border-white/[0.08] p-4">
-          <Collapsible open={catOpen} onOpenChange={setCatOpen}>
-            <CollapsibleTrigger className="w-full flex items-center justify-between text-sm font-semibold text-white/70 hover:text-white transition-colors cursor-pointer">
-              <span className="flex items-center gap-2">
-                <span className="p-1 rounded-md bg-[hsl(195,70%,48%)]/10">
-                  <ClipboardList className="h-3.5 w-3.5 text-[hsl(195,70%,48%)]" />
+          {/* Category pills — always visible */}
+          <div className="flex flex-wrap gap-1.5 justify-center">
+            {counts.map(({ label, count }) => (
+              <button
+                key={label}
+                onClick={() => setActive(label)}
+                className={`px-3 py-1.5 rounded-full text-[11px] font-semibold transition-all duration-150 border ${
+                  active === label
+                    ? "bg-[hsl(195,70%,48%)]/15 text-[hsl(195,70%,68%)] border-[hsl(195,70%,48%)]/35"
+                    : "bg-transparent text-white/35 border-white/[0.08] hover:border-white/20 hover:text-white/55"
+                }`}
+              >
+                {label}
+                <span className={`ml-1.5 text-[10px] ${active === label ? "text-[hsl(195,70%,50%)]" : "text-white/20"}`}>
+                  {count}
                 </span>
-                Filtrar por categoría
-              </span>
-              <span className="flex items-center gap-2">
-                {active !== "Todos" &&
-                <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-[hsl(195,70%,48%)]/15 text-[hsl(195,70%,70%)] border border-[hsl(195,70%,48%)]/20">
-                    {active}
-                  </span>
-                }
-                <ChevronDown className={`h-4 w-4 text-white/40 transition-transform duration-200 ${catOpen ? "rotate-180" : ""}`} />
-              </span>
-            </CollapsibleTrigger>
-            <CollapsibleContent>
-              <div className="flex flex-wrap gap-2 mt-4 pt-3 border-t border-white/[0.08]">
-                {counts.map(({ label, count }) =>
-                <button
-                  key={label}
-                  onClick={() => {setActive(label);}}
-                  className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all duration-200 border-2 ${
-                  active === label ?
-                  "bg-[hsl(195,70%,48%)]/20 text-[hsl(195,70%,70%)] border-[hsl(195,70%,48%)]/40 shadow-md shadow-[hsl(195,70%,48%)]/10" :
-                  "bg-white/[0.04] text-white/50 border-white/[0.1] hover:border-white/[0.2] hover:text-white/70"}`
-                  }>
-                  
-                    {label} <span className="ml-1 opacity-50">({count})</span>
+              </button>
+            ))}
+          </div>
+
+          {/* Inline status line */}
+          {(search.trim() || active !== "Todos") && (
+            <div className="flex items-center justify-center gap-2 flex-wrap">
+              {search.trim() && (
+                <span className="text-xs text-white/35">
+                  {filtered.length} resultado{filtered.length !== 1 ? "s" : ""} para &ldquo;{search}&rdquo;
+                </span>
+              )}
+              {active !== "Todos" && (
+                <span className="inline-flex items-center gap-1 text-xs text-[hsl(195,70%,60%)] bg-[hsl(195,70%,48%)]/10 border border-[hsl(195,70%,48%)]/20 px-2 py-0.5 rounded-full">
+                  {active}
+                  <button
+                    onClick={() => setActive("Todos")}
+                    className="hover:text-white ml-0.5"
+                    aria-label="Quitar filtro de categoría"
+                  >
+                    <X className="h-2.5 w-2.5" />
                   </button>
-                )}
-              </div>
-            </CollapsibleContent>
-          </Collapsible>
+                </span>
+              )}
+              {(search.trim() || active !== "Todos") && (
+                <button
+                  onClick={() => { setActive("Todos"); setSearch(""); }}
+                  className="text-[11px] text-white/25 hover:text-white/50 underline transition-colors"
+                >
+                  Limpiar
+                </button>
+              )}
+            </div>
+          )}
         </div>
 
-        {/* Active filters summary */}
-        {active !== "Todos" &&
-        <div className="max-w-4xl mx-auto mb-6 flex flex-wrap items-center gap-2">
-            <span className="text-xs text-white/40">Filtros activos:</span>
-            {active !== "Todos" &&
-          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-[hsl(195,70%,48%)]/15 text-[hsl(195,70%,70%)] text-xs font-medium border border-[hsl(195,70%,48%)]/20">
-                {active}
-                <button onClick={() => setActive("Todos")} className="hover:text-white"><X className="h-3 w-3" /></button>
-              </span>
-          }
-            <button
-            onClick={() => {setActive("Todos");setSearch("");}}
-            className="text-xs text-white/40 hover:text-white underline ml-1">
-            
-              Limpiar todo
-            </button>
+        {/* ── Document grid ── */}
+        {visible.length > 0 ? (
+          <div
+            id="docs-grid"
+            className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3"
+            aria-live="polite"
+          >
+            {visible.map((doc, i) => (
+              <DocCard key={`${doc.title}-${i}`} doc={doc} index={i} />
+            ))}
           </div>
-        }
-
-        {/* Results count when searching */}
-        {search.trim() &&
-        <p className="text-center text-sm text-white/40 mb-6">
-            {filtered.length} resultado{filtered.length !== 1 ? "s" : ""} para "{search}"
-          </p>
-        }
-
-        {/* Document grid */}
-        {visible.length > 0 ?
-        <div id="docs-grid" className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5" aria-live="polite">
-            {visible.map((doc, i) => {
-            const Icon = doc.icon;
-            return (
-                <SpotlightCard
-                key={`${doc.title}-${i}`}
-                className="rounded-xl"
-                spotlightColor="rgba(56, 189, 248, 0.12)">
-                <a
-                  href={doc.files[0]?.href}
-                  download
-                  aria-label={`Descargar ${doc.title} en PDF`}
-                  className="block focus:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(195,70%,48%)]/60 rounded-xl"
-                >
-                <GlareHover
-                glareColor="#38bdf8"
-                glareOpacity={0.1}
-                glareSize={180}
-                className="bg-white/[0.04] backdrop-blur-sm rounded-xl border border-white/[0.08] p-5 hover:-translate-y-1 hover:shadow-lg hover:shadow-[hsl(195,70%,48%)]/5 transition-all duration-300 group cursor-pointer">
-                
-                  <div className="flex items-start gap-3">
-                    <div className="p-2.5 rounded-xl bg-[hsl(195,70%,48%)]/10 text-[hsl(195,70%,48%)] shrink-0">
-                      <Icon className="h-5 w-5" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <h3 className="font-semibold text-sm text-white/90 group-hover:text-[hsl(195,70%,70%)] transition-colors">
-                          {doc.title}
-                        </h3>
-                        {doc.lang &&
-                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-[hsl(50,90%,58%)]/15 text-[hsl(50,90%,70%)]">
-                            {doc.lang}
-                          </span>
-                      }
-                      </div>
-                      <p className="text-xs text-white/40 mt-1 line-clamp-2">{doc.desc}</p>
-
-                      {/* Footer */}
-                      <div className="flex items-center justify-between mt-3 pt-3 border-t border-white/[0.08]">
-                        <div className="flex items-center gap-2">
-                          <span className="text-[10px] text-white/30">{doc.date}</span>
-                        </div>
-                        <span className="inline-flex items-center gap-1 text-[hsl(195,70%,60%)] group-hover:text-[hsl(195,70%,80%)] text-xs font-semibold px-2 py-1 rounded-md bg-white/[0.04] group-hover:bg-white/[0.08] transition-colors">
-                          <Download className="h-3 w-3" />
-                          <span className="hidden sm:inline">Descargar PDF</span>
-                          <span className="sm:hidden">PDF</span>
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </GlareHover>
-                </a>
-                </SpotlightCard>);
-
-          })}
-          </div> :
-
-        <div className="text-center py-12">
-            <Search className="h-10 w-10 text-white/20 mx-auto mb-3" />
-            <p className="text-white/40">No se encontraron documentos</p>
+        ) : (
+          <div className="text-center py-16">
+            <div className="h-12 w-12 rounded-xl border border-white/[0.08] bg-white/[0.03] flex items-center justify-center mx-auto mb-3">
+              <Search className="h-5 w-5 text-white/20" />
+            </div>
+            <p className="text-sm text-white/30">Sin resultados para ese criterio</p>
           </div>
-        }
+        )}
 
+        {/* ── Show all / collapse ── */}
         {canCollapse && (
-          <div className="mt-6 flex justify-center">
+          <div className="mt-8 flex justify-center">
             <button
               type="button"
               onClick={() => {
                 setShowAll((v) => {
                   const next = !v;
-                  // Al colapsar, devolvemos el foco/scroll al inicio del grid
-                  // para que el usuario no quede "perdido" al final de la lista.
                   if (!next && typeof document !== "undefined") {
                     requestAnimationFrame(() => {
                       const grid = document.getElementById("docs-grid");
@@ -1157,18 +1175,34 @@ export function DocumentationSection() {
               }}
               aria-expanded={showAll}
               aria-controls="docs-grid"
-              aria-label={showAll
-                ? "Colapsar la lista de documentos públicos"
-                : `Mostrar ${hiddenCount} documentos públicos adicionales`}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold text-white/80 hover:text-white bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 hover:border-white/20 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(195,70%,48%)]/60 focus-visible:ring-offset-2 focus-visible:ring-offset-mango-dark"
+              aria-label={
+                showAll
+                  ? "Colapsar la lista de documentos públicos"
+                  : `Mostrar ${hiddenCount} documentos públicos adicionales`
+              }
+              className="inline-flex items-center gap-2 px-5 py-2 rounded-lg text-xs font-semibold text-white/50 hover:text-white/80 bg-white/[0.03] hover:bg-white/[0.06] border border-white/[0.08] hover:border-white/15 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(195,70%,48%)]/60 focus-visible:ring-offset-2 focus-visible:ring-offset-mango-dark"
             >
-              {showAll
-                ? "Ver menos"
-                : `Ver todos los documentos (${hiddenCount} más)`}
+              <ChevronDown
+                className={`h-3.5 w-3.5 transition-transform duration-200 ${showAll ? "rotate-180" : ""}`}
+              />
+              {showAll ? "Ver menos" : `Ver todos los documentos (${hiddenCount} más)`}
             </button>
           </div>
         )}
-      </div>
-    </section>);
 
+        {/* ── Subtle footer: restricted files notice ── */}
+        <div className="mt-12 text-center">
+          <p className="text-[11px] text-white/20">
+            Archivos editables (DOCX, XLSX, PPTX) disponibles desde el panel autenticado{" "}
+            <Link
+              to="/login"
+              className="text-white/35 hover:text-white/60 underline underline-offset-2 transition-colors"
+            >
+              Iniciar sesión
+            </Link>
+          </p>
+        </div>
+      </div>
+    </section>
+  );
 }

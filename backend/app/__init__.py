@@ -6,6 +6,7 @@ from flask_sock import Sock
 
 from .config import Config
 from .extensions import db, init_redis
+from .middleware.rate_limit_middleware import init_limiter
 from .routes import register_routes
 
 sock = Sock()
@@ -23,6 +24,7 @@ def create_app() -> Flask:
 
     db.init_app(app)
     init_redis(app)
+    init_limiter(app)
     sock.init_app(app)
     register_routes(app)
 
