@@ -6,7 +6,7 @@ import { handleApiError } from "@/lib/errorHandler";
 import type { UserRecord, UserRole, AccessRequestRecord, TierName } from "@/types/dashboard";
 import { TIER_LABELS } from "@/types/dashboard";
 
-const SUPER_ADMIN_EMAIL = "mangossc@gmail.com";
+const SUPER_ADMIN_EMAIL = "mango123@gmail.com";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
