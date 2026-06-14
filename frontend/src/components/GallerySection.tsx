@@ -6,7 +6,9 @@ const filters = ["Todo", "Hardware", "Software", "Campo", "Progreso"];
 
 const INITIAL_VISIBLE = 8;
 
-const images = [
+type GalleryItem = { src: string; title: string; cat: string; desc: string };
+
+const STATIC_IMAGES: GalleryItem[] = [
   { src: "/images/gallery/hardware/hardware_1_1_ESP32.jpg", title: "Cerebro del Sistema: ESP32", cat: "Hardware", desc: "Microcontrolador principal del sistema M.A.N.G.O." },
   // hardware_2 removed (duplicate ESP32)
   { src: "/images/gallery/hardware/hardware_3_APISQUEEN_PAQUETE_1.jpg", title: "Regulador UBEC de Voltaje", cat: "Hardware", desc: "APISQUEEN - UBEC regulador de voltaje para propulsión." },
@@ -146,12 +148,44 @@ const images = [
   { src: "/images/gallery/hardware/hardware_137_ESQUEMA_MANGO.png", title: "Diagrama Conceptual M.A.N.G.O", cat: "Software", desc: "Diagrama de la problemática ambiental y la solución tecnológica." },
 ];
 
+const VALID_CATS = new Set(["Hardware", "Software", "Campo", "Progreso"]);
+
 export function GallerySection() {
   const [active, setActive] = useState("Todo");
   const [lightbox, setLightbox] = useState<number | null>(null);
   const [zoom, setZoom] = useState(1);
   const [expanded, setExpanded] = useState(false);
   const [search, setSearch] = useState("");
+  const [apiImages, setApiImages] = useState<GalleryItem[]>([]);
+
+  // Fetch uploaded images from public API — fail silently so static gallery always works.
+  useEffect(() => {
+    let cancelled = false;
+    const fetchAll = async () => {
+      try {
+        const res = await fetch("/api/v1/public/media?kind=image&per_page=100&page=1");
+        if (!res.ok || cancelled) return;
+        const data = await res.json() as { items: Array<{ url: string; title: string; category: string | null; description: string | null }>; total: number; pages: number };
+        if (cancelled) return;
+        const mapped: GalleryItem[] = data.items.map((it) => ({
+          src:   it.url,
+          title: it.title || "Sin título",
+          cat:   VALID_CATS.has(it.category ?? "") ? (it.category as string) : "Progreso",
+          desc:  it.description || "",
+        }));
+        setApiImages(mapped);
+      } catch {
+        // network error — static gallery still renders
+      }
+    };
+    void fetchAll();
+    return () => { cancelled = true; };
+  }, []);
+
+  const images = useMemo<GalleryItem[]>(
+    () => [...STATIC_IMAGES, ...apiImages],
+    [apiImages],
+  );
 
   const filtered = useMemo(() => {
     let result = active === "Todo" ? images : images.filter((img) => img.cat === active);
@@ -165,7 +199,7 @@ export function GallerySection() {
       );
     }
     return result;
-  }, [active, search]);
+  }, [active, search, images]);
 
   const needsCollapse = filtered.length > INITIAL_VISIBLE;
   const visible = expanded || !needsCollapse ? filtered : filtered.slice(0, INITIAL_VISIBLE);

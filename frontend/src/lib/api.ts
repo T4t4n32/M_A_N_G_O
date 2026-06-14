@@ -33,7 +33,7 @@ import type {
 export type { Mission };
 
 const API_BASE = "/api/v1";
-const REQUEST_TIMEOUT = 8000;
+const REQUEST_TIMEOUT = 20000;
 
 // ─── Error descriptivo con código HTTP ───────────────────────
 export class ApiError extends Error {
@@ -394,10 +394,33 @@ export function uploadFile(
   });
 }
 
-export const listServerUploads = (kind?: "image" | "video" | "document") =>
-  request<{ items: UploadedFileRecord[]; total: number }>(
-    `/admin/uploads${kind ? `?kind=${kind}` : ""}`,
+export const listServerUploads = (
+  kind?: "image" | "video" | "document",
+  page?: number,
+  per_page?: number,
+) => {
+  const p = new URLSearchParams();
+  if (kind)     p.set("kind",     kind);
+  if (page)     p.set("page",     String(page));
+  if (per_page) p.set("per_page", String(per_page));
+  const qs = p.toString();
+  return request<{ items: UploadedFileRecord[]; total: number; pages?: number }>(
+    `/admin/uploads${qs ? `?${qs}` : ""}`,
   );
+};
+
+/** Public — no auth required. Returns uploaded images and videos. */
+export const getPublicMedia = (
+  kind?: "image" | "video",
+  page = 1,
+  per_page = 50,
+) => {
+  const p = new URLSearchParams({ page: String(page), per_page: String(per_page) });
+  if (kind) p.set("kind", kind);
+  return request<{ items: UploadedFileRecord[]; total: number; page: number; pages: number }>(
+    `/public/media?${p}`,
+  );
+};
 
 export const deleteServerUpload = (id: number) =>
   request<{ ok: boolean }>(`/admin/uploads/${id}`, { method: "DELETE" });
