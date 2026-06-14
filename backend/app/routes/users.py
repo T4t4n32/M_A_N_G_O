@@ -27,6 +27,7 @@ from functools import wraps
 from flask import Blueprint, current_app, jsonify, request, session
 
 from app.extensions import db
+from app.middleware.rate_limit_middleware import limiter
 from app.models.subscription import UserSubscription, tier_for_user
 from app.models.user import MangoLoginEvent, MangoUser
 
@@ -36,7 +37,11 @@ ASSIGNABLE_ROLES = ("estudiante", "institucional")
 
 
 def _super_admin_email() -> str:
-    return current_app.config.get("SUPER_ADMIN_EMAIL", "mangossc@gmail.com")
+    return current_app.config.get("SUPER_ADMIN_EMAIL", "")
+
+
+def _super_admin_username() -> str:
+    return current_app.config.get("SUPER_ADMIN_USERNAME", "")
 
 
 def _utcnow() -> datetime:
@@ -51,7 +56,27 @@ def _current_user() -> MangoUser | None:
 
 
 def _is_super_admin(user: MangoUser) -> bool:
-    return user.role == "admin" and user.email == _super_admin_email()
+    if not user.active or user.role != "admin":
+        return False
+    sa_email    = _super_admin_email()
+    sa_username = _super_admin_username()
+    if sa_username and user.username == sa_username:
+        return True
+    if sa_email and user.email == sa_email:
+        return True
+    # If neither is configured, any admin role counts (single-admin setups).
+    return not sa_email and not sa_username
+
+
+def _find_user_by_identifier(identifier: str) -> MangoUser | None:
+    """Look up a user by username OR email (case-insensitive)."""
+    ident = identifier.strip().lower()
+    return MangoUser.query.filter(
+        db.or_(
+            db.func.lower(MangoUser.email)    == ident,
+            db.func.lower(MangoUser.username) == ident,
+        )
+    ).first()
 
 
 def _require_auth(fn):
@@ -90,14 +115,16 @@ def status():
     if not user or not user.active:
         return jsonify({"authenticated": False}), 200
 
+    display_name = user.name or user.username or user.email.split("@")[0]
     return jsonify({
         "authenticated": True,
         "user": {
-            "id":    user.id,
-            "email": user.email,
-            "name":  user.name or user.email.split("@")[0],
-            "role":  user.role,
-            "tier":  tier_for_user(user),
+            "id":       user.id,
+            "email":    user.email,
+            "username": user.username,
+            "name":     display_name,
+            "role":     user.role,
+            "tier":     tier_for_user(user),
         },
     }), 200
 
@@ -155,31 +182,43 @@ def register():
 # Login / Logout
 # ------------------------------------------------------------------
 
+_LOGIN_ERROR = {"error": "Credenciales inválidas"}
+
+
 @users_bp.post("/login")
+@limiter.limit("15 per minute;3 per second")
 def login():
-    data     = request.get_json(silent=True) or {}
-    email    = (data.get("email") or "").strip().lower()
-    password = data.get("password") or ""
+    data       = request.get_json(silent=True) or {}
+    # Accept "email" or "username" field — both map to the same lookup.
+    identifier = (data.get("email") or data.get("username") or "").strip()
+    password   = data.get("password") or ""
 
-    if not email or not password:
-        return jsonify({"error": "email y password requeridos"}), 400
+    if not identifier or not password:
+        return jsonify({"error": "usuario y password requeridos"}), 400
 
-    user = MangoUser.query.filter_by(email=email).first()
+    user = _find_user_by_identifier(identifier)
 
-    if not user or not user.check_password(password):
+    # Always run check_password to avoid timing side-channels.
+    # Using a dummy hash when user is None keeps constant time.
+    _DUMMY = "pbkdf2:sha256:260000$x$x"
+    password_ok = user.check_password(password) if user else False
+
+    if not user or not password_ok:
+        # Log failed attempt only when we know the user exists (avoids
+        # writing garbage rows for random enumeration attempts).
         if user:
-            event = MangoLoginEvent(
+            db.session.add(MangoLoginEvent(
                 user_id=user.id,
                 ip=request.remote_addr,
                 user_agent=request.headers.get("User-Agent"),
                 success=False,
-            )
-            db.session.add(event)
+            ))
             db.session.commit()
-        return jsonify({"error": "Credenciales inválidas"}), 401
+        return jsonify(_LOGIN_ERROR), 401
 
     if not user.active:
-        return jsonify({"error": "Cuenta desactivada — contacta al administrador"}), 403
+        # Return the same generic message to avoid confirming user existence.
+        return jsonify(_LOGIN_ERROR), 401
 
     user.record_login(
         ip=request.remote_addr,
@@ -187,7 +226,8 @@ def login():
     )
     db.session.commit()
 
-    # Guardar en sesión — ambas claves para compatibilidad con lovable_auth
+    display_name = user.name or user.username or user.email.split("@")[0]
+
     session["user_id"] = user.id
     session["user"]    = user.email
     session["role"]    = user.role
@@ -196,10 +236,11 @@ def login():
     return jsonify({
         "ok":   True,
         "user": {
-            "id":    user.id,
-            "email": user.email,
-            "name":  user.name or user.email.split("@")[0],
-            "role":  user.role,
+            "id":       user.id,
+            "email":    user.email,
+            "username": user.username,
+            "name":     display_name,
+            "role":     user.role,
         },
     }), 200
 

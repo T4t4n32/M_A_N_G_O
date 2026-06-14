@@ -4,7 +4,7 @@ import { login as apiLogin, checkAuth, ApiError } from "@/lib/api";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Lock, Mail, Loader2, AlertCircle, Eye, EyeOff, ShieldAlert } from "lucide-react";
+import { Lock, User, Loader2, AlertCircle, Eye, EyeOff, ShieldAlert } from "lucide-react";
 import { motion } from "framer-motion";
 
 /**
@@ -26,7 +26,7 @@ import { motion } from "framer-motion";
  */
 export default function PanelEmmaLogin() {
   const navigate = useNavigate();
-  const [email, setEmail] = useState("");
+  const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [showPass, setShowPass] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -48,13 +48,13 @@ export default function PanelEmmaLogin() {
   const handleSubmit = async (ev: React.FormEvent) => {
     ev.preventDefault();
     setError(null);
-    if (!email || !password) {
-      setError({ msg: "Complete ambos campos.", detail: "Email y contraseña son obligatorios." });
+    if (!identifier || !password) {
+      setError({ msg: "Complete ambos campos.", detail: "Usuario y contraseña son obligatorios." });
       return;
     }
     setLoading(true);
     try {
-      const res = await apiLogin({ email, password });
+      const res = await apiLogin({ email: identifier, password });
       if (!res.ok) {
         setError({
           msg: res.message ?? "Credenciales inválidas.",
@@ -130,15 +130,15 @@ export default function PanelEmmaLogin() {
 
           <form onSubmit={handleSubmit} className="space-y-4" noValidate>
             <div className="space-y-1.5">
-              <Label htmlFor="se-email" className="text-white/70 text-xs">Email</Label>
+              <Label htmlFor="se-email" className="text-white/70 text-xs">Usuario o email</Label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/30" />
+                <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/30" />
                 <Input
                   id="se-email"
-                  type="email"
+                  type="text"
                   autoComplete="username"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  value={identifier}
+                  onChange={(e) => setIdentifier(e.target.value)}
                   className="pl-9 h-11 bg-white/[0.04] border-white/10 text-white rounded-lg"
                   disabled={loading}
                 />

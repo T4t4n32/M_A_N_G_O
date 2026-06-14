@@ -1284,7 +1284,7 @@ export default function PanelEmmaDashboard() {
               <Video className="h-4 w-4" /> Videos
             </TabsTrigger>
             <TabsTrigger value="files" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground text-white/60 gap-1.5 py-2">
-              <FolderOpen className="h-4 w-4" /> Archivos
+              <FileText className="h-4 w-4" /> Documentos
             </TabsTrigger>
           </TabsList>
 
@@ -1313,29 +1313,56 @@ export default function PanelEmmaDashboard() {
           </TabsContent>
 
           <TabsContent value="files" className="mt-5">
-            <div className="mb-4 rounded-lg border border-teal-500/25 bg-teal-500/[0.06] p-3 flex items-center justify-between gap-3">
-              <div className="flex items-center gap-2.5 min-w-0">
-                <Leaf className="h-4 w-4 text-teal-400 shrink-0" />
-                <p className="text-xs text-teal-100/80 leading-relaxed">
-                  Los PDFs subidos aquí aparecen automáticamente en la Biblioteca de Archivos pública.
-                </p>
+            <div className="mb-4 rounded-xl border border-teal-500/25 bg-teal-500/[0.06] p-4 space-y-3">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-start gap-2.5 min-w-0">
+                  <Leaf className="h-4 w-4 text-teal-400 shrink-0 mt-0.5" />
+                  <div className="space-y-1">
+                    <p className="text-xs font-semibold text-teal-200">
+                      Sube documentos de cualquier tipo — hasta 500 MB por archivo
+                    </p>
+                    <p className="text-[11px] text-teal-100/60 leading-relaxed">
+                      Los PDFs aparecen automáticamente en la sección pública. El resto (DOCX, XLSX, PPTX, etc.) queda disponible solo desde el panel autenticado.
+                    </p>
+                  </div>
+                </div>
+                <a
+                  href="/archivos"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="shrink-0 flex items-center gap-1 text-[11px] font-semibold text-teal-300 hover:text-teal-200 border border-teal-500/25 rounded-lg px-2.5 py-1 bg-teal-500/[0.08] hover:bg-teal-500/[0.14] transition-colors"
+                >
+                  Ver pública
+                  <ExternalLink className="h-3 w-3" />
+                </a>
               </div>
-              <a
-                href="/archivos"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="shrink-0 flex items-center gap-1 text-[11px] font-semibold text-teal-300 hover:text-teal-200 border border-teal-500/25 rounded-lg px-2.5 py-1 bg-teal-500/[0.08] hover:bg-teal-500/[0.14] transition-colors"
-              >
-                Ver biblioteca
-                <ExternalLink className="h-3 w-3" />
-              </a>
+              {/* Accepted format chips */}
+              <div className="flex flex-wrap gap-1.5 pt-1 border-t border-teal-500/15">
+                {[
+                  { label: "PDF", color: "text-red-300 border-red-500/30 bg-red-500/10" },
+                  { label: "DOCX", color: "text-blue-300 border-blue-500/30 bg-blue-500/10" },
+                  { label: "XLSX", color: "text-emerald-300 border-emerald-500/30 bg-emerald-500/10" },
+                  { label: "PPTX", color: "text-orange-300 border-orange-500/30 bg-orange-500/10" },
+                  { label: "TXT", color: "text-slate-300 border-slate-500/30 bg-slate-500/10" },
+                  { label: "MD", color: "text-purple-300 border-purple-500/30 bg-purple-500/10" },
+                  { label: "ZIP", color: "text-yellow-300 border-yellow-500/30 bg-yellow-500/10" },
+                  { label: "+ más", color: "text-white/40 border-white/15 bg-white/[0.04]" },
+                ].map(({ label, color }) => (
+                  <span
+                    key={label}
+                    className={`text-[10px] font-bold px-2 py-0.5 rounded border ${color}`}
+                  >
+                    {label}
+                  </span>
+                ))}
+              </div>
             </div>
             <ContentSection
               kind="document"
               accept={FILE_ACCEPT}
               layout="file-list"
               emptyIcon={FolderOpen}
-              emptyLabel="No hay archivos subidos todavía."
+              emptyLabel="No hay documentos subidos todavía."
             />
           </TabsContent>
         </Tabs>

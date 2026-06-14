@@ -31,8 +31,10 @@ class Config:
         if o.strip()
     ]
 
-    # Super-admin email — first registration must use this address
-    SUPER_ADMIN_EMAIL: str = os.getenv("SUPER_ADMIN_EMAIL", "mangossc@gmail.com")
+    # Super-admin identity — login accepted by username (preferred) or email.
+    # Set SUPER_ADMIN_USERNAME to allow non-email identifiers.
+    SUPER_ADMIN_EMAIL:    str = os.getenv("SUPER_ADMIN_EMAIL", "")
+    SUPER_ADMIN_USERNAME: str = os.getenv("SUPER_ADMIN_USERNAME", "")
 
     # SMTP — for contact form email delivery
     SMTP_HOST:     str = os.getenv("SMTP_HOST", "smtp.gmail.com")
