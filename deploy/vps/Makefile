@@ -49,7 +49,7 @@ UI_WEBROOT    := /var/www/mango-ui
 .PHONY: up down restart logs logs-backend logs-db status health \
         routes db-tables admin-cli users-list subs-list \
         backup restore shell-backend shell-db nuke deploy-ui \
-        setup-uploads migrate-uploads
+        setup-uploads migrate-uploads ssl-renew ssl-status
 
 ## Create /var/www/mango-uploads with correct ownership for the bind mount.
 ## Run once on a fresh VPS before the first 'make up'.
@@ -165,6 +165,20 @@ shell-backend:
 ## Open psql inside the database container.
 shell-db:
 	docker exec -it mango_db psql -U $(DB_USER) -d $(DB_NAME)
+
+## Renew the Let's Encrypt SSL certificate and reload nginx.
+## Run when the cert is near expiry or after 'make ssl-status' shows < 30 days remaining.
+ssl-renew:
+	sudo certbot renew --nginx --cert-name integramosoe.com
+	sudo systemctl reload nginx
+	@echo "Renewal attempted. Verify with: make ssl-status"
+
+## Show SSL certificate expiry date and days remaining.
+ssl-status:
+	@DOMAIN=$$(grep -oP '(?<=PUBLIC_BASE_URL=https://)([^/]+)' .env.vps 2>/dev/null || echo "integramosoe.com"); \
+	 echo | openssl s_client -connect "$$DOMAIN:443" -servername "$$DOMAIN" 2>/dev/null \
+	   | openssl x509 -noout -enddate -subject 2>/dev/null \
+	   || echo "Could not connect to $$DOMAIN:443 — check nginx and cert path"
 
 ## DESTRUCTIVE: Remove everything — containers, volumes, and local images.
 ## This wipes all persistent data (Postgres + Redis). Use to start from scratch.

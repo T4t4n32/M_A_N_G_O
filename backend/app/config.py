@@ -11,6 +11,12 @@ def _truthy(val: str) -> bool:
 class Config:
     SQLALCHEMY_DATABASE_URI: str = os.getenv("DATABASE_URL", "")
     SQLALCHEMY_TRACK_MODIFICATIONS: bool = False
+    # Connection pool — prevents "connection closed" errors and handles load spikes.
+    SQLALCHEMY_POOL_SIZE:     int  = int(os.getenv("DB_POOL_SIZE",     "10"))
+    SQLALCHEMY_MAX_OVERFLOW:  int  = int(os.getenv("DB_MAX_OVERFLOW",  "20"))
+    SQLALCHEMY_POOL_TIMEOUT:  int  = int(os.getenv("DB_POOL_TIMEOUT",  "30"))
+    SQLALCHEMY_POOL_RECYCLE:  int  = int(os.getenv("DB_POOL_RECYCLE",  "1800"))
+    SQLALCHEMY_POOL_PRE_PING: bool = True
 
     REDIS_URL: str = os.getenv("REDIS_URL", "redis://redis:6379/0")
 

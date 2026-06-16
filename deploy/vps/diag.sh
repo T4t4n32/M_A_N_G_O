@@ -220,7 +220,24 @@ else
 fi
 
 # ---------------------------------------------------------------------------
-# 9. Recent backend errors
+# 9. Certbot auto-renewal
+# ---------------------------------------------------------------------------
+section "Certbot auto-renewal"
+
+if command -v certbot &>/dev/null; then
+    if command -v systemctl &>/dev/null && systemctl is-active certbot.timer &>/dev/null 2>&1; then
+        pass "certbot.timer is active — auto-renewal is configured"
+    elif crontab -l 2>/dev/null | grep -q certbot; then
+        pass "certbot renewal found in crontab"
+    else
+        warn "certbot installed but auto-renewal timer not active. Run: sudo systemctl enable certbot.timer && sudo systemctl start certbot.timer"
+    fi
+else
+    warn "certbot not found — SSL auto-renewal is not configured. Install: sudo apt install certbot python3-certbot-nginx"
+fi
+
+# ---------------------------------------------------------------------------
+# 10. Recent backend errors
 # ---------------------------------------------------------------------------
 section "Recent backend errors (last 50 lines)"
 
