@@ -58,8 +58,10 @@ services:
       REDIS_URL: "redis://redis:6379/0"
       SECRET_KEY: "${SECRET_KEY:-local-dev-secret}"
 
-      # Session security (must be "1" when served over HTTPS)
-      SESSION_SECURE: "${SESSION_SECURE:-1}"
+      # Session security: set to "1" only when served over HTTPS.
+      # Local dev stack runs on HTTP so the default here is "0".
+      # The VPS .env.vps file sets this to "1" explicitly.
+      SESSION_SECURE: "${SESSION_SECURE:-0}"
 
       # Super-admin: first registration must use this email
       SUPER_ADMIN_EMAIL: "${SUPER_ADMIN_EMAIL:-mangossc@gmail.com}"
