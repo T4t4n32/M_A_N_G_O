@@ -1,5 +1,4 @@
-import { motion, type Variants } from "framer-motion";
-import { forwardRef, type ReactNode } from "react";
+import { useEffect, useRef, forwardRef, type ReactNode } from "react";
 
 interface ScrollRevealProps {
   children: ReactNode;
@@ -9,39 +8,41 @@ interface ScrollRevealProps {
   duration?: number;
 }
 
-const variants: Record<string, Variants> = {
-  "fade-up": {
-    hidden: { opacity: 0, y: 40 },
-    visible: { opacity: 1, y: 0 },
-  },
-  "fade-left": {
-    hidden: { opacity: 0, x: -40 },
-    visible: { opacity: 1, x: 0 },
-  },
-  "fade-right": {
-    hidden: { opacity: 0, x: 40 },
-    visible: { opacity: 1, x: 0 },
-  },
-  scale: {
-    hidden: { opacity: 0, scale: 0.92 },
-    visible: { opacity: 1, scale: 1 },
-  },
-};
-
 export const ScrollReveal = forwardRef<HTMLDivElement, ScrollRevealProps>(
-  function ScrollReveal({ children, className, variant = "fade-up", delay = 0, duration = 0.6 }, ref) {
+  function ScrollReveal({ children, className, delay = 0, duration = 0.6 }, ref) {
+    const localRef = useRef<HTMLDivElement>(null);
+    const elRef = (ref as React.RefObject<HTMLDivElement>) ?? localRef;
+
+    useEffect(() => {
+      const el = elRef.current;
+      if (!el) return;
+      const obs = new IntersectionObserver(
+        ([entry]) => {
+          if (entry.isIntersecting) {
+            el.style.opacity = "1";
+            el.style.transform = "none";
+            obs.disconnect();
+          }
+        },
+        { threshold: 0.05 }
+      );
+      obs.observe(el);
+      return () => obs.disconnect();
+    }, [elRef]);
+
     return (
-      <motion.div
-        ref={ref}
+      <div
+        ref={elRef}
         className={className}
-        initial="hidden"
-        whileInView="visible"
-        viewport={{ once: true, amount: 0.15 }}
-        transition={{ duration, delay, ease: "easeOut" }}
-        variants={variants[variant]}
+        style={{
+          opacity: 0,
+          transform: "translateY(24px)",
+          transition: `opacity ${duration}s ease-out ${delay}s, transform ${duration}s ease-out ${delay}s`,
+          willChange: "opacity, transform",
+        }}
       >
         {children}
-      </motion.div>
+      </div>
     );
   }
 );
