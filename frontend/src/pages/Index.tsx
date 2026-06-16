@@ -1,14 +1,16 @@
 import { lazy, Suspense, useEffect } from "react";
 import { Header } from "@/components/Header";
 import { HeroSection } from "@/components/HeroSection";
-import { ProjectSection } from "@/components/ProjectSection";
 import { Footer } from "@/components/Footer";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import { useSiteSeo } from "@/lib/siteSeo";
 import { syncFromPublished } from "@/lib/siteContent";
 import { useLiveEdit } from "@/contexts/LiveEditContext";
 
-// Lazy-load heavy sections (large image arrays, GSAP masonry, etc.)
+// Lazy-load all heavy sections — none are needed for first paint
+const ProjectSection = lazy(() =>
+  import("@/components/ProjectSection").then((m) => ({ default: m.ProjectSection }))
+);
 const DocumentationSection = lazy(() =>
   import("@/components/DocumentationSection").then((m) => ({ default: m.DocumentationSection }))
 );
@@ -75,9 +77,9 @@ const Index = () => {
 
       <WaveDivider variant="teal" />
 
-      <ScrollReveal variant="fade-up">
+      <Suspense fallback={<SectionFallback />}>
         <ProjectSection />
-      </ScrollReveal>
+      </Suspense>
 
       <WaveDivider variant="blue" />
 

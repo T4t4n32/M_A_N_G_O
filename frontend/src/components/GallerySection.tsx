@@ -158,22 +158,37 @@ export function GallerySection() {
   const [search, setSearch] = useState("");
   const [apiImages, setApiImages] = useState<GalleryItem[]>([]);
 
-  // Fetch uploaded images from public API — fail silently so static gallery always works.
+  // Fetch all uploaded images from public API (all pages) — fail silently so static gallery always works.
+  // Only dynamic uploads (URL starts with /api/v1/uploads/) are included to avoid duplicating
+  // the static hardware images already listed in STATIC_IMAGES above.
   useEffect(() => {
     let cancelled = false;
     const fetchAll = async () => {
       try {
-        const res = await fetch("/api/v1/public/media?kind=image&per_page=100&page=1");
-        if (!res.ok || cancelled) return;
-        const data = await res.json() as { items: Array<{ url: string; title: string; category: string | null; description: string | null }>; total: number; pages: number };
-        if (cancelled) return;
-        const mapped: GalleryItem[] = data.items.map((it) => ({
-          src:   it.url,
-          title: it.title || "Sin título",
-          cat:   VALID_CATS.has(it.category ?? "") ? (it.category as string) : "Progreso",
-          desc:  it.description || "",
-        }));
-        setApiImages(mapped);
+        const all: GalleryItem[] = [];
+        let page = 1;
+        while (true) {
+          const res = await fetch(`/api/v1/public/media?kind=image&per_page=100&page=${page}`);
+          if (!res.ok || cancelled) return;
+          const data = await res.json() as {
+            items: Array<{ url: string; title: string; category: string | null; description: string | null }>;
+            total: number;
+            pages: number;
+          };
+          if (cancelled) return;
+          const mapped: GalleryItem[] = data.items
+            .filter((it) => it.url.startsWith("/api/v1/uploads/"))
+            .map((it) => ({
+              src:   it.url,
+              title: it.title || "Sin título",
+              cat:   VALID_CATS.has(it.category ?? "") ? (it.category as string) : "Progreso",
+              desc:  it.description || "",
+            }));
+          all.push(...mapped);
+          if (page >= data.pages) break;
+          page++;
+        }
+        setApiImages(all);
       } catch {
         // network error — static gallery still renders
       }
