@@ -16,9 +16,9 @@ import { SiteMediaVisual } from "@/components/SiteMediaVisual";
 export function ContactSection() {
   const { toast } = useToast();
   const heading = useSiteValue("contact.heading", "Contacto");
-  const subheading = useSiteValue("contact.subheading", "¿Estás interesado en aprender más? Escríbenos");
-  const infoTitle = useSiteValue("contact.info.title", "Información de Contacto");
-  const socialTitle = useSiteValue("contact.social.title", "Síguenos");
+  const subheading = useSiteValue("contact.subheading", "¿Tienes preguntas, quieres colaborar o sumarte al proyecto? Escríbenos");
+  const infoTitle = useSiteValue("contact.info.title", "Dónde encontrarnos");
+  const socialTitle = useSiteValue("contact.social.title", "Síguenos en redes");
   const [form, setForm] = useState({ name: "", email: "", institution: "", message: "" });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [sending, setSending] = useState(false);
@@ -119,13 +119,13 @@ export function ContactSection() {
                 </div>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="c-inst" className="text-white/70">Institución</Label>
-                <Input id="c-inst" required aria-required="true" aria-invalid={!!errors.institution} aria-describedby={errors.institution ? "err-inst" : undefined} placeholder="Nombre de tu institución" value={form.institution} onChange={(e) => update("institution", e.target.value)} className="bg-white/[0.05] border-white/[0.1] text-white placeholder:text-white/45 focus-visible:ring-2 focus-visible:ring-[hsl(168,72%,42%)]/60" />
+                <Label htmlFor="c-inst" className="text-white/70">Organización o institución</Label>
+                <Input id="c-inst" required aria-required="true" aria-invalid={!!errors.institution} aria-describedby={errors.institution ? "err-inst" : undefined} placeholder="Universidad, empresa, ONG, etc." value={form.institution} onChange={(e) => update("institution", e.target.value)} className="bg-white/[0.05] border-white/[0.1] text-white placeholder:text-white/45 focus-visible:ring-2 focus-visible:ring-[hsl(168,72%,42%)]/60" />
                 {errors.institution && <p id="err-inst" role="alert" className="text-xs text-destructive">{errors.institution}</p>}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="c-msg" className="text-white/70">Mensaje</Label>
-                <Textarea id="c-msg" required aria-required="true" aria-invalid={!!errors.message} aria-describedby={errors.message ? "err-msg" : undefined} placeholder="Cuéntanos sobre tu interés en el proyecto..." rows={5} value={form.message} onChange={(e) => update("message", e.target.value)} className="bg-white/[0.05] border-white/[0.1] text-white placeholder:text-white/45 focus-visible:ring-2 focus-visible:ring-[hsl(168,72%,42%)]/60" />
+                <Textarea id="c-msg" required aria-required="true" aria-invalid={!!errors.message} aria-describedby={errors.message ? "err-msg" : undefined} placeholder="¿Qué te interesa del proyecto? ¿Tienes una pregunta o propuesta?" rows={5} value={form.message} onChange={(e) => update("message", e.target.value)} className="bg-white/[0.05] border-white/[0.1] text-white placeholder:text-white/45 focus-visible:ring-2 focus-visible:ring-[hsl(168,72%,42%)]/60" />
                 {errors.message && <p id="err-msg" role="alert" className="text-xs text-destructive">{errors.message}</p>}
               </div>
               <Button

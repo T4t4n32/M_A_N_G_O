@@ -80,9 +80,9 @@ const SCHEMAS = [
 
 const COMPONENTS = [
   {
-    id: "esp32", num: "01", title: "ESP32", role: "Microcontrolador central", accent: "#00c9a7",
+    id: "esp32", num: "01", title: "ESP32", role: "El cerebro del sistema", accent: "#00c9a7",
     images: [HW.esp32, HW.esp32b],
-    desc: "El ESP32 es el cerebro local del sistema: lee los sensores en tiempo real, procesa las señales y las envía al módulo LoRa para transmisión. Dual-core de 240 MHz, bajo consumo y probado en entornos de alta humedad.",
+    desc: "El ESP32 es el microchip que controla todo el dispositivo. Lee los sensores, calcula los valores, empaqueta los datos y los envía por radio. Es pequeño, consume poca energía y funciona en ambientes de alta humedad como los manglares.",
     specs: [
       { k: "Procesador", v: "Dual-core 240 MHz" },
       { k: "Memoria",    v: "520 KB SRAM" },
@@ -91,9 +91,9 @@ const COMPONENTS = [
     ],
   },
   {
-    id: "lora", num: "02", title: "LoRa", role: "Telemetría inalámbrica", accent: "#38bdf8",
+    id: "lora", num: "02", title: "LoRa", role: "Radio de largo alcance", accent: "#38bdf8",
     images: [HW.lora, HW.lorab, HW.lorac, HW.heltec4, HW.loraMount1, HW.loraMount, HW.loraCode],
-    desc: "El módulo LoRa Heltec transmite datos a kilómetros de distancia sin WiFi ni red celular, usando la banda libre ISM de 433 MHz. Permite operar en zonas remotas sin ninguna infraestructura de telecomunicaciones.",
+    desc: "LoRa es una tecnología de radio que transmite datos a varios kilómetros de distancia sin necesitar WiFi ni señal celular. Esto permite que el dispositivo funcione en zonas remotas sin ninguna infraestructura de comunicaciones existente.",
     specs: [
       { k: "Frecuencia",   v: "433 MHz ISM" },
       { k: "Alcance",      v: "hasta 5 km en campo" },
@@ -102,9 +102,9 @@ const COMPONENTS = [
     ],
   },
   {
-    id: "ph", num: "03", title: "Sensor pH", role: "Acidez del agua", accent: "#a78bfa",
+    id: "ph", num: "03", title: "Sensor pH", role: "Medidor de acidez del agua", accent: "#a78bfa",
     images: [HW.ph, HW.phb, HW.phc, HW.phd, HW.phMount1, HW.phMount2],
-    desc: "Sensor sumergible con electrodo BNC que mide la acidez del agua en tiempo real. Los cambios de pH son los primeros indicadores de estrés ambiental, floración de algas o contaminación por vertidos.",
+    desc: "Este sensor sumergible mide qué tan ácida o alcalina está el agua. El pH es el primer indicador de que algo está pasando en el ecosistema: contaminación por vertidos, floración excesiva de algas o cambios en la composición del agua.",
     specs: [
       { k: "Rango",      v: "0 – 14 pH" },
       { k: "Precisión",  v: "±0.01 pH" },
@@ -113,9 +113,9 @@ const COMPONENTS = [
     ],
   },
   {
-    id: "temp", num: "04", title: "Sensor Temperatura", role: "Termometría de precisión", accent: "#fbbf24",
+    id: "temp", num: "04", title: "Sensor Temperatura", role: "Termómetro de alta precisión", accent: "#fbbf24",
     images: [HW.temp, HW.tempb, HW.tempc, HW.tempd, HW.temp4, HW.temp5, HW.tempe1],
-    desc: "El módulo MAX31865 combinado con una sonda PT100 mide la temperatura del agua con alta precisión. Detecta variaciones de menos de un grado que indican cambios térmicos relevantes en el ecosistema.",
+    desc: "Mide la temperatura del agua con una precisión de medio grado. Cambios pequeños de temperatura pueden ser señales importantes: indican eventos térmicos que afectan a las especies del ecosistema o el inicio de fenómenos como el blanqueamiento de corales.",
     specs: [
       { k: "Sonda",      v: "PT100 RTD" },
       { k: "Rango",      v: "−200 °C a +850 °C" },
@@ -435,7 +435,7 @@ export function ProjectSection() {
 
         <div className="relative z-10 max-w-7xl mx-auto w-full px-6 lg:px-8 pb-20">
           <p className="font-mono text-[hsl(168,72%,55%)] text-xs tracking-[0.35em] uppercase mb-5 text-center">
-            01 — Sistema de Monitoreo Ambiental
+            01 — El Dispositivo
           </p>
 
           {/* Two-column on desktop: text left (3/5), floating 3D model right (2/5) */}
@@ -448,7 +448,7 @@ export function ProjectSection() {
                   className="text-white" encryptedClassName="text-[hsl(168,72%,42%)]/40" />
               </h2>
               <p className="text-xl text-white/80 max-w-lg font-light leading-relaxed">
-                Un sistema autónomo que mide pH, temperatura y turbidez en cuerpos de agua, sin intervención humana continua.
+                Un dispositivo impermeable y autónomo que mide la acidez, la temperatura y la turbidez del agua — las tres señales clave para saber si un ecosistema acuático está sano o en peligro — sin que nadie tenga que estar presente.
               </p>
               {heroImgs.length > 1 && (
                 <div className="flex gap-2 mt-8">
@@ -487,12 +487,11 @@ export function ProjectSection() {
           <div className="text-center mb-16">
             <p className="font-mono text-[hsl(168,72%,55%)] text-xs tracking-[0.4em] uppercase mb-4 text-center">02 — El Problema</p>
             <h3 className="text-4xl md:text-5xl font-black text-white leading-tight mb-6">
-              El ecosistema está<br />
-              <span className="text-[hsl(168,72%,52%)]">hablando sin ser escuchado</span>
+              Los ecosistemas cambian<br />
+              <span className="text-[hsl(168,72%,52%)]">más rápido de lo que podemos verlos</span>
             </h3>
             <p className="text-white/70 text-lg leading-relaxed max-w-2xl mx-auto text-center">
-              Los manglares y cuerpos de agua costera son ecosistemas críticos. Sin monitoreo continuo,
-              los cambios en pH, temperatura y turbidez pasan completamente desapercibidos — hasta que es demasiado tarde.
+              Los manglares son bosques que crecen en la costa, entre el mar y la tierra. Son el hogar de miles de especies, protegen los litorales de las tormentas y absorben dióxido de carbono. Pero están desapareciendo — y no lo detectamos a tiempo porque nadie está midiendo constantemente lo que le pasa al agua que los alimenta.
             </p>
           </div>
 
@@ -501,11 +500,11 @@ export function ProjectSection() {
 
             {/* Left: sensor offline displays */}
             <div className="lg:col-span-2 flex flex-col gap-4">
-              <p className="font-mono text-white/60 text-[10px] uppercase tracking-widest mb-2">Estado actual del ecosistema</p>
+              <p className="font-mono text-white/60 text-[10px] uppercase tracking-widest mb-2">Sin monitoreo — datos ausentes</p>
               {[
-                { label: "pH del agua",    unit: "pH",  color: "#00c9a7", desc: "Sin referencia de acidez" },
-                { label: "Temperatura",    unit: "°C",  color: "#38bdf8", desc: "Sin lectura térmica" },
-                { label: "Turbidez",       unit: "NTU", color: "#fbbf24", desc: "Sin medición de claridad" },
+                { label: "pH del agua",    unit: "pH",  color: "#00c9a7", desc: "Acidez del agua — indica contaminación o estrés" },
+                { label: "Temperatura",    unit: "°C",  color: "#38bdf8", desc: "Temperatura del agua — detecta anomalías térmicas" },
+                { label: "Turbidez",       unit: "NTU", color: "#fbbf24", desc: "Claridad del agua — sube con algas o sedimentos" },
               ].map(s => (
                 <div key={s.label} className="rounded-2xl bg-white/[0.03] border border-white/[0.07] p-4 flex items-center gap-4">
                   <div className="flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center" style={{ background: s.color + "12", border: `1px solid ${s.color}25` }}>
@@ -705,8 +704,8 @@ export function ProjectSection() {
                 Icon: DollarSign,
                 stat: "$5.000+",
                 statLabel: "por equipo de análisis",
-                title: "Equipos fuera de alcance",
-                desc: "Un kit profesional de análisis de calidad de agua supera los $5.000. Solo instituciones con presupuesto científico pueden costearlos, dejando a la mayoría de ecosistemas sin cobertura.",
+                title: "Instrumentos inaccesibles",
+                desc: "Un kit profesional de análisis de agua puede costar más de $5.000 USD. La mayoría de organizaciones ambientales y comunidades locales no tiene acceso a estos recursos.",
                 color: "#fbbf24",
                 bg: "hsl(45,80%,12%)",
               },
@@ -714,8 +713,8 @@ export function ProjectSection() {
                 Icon: MapPin,
                 stat: "+4 hs",
                 statLabel: "de viaje por visita",
-                title: "Acceso difícil y costoso",
-                desc: "Las zonas de manglar y costas estuarinas suelen estar en áreas remotas. Cada visita de campo implica horas de desplazamiento, logística especializada y personal en terreno.",
+                title: "Lugares difíciles de alcanzar",
+                desc: "Muchos manglares y zonas costeras están en áreas remotas. Llegar requiere horas de viaje, embarcaciones y logística especializada — lo que hace que las visitas sean escasas y costosas.",
                 color: "#f472b6",
                 bg: "hsl(330,60%,10%)",
               },
@@ -723,17 +722,17 @@ export function ProjectSection() {
                 Icon: Clock,
                 stat: "0 datos",
                 statLabel: "entre visitas periódicas",
-                title: "Sin continuidad de datos",
-                desc: "Sin sensores permanentes, el monitoreo ocurre solo en los momentos de visita. Los cambios críticos — floraciones de algas, acidificación, temperatura — suceden entre mediciones.",
+                title: "Vacíos de información",
+                desc: "Sin sensores instalados de forma permanente, el monitoreo solo ocurre en los momentos de visita. Los cambios críticos — floraciones de algas, acidificación súbita, calentamiento — suceden sin ser registrados.",
                 color: "#a78bfa",
                 bg: "hsl(265,50%,10%)",
               },
               {
                 Icon: Users,
                 stat: "3+ expertos",
-                statLabel: "por muestra de campo",
-                title: "Dependencia de personal",
-                desc: "Cada medición requiere biólogos, técnicos ambientales o ingenieros disponibles para ir al campo. La escasez de estos perfiles limita directamente la frecuencia del monitoreo.",
+                statLabel: "por salida de campo",
+                title: "Demasiados recursos humanos",
+                desc: "Cada medición tradicional requiere biólogos, técnicos ambientales y personal de campo. La escasez de estos profesionales limita directamente cuánto y con qué frecuencia se puede medir.",
                 color: "#38bdf8",
                 bg: "hsl(200,55%,9%)",
               },
@@ -772,31 +771,31 @@ export function ProjectSection() {
 
           {/* Header */}
           <div className="text-center mb-14">
-            <p className="font-mono text-[hsl(168,72%,55%)] text-xs tracking-[0.35em] uppercase mb-3 text-center">03 — Hardware</p>
-            <h3 className="text-4xl md:text-5xl font-black text-white mb-4">El sistema físico</h3>
+            <p className="font-mono text-[hsl(168,72%,55%)] text-xs tracking-[0.35em] uppercase mb-3 text-center">03 — Los Componentes</p>
+            <h3 className="text-4xl md:text-5xl font-black text-white mb-4">Así está construido</h3>
             <p className="text-white/60 text-base max-w-xl mx-auto">
-              Hardware real, ensamblado a mano. Cada componente fue seleccionado y probado para operar de forma autónoma en campo.
+              Cada pieza fue seleccionada para resistir la humedad, funcionar sin conexión a internet y operar de forma autónoma durante días sin intervención humana. Todo ensamblado a mano.
             </p>
           </div>
 
           {/* 3-layer mental model */}
           <div className="grid grid-cols-3 gap-4 mb-16">
             {[
-              { num: "01", tag: "Captura",        title: "Sensores",       sub: "pH · Temperatura · Turbidez",  color: "#00c9a7", icon: (
+              { num: "01", tag: "1. Captura",       title: "Sensores",       sub: "Acidez · Temperatura · Turbidez",  color: "#00c9a7", icon: (
                 <svg viewBox="0 0 32 32" className="w-7 h-7" fill="none">
                   <circle cx="16" cy="16" r="7" stroke="currentColor" strokeWidth="2"/>
                   <path d="M16 4v4M16 24v4M4 16h4M24 16h4" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
                   <circle cx="16" cy="16" r="2.5" fill="currentColor"/>
                 </svg>
               )},
-              { num: "02", tag: "Procesamiento",  title: "ESP32 + Jetson", sub: "Linux embebido · Dual-core",   color: "#38bdf8", icon: (
+              { num: "02", tag: "2. Procesamiento", title: "Procesador",     sub: "Lee, calcula y empaqueta los datos",   color: "#38bdf8", icon: (
                 <svg viewBox="0 0 32 32" className="w-7 h-7" fill="none">
                   <rect x="8" y="8" width="16" height="16" rx="3" stroke="currentColor" strokeWidth="2"/>
                   <rect x="12" y="12" width="8" height="8" rx="1.5" fill="currentColor" opacity="0.4"/>
                   <path d="M4 12h4M4 16h4M4 20h4M24 12h4M24 16h4M24 20h4M12 4v4M16 4v4M20 4v4M12 24v4M16 24v4M20 24v4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
                 </svg>
               )},
-              { num: "03", tag: "Transmisión",    title: "LoRa 433 MHz",   sub: "Sin WiFi · Sin red celular",   color: "#a78bfa", icon: (
+              { num: "03", tag: "3. Transmisión",  title: "Radio LoRa",     sub: "Sin WiFi ni red celular",      color: "#a78bfa", icon: (
                 <svg viewBox="0 0 32 32" className="w-7 h-7" fill="none">
                   <path d="M16 20a4 4 0 1 0 0-8 4 4 0 0 0 0 8z" stroke="currentColor" strokeWidth="2"/>
                   <path d="M9 9a10 10 0 0 0 0 14M23 9a10 10 0 0 1 0 14" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
@@ -843,10 +842,10 @@ export function ProjectSection() {
           <div>
             <div className="flex items-center gap-3 mb-3">
               <div className="h-px flex-1 bg-white/[0.06]" />
-              <p className="text-white/60 text-[11px] font-mono uppercase tracking-widest">Planos técnicos</p>
+              <p className="text-white/60 text-[11px] font-mono uppercase tracking-widest">Esquemas del sistema</p>
               <div className="h-px flex-1 bg-white/[0.06]" />
             </div>
-            <p className="text-center text-white/60 text-xs mb-8">Haz clic en la imagen o en los tabs para explorar cada plano</p>
+            <p className="text-center text-white/60 text-xs mb-8">Haz clic en la imagen o en las pestañas para explorar cómo está conectado el sistema</p>
             <SchemaCarousel />
           </div>
 
@@ -857,14 +856,14 @@ export function ProjectSection() {
       <div className="py-20 border-t border-white/[0.06]">
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
           <p className="font-mono text-[hsl(168,72%,55%)] text-xs tracking-[0.35em] uppercase mb-3 text-center">04 — Comunicación</p>
-          <h3 className="text-3xl font-bold text-white mb-10">Del agua a la nube</h3>
+          <h3 className="text-3xl font-bold text-white mb-10">Del agua hasta tu pantalla</h3>
           <div className="flex items-start gap-3 overflow-x-auto pb-4" style={{ scrollbarWidth: "none" }}>
             {[
-              { label: "Sensores",      sub: "Sumergibles",   img: HW.ph,        color: "#00c9a7" },
-              { label: "Jetson TK1",    sub: "Edge compute",  img: HW.jetson,    color: "#38bdf8" },
-              { label: "LoRa Radio",    sub: "433 MHz",       img: HW.lora,      color: "#a78bfa" },
-              { label: "Estación Base", sub: "Recepción",     img: null,          color: "#fbbf24" },
-              { label: "Dashboard",     sub: "Tiempo real",   img: null,          color: "#f472b6" },
+              { label: "Sensores",         sub: "En el agua",       img: HW.ph,        color: "#00c9a7" },
+              { label: "Procesador",        sub: "Calcula los datos", img: HW.jetson,    color: "#38bdf8" },
+              { label: "Radio LoRa",        sub: "Envía sin WiFi",   img: HW.lora,      color: "#a78bfa" },
+              { label: "Estación Base",     sub: "Recibe la señal",  img: null,          color: "#fbbf24" },
+              { label: "Panel web",         sub: "Datos en vivo",    img: null,          color: "#f472b6" },
             ].map((node, i, arr) => (
               <div key={node.label} className="flex items-center gap-2 flex-shrink-0">
                 <div className="flex flex-col items-center gap-2">
@@ -899,8 +898,8 @@ export function ProjectSection() {
             <span className="px-3 py-1 rounded-full bg-[hsl(168,72%,42%)]/15 border border-[hsl(168,72%,42%)]/30 font-mono text-[11px] text-[hsl(168,72%,55%)] uppercase tracking-widest">05A</span>
             <span className="text-white/60 font-mono text-xs uppercase tracking-widest">Fase 1</span>
           </div>
-          <h3 className="text-3xl font-bold text-white mb-2">Ensayos Técnicos</h3>
-          <p className="text-white/65 text-base mb-8 max-w-xl text-justify">Pruebas de conectividad LoRa, validación de propulsores y verificación del sistema de sensores antes de salidas al campo.</p>
+          <h3 className="text-3xl font-bold text-white mb-2">Antes de ir al agua</h3>
+          <p className="text-white/65 text-base mb-8 max-w-xl text-justify">Antes de desplegar el dispositivo en campo, cada componente se prueba por separado: que la radio transmita a la distancia esperada, que los sensores entreguen lecturas correctas y que el sistema no falle bajo condiciones adversas.</p>
           {pruebasVids.length > 0
             ? <VideoPlayer videos={pruebasVids} label="Ensayos técnicos" />
             : <div className="rounded-2xl bg-white/[0.03] border border-white/[0.06] p-10 text-center text-white/30 font-mono text-sm">Cargando videos...</div>}
@@ -916,8 +915,8 @@ export function ProjectSection() {
           </div>
           <div className="flex items-end justify-between">
             <div>
-              <h3 className="text-3xl font-bold text-white mb-1">Pruebas de Campo</h3>
-              <p className="text-white/65 text-base max-w-md">El sistema en agua real. Despliegue en lagunas y embalses.</p>
+              <h3 className="text-3xl font-bold text-white mb-1">El dispositivo en agua real</h3>
+              <p className="text-white/65 text-base max-w-md">Cada despliegue en lagunas y embalses reales nos enseñó algo nuevo sobre cómo mejorar el sistema.</p>
             </div>
             <div className="flex gap-2 flex-shrink-0">
               <button type="button" onClick={() => nudge(-1)} aria-label="Anterior"
@@ -954,7 +953,7 @@ export function ProjectSection() {
 
         {campoVids.length > 0 && (
           <div className="max-w-7xl mx-auto px-6 lg:px-8 mt-10">
-            <p className="text-white/55 text-sm font-medium mb-5">Videos de despliegue en campo</p>
+            <p className="text-white/55 text-sm font-medium mb-5">El dispositivo en acción</p>
             <VideoPlayer videos={campoVids} label="Pruebas de campo" />
           </div>
         )}
@@ -963,13 +962,13 @@ export function ProjectSection() {
       {/* ── 06 LOS DATOS ────────────────────────────────────────────────── */}
       <div className="py-20 border-t border-white/[0.06]">
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          <p className="font-mono text-[hsl(168,72%,55%)] text-xs tracking-[0.35em] uppercase mb-3 text-center">06 — Los Datos</p>
-          <h3 className="text-3xl font-bold text-white mb-10">Lo que M.A.N.G.O. mide</h3>
+          <p className="font-mono text-[hsl(168,72%,55%)] text-xs tracking-[0.35em] uppercase mb-3 text-center">06 — Qué Medimos</p>
+          <h3 className="text-3xl font-bold text-white mb-10">Tres números que lo dicen todo</h3>
           <div className="grid sm:grid-cols-3 gap-4">
             {[
-              { label: "pH del Agua",  end: 7.4, dec: 1, suffix: "",    unit: "pH",  desc: "Acidez y alcalinidad del ecosistema. Indica estrés ambiental cuando se aleja de rangos normales.", color: "#00c9a7" },
-              { label: "Temperatura",  end: 24,  dec: 0, suffix: "°C",  unit: "°C",  desc: "Temperatura superficial del agua. Clave para detectar anomalías térmicas y estratificación.",       color: "#38bdf8" },
-              { label: "Turbidez",     end: 12,  dec: 0, suffix: " NTU",unit: "NTU", desc: "Claridad del agua. Alta turbidez indica sedimentos, contaminación o floración de algas.",           color: "#fbbf24" },
+              { label: "pH del Agua",  end: 7.4, dec: 1, suffix: "",    unit: "pH",  desc: "Qué tan ácida o alcalina está el agua. Un pH bajo o alto fuera del rango normal puede indicar contaminación, exceso de algas o estrés en el ecosistema.", color: "#00c9a7" },
+              { label: "Temperatura",  end: 24,  dec: 0, suffix: "°C",  unit: "°C",  desc: "La temperatura del agua en superficie. Cambios bruscos afectan a las especies que viven en el ecosistema y pueden señalar fenómenos térmicos anómalos.",       color: "#38bdf8" },
+              { label: "Turbidez",     end: 12,  dec: 0, suffix: " NTU",unit: "NTU", desc: "Qué tan turbia o clara está el agua. Cuanto más turbia, más sedimentos, partículas o algas contiene — una señal directa de alteración del ecosistema.",           color: "#fbbf24" },
             ].map(m => (
               <div key={m.label} className="rounded-2xl bg-white/[0.04] border border-white/[0.08] p-6 hover:border-white/15 transition-colors">
                 <p className="font-mono text-[11px] uppercase tracking-widest mb-5" style={{ color: m.color }}>{m.label}</p>
@@ -988,10 +987,10 @@ export function ProjectSection() {
       {/* ── 07 ACCESO ───────────────────────────────────────────────────── */}
       <div className="py-16 border-t border-white/[0.06]">
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          <p className="font-mono text-[hsl(168,72%,55%)] text-xs tracking-[0.35em] uppercase mb-6 text-center">07 — Acceso</p>
+          <p className="font-mono text-[hsl(168,72%,55%)] text-xs tracking-[0.35em] uppercase mb-6 text-center">07 — Acceso al Panel</p>
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
           <div>
-            <p className="text-white/60 text-sm leading-relaxed max-w-xs">Acceso restringido a instituciones de investigación vinculadas al proyecto.</p>
+            <p className="text-white/60 text-sm leading-relaxed max-w-xs">El panel de datos en tiempo real está disponible para instituciones de investigación y organizaciones vinculadas al proyecto. Si formas parte de una, puedes solicitar acceso.</p>
           </div>
           <div className="flex flex-wrap gap-3">
             <a href="https://youtube.com/playlist?list=PLihEHjHiZwltNIlYLmrEdUG3jRNTNPq0M" target="_blank" rel="noopener noreferrer"

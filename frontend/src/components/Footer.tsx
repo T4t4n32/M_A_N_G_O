@@ -32,10 +32,10 @@ const techLogos = [
 export function Footer() {
   const { toast } = useToast();
   const [isLoginOpen, setIsLoginOpen] = useState(false);
-  const tagline = useSiteValue("footer.tagline", "Sistema de Monitoreo Autónomo de Niveles y Gestión Oceánica para la protección de ecosistemas de manglar.");
-  const institutionsText = useSiteValue("footer.institutions.text", "Acceso autorizado exclusivo para instituciones vinculadas a proyectos de investigación ambiental.");
+  const tagline = useSiteValue("footer.tagline", "M.A.N.G.O. es un dispositivo autónomo que monitorea la salud del agua en ecosistemas de manglar — registrando acidez, temperatura y turbidez de forma continua y en tiempo real.");
+  const institutionsText = useSiteValue("footer.institutions.text", "El panel de datos en tiempo real está disponible para instituciones de investigación y organizaciones vinculadas al proyecto.");
   const copyright = useSiteValue("footer.copyright", "M.A.N.G.O — Todos los derechos reservados");
-  const legal = useSiteValue("footer.legal", "Proyecto de investigación con fines académicos y de conservación");
+  const legal = useSiteValue("footer.legal", "Proyecto de investigación con fines académicos y de conservación ambiental");
 
   const scrollTo = (href: string) => {
     document.querySelector(href)?.scrollIntoView({ behavior: "smooth" });
@@ -54,7 +54,7 @@ export function Footer() {
       {/* Tech Stack LogoLoop */}
       <div className="border-b border-white/[0.06] py-5 overflow-visible relative z-10">
         <div className="max-w-7xl mx-auto px-4">
-          <p className="text-[10px] uppercase tracking-widest text-white/25 text-center mb-3 font-semibold">Tecnologías del Proyecto</p>
+          <p className="text-[10px] uppercase tracking-widest text-white/25 text-center mb-3 font-semibold">Tecnologías utilizadas en el proyecto</p>
           <LogoLoop
             logos={techLogos}
             speed={60}
@@ -140,7 +140,7 @@ export function Footer() {
 
           <ScrollReveal variant="fade-up" delay={0.3}>
           <SpotlightCard className="rounded-3xl border border-white/10 bg-white/[0.02] p-6" spotlightColor="rgba(0, 201, 167, 0.15)">
-            <h4 className="text-white font-semibold mb-4">Instituciones</h4>
+            <h4 className="text-white font-semibold mb-4">Acceso institucional</h4>
             <p className="text-sm text-white/70">{institutionsText}</p>
             <StarBorder
               as="button"

@@ -18,13 +18,13 @@ import { useSiteValue } from "@/lib/siteContent";
 
 export function AboutSection() {
   const [mencionOpen, setMencionOpen] = useState(false);
-  const heading = useSiteValue("about.heading", "Sobre el Proyecto");
-  const subheading = useSiteValue("about.subheading", "Las personas e historia detrás de M.A.N.G.O");
-  const calibotsEyebrow = useSiteValue("about.calibots.eyebrow", "Lo más reciente de CALIBOTS");
+  const heading = useSiteValue("about.heading", "El equipo detrás de M.A.N.G.O");
+  const subheading = useSiteValue("about.subheading", "Estudiantes e investigadores de Cali, Colombia, que construyeron este sistema desde cero");
+  const calibotsEyebrow = useSiteValue("about.calibots.eyebrow", "Lo más reciente del equipo CALIBOTS");
   const calibotsTitle = useSiteValue("about.calibots.title", "UNEARTHED");
   const calibotsSubtitle = useSiteValue("about.calibots.subtitle", "FIRST LEGO League — Temporada 2024-2025");
-  const calibotsText = useSiteValue("about.calibots.text", "Con nuevas propuestas y la misma pasión, el equipo trae una visión renovada que desafía los límites de lo que se ha hecho hasta ahora.");
-  const contributorsTitle = useSiteValue("about.contributors.title", "Contribuyentes Clave");
+  const calibotsText = useSiteValue("about.calibots.text", "CALIBOTS es el equipo de robótica que dio origen a M.A.N.G.O. Con cada temporada de FIRST LEGO League, el equipo desarrolla soluciones reales para problemas ambientales y científicos.");
+  const contributorsTitle = useSiteValue("about.contributors.title", "Personas clave del proyecto");
   const pillarsDescription = useSiteValue("about.pillars.description", "");
   return (
     <section id="sobre" className="py-20 md:py-28 bg-mango-dark relative overflow-hidden">

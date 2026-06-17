@@ -21,14 +21,14 @@ const particles = Array.from({ length: 5 }, (_, i) => ({
 export function HeroSection() {
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
-  const eyebrow = useSiteValue("hero.eyebrow", "Conservación de Manglares · Tecnología Autónoma");
-  const titleLine = useSiteValue("hero.titleLine", "Monitoreo Autónomo de");
+  const eyebrow = useSiteValue("hero.eyebrow", "Vigilancia ambiental autónoma · Manglares · Colombia");
+  const titleLine = useSiteValue("hero.titleLine", "Monitoreo continuo de");
   const description = useSiteValue(
     "hero.description",
-    "Sistema institucional de monitoreo ambiental en tiempo real para la protección de manglares y ecosistemas marítimos. Tecnología al servicio de la conservación.",
+    "Los manglares son bosques costeros que protegen las costas, limpian el agua y albergan una biodiversidad única. M.A.N.G.O. es un dispositivo que registra la salud de estos ecosistemas de forma automática y continua — sin que nadie tenga que estar físicamente presente.",
   );
-  const cta1 = useSiteValue("hero.cta1", "Conoce el Proyecto");
-  const cta2 = useSiteValue("hero.cta2", "Contacto Institucional");
+  const cta1 = useSiteValue("hero.cta1", "Ver cómo funciona");
+  const cta2 = useSiteValue("hero.cta2", "Contactar al equipo");
 
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
@@ -132,7 +132,7 @@ export function HeroSection() {
           </EditableField>
           <span className="flex items-center justify-center gap-2 sm:gap-3 text-[1.15rem] sm:text-3xl md:text-4xl lg:text-5xl font-extrabold mt-3 mb-2 min-h-[3em] sm:min-h-[1.8em] px-2">
             <RotatingText
-              texts={["Niveles y Gestión Oceánica", "Ecosistemas de Manglar", "Conservación Ambiental", "Datos en Tiempo Real"]}
+              texts={["ecosistemas de manglar.", "calidad del agua en tiempo real.", "zonas costeras vulnerables.", "la biodiversidad acuática."]}
               rotationInterval={3000}
               staggerDuration={0.02}
               className="justify-center text-center"
