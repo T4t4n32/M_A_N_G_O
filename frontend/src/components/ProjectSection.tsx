@@ -127,76 +127,88 @@ const COMPONENTS = [
 
 interface MediaItem { url: string; title: string; kind?: string }
 
-// ── Schema Carousel — compact, annotated ─────────────────────────────────────
-function SchemaCarousel() {
-  const [idx, setIdx] = useState(0);
+// ── Schema Viewer — editorial featured+thumbnails ────────────────────────────
+function SchemaViewer() {
+  const [active, setActive] = useState(0);
   const [paused, setPaused] = useState(false);
-  const prev = () => setIdx(i => (i - 1 + SCHEMAS.length) % SCHEMAS.length);
-  const next = () => setIdx(i => (i + 1) % SCHEMAS.length);
 
   useEffect(() => {
     if (paused) return;
-    const id = setInterval(() => setIdx(i => (i + 1) % SCHEMAS.length), 6000);
+    const id = setInterval(() => setActive(i => (i + 1) % SCHEMAS.length), 5500);
     return () => clearInterval(id);
   }, [paused]);
 
-  const s = SCHEMAS[idx];
+  const s = SCHEMAS[active];
+
   return (
-    <div className="max-w-2xl mx-auto">
-      {/* Image area */}
-      <div className="relative rounded-2xl overflow-hidden bg-[hsl(210,32%,10%)] border border-white/[0.09]"
-        style={{ aspectRatio: "4/3" }}
-        onMouseEnter={() => setPaused(true)}
-        onMouseLeave={() => setPaused(false)}>
-        {SCHEMAS.map((sc, i) => (
-          <img key={sc.src} src={sc.src} alt={sc.label}
-            className="absolute inset-0 w-full h-full object-contain p-5 transition-opacity duration-500"
-            style={{ opacity: i === idx ? 1 : 0 }}
-            loading={i === 0 ? "eager" : "lazy"} />
-        ))}
-        {/* Tag pill */}
-        <span className="absolute top-3 left-3 font-mono text-[9px] px-2.5 py-1 rounded-full border"
-          style={{ color: "#00c9a7", borderColor: "#00c9a740", background: "#00c9a712" }}>
-          {s.tag}
-        </span>
-        {/* Open full */}
-        <a href={s.src} target="_blank" rel="noopener noreferrer"
-          className="absolute top-3 right-3 w-7 h-7 rounded-lg bg-black/50 border border-white/10 flex items-center justify-center text-white/40 hover:text-white hover:bg-black/70 transition-all"
-          title="Ver plano completo">
-          <ExternalLink className="h-3 w-3" />
-        </a>
-        {/* Arrows */}
-        <button type="button" onClick={prev} aria-label="Anterior"
-          className="absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/55 border border-white/10 flex items-center justify-center text-white/70 hover:bg-black/80 transition-all">
-          <ChevronLeft className="h-4 w-4" />
-        </button>
-        <button type="button" onClick={next} aria-label="Siguiente"
-          className="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/55 border border-white/10 flex items-center justify-center text-white/70 hover:bg-black/80 transition-all">
-          <ChevronRight className="h-4 w-4" />
-        </button>
-        {/* Counter */}
-        <span className="absolute bottom-3 right-4 font-mono text-[10px] text-white/50">
-          {idx + 1} / {SCHEMAS.length}
-        </span>
+    <div>
+      <div className="flex items-center gap-4 mb-5">
+        <div className="h-px flex-1 bg-white/[0.06]" />
+        <p className="text-white/35 font-mono text-[11px] uppercase tracking-widest">Esquemas reales del hardware</p>
+        <div className="h-px flex-1 bg-white/[0.06]" />
       </div>
+      <p className="text-center text-white/45 text-sm mb-8 max-w-xl mx-auto">
+        Los diagramas muestran cómo están físicamente conectados los componentes — la evidencia de que el flujo anterior es real.
+      </p>
 
-      {/* Annotation below image */}
-      <div className="mt-5 text-center px-2">
-        <p className="text-white font-semibold text-sm mb-2">{s.label}</p>
-        <p className="text-white/55 text-sm leading-relaxed">{s.desc}</p>
-      </div>
+      <div className="grid lg:grid-cols-5 gap-4">
 
-      {/* Numbered tab navigation */}
-      <div className="flex gap-1.5 mt-5 justify-center flex-wrap">
-        {SCHEMAS.map((sc, i) => (
-          <button key={i} type="button" onClick={() => setIdx(i)}
-            className="px-2.5 py-1.5 rounded-lg text-[11px] font-mono transition-all border"
-            style={i === idx
-              ? { borderColor: "#00c9a740", background: "#00c9a712", color: "#00c9a7" }
-              : { borderColor: "rgba(255,255,255,0.07)", background: "rgba(255,255,255,0.02)", color: "rgba(255,255,255,0.35)" }}>
-            {String(i + 1).padStart(2, "0")} {sc.tag}
-          </button>
-        ))}
+        {/* Featured image — 3 cols */}
+        <div className="lg:col-span-3">
+          <div className="relative rounded-2xl overflow-hidden bg-[hsl(210,36%,6%)] border border-white/[0.07] group" style={{ aspectRatio: "4/3" }}>
+            {SCHEMAS.map((sc, i) => (
+              <img key={sc.src} src={sc.src} alt={sc.label}
+                className="absolute inset-0 w-full h-full object-contain p-5 transition-opacity duration-500"
+                style={{ opacity: i === active ? 1 : 0 }}
+                loading={i === 0 ? "eager" : "lazy"} />
+            ))}
+
+            {/* Info overlay */}
+            <div className="absolute bottom-0 left-0 right-0 p-5 bg-gradient-to-t from-black/90 via-black/50 to-transparent translate-y-1 group-hover:translate-y-0 transition-transform duration-300">
+              <span className="font-mono text-[10px] uppercase tracking-widest block mb-1.5" style={{ color: "#00c9a7" }}>{s.tag}</span>
+              <h4 className="text-white font-bold text-sm mb-1.5 leading-snug">{s.label}</h4>
+              <p className="text-white/60 text-xs leading-relaxed">{s.desc}</p>
+            </div>
+
+            {/* Counter */}
+            <div className="absolute top-3 left-3 font-mono text-[10px] px-2.5 py-1 rounded-full"
+              style={{ background: "#00c9a710", border: "1px solid #00c9a730", color: "#00c9a7" }}>
+              {active + 1} / {SCHEMAS.length}
+            </div>
+
+            {/* Open full resolution */}
+            <a href={s.src} target="_blank" rel="noopener noreferrer"
+              className="absolute top-3 right-3 w-8 h-8 rounded-xl bg-black/55 border border-white/10 flex items-center justify-center text-white/35 hover:text-white hover:border-white/25 transition-all"
+              title="Ver imagen completa">
+              <ExternalLink className="h-3.5 w-3.5" />
+            </a>
+          </div>
+        </div>
+
+        {/* Thumbnail list — 2 cols */}
+        <div className="lg:col-span-2 flex flex-row lg:flex-col gap-2 overflow-x-auto lg:overflow-visible" style={{ scrollbarWidth: "none" }}>
+          {SCHEMAS.map((sc, i) => (
+            <button key={i} type="button"
+              onClick={() => { setActive(i); setPaused(true); }}
+              className={`group flex-shrink-0 lg:flex-shrink flex gap-3 items-center rounded-xl border p-2.5 text-left transition-all duration-200 w-28 lg:w-auto ${
+                active === i
+                  ? "border-[hsl(168,72%,42%)]/45 bg-[hsl(168,72%,42%)]/[0.08]"
+                  : "border-white/[0.06] bg-white/[0.02] hover:border-white/15 hover:bg-white/[0.04]"
+              }`}
+            >
+              <div className={`relative flex-shrink-0 overflow-hidden rounded-lg bg-black/40 ${active === i ? "ring-1 ring-[hsl(168,72%,42%)]/55" : ""}`}
+                style={{ width: "56px", aspectRatio: "4/3" }}>
+                <img src={sc.src} alt={sc.label} className="w-full h-full object-contain" loading="lazy" />
+              </div>
+              <div className="flex-1 min-w-0 hidden lg:block">
+                <p className="font-mono text-[9px] uppercase tracking-widest mb-0.5 truncate"
+                  style={{ color: active === i ? "#00c9a7" : "rgba(255,255,255,0.28)" }}>{sc.tag}</p>
+                <p className={`text-xs font-medium line-clamp-2 leading-snug ${active === i ? "text-white" : "text-white/55"}`}>{sc.label}</p>
+              </div>
+            </button>
+          ))}
+        </div>
+
       </div>
     </div>
   );
@@ -838,56 +850,169 @@ export function ProjectSection() {
             <ComponentShowcase />
           </div>
 
-          {/* Schemas */}
-          <div>
-            <div className="flex items-center gap-3 mb-3">
-              <div className="h-px flex-1 bg-white/[0.06]" />
-              <p className="text-white/60 text-[11px] font-mono uppercase tracking-widest">Esquemas del sistema</p>
-              <div className="h-px flex-1 bg-white/[0.06]" />
-            </div>
-            <p className="text-center text-white/60 text-xs mb-8">Haz clic en la imagen o en las pestañas para explorar cómo está conectado el sistema</p>
-            <SchemaCarousel />
-          </div>
-
         </div>
       </div>
 
-      {/* ── 04 COMUNICACIÓN ─────────────────────────────────────────────── */}
-      <div className="py-20 border-t border-white/[0.06]">
-        <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          <p className="font-mono text-[hsl(168,72%,55%)] text-xs tracking-[0.35em] uppercase mb-3 text-center">04 — Comunicación</p>
-          <h3 className="text-3xl font-bold text-white mb-10">Del agua hasta tu pantalla</h3>
-          <div className="flex items-start gap-3 overflow-x-auto pb-4" style={{ scrollbarWidth: "none" }}>
-            {[
-              { label: "Sensores",         sub: "En el agua",       img: HW.ph,        color: "#00c9a7" },
-              { label: "Procesador",        sub: "Calcula los datos", img: HW.jetson,    color: "#38bdf8" },
-              { label: "Radio LoRa",        sub: "Envía sin WiFi",   img: HW.lora,      color: "#a78bfa" },
-              { label: "Estación Base",     sub: "Recibe la señal",  img: null,          color: "#fbbf24" },
-              { label: "Panel web",         sub: "Datos en vivo",    img: null,          color: "#f472b6" },
-            ].map((node, i, arr) => (
-              <div key={node.label} className="flex items-center gap-2 flex-shrink-0">
-                <div className="flex flex-col items-center gap-2">
-                  <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl overflow-hidden border-2 flex items-center justify-center bg-white/[0.05]"
-                    style={{ borderColor: node.color + "55", boxShadow: `0 0 18px ${node.color}1a` }}>
-                    {node.img ? <img src={node.img} alt={node.label} className="w-full h-full object-cover" loading="lazy" />
-                      : <Database className="h-7 w-7 opacity-40" style={{ color: node.color }} />}
-                  </div>
-                  <div className="text-center">
-                    <p className="text-white text-xs font-semibold">{node.label}</p>
-                    <p className="text-white/65 text-[10px] font-mono">{node.sub}</p>
-                  </div>
-                </div>
-                {i < arr.length - 1 && (
-                  <div className="flex items-center gap-1 pb-6 flex-shrink-0">
-                    <div className="h-px w-6 sm:w-8 bg-white/15" />
-                    <svg width="10" height="6" viewBox="0 0 10 6" fill="none" className="text-white/25">
-                      <path d="M7 0L10 3L7 6M0 3h10" stroke="currentColor" strokeWidth="1.2" />
+      {/* ── 04 COMUNICACIÓN Y ESQUEMAS ──────────────────────────────────── */}
+      <div className="border-t border-white/[0.06] relative overflow-hidden">
+        <style>{`
+          @keyframes data-flow {
+            0%   { left: -6px; opacity: 0; }
+            20%  { opacity: 1; }
+            80%  { opacity: 1; }
+            100% { left: calc(100% + 6px); opacity: 0; }
+          }
+        `}</style>
+
+        {/* Dot-grid texture */}
+        <div className="absolute inset-0 pointer-events-none"
+          style={{ backgroundImage: "radial-gradient(circle, rgba(255,255,255,0.032) 1px, transparent 1px)", backgroundSize: "28px 28px" }} />
+        {/* Ambient glows */}
+        <div className="absolute top-20 left-[12%] w-[480px] h-[480px] rounded-full pointer-events-none"
+          style={{ background: "radial-gradient(circle, rgba(0,201,167,0.06), transparent 60%)" }} />
+        <div className="absolute bottom-20 right-[8%] w-[380px] h-[380px] rounded-full pointer-events-none"
+          style={{ background: "radial-gradient(circle, rgba(167,139,250,0.05), transparent 60%)" }} />
+
+        <div className="max-w-7xl mx-auto px-6 lg:px-8 py-28">
+
+          {/* ── Header ── */}
+          <div className="text-center mb-20">
+            <div className="inline-flex items-center gap-3 mb-5">
+              <div className="h-px w-14 bg-[hsl(168,72%,42%)]/30" />
+              <span className="font-mono text-[hsl(168,72%,55%)] text-xs tracking-[0.35em] uppercase">04 — Comunicación</span>
+              <div className="h-px w-14 bg-[hsl(168,72%,42%)]/30" />
+            </div>
+            <h3
+              className="font-black text-white leading-[0.92] mb-6"
+              style={{ fontSize: "clamp(2.8rem, 7vw, 5.5rem)" }}
+            >
+              Del agua<br />
+              <span style={{
+                background: "linear-gradient(135deg, #00c9a7 0%, #38bdf8 45%, #a78bfa 100%)",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                backgroundClip: "text",
+              }}>
+                hasta tu pantalla
+              </span>
+            </h3>
+            <p className="text-white/55 text-lg max-w-2xl mx-auto leading-relaxed">
+              Cada lectura que toman los sensores viaja de forma automática — sin cables ni personas — hasta el panel web donde los investigadores pueden verla en tiempo real.
+            </p>
+          </div>
+
+          {/* ── Signal Pipeline ── */}
+          <div className="flex flex-col lg:flex-row items-stretch gap-0 mb-24">
+            {([
+              {
+                step: "01", label: "Sensores",      sub: "Tres sondas sumergibles",
+                desc: "Miden la acidez (pH), temperatura y turbidez del agua cada pocos minutos, de forma continua.",
+                img: HW.ph,     color: "#00c9a7",
+              },
+              {
+                step: "02", label: "Procesador",    sub: "ESP32 + Jetson TK1",
+                desc: "Recibe las lecturas, las convierte en paquetes de datos y las entrega al módulo de radio.",
+                img: HW.jetson, color: "#38bdf8",
+              },
+              {
+                step: "03", label: "Radio LoRa",    sub: "Transmisión sin internet",
+                desc: "Envía los paquetes a kilómetros de distancia usando una banda de radio libre. Sin WiFi, sin celular.",
+                img: HW.lora,   color: "#a78bfa",
+              },
+              {
+                step: "04", label: "Estación Base", sub: "Nodo receptor",
+                desc: "Recibe la señal LoRa y la sube automáticamente al servidor a través de internet.",
+                img: null,      color: "#fbbf24",
+              },
+              {
+                step: "05", label: "Panel web",     sub: "Datos en vivo",
+                desc: "Investigadores ven todas las lecturas en tiempo real desde cualquier dispositivo, en cualquier lugar.",
+                img: null,      color: "#f472b6",
+              },
+            ] as const).flatMap((node, i, arr) => {
+              const out = [];
+
+              // Mobile vertical arrow before each node (except first)
+              if (i > 0) {
+                out.push(
+                  <div key={`marr-${i}`} aria-hidden className="lg:hidden flex justify-center py-2">
+                    <svg width="14" height="18" viewBox="0 0 14 18" fill="none">
+                      <path d="M7 0v11M1 7l6 9 6-9" stroke="rgba(255,255,255,0.1)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                     </svg>
                   </div>
-                )}
-              </div>
-            ))}
+                );
+              }
+
+              // Node card
+              out.push(
+                <div
+                  key={node.label}
+                  className="flex-1 min-w-0 rounded-2xl border overflow-hidden bg-[hsl(210,35%,7%)] hover:bg-[hsl(210,32%,9%)] transition-all duration-500 group"
+                  style={{ borderColor: node.color + "22", boxShadow: `0 4px 32px ${node.color}05` }}
+                >
+                  {/* Colored top accent */}
+                  <div className="h-[3px]" style={{ background: `linear-gradient(90deg, ${node.color}95, ${node.color}12)` }} />
+
+                  {/* Image / icon area */}
+                  <div className="relative overflow-hidden bg-black" style={{ height: "148px" }}>
+                    {node.img ? (
+                      <>
+                        <img src={node.img as string} alt={node.label} loading="lazy"
+                          className="w-full h-full object-cover opacity-55 group-hover:opacity-80 group-hover:scale-105 transition-all duration-700" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-[hsl(210,35%,7%)] via-[hsl(210,35%,7%)]/15 to-transparent" />
+                      </>
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center"
+                        style={{ background: `radial-gradient(ellipse at center, ${node.color}0a, transparent 70%)` }}>
+                        <Database className="h-10 w-10 opacity-18" style={{ color: node.color }} />
+                      </div>
+                    )}
+
+                    {/* Step badge */}
+                    <div className="absolute top-3 left-3 rounded font-mono text-[10px] font-bold px-2 py-0.5"
+                      style={{ background: node.color + "18", border: `1px solid ${node.color}32`, color: node.color }}>
+                      {node.step}
+                    </div>
+
+                    {/* Glowing dot at bottom center — visual "output" of the node */}
+                    <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 w-2.5 h-2.5 rounded-full"
+                      style={{ background: node.color, boxShadow: `0 0 14px 5px ${node.color}55` }} />
+                  </div>
+
+                  {/* Text */}
+                  <div className="p-5">
+                    <p className="font-mono text-[9px] uppercase tracking-widest mb-1.5" style={{ color: node.color + "a0" }}>{node.sub}</p>
+                    <h4 className="text-white font-bold text-[15px] mb-2 leading-snug">{node.label}</h4>
+                    <p className="text-white/48 text-xs leading-relaxed">{node.desc}</p>
+                  </div>
+                </div>
+              );
+
+              // Desktop animated connector (after each node except last)
+              if (i < arr.length - 1) {
+                out.push(
+                  <div key={`conn-${i}`} className="hidden lg:flex items-center w-10 flex-shrink-0">
+                    <div className="relative w-full" style={{ height: "1px", background: "rgba(255,255,255,0.06)" }}>
+                      <div
+                        className="absolute top-1/2 -translate-y-1/2 w-3 h-3 rounded-full"
+                        style={{
+                          background: node.color,
+                          boxShadow: `0 0 10px 4px ${node.color}55`,
+                          animation: `data-flow 2.2s ${i * 0.55}s linear infinite`,
+                        }}
+                      />
+                    </div>
+                  </div>
+                );
+              }
+
+              return out;
+            })}
           </div>
+
+          {/* ── Technical Schemas — integrated below the pipeline ── */}
+          <SchemaViewer />
+
         </div>
       </div>
 
