@@ -1,10 +1,13 @@
 import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import {
   ChevronLeft, ChevronRight, ExternalLink, LogIn, Mail, Database,
-  Play, DollarSign, MapPin, Clock, Users,
+  Play, DollarSign, MapPin, Clock, Users, Download, Box,
 } from "lucide-react";
 import DecryptedText from "@/components/effects/DecryptedText";
 import { useSiteValue } from "@/lib/siteContent";
+import { lazy, Suspense } from "react";
+
+const ModelViewer = lazy(() => import("@/components/effects/ModelViewer"));
 
 // ── Static hardware images ────────────────────────────────────────────────────
 const HW = {
@@ -73,6 +76,23 @@ const SCHEMAS = [
     desc: "Vista complementaria del sistema de sensores. Detalla los pines de alimentación y señal del circuito completo de medición.",
   },
 ];
+
+const MODELS_3D = [
+  {
+    id: "v2",
+    label: "MANGO V2",
+    glb: "/api/v1/uploads/document/0b58fcfefa034d49bf6d7503678b9269.glb",
+    stl: "/api/v1/uploads/document/165b083c21aa498092bc30c9ac23f5e7.stl",
+    desc: "Segunda iteración del chasis sumergible — geometría optimizada para el montaje de sensores.",
+  },
+  {
+    id: "v1",
+    label: "MANGO V1",
+    glb: "/api/v1/uploads/document/892bdea21da748efae274527dacf2032.glb",
+    stl: "/api/v1/uploads/document/2d0f0d086c2948558e22e574fe4c60c8.stl",
+    desc: "Prototipo original del chasis impermeable. Primera versión funcional desplegada en campo.",
+  },
+] as const;
 
 const COMPONENTS = [
   {
@@ -259,6 +279,85 @@ function ComponentShowcase() {
               </div>
             ))}
           </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Interactive 3D model section ─────────────────────────────────────────────
+function Model3DSection() {
+  const [activeId, setActiveId] = useState<string>(MODELS_3D[0].id);
+  const model = MODELS_3D.find(m => m.id === activeId) ?? MODELS_3D[0];
+
+  return (
+    <div>
+      {/* Version selector */}
+      <div className="flex items-center gap-2 mb-6 justify-center">
+        {MODELS_3D.map(m => (
+          <button
+            key={m.id} type="button" onClick={() => setActiveId(m.id)}
+            className="flex items-center gap-2 px-5 py-2 rounded-xl text-sm font-medium border transition-all"
+            style={m.id === activeId
+              ? { borderColor: "#00c9a750", background: "#00c9a712", color: "white" }
+              : { borderColor: "rgba(255,255,255,0.07)", background: "transparent", color: "rgba(255,255,255,0.40)" }}
+          >
+            <Box className="h-3.5 w-3.5 opacity-70" />
+            {m.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Three.js viewer */}
+      <div
+        className="rounded-2xl overflow-hidden border border-white/[0.08] relative"
+        style={{ aspectRatio: "16/9", background: "hsl(210,35%,5%)" }}
+      >
+        <Suspense fallback={
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
+            <div className="w-8 h-8 border-2 border-white/10 border-t-[#00c9a7] rounded-full animate-spin" />
+            <p className="font-mono text-xs text-white/40">Cargando modelo 3D…</p>
+          </div>
+        }>
+          <ModelViewer
+            key={model.glb}
+            url={model.glb}
+            width="100%"
+            height="100%"
+            autoRotate
+            autoRotateSpeed={0.28}
+            enableHoverRotation
+            environmentPreset="forest"
+            name={model.label}
+            description={model.desc}
+          />
+        </Suspense>
+
+        {/* Top-left badge */}
+        <div className="absolute top-3 left-3 flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-mono uppercase tracking-widest pointer-events-none"
+          style={{ background: "rgba(0,201,167,0.10)", border: "1px solid rgba(0,201,167,0.22)", color: "#00c9a7" }}>
+          <Box className="h-2.5 w-2.5" />
+          3D interactivo
+        </div>
+
+        {/* Bottom controls hint */}
+        <p className="absolute bottom-3 left-1/2 -translate-x-1/2 font-mono text-[10px] text-white/30 pointer-events-none whitespace-nowrap">
+          Arrastra · Scroll para zoom · Flechas del teclado
+        </p>
+      </div>
+
+      {/* Downloads + description */}
+      <div className="mt-4 flex flex-wrap items-start gap-4">
+        <p className="text-white/50 text-sm leading-relaxed flex-1 min-w-0">{model.desc}</p>
+        <div className="flex gap-2 flex-shrink-0">
+          <a href={model.glb} download={`${model.label}.glb`}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono border border-white/[0.10] text-white/50 hover:text-white/80 hover:border-white/20 transition-colors">
+            <Download className="h-3 w-3" />GLB
+          </a>
+          <a href={model.stl} download={`${model.label}.stl`}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono border border-white/[0.10] text-white/50 hover:text-white/80 hover:border-white/20 transition-colors">
+            <Download className="h-3 w-3" />STL
+          </a>
         </div>
       </div>
     </div>
@@ -810,6 +909,16 @@ export function ProjectSection() {
               <div className="h-px flex-1 bg-white/[0.06]" />
             </div>
             <ComponentShowcase />
+          </div>
+
+          {/* 3D model viewer */}
+          <div className="mb-16">
+            <div className="flex items-center gap-3 mb-8">
+              <div className="h-px flex-1 bg-white/[0.06]" />
+              <p className="text-white/60 text-[11px] font-mono uppercase tracking-widest">Modelo 3D</p>
+              <div className="h-px flex-1 bg-white/[0.06]" />
+            </div>
+            <Model3DSection />
           </div>
 
           {/* Schemas */}
