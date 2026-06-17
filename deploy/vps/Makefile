@@ -46,10 +46,14 @@ IMAGES     := mango-backend:local
 FRONTEND_DIST := ../../frontend/dist
 UI_WEBROOT    := /var/www/mango-ui
 
+# Nginx config source and target
+NGINX_SRC  := nginx/integramosoe.conf
+NGINX_DEST := /etc/nginx/sites-available/integramosoe
+
 .PHONY: up down restart logs logs-backend logs-db status health \
         routes db-tables admin-cli users-list subs-list \
         backup restore shell-backend shell-db nuke deploy-ui \
-        setup-uploads migrate-uploads ssl-renew ssl-status
+        setup-uploads migrate-uploads ssl-renew ssl-status deploy-nginx
 
 ## Create /var/www/mango-uploads with correct ownership for the bind mount.
 ## Run once on a fresh VPS before the first 'make up'.
@@ -72,6 +76,23 @@ migrate-uploads:
 	  -v /var/www/mango-uploads:/dst \
 	  alpine sh -c "cp -a /src/. /dst/ && echo 'Migration complete.'"
 	@echo "Verify with: ls -lh /var/www/mango-uploads/"
+
+## Deploy the nginx site config and reload nginx.
+## This copies nginx/integramosoe.conf → /etc/nginx/sites-available/integramosoe,
+## tests the config, and reloads nginx if the test passes.
+deploy-nginx:
+	@set -e; \
+	 TS=$$(date +%Y%m%d_%H%M%S); \
+	 BACKUP=$(NGINX_DEST).bak.$${TS}; \
+	 sudo cp $(NGINX_DEST) $${BACKUP} && echo "Backup: $${BACKUP}"; \
+	 sudo cp $(NGINX_SRC) $(NGINX_DEST); \
+	 if sudo nginx -t 2>&1; then \
+	   sudo systemctl reload nginx && echo "Nginx reloaded OK"; \
+	 else \
+	   echo "Config test FAILED — rolling back to $${BACKUP}"; \
+	   sudo cp $${BACKUP} $(NGINX_DEST); \
+	   exit 1; \
+	 fi
 
 ## Copy the built frontend dist to the nginx web root.
 ## Run 'cd ../../frontend && npm run build' first, then this target.
