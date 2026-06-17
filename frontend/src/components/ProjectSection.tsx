@@ -26,6 +26,13 @@ const HW = {
   sensors: "/images/gallery/hardware/hardware_117_SENSORES_1.jpg",
   jetson:  "/images/gallery/hardware/hardware_59_G-PIO_Jetson_TK1.jpg",
   loraMount:"/images/gallery/hardware/hardware_93_MONTAJE_LORA_2.jpg",
+  loraMount1:"/images/gallery/hardware/hardware_92_MONTAJE_LORA_1.jpg",
+  heltec4:  "/images/gallery/hardware/hardware_63_HELTEC_4.jpg",
+  phMount1: "/images/gallery/hardware/hardware_102_MONTAJE_PH_1.jpg",
+  phMount2: "/images/gallery/hardware/hardware_103_MONTAJE_PH_2.jpg",
+  temp4:    "/images/gallery/hardware/hardware_74_MAX31865_4.jpg",
+  temp5:    "/images/gallery/hardware/hardware_75_MAX31865_5.jpg",
+  tempe1:   "/images/gallery/hardware/hardware_130_TEMPERATURA_1.jpg",
 } as const;
 
 const SCHEMAS = [
@@ -81,7 +88,7 @@ const COMPONENTS = [
   },
   {
     id: "lora", num: "02", title: "LoRa", role: "Telemetría inalámbrica", accent: "#38bdf8",
-    images: [HW.lora, HW.lorab, HW.lorac, HW.loraCode],
+    images: [HW.lora, HW.lorab, HW.lorac, HW.heltec4, HW.loraMount1, HW.loraMount, HW.loraCode],
     desc: "El módulo LoRa Heltec transmite datos a kilómetros de distancia sin WiFi ni red celular, usando la banda libre ISM de 433 MHz. Permite operar en zonas remotas sin ninguna infraestructura de telecomunicaciones.",
     specs: [
       { k: "Frecuencia",   v: "433 MHz ISM" },
@@ -92,7 +99,7 @@ const COMPONENTS = [
   },
   {
     id: "ph", num: "03", title: "Sensor pH", role: "Acidez del agua", accent: "#a78bfa",
-    images: [HW.ph, HW.phb, HW.phc, HW.phd],
+    images: [HW.ph, HW.phb, HW.phc, HW.phd, HW.phMount1, HW.phMount2],
     desc: "Sensor sumergible con electrodo BNC que mide la acidez del agua en tiempo real. Los cambios de pH son los primeros indicadores de estrés ambiental, floración de algas o contaminación por vertidos.",
     specs: [
       { k: "Rango",      v: "0 – 14 pH" },
@@ -103,7 +110,7 @@ const COMPONENTS = [
   },
   {
     id: "temp", num: "04", title: "Sensor Temperatura", role: "Termometría de precisión", accent: "#fbbf24",
-    images: [HW.temp, HW.tempb, HW.tempc, HW.tempd],
+    images: [HW.temp, HW.tempb, HW.tempc, HW.tempd, HW.temp4, HW.temp5, HW.tempe1],
     desc: "El módulo MAX31865 combinado con una sonda PT100 mide la temperatura del agua con alta precisión. Detecta variaciones de menos de un grado que indican cambios térmicos relevantes en el ecosistema.",
     specs: [
       { k: "Sonda",      v: "PT100 RTD" },
@@ -243,7 +250,7 @@ function ComponentShowcase() {
         <div className="md:col-span-2">
           <p className="font-mono text-[10px] uppercase tracking-widest mb-2" style={{ color: c.accent }}>{c.role}</p>
           <h4 className="text-white text-2xl font-bold mb-4">{c.title}</h4>
-          <p className="text-white/68 text-sm leading-relaxed mb-7 text-justify">{c.desc}</p>
+          <p className="text-white/65 text-sm leading-relaxed mb-7 text-justify">{c.desc}</p>
           <div className="space-y-0">
             {c.specs.map((sp, i) => (
               <div key={sp.k} className={`flex items-center justify-between py-2.5 ${i < c.specs.length - 1 ? "border-b border-white/[0.06]" : ""}`}>
