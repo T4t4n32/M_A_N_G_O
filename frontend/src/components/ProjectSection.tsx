@@ -1887,32 +1887,255 @@ export function ProjectSection() {
       </div>
 
       {/* ── 07 ACCESO ───────────────────────────────────────────────────── */}
-      <div className="py-16 border-t border-white/[0.06]">
-        <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          <p className="font-mono text-[hsl(168,72%,55%)] text-xs tracking-[0.35em] uppercase mb-6 text-center">07 — Acceso al Panel</p>
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
-          <div>
-            <p className="text-white/60 text-sm leading-relaxed max-w-xs">El panel de datos en tiempo real está disponible para instituciones de investigación y organizaciones vinculadas al proyecto. Si formas parte de una, puedes solicitar acceso.</p>
+      <div className="relative py-28 border-t border-white/[0.06] overflow-hidden">
+        <style>{`
+          @keyframes ring-expand {
+            0%   { transform: scale(0.75); opacity: 0.6; }
+            100% { transform: scale(2);    opacity: 0; }
+          }
+          @keyframes node-pulse {
+            0%, 100% { opacity: 1; }
+            50%       { opacity: 0.45; }
+          }
+        `}</style>
+
+        {/* Ambient */}
+        <div className="absolute inset-0 pointer-events-none" aria-hidden>
+          <div className="absolute inset-0"
+            style={{ background: "radial-gradient(ellipse 65% 55% at 50% 30%, rgba(0,201,167,0.07), transparent)" }} />
+          <div className="absolute inset-0"
+            style={{ background: "radial-gradient(ellipse 40% 40% at 15% 80%, rgba(167,139,250,0.04), transparent)" }} />
+          <div className="absolute inset-0"
+            style={{ background: "radial-gradient(ellipse 40% 40% at 85% 80%, rgba(239,68,68,0.03), transparent)" }} />
+        </div>
+
+        <div className="relative max-w-7xl mx-auto px-6 lg:px-8">
+
+          {/* ── Header ── */}
+          <div className="text-center mb-14">
+            <div className="inline-flex items-center gap-3 mb-5">
+              <div className="h-px w-14 bg-[hsl(168,72%,42%)]/30" />
+              <span className="font-mono text-[hsl(168,72%,55%)] text-xs tracking-[0.35em] uppercase">07 — Acceso al Panel</span>
+              <div className="h-px w-14 bg-[hsl(168,72%,42%)]/30" />
+            </div>
+            <h3
+              className="font-black text-white leading-[0.9] mb-5"
+              style={{ fontSize: "clamp(2.8rem, 6.5vw, 5rem)" }}
+            >
+              El sistema<br />
+              <span style={{
+                background: "linear-gradient(125deg, #00c9a7 0%, #38bdf8 100%)",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                backgroundClip: "text",
+              }}>está activo.</span>
+            </h3>
+            <div className="flex items-center justify-center gap-2 mb-5">
+              <span
+                className="w-2 h-2 rounded-full"
+                style={{
+                  background: "#00c9a7",
+                  boxShadow: "0 0 8px 3px #00c9a755",
+                  animation: "node-pulse 2s ease-in-out infinite",
+                }}
+              />
+              <span className="font-mono text-[11px] text-white/35 uppercase tracking-widest">
+                Señal en vivo · Valle del Cauca · Colombia
+              </span>
+            </div>
+            <p className="text-white/50 text-base max-w-lg mx-auto leading-relaxed">
+              Los investigadores y organizaciones vinculadas al proyecto tienen acceso al panel de datos. El canal de YouTube documenta cada etapa del desarrollo.
+            </p>
           </div>
-          <div className="flex flex-wrap gap-3">
-            <a href="https://youtube.com/playlist?list=PLihEHjHiZwltNIlYLmrEdUG3jRNTNPq0M" target="_blank" rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-red-500/[0.08] border border-red-500/20 text-red-400 text-sm font-medium hover:bg-red-500/15 transition-colors whitespace-nowrap">
-              <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-                <path d="M23.5 6.19a3.02 3.02 0 0 0-2.12-2.14C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.38.55A3.02 3.02 0 0 0 .5 6.19 31.6 31.6 0 0 0 0 12a31.6 31.6 0 0 0 .5 5.81 3.02 3.02 0 0 0 2.12 2.14c1.88.55 9.38.55 9.38.55s7.5 0 9.38-.55a3.02 3.02 0 0 0 2.12-2.14A31.6 31.6 0 0 0 24 12a31.6 31.6 0 0 0-.5-5.81zM9.75 15.02V8.98L15.5 12l-5.75 3.02z" />
-              </svg>
-              Videos en YouTube
-              <ExternalLink className="h-3 w-3 opacity-60" />
-            </a>
-            <a href="/login"
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[hsl(168,72%,42%)]/10 border border-[hsl(168,72%,42%)]/25 text-[hsl(168,72%,60%)] text-sm font-medium hover:bg-[hsl(168,72%,42%)]/18 transition-colors whitespace-nowrap">
-              <LogIn className="h-3.5 w-3.5" />Acceder al sistema
-            </a>
-            <a href="#contacto"
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white/[0.05] border border-white/10 text-white/60 text-sm font-medium hover:bg-white/[0.09] hover:text-white/80 transition-colors whitespace-nowrap">
-              <Mail className="h-3.5 w-3.5" />Solicitar acceso
-            </a>
+
+          {/* ── Pulse signal visualization ── */}
+          <div className="flex justify-center mb-16" aria-hidden>
+            <div className="relative" style={{ width: "160px", height: "160px" }}>
+              {/* Expanding rings */}
+              {[0, 1, 2].map(i => (
+                <div
+                  key={i}
+                  className="absolute inset-0 rounded-full border"
+                  style={{
+                    borderColor: "rgba(0,201,167,0.35)",
+                    animation: `ring-expand 3s ${i * 1}s ease-out infinite`,
+                  }}
+                />
+              ))}
+              {/* Static inner ring */}
+              <div className="absolute inset-5 rounded-full border border-white/[0.05]" />
+              {/* Center node */}
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div
+                  className="w-14 h-14 rounded-full flex items-center justify-center"
+                  style={{
+                    background: "hsl(212,32%,6%)",
+                    border: "1px solid rgba(0,201,167,0.32)",
+                    boxShadow: "0 0 36px rgba(0,201,167,0.14)",
+                  }}
+                >
+                  <svg viewBox="0 0 32 32" className="w-7 h-7" fill="none">
+                    <path
+                      d="M4 16 Q7 8 10 16 Q13 24 16 16 Q19 8 22 16 Q25 24 28 16"
+                      stroke="#00c9a7" strokeWidth="2" strokeLinecap="round"
+                    />
+                  </svg>
+                </div>
+              </div>
+              {/* Three sensor-color orbit nodes */}
+              {([
+                { angle: 270, color: "#00c9a7", delay: "0s"   },
+                { angle:  30, color: "#38bdf8", delay: "0.7s" },
+                { angle: 150, color: "#fbbf24", delay: "1.4s" },
+              ] as const).map(({ angle, color, delay }) => {
+                const r = 68, rad = (angle * Math.PI) / 180;
+                const x = 80 + r * Math.cos(rad);
+                const y = 80 + r * Math.sin(rad);
+                return (
+                  <div
+                    key={angle}
+                    className="absolute w-3 h-3 rounded-full"
+                    style={{
+                      left: `${x}px`, top: `${y}px`,
+                      transform: "translate(-50%, -50%)",
+                      background: color,
+                      boxShadow: `0 0 8px 3px ${color}55`,
+                      animation: `node-pulse 2s ${delay} ease-in-out infinite`,
+                    }}
+                  />
+                );
+              })}
+            </div>
           </div>
+
+          {/* ── Three access paths ── */}
+          <div className="grid md:grid-cols-3 gap-4 mb-12">
+
+            {/* YouTube — documentation */}
+            <a
+              href="https://youtube.com/playlist?list=PLihEHjHiZwltNIlYLmrEdUG3jRNTNPq0M"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group rounded-2xl overflow-hidden border border-white/[0.07] hover:border-red-500/30 transition-all duration-300 flex flex-col"
+              style={{ background: "linear-gradient(170deg, hsl(0,40%,7%), hsl(0,30%,5%))" }}
+            >
+              <div className="h-[3px]"
+                style={{ background: "linear-gradient(90deg, #ef4444, #ef444420 70%, transparent)" }} />
+              <div className="p-7 flex flex-col flex-1">
+                <div
+                  className="w-12 h-12 rounded-xl flex items-center justify-center mb-5"
+                  style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.22)" }}
+                >
+                  <svg className="w-6 h-6 text-red-400" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+                    <path d="M23.5 6.19a3.02 3.02 0 0 0-2.12-2.14C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.38.55A3.02 3.02 0 0 0 .5 6.19 31.6 31.6 0 0 0 0 12a31.6 31.6 0 0 0 .5 5.81 3.02 3.02 0 0 0 2.12 2.14c1.88.55 9.38.55 9.38.55s7.5 0 9.38-.55a3.02 3.02 0 0 0 2.12-2.14A31.6 31.6 0 0 0 24 12a31.6 31.6 0 0 0-.5-5.81zM9.75 15.02V8.98L15.5 12l-5.75 3.02z" />
+                  </svg>
+                </div>
+                <p className="font-mono text-[10px] uppercase tracking-widest mb-2"
+                  style={{ color: "rgba(239,68,68,0.55)" }}>
+                  Canal de documentación
+                </p>
+                <h4 className="text-white font-bold text-lg mb-3 leading-snug">Videos en YouTube</h4>
+                <p className="text-white/48 text-sm leading-relaxed flex-1">
+                  El registro completo del proyecto — pruebas de campo, despliegues en Lago Calima y Rozo, y el sistema funcionando en tiempo real desde cero.
+                </p>
+                <div className="mt-6 flex items-center gap-2 font-mono text-xs text-red-400/60 group-hover:text-red-400 transition-colors">
+                  <span>Ver playlist completa</span>
+                  <ExternalLink className="h-3 w-3" />
+                </div>
+              </div>
+            </a>
+
+            {/* Login — primary */}
+            <a
+              href="/login"
+              className="group rounded-2xl overflow-hidden border transition-all duration-300 flex flex-col relative"
+              style={{
+                background: "linear-gradient(170deg, hsl(168,40%,8%), hsl(168,30%,5%))",
+                borderColor: "rgba(0,201,167,0.28)",
+                boxShadow: "0 0 48px rgba(0,201,167,0.07)",
+              }}
+            >
+              <div className="h-[3px]"
+                style={{ background: "linear-gradient(90deg, #00c9a7, #38bdf8 60%, transparent)" }} />
+              {/* Live badge */}
+              <div
+                className="absolute top-4 right-4 flex items-center gap-1.5 px-2.5 py-1 rounded-full"
+                style={{ background: "rgba(0,201,167,0.1)", border: "1px solid rgba(0,201,167,0.22)" }}
+              >
+                <span
+                  className="w-1.5 h-1.5 rounded-full"
+                  style={{ background: "#00c9a7", animation: "node-pulse 1.5s ease-in-out infinite" }}
+                />
+                <span className="font-mono text-[9px] uppercase tracking-widest" style={{ color: "#00c9a7" }}>
+                  Activo
+                </span>
+              </div>
+              <div className="p-7 flex flex-col flex-1">
+                <div
+                  className="w-12 h-12 rounded-xl flex items-center justify-center mb-5"
+                  style={{ background: "rgba(0,201,167,0.1)", border: "1px solid rgba(0,201,167,0.25)" }}
+                >
+                  <LogIn className="w-6 h-6" style={{ color: "#00c9a7" }} />
+                </div>
+                <p className="font-mono text-[10px] uppercase tracking-widest mb-2"
+                  style={{ color: "rgba(0,201,167,0.55)" }}>
+                  Acceso directo
+                </p>
+                <h4 className="text-white font-bold text-lg mb-3 leading-snug">Acceder al sistema</h4>
+                <p className="text-white/48 text-sm leading-relaxed flex-1">
+                  Panel de datos en tiempo real con lecturas de todos los sensores, historial de misiones y visualizaciones georreferenciadas del ecosistema.
+                </p>
+                <div className="mt-6 flex items-center justify-between">
+                  <span className="font-mono text-xs transition-colors"
+                    style={{ color: "rgba(0,201,167,0.65)" }}>
+                    Ir al panel →
+                  </span>
+                  <span className="font-mono text-[9px] text-white/18 uppercase tracking-widest">
+                    Requiere credenciales
+                  </span>
+                </div>
+              </div>
+            </a>
+
+            {/* Request access */}
+            <a
+              href="#contacto"
+              className="group rounded-2xl overflow-hidden border border-white/[0.07] hover:border-[#a78bfa]/30 transition-all duration-300 flex flex-col"
+              style={{ background: "linear-gradient(170deg, hsl(265,35%,8%), hsl(265,25%,5%))" }}
+            >
+              <div className="h-[3px]"
+                style={{ background: "linear-gradient(90deg, #a78bfa, #a78bfa20 70%, transparent)" }} />
+              <div className="p-7 flex flex-col flex-1">
+                <div
+                  className="w-12 h-12 rounded-xl flex items-center justify-center mb-5"
+                  style={{ background: "rgba(167,139,250,0.1)", border: "1px solid rgba(167,139,250,0.22)" }}
+                >
+                  <Mail className="w-6 h-6" style={{ color: "#a78bfa" }} />
+                </div>
+                <p className="font-mono text-[10px] uppercase tracking-widest mb-2"
+                  style={{ color: "rgba(167,139,250,0.55)" }}>
+                  Investigadores · Instituciones
+                </p>
+                <h4 className="text-white font-bold text-lg mb-3 leading-snug">Solicitar acceso</h4>
+                <p className="text-white/48 text-sm leading-relaxed flex-1">
+                  El acceso al panel está disponible para instituciones de investigación y organizaciones vinculadas al monitoreo ambiental. Escríbenos para coordinarlo.
+                </p>
+                <div className="mt-6 flex items-center gap-2 font-mono text-xs text-[#a78bfa]/60 group-hover:text-[#a78bfa] transition-colors">
+                  <span>Ir a contacto</span>
+                  <span className="opacity-60">↓</span>
+                </div>
+              </div>
+            </a>
+
           </div>
+
+          {/* ── Closing note ── */}
+          <div className="text-center">
+            <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-white/18">
+              Los datos del panel son reales y continuos — sin simulaciones, sin demos.
+            </p>
+          </div>
+
         </div>
       </div>
     </section>
