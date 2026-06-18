@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState, useCallback, useMemo, Suspense } from "react";
+import { createPortal } from "react-dom";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   ChevronLeft, ChevronRight, ExternalLink, LogIn, Mail, Database,
-  Play, DollarSign, MapPin, Clock, Users,
+  Play, DollarSign, MapPin, Clock, Users, ZoomIn, X,
 } from "lucide-react";
 import DecryptedText from "@/components/effects/DecryptedText";
 import { useSiteValue } from "@/lib/siteContent";
@@ -377,9 +379,504 @@ function VideoPlayer({ videos, label }: { videos: MediaItem[]; label: string }) 
   );
 }
 
+// ── FieldMissionCard ─────────────────────────────────────────────────────────
+interface MissionCardProps {
+  missionId: string; code: string; title: string; location: string;
+  accentColor: string; description: string;
+  videos: MediaItem[]; images: MediaItem[];
+  offsetClass: string;
+}
+
+// ── FieldArchivePanel — full-viewport split-screen photo viewer ───────────────
+// Left: featured image at natural AR. Right: scrollable thumbnail strip.
+// Desktop: side-by-side. Mobile: stacked (image top, thumbnails bottom).
+function FieldArchivePanel({
+  images, accentColor, title, subtitle, description, isOpen, onClose,
+}: {
+  images: MediaItem[];
+  accentColor: string;
+  title: string;
+  subtitle: string;
+  description: string;
+  isOpen: boolean;
+  onClose: () => void;
+}) {
+  const [idx, setIdx] = useState(0);
+  const thumbsRef = useRef<HTMLDivElement>(null);
+
+  // Reset index, scroll lock, keyboard nav
+  useEffect(() => {
+    if (!isOpen) return;
+    setIdx(0);
+    document.body.style.overflow = "hidden";
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape")      onClose();
+      if (e.key === "ArrowRight")  setIdx(i => Math.min(i + 1, images.length - 1));
+      if (e.key === "ArrowLeft")   setIdx(i => Math.max(i - 1, 0));
+    };
+    window.addEventListener("keydown", onKey);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = "";
+    };
+  }, [isOpen, onClose, images.length]);
+
+  // Keep active thumbnail visible in the sidebar
+  useEffect(() => {
+    const el = thumbsRef.current?.querySelector<HTMLElement>(`[data-idx="${idx}"]`);
+    el?.scrollIntoView({ block: "nearest", inline: "nearest", behavior: "smooth" });
+  }, [idx]);
+
+  if (!images.length) return null;
+  const active = images[idx];
+
+  return createPortal(
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2, ease: "easeOut" }}
+          className="fixed inset-0 z-[150] flex flex-col"
+          style={{ background: "hsl(212,32%,4%)" }}
+        >
+          {/* ── Header ──────────────────────────────────────────────── */}
+          <div
+            className="shrink-0 flex items-center gap-3 px-4 md:px-6 h-12 border-b"
+            style={{ borderColor: "rgba(255,255,255,0.06)" }}
+          >
+            {/* Mission badge */}
+            <span
+              className="font-mono text-[10px] uppercase tracking-[0.22em] px-2.5 py-0.5 rounded-sm shrink-0"
+              style={{ background: `${accentColor}1c`, color: accentColor }}
+            >
+              {subtitle}
+            </span>
+
+            {/* Title */}
+            <span className="text-white/90 font-semibold text-sm shrink-0">{title}</span>
+
+            {/* Separator + description (desktop only) */}
+            <span className="hidden md:block w-px h-3.5 shrink-0 bg-white/10" />
+            <span className="hidden md:block text-white/28 text-xs truncate min-w-0 leading-relaxed">
+              {description}
+            </span>
+
+            {/* Spacer */}
+            <div className="ml-auto flex items-center gap-4 shrink-0">
+              {/* Counter */}
+              <span className="font-mono text-[11px] tabular-nums select-none"
+                style={{ color: `${accentColor}65` }}>
+                {String(idx + 1).padStart(3, "0")}&thinsp;/&thinsp;{String(images.length).padStart(3, "0")}
+              </span>
+
+              {/* Close */}
+              <button
+                onClick={onClose}
+                className="w-8 h-8 rounded-full flex items-center justify-center border border-white/[0.08] text-white/35 hover:text-white hover:border-white/22 transition-colors focus:outline-none"
+                aria-label="Cerrar"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+
+          {/* ── Body ─────────────────────────────────────────────────── */}
+          <div className="flex-1 min-h-0 flex flex-col md:flex-row overflow-hidden">
+
+            {/* Featured image ─────────────────────────────────────────── */}
+            <div className="flex-1 min-h-0 relative flex items-center justify-center p-5 md:p-8 lg:p-12">
+              <AnimatePresence mode="wait">
+                <motion.img
+                  key={active.url}
+                  src={active.url}
+                  alt={active.title}
+                  initial={{ opacity: 0, scale: 0.972 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 1.018 }}
+                  transition={{ duration: 0.16, ease: "easeOut" }}
+                  className="max-w-full max-h-full object-contain rounded-lg select-none"
+                  style={{ boxShadow: `0 16px 100px ${accentColor}16` }}
+                  draggable={false}
+                />
+              </AnimatePresence>
+
+              {/* Prev arrow */}
+              {idx > 0 && (
+                <button
+                  onClick={() => setIdx(i => i - 1)}
+                  className="absolute left-2 md:left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full flex items-center justify-center border border-white/[0.08] text-white/30 hover:text-white hover:border-white/20 transition-all focus:outline-none"
+                  aria-label="Foto anterior"
+                >
+                  <ChevronLeft className="h-5 w-5" />
+                </button>
+              )}
+
+              {/* Next arrow */}
+              {idx < images.length - 1 && (
+                <button
+                  onClick={() => setIdx(i => i + 1)}
+                  className="absolute right-2 md:right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full flex items-center justify-center border border-white/[0.08] text-white/30 hover:text-white hover:border-white/20 transition-all focus:outline-none"
+                  aria-label="Foto siguiente"
+                >
+                  <ChevronRight className="h-5 w-5" />
+                </button>
+              )}
+
+              {/* Caption */}
+              {active.title && (
+                <p
+                  className="absolute bottom-3 left-0 right-0 text-center px-10 font-mono text-[9px] uppercase tracking-[0.22em] pointer-events-none select-none"
+                  style={{ color: "rgba(255,255,255,0.18)" }}
+                >
+                  {active.title}
+                </p>
+              )}
+            </div>
+
+            {/* Thumbnail sidebar ───────────────────────────────────────── */}
+            <div
+              className="shrink-0 flex flex-col overflow-hidden border-t md:border-t-0 md:border-l max-h-[32vh] md:max-h-none md:w-60 lg:w-72"
+              style={{ borderColor: "rgba(255,255,255,0.05)" }}
+            >
+              {/* Sidebar label */}
+              <div
+                className="shrink-0 flex items-center justify-between px-3 py-2"
+                style={{ borderBottom: "1px solid rgba(255,255,255,0.04)" }}
+              >
+                <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-white/18 select-none">
+                  {images.length} fotografías
+                </span>
+                <span className="font-mono text-[9px] uppercase tracking-[0.2em] select-none"
+                  style={{ color: `${accentColor}45` }}>
+                  ←  →
+                </span>
+              </div>
+
+              {/* Scrollable thumbnail grid */}
+              <div
+                ref={thumbsRef}
+                className="overflow-y-auto overflow-x-hidden flex-1"
+                style={{
+                  scrollbarWidth: "thin",
+                  scrollbarColor: `${accentColor}28 transparent`,
+                }}
+              >
+                <div
+                  className="grid"
+                  style={{
+                    gridTemplateColumns: "repeat(auto-fill, minmax(68px, 1fr))",
+                    gap: "1.5px",
+                    background: "rgba(255,255,255,0.03)",
+                  }}
+                >
+                  {images.map((img, i) => (
+                    <button
+                      key={img.url}
+                      data-idx={i}
+                      type="button"
+                      onClick={() => setIdx(i)}
+                      className="relative overflow-hidden focus:outline-none group"
+                      style={{ aspectRatio: "1/1" }}
+                      aria-label={`Foto ${i + 1}`}
+                      aria-pressed={i === idx}
+                    >
+                      <img
+                        src={img.url} alt=""
+                        className="w-full h-full object-cover transition-all duration-250"
+                        style={{
+                          filter: i === idx
+                            ? "brightness(1) grayscale(0)"
+                            : "brightness(0.32) grayscale(0.4)",
+                          transform: i === idx ? "scale(1.05)" : "scale(1)",
+                        }}
+                        loading="lazy"
+                      />
+                      {/* Selected border */}
+                      {i === idx && (
+                        <div className="absolute inset-0 pointer-events-none"
+                          style={{ boxShadow: `inset 0 0 0 2px ${accentColor}` }} />
+                      )}
+                      {/* Hover: show frame number */}
+                      <span
+                        className="absolute bottom-0.5 right-0.5 font-mono leading-none opacity-0 group-hover:opacity-100 transition-opacity bg-black/65 px-1 py-0.5 rounded-sm"
+                        style={{ fontSize: "7px", color: i === idx ? accentColor : "rgba(255,255,255,0.4)" }}
+                      >
+                        {String(i + 1).padStart(3, "0")}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>,
+    document.body
+  );
+}
+
+// ── PhotoDossier — trigger strip that opens FieldArchivePanel ─────────────────
+function PhotoDossier({
+  images, accentColor, title, subtitle, description,
+}: {
+  images: MediaItem[];
+  accentColor: string;
+  title: string;
+  subtitle: string;
+  description: string;
+}) {
+  const [panelOpen,    setPanelOpen]    = useState(false);
+  const [panelMounted, setPanelMounted] = useState(false);
+
+  const openPanel  = () => { setPanelMounted(true); setPanelOpen(true); };
+  const closePanel = useCallback(() => {
+    setPanelOpen(false);
+    setTimeout(() => setPanelMounted(false), 280);
+  }, []);
+
+  if (images.length === 0) return null;
+
+  // 5 evenly-spaced previews for the filmstrip
+  const previews = [0, 1, 2, 3, 4].map(k =>
+    images[Math.min(Math.floor(k * images.length / 5), images.length - 1)]
+  );
+
+  return (
+    <>
+      <button
+        type="button"
+        onClick={openPanel}
+        className="w-full group relative rounded-xl overflow-hidden focus:outline-none transition-all duration-300"
+        style={{ border: "1px solid rgba(255,255,255,0.06)" }}
+        aria-label="Abrir galería fotográfica"
+      >
+        {/* Preview strip */}
+        <div className="flex overflow-hidden" style={{ height: "76px" }}>
+          {previews.map((img, k) => (
+            <div key={k} className="flex-1 overflow-hidden">
+              <img src={img.url} alt="" aria-hidden="true"
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                style={{ filter: "brightness(0.42)" }}
+                loading="lazy"
+              />
+            </div>
+          ))}
+          <div className="absolute inset-0 pointer-events-none"
+            style={{ background: "linear-gradient(90deg, rgba(7,13,20,0.92) 0%, rgba(7,13,20,0.20) 28%, rgba(7,13,20,0.20) 72%, rgba(7,13,20,0.92) 100%)" }}
+          />
+        </div>
+
+        {/* Label overlay */}
+        <div className="absolute inset-0 flex items-center justify-between px-4 pointer-events-none">
+          <div>
+            <p className="font-mono text-[9px] uppercase tracking-[0.28em] mb-0.5"
+              style={{ color: `${accentColor}80` }}>
+              Archivo fotográfico
+            </p>
+            <p className="font-bold text-white text-sm">{images.length} registros</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="font-mono text-[10px] uppercase tracking-widest text-white/38 group-hover:text-white/65 transition-colors">
+              ver galería
+            </span>
+            <div className="w-7 h-7 rounded-full flex items-center justify-center border transition-all duration-300 group-hover:scale-110"
+              style={{ borderColor: `${accentColor}38`, background: `${accentColor}12` }}>
+              <ZoomIn className="h-3.5 w-3.5" style={{ color: accentColor }} />
+            </div>
+          </div>
+        </div>
+
+        {/* Hover: accent inset ring */}
+        <div className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
+          style={{ boxShadow: `inset 0 0 0 1px ${accentColor}25` }}
+        />
+      </button>
+
+      {panelMounted && (
+        <FieldArchivePanel
+          isOpen={panelOpen}
+          onClose={closePanel}
+          images={images}
+          accentColor={accentColor}
+          title={title}
+          subtitle={subtitle}
+          description={description}
+        />
+      )}
+    </>
+  );
+}
+
+// Sub-section divider label — only rendered when a card has both media types
+function SubLabel({ label, accentColor }: { label: string; accentColor: string }) {
+  return (
+    <div className="flex items-center gap-2 mb-3">
+      <div className="h-px flex-1" style={{ background: `linear-gradient(90deg, ${accentColor}28, transparent)` }} />
+      <span className="font-mono text-[10px] text-white/30 uppercase tracking-[0.22em]">{label}</span>
+      <div className="h-px flex-1" style={{ background: `linear-gradient(90deg, transparent, ${accentColor}28)` }} />
+    </div>
+  );
+}
+
+function FieldMissionCard({
+  missionId, code, title, location, accentColor, description,
+  videos, images, offsetClass,
+}: MissionCardProps) {
+  const [activeVideoIdx, setActiveVideoIdx] = useState(0);
+  const safeVideoIdx = videos.length > 0 ? Math.min(activeVideoIdx, videos.length - 1) : 0;
+  const activeVideo  = videos[safeVideoIdx];
+
+  const hasVideos = videos.length > 0;
+  const hasImages = images.length > 0;
+  const hasBoth   = hasVideos && hasImages;
+  const loading   = !hasVideos && !hasImages;
+
+  return (
+    <div
+      className={`relative rounded-2xl overflow-hidden border border-white/[0.07] hover:border-white/[0.15] transition-colors duration-500 ${offsetClass}`}
+      style={{ background: "linear-gradient(160deg, hsl(210,38%,7.5%), hsl(210,38%,5.5%))" }}
+    >
+      {/* Accent bar */}
+      <div className="h-[3px]"
+        style={{ background: `linear-gradient(90deg, ${accentColor}, ${accentColor}55 45%, transparent 82%)` }} />
+
+      {/* Watermark number */}
+      <div className="absolute -bottom-5 -right-2 font-black leading-none select-none pointer-events-none"
+        style={{ fontSize: "9.5rem", color: accentColor, opacity: 0.045, lineHeight: 1 }}
+        aria-hidden="true">
+        {missionId}
+      </div>
+
+      <div className="relative p-5 lg:p-6">
+
+        {/* ── Card header ── */}
+        <div className="mb-5">
+          <div className="flex flex-wrap items-center gap-2 mb-3">
+            <span className="px-2.5 py-0.5 rounded-sm font-mono text-[10px] uppercase tracking-[0.2em] border"
+              style={{ color: accentColor, borderColor: `${accentColor}45`, backgroundColor: `${accentColor}12` }}>
+              {code}
+            </span>
+            <span className="flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-wider text-[hsl(168,72%,50%)]">
+              <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ backgroundColor: "hsl(168,72%,48%)" }} />
+              Completado
+            </span>
+          </div>
+          <h4 className="text-[1.35rem] font-black text-white leading-tight mb-1.5">{title}</h4>
+          <p className="font-mono text-[10px] text-white/35 uppercase tracking-[0.18em] flex items-center gap-1.5">
+            <MapPin className="h-3 w-3 shrink-0" style={{ color: accentColor, opacity: 0.7 }} />
+            {location}
+          </p>
+        </div>
+
+        {/* ── Loading skeleton ── */}
+        {loading && (
+          <div className="rounded-xl bg-white/[0.04] border border-white/[0.06] animate-pulse mb-5"
+            style={{ height: "200px" }} />
+        )}
+
+        {/* ══ VIDEO SUB-SECTION ══
+             The <video> element has no fixed container height — it expands to its
+             intrinsic aspect ratio (width: 100%; display: block; height: auto).
+             No black bars, no stretching, no cropping. */}
+        {hasVideos && (
+          <div className="mb-5">
+            {hasBoth && <SubLabel label={`Video · ${videos.length}`} accentColor={accentColor} />}
+
+            {/* Main video — natural aspect ratio */}
+            <div className="rounded-xl overflow-hidden bg-black mb-2.5"
+              style={{ minHeight: "140px" }}>
+              <video
+                key={activeVideo.url}
+                src={activeVideo.url}
+                muted autoPlay playsInline controls loop
+                style={{ width: "100%", display: "block" }}
+              />
+            </div>
+
+            {/* Video thumbnail strip */}
+            {videos.length > 1 && (
+              <div className="flex gap-1.5 overflow-x-auto pb-0.5" style={{ scrollbarWidth: "none" }}>
+                {videos.map((v, i) => (
+                  <button
+                    key={v.url}
+                    type="button"
+                    onClick={() => setActiveVideoIdx(i)}
+                    className="flex-shrink-0 rounded-md overflow-hidden border transition-all duration-200"
+                    style={{
+                      width: "2.75rem", height: "2.75rem",
+                      borderColor: i === safeVideoIdx ? accentColor : "rgba(255,255,255,0.1)",
+                      opacity: i === safeVideoIdx ? 1 : 0.42,
+                    }}
+                    aria-label={v.title}
+                  >
+                    <div className="w-full h-full flex items-center justify-center"
+                      style={{ background: "hsl(210,38%,6%)" }}>
+                      <Play className="h-3.5 w-3.5"
+                        style={{ color: i === safeVideoIdx ? accentColor : "rgba(255,255,255,0.45)" }} />
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ══ IMAGE SUB-SECTION — PhotoWall contact sheet ══ */}
+        {hasImages && (
+          <div className="mb-5">
+            {hasBoth && <SubLabel label={`Fotografías · ${images.length}`} accentColor={accentColor} />}
+            <PhotoDossier
+              images={images}
+              accentColor={accentColor}
+              title={title}
+              subtitle={code}
+              description={description}
+            />
+          </div>
+        )}
+
+        {/* ── Description ── */}
+        <p className="text-white/60 text-sm leading-relaxed">{description}</p>
+
+        {/* ── Footer ── */}
+        <div className="mt-4 pt-3 border-t border-white/[0.06] flex items-center gap-3">
+          <span className="font-mono text-[10px] text-white/28 uppercase tracking-wider shrink-0">
+            {loading
+              ? "Cargando…"
+              : `${videos.length + images.length} registros`}
+          </span>
+          <div className="flex-1 h-px"
+            style={{ background: `linear-gradient(90deg, ${accentColor}35, transparent)` }} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Pre-computed waveform paths for the section 06 signal monitor ─────────────
+const SENSOR_CHANNELS = (() => {
+  const W = 1400, H = 76, mid = H / 2;
+  return [
+    { id: "ph",  label: "pH",  desc: "Acidez",      end: 7.4, dec: 1, suf: "",  color: "#00c9a7", amp: 18, freq: 3, dur: "5.5s", delay: "0s"    },
+    { id: "tmp", label: "°C",  desc: "Temperatura", end: 24,  dec: 0, suf: "°", color: "#38bdf8", amp: 12, freq: 5, dur: "3.8s", delay: "-1.4s"  },
+    { id: "ntu", label: "NTU", desc: "Turbidez",    end: 12,  dec: 0, suf: "",  color: "#fbbf24", amp: 26, freq: 2, dur: "7s",   delay: "-2.8s"  },
+  ].map(ch => {
+    const pts: string[] = [];
+    for (let x = 0; x <= W * 2; x += 8) {
+      const t = (x / W) * Math.PI * 2 * ch.freq;
+      const y = mid + Math.sin(t) * ch.amp;
+      pts.push(x === 0 ? `M${x},${y.toFixed(1)}` : `L${x},${y.toFixed(1)}`);
+    }
+    return { ...ch, W, H, wavePath: pts.join(" ") };
+  });
+})();
+
 // ── Main component ────────────────────────────────────────────────────────────
 export function ProjectSection() {
-  const heading      = useSiteValue("project.heading", "El Proyecto");
+  const heading      = useSiteValue("project.heading", "M.A.N.G.O.");
   const [campoImgs,   setCampoImgs]   = useState<MediaItem[]>([]);
   const [campoVids,   setCampoVids]   = useState<MediaItem[]>([]);
   const [pruebasVids, setPruebasVids] = useState<MediaItem[]>([]);
@@ -420,6 +917,23 @@ export function ProjectSection() {
     return campoImgs.filter((_, i) => i % step === 0).slice(0, 8);
   }, [campoImgs]);
 
+  // Video redistribution across the three field missions:
+  // - First 3 campo vids → Rozo (Mission 03)
+  // - Index 3 to (length-3) → Lago Calima (Mission 02)
+  // - Last 2 campo vids appended to pruebasVids → Test de Componentes (Mission 01)
+  const rozoVids = useMemo(() => {
+    const safeMax = Math.max(0, campoVids.length - 2);
+    return campoVids.slice(0, Math.min(3, safeMax));
+  }, [campoVids]);
+  const calimaVids = useMemo(() => {
+    const end = campoVids.length - 2;
+    return end > 3 ? campoVids.slice(3, end) : [];
+  }, [campoVids]);
+  const compTestVids = useMemo(() => [
+    ...pruebasVids,
+    ...(campoVids.length >= 2 ? campoVids.slice(-2) : []),
+  ], [pruebasVids, campoVids]);
+
   // Hero slideshow
   useEffect(() => {
     if (heroImgs.length < 2) return;
@@ -435,31 +949,34 @@ export function ProjectSection() {
     <section id="proyecto" className="bg-[hsl(210,35%,8%)]">
 
       {/* ── 01 HERO ─────────────────────────────────────────────────────── */}
-      <div className="relative min-h-[88vh] flex flex-col justify-end overflow-hidden">
+      <div className="relative min-h-screen flex flex-col justify-center overflow-hidden">
         {heroImgs.map((img, i) => (
           <img key={img.url} src={img.url} alt="" aria-hidden
-            className="absolute inset-0 w-full h-full object-cover transition-opacity duration-1000"
+            className="absolute inset-0 w-full h-full object-cover object-center transition-opacity duration-1000"
             style={{ opacity: i === heroIdx ? 1 : 0 }}
             loading={i === 0 ? "eager" : "lazy"} />
         ))}
-        <div className="absolute inset-0 bg-gradient-to-t from-[hsl(210,38%,5%)] via-[hsl(210,38%,6%)]/65 to-transparent" />
-        <div className="absolute inset-0 bg-gradient-to-r from-[hsl(210,38%,5%)]/85 via-transparent to-transparent" />
+        {/* Uniform base — ensures text stays readable regardless of image tone or crop */}
+        <div className="absolute inset-0 bg-[hsl(210,38%,5%)]/52" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[hsl(210,38%,5%)] via-transparent to-[hsl(210,38%,5%)]/35" />
+        <div className="absolute inset-0 bg-gradient-to-r from-[hsl(210,38%,5%)]/75 via-transparent to-transparent" />
 
-        <div className="relative z-10 max-w-7xl mx-auto w-full px-6 lg:px-8 pb-20">
-          <p className="font-mono text-[hsl(168,72%,55%)] text-xs tracking-[0.35em] uppercase mb-5 text-center">
+        <div className="relative z-10 max-w-7xl mx-auto w-full px-6 lg:px-8 py-24 lg:py-28">
+          <p className="font-mono text-[hsl(168,72%,55%)] text-xs tracking-[0.35em] uppercase mb-7 text-center">
             01 — El Dispositivo
           </p>
 
           {/* Two-column on desktop: text left (3/5), floating 3D model right (2/5) */}
-          <div className="lg:grid lg:grid-cols-5 lg:items-end lg:gap-4">
+          <div className="lg:grid lg:grid-cols-5 lg:items-center lg:gap-8">
 
             {/* Text column */}
             <div className="lg:col-span-3">
-              <h2 className="text-[4rem] sm:text-[7rem] md:text-[9rem] font-black tracking-tight text-white leading-none mb-6">
+              <h2 className="font-black tracking-tight text-white leading-none mb-7"
+                style={{ fontSize: "clamp(3rem, 7.5vw, 6.5rem)" }}>
                 <DecryptedText text={heading} speed={22} maxIterations={7} animateOn="view"
                   className="text-white" encryptedClassName="text-[hsl(168,72%,42%)]/40" />
               </h2>
-              <p className="text-xl text-white/80 max-w-lg font-light leading-relaxed">
+              <p className="text-lg lg:text-xl text-white/75 max-w-lg font-light leading-relaxed">
                 Un dispositivo impermeable y autónomo que mide la acidez, la temperatura y la turbidez del agua — las tres señales clave para saber si un ecosistema acuático está sano o en peligro — sin que nadie tenga que estar presente.
               </p>
               {heroImgs.length > 1 && (
@@ -475,8 +992,8 @@ export function ProjectSection() {
 
             {/* 3D model column — desktop only, transparent canvas floats over the hero photo */}
             <div
-              className="hidden lg:block lg:col-span-2 pointer-events-auto"
-              style={{ height: "460px" }}
+              className="hidden lg:flex lg:col-span-2 items-center justify-center pointer-events-auto"
+              style={{ height: "500px" }}
               aria-hidden="true"
             >
               <Suspense fallback={null}>
@@ -1016,93 +1533,353 @@ export function ProjectSection() {
         </div>
       </div>
 
-      {/* ── 05A ENSAYOS TÉCNICOS ────────────────────────────────────────── */}
-      <div className="py-20 border-t border-white/[0.06]">
+      {/* ── 05 VALIDACIÓN DE CAMPO ──────────────────────────────────────── */}
+      <div className="relative py-24 border-t border-white/[0.06] overflow-hidden">
+
+        {/* Dot-grid field texture */}
+        <div className="absolute inset-0 pointer-events-none"
+          style={{ backgroundImage: "radial-gradient(circle, rgba(0,201,167,0.055) 1px, transparent 1px)", backgroundSize: "28px 28px" }} />
+
+        {/* Survey baseline — subtle horizontal axis evoking field measurement */}
+        <div className="absolute w-full pointer-events-none" style={{ top: "54%", height: "1px" }} aria-hidden="true">
+          <div className="h-px w-full" style={{ background: "linear-gradient(90deg, transparent 5%, rgba(0,201,167,0.08) 30%, rgba(56,189,248,0.08) 70%, transparent 95%)" }} />
+        </div>
+
+        {/* Ambient glows */}
+        <div className="absolute top-0 -left-60 w-[520px] h-[520px] rounded-full pointer-events-none"
+          style={{ background: "radial-gradient(circle, rgba(0,201,167,0.04), transparent 70%)" }} />
+        <div className="absolute bottom-0 -right-60 w-[420px] h-[420px] rounded-full pointer-events-none"
+          style={{ background: "radial-gradient(circle, rgba(56,189,248,0.04), transparent 70%)" }} />
+
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          <div className="flex items-center justify-center gap-3 mb-2">
-            <span className="px-3 py-1 rounded-full bg-[hsl(168,72%,42%)]/15 border border-[hsl(168,72%,42%)]/30 font-mono text-[11px] text-[hsl(168,72%,55%)] uppercase tracking-widest">05A</span>
-            <span className="text-white/60 font-mono text-xs uppercase tracking-widest">Fase 1</span>
+
+          {/* Section header */}
+          <div className="text-center mb-16 lg:mb-20">
+            <p className="font-mono text-[hsl(168,72%,55%)] text-xs tracking-[0.35em] uppercase mb-5 text-center">
+              05 — Validación · Pruebas de Campo
+            </p>
+            <h3 className="font-black text-white leading-[0.9] mb-5"
+              style={{ fontSize: "clamp(2.8rem, 6.5vw, 5rem)" }}>
+              El sistema<br />
+              <span style={{
+                background: "linear-gradient(125deg, #00c9a7 0%, #38bdf8 55%, #fbbf24 100%)",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                backgroundClip: "text",
+              }}>puesto a prueba</span>
+            </h3>
+            <p className="text-white/50 text-base max-w-2xl mx-auto leading-relaxed">
+              Tres escenarios reales donde el dispositivo fue validado — desde las primeras pruebas de propulsión en laboratorio hasta los despliegues en cuerpos de agua de Valle del Cauca.
+            </p>
           </div>
-          <h3 className="text-3xl font-bold text-white mb-2">Antes de ir al agua</h3>
-          <p className="text-white/65 text-base mb-8 max-w-xl text-justify">Antes de desplegar el dispositivo en campo, cada componente se prueba por separado: que la radio transmita a la distancia esperada, que los sensores entreguen lecturas correctas y que el sistema no falle bajo condiciones adversas.</p>
-          {pruebasVids.length > 0
-            ? <VideoPlayer videos={pruebasVids} label="Ensayos técnicos" />
-            : <div className="rounded-2xl bg-white/[0.03] border border-white/[0.06] p-10 text-center text-white/30 font-mono text-sm">Cargando videos...</div>}
+
+          {/* Three mission cards — staggered vertically on desktop */}
+          <div className="grid md:grid-cols-3 gap-5 lg:gap-7 items-start">
+
+            <FieldMissionCard
+              missionId="01"
+              code="TEST-COMP"
+              title="Pruebas de Componentes"
+              location="Laboratorio CALIBOTS"
+              accentColor="#00c9a7"
+              description="Validación técnica antes del primer despliegue: comunicación LoRa, respuesta de sensores, firmware y propulsión — cada subsistema probado individualmente en condiciones controladas."
+              videos={compTestVids}
+              images={[]}
+              offsetClass=""
+            />
+
+            <FieldMissionCard
+              missionId="02"
+              code="CAMPO-CALIMA"
+              title="Lago Calima"
+              location="Valle del Cauca · Colombia"
+              accentColor="#38bdf8"
+              description="Primera salida a agua real. pH, temperatura y turbidez medidos simultáneamente en el embalse del Lago Calima — primera vez en condiciones de campo."
+              videos={calimaVids}
+              images={campoImgs}
+              offsetClass="md:mt-14"
+            />
+
+            <FieldMissionCard
+              missionId="03"
+              code="CAMPO-ROZO"
+              title="Prueba en Rozo"
+              location="Rozo, Valle del Cauca · Colombia"
+              accentColor="#fbbf24"
+              description="Segunda salida de campo. Registro en video del despliegue del dispositivo en ecosistema acuático local — documentando la operación en condiciones reales."
+              videos={rozoVids}
+              images={[]}
+              offsetClass="md:mt-7"
+            />
+
+          </div>
         </div>
-      </div>
-
-      {/* ── 05B PRUEBAS DE CAMPO ────────────────────────────────────────── */}
-      <div className="py-20 border-t border-white/[0.06]">
-        <div className="max-w-7xl mx-auto px-6 lg:px-8 mb-6">
-          <div className="flex items-center justify-center gap-3 mb-2">
-            <span className="px-3 py-1 rounded-full bg-[hsl(204,70%,53%)]/15 border border-[hsl(204,70%,53%)]/30 font-mono text-[11px] text-[hsl(204,70%,65%)] uppercase tracking-widest">05B</span>
-            <span className="text-white/60 font-mono text-xs uppercase tracking-widest">Fase 2</span>
-          </div>
-          <div className="flex items-end justify-between">
-            <div>
-              <h3 className="text-3xl font-bold text-white mb-1">El dispositivo en agua real</h3>
-              <p className="text-white/65 text-base max-w-md">Cada despliegue en lagunas y embalses reales nos enseñó algo nuevo sobre cómo mejorar el sistema.</p>
-            </div>
-            <div className="flex gap-2 flex-shrink-0">
-              <button type="button" onClick={() => nudge(-1)} aria-label="Anterior"
-                className="w-9 h-9 rounded-full bg-white/[0.06] border border-white/10 flex items-center justify-center text-white/50 hover:bg-white/10 hover:text-white transition-all">
-                <ChevronLeft className="h-4 w-4" />
-              </button>
-              <button type="button" onClick={() => nudge(1)} aria-label="Siguiente"
-                className="w-9 h-9 rounded-full bg-white/[0.06] border border-white/10 flex items-center justify-center text-white/50 hover:bg-white/10 hover:text-white transition-all">
-                <ChevronRight className="h-4 w-4" />
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <div ref={stripRef} className="flex gap-3 overflow-x-auto px-6 lg:px-8 pb-2 snap-x snap-mandatory scroll-smooth" style={{ scrollbarWidth: "none" }}>
-          {campoImgs.length === 0
-            ? Array.from({ length: 6 }, (_, i) => (
-                <div key={i} className="flex-shrink-0 snap-start rounded-2xl bg-white/[0.04] border border-white/[0.05] animate-pulse" style={{ width: "17rem", height: "17rem" }} />
-              ))
-            : campoImgs.map((img, i) => (
-                <div key={img.url} className="flex-shrink-0 snap-start rounded-2xl overflow-hidden relative group" style={{ width: "17rem", height: "17rem" }}>
-                  <img src={img.url} alt={img.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" loading="lazy" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                  <span className="absolute top-3 left-3 font-mono text-[10px] text-white/65 bg-black/40 backdrop-blur-sm px-2 py-0.5 rounded">{String(i+1).padStart(2,"0")}</span>
-                  <p className="absolute bottom-3 left-3 right-3 text-white text-xs font-medium truncate opacity-0 group-hover:opacity-100 transition-opacity">{img.title}</p>
-                </div>
-              ))
-          }
-        </div>
-
-        {campoImgs.length > 0 && (
-          <p className="mt-3 px-6 lg:px-8 max-w-7xl mx-auto font-mono text-xs text-white/50">{campoImgs.length} registros documentados</p>
-        )}
-
-        {campoVids.length > 0 && (
-          <div className="max-w-7xl mx-auto px-6 lg:px-8 mt-10">
-            <p className="text-white/55 text-sm font-medium mb-5">El dispositivo en acción</p>
-            <VideoPlayer videos={campoVids} label="Pruebas de campo" />
-          </div>
-        )}
       </div>
 
       {/* ── 06 LOS DATOS ────────────────────────────────────────────────── */}
-      <div className="py-20 border-t border-white/[0.06]">
-        <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          <p className="font-mono text-[hsl(168,72%,55%)] text-xs tracking-[0.35em] uppercase mb-3 text-center">06 — Qué Medimos</p>
-          <h3 className="text-3xl font-bold text-white mb-10">Tres números que lo dicen todo</h3>
-          <div className="grid sm:grid-cols-3 gap-4">
-            {[
-              { label: "pH del Agua",  end: 7.4, dec: 1, suffix: "",    unit: "pH",  desc: "Qué tan ácida o alcalina está el agua. Un pH bajo o alto fuera del rango normal puede indicar contaminación, exceso de algas o estrés en el ecosistema.", color: "#00c9a7" },
-              { label: "Temperatura",  end: 24,  dec: 0, suffix: "°C",  unit: "°C",  desc: "La temperatura del agua en superficie. Cambios bruscos afectan a las especies que viven en el ecosistema y pueden señalar fenómenos térmicos anómalos.",       color: "#38bdf8" },
-              { label: "Turbidez",     end: 12,  dec: 0, suffix: " NTU",unit: "NTU", desc: "Qué tan turbia o clara está el agua. Cuanto más turbia, más sedimentos, partículas o algas contiene — una señal directa de alteración del ecosistema.",           color: "#fbbf24" },
-            ].map(m => (
-              <div key={m.label} className="rounded-2xl bg-white/[0.04] border border-white/[0.08] p-6 hover:border-white/15 transition-colors">
-                <p className="font-mono text-[11px] uppercase tracking-widest mb-5" style={{ color: m.color }}>{m.label}</p>
-                <div className="text-5xl font-black text-white font-mono leading-none mb-1">
-                  <Counter end={m.end} decimals={m.dec} suffix={m.suffix} />
+      <div className="relative py-28 border-t border-white/[0.06] overflow-hidden">
+        <style>{`
+          @keyframes wave-scroll {
+            from { transform: translateX(0); }
+            to   { transform: translateX(-50%); }
+          }
+        `}</style>
+
+        {/* Ambient glows */}
+        <div className="absolute inset-0 pointer-events-none" aria-hidden>
+          <div className="absolute inset-0"
+            style={{ background: "radial-gradient(ellipse 70% 40% at 50% 0%, rgba(0,201,167,0.05), transparent)" }} />
+          <div className="absolute inset-0"
+            style={{ background: "radial-gradient(ellipse 50% 50% at 0% 100%, rgba(56,189,248,0.03), transparent)" }} />
+          <div className="absolute inset-0"
+            style={{ background: "radial-gradient(ellipse 50% 50% at 100% 100%, rgba(251,191,36,0.03), transparent)" }} />
+        </div>
+
+        <div className="relative max-w-7xl mx-auto px-6 lg:px-8">
+
+          {/* Header */}
+          <div className="text-center mb-20">
+            <div className="inline-flex items-center gap-3 mb-5">
+              <div className="h-px w-14 bg-[hsl(168,72%,42%)]/30" />
+              <span className="font-mono text-[hsl(168,72%,55%)] text-xs tracking-[0.35em] uppercase">06 — Qué Medimos</span>
+              <div className="h-px w-14 bg-[hsl(168,72%,42%)]/30" />
+            </div>
+            <h3
+              className="font-black text-white leading-[0.9] mb-5"
+              style={{ fontSize: "clamp(2.8rem, 6.5vw, 5rem)" }}
+            >
+              Tres señales.<br />
+              <span style={{
+                background: "linear-gradient(125deg, #00c9a7 0%, #38bdf8 55%, #fbbf24 100%)",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                backgroundClip: "text",
+              }}>Un ecosistema.</span>
+            </h3>
+            <p className="text-white/50 text-base max-w-xl mx-auto leading-relaxed">
+              pH, temperatura y turbidez son las tres variables que determinan si un cuerpo de agua está sano o en crisis — y son exactamente lo que M.A.N.G.O. registra de forma continua y autónoma.
+            </p>
+          </div>
+
+          {/* ── Signal Monitor ── */}
+          <div
+            className="rounded-2xl overflow-hidden mb-14"
+            style={{ background: "hsl(212,32%,4%)", border: "1px solid rgba(255,255,255,0.07)" }}
+          >
+            {/* Monitor header bar */}
+            <div
+              className="flex items-center gap-3 px-5 py-3 border-b"
+              style={{ borderColor: "rgba(255,255,255,0.05)" }}
+            >
+              <span className="w-2 h-2 rounded-full"
+                style={{ background: "#00c9a7", boxShadow: "0 0 8px 3px #00c9a755" }} />
+              <span className="font-mono text-[10px] uppercase tracking-[0.28em] text-white/28">
+                MANGO Sensor Array · Señal activa
+              </span>
+              <div className="ml-auto flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-red-500/60" />
+                <span className="w-1.5 h-1.5 rounded-full bg-yellow-400/40" />
+                <span className="w-1.5 h-1.5 rounded-full" style={{ background: "rgba(0,201,167,0.55)" }} />
+              </div>
+            </div>
+
+            {/* Sensor channels */}
+            {SENSOR_CHANNELS.map((ch, idx, arr) => (
+              <div
+                key={ch.id}
+                className={idx < arr.length - 1 ? "border-b" : ""}
+                style={{ borderColor: "rgba(255,255,255,0.04)" }}
+              >
+                <div className="flex items-stretch">
+
+                  {/* Left: channel label */}
+                  <div
+                    className="w-20 sm:w-28 flex-shrink-0 flex flex-col justify-center items-center gap-0.5 py-5 px-3 border-r"
+                    style={{ borderColor: "rgba(255,255,255,0.04)" }}
+                  >
+                    <span className="font-mono font-black text-xl leading-none" style={{ color: ch.color }}>
+                      {ch.label}
+                    </span>
+                    <span
+                      className="font-mono text-[9px] uppercase tracking-widest mt-0.5"
+                      style={{ color: `${ch.color}55` }}
+                    >
+                      {ch.desc}
+                    </span>
+                  </div>
+
+                  {/* Center: animated waveform */}
+                  <div className="flex-1 relative overflow-hidden" style={{ height: `${ch.H}px` }}>
+                    {/* Subtle grid */}
+                    <div className="absolute inset-0 flex flex-col justify-around pointer-events-none" aria-hidden>
+                      {[0, 1, 2].map(i => (
+                        <div key={i} className="w-full h-px" style={{ background: "rgba(255,255,255,0.02)" }} />
+                      ))}
+                    </div>
+                    {/* Axis midline */}
+                    <div
+                      className="absolute left-0 right-0 h-px pointer-events-none"
+                      style={{ top: "50%", background: `${ch.color}10` }}
+                    />
+
+                    {/* Scrolling wave */}
+                    <svg
+                      width={ch.W * 2}
+                      height={ch.H}
+                      className="absolute top-0 left-0"
+                      aria-hidden
+                      style={{
+                        animationName: "wave-scroll",
+                        animationDuration: ch.dur,
+                        animationDelay: ch.delay,
+                        animationTimingFunction: "linear",
+                        animationIterationCount: "infinite",
+                      }}
+                    >
+                      <defs>
+                        <linearGradient id={`wfill-${ch.id}`} x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor={ch.color} stopOpacity="0.1" />
+                          <stop offset="100%" stopColor={ch.color} stopOpacity="0" />
+                        </linearGradient>
+                      </defs>
+                      <path
+                        d={`${ch.wavePath} L${ch.W * 2},${ch.H} L0,${ch.H} Z`}
+                        fill={`url(#wfill-${ch.id})`}
+                      />
+                      <path
+                        d={ch.wavePath}
+                        stroke={ch.color}
+                        strokeWidth="1.5"
+                        fill="none"
+                        strokeLinecap="round"
+                        opacity="0.8"
+                      />
+                    </svg>
+
+                    {/* Right vignette */}
+                    <div
+                      className="absolute right-0 top-0 bottom-0 w-20 pointer-events-none"
+                      style={{ background: `linear-gradient(90deg, transparent, hsl(212,32%,4%))` }}
+                    />
+                    {/* Cursor line */}
+                    <div
+                      className="absolute top-3 bottom-3 w-px pointer-events-none"
+                      style={{ right: "72px", background: `linear-gradient(180deg, transparent, ${ch.color}40, transparent)` }}
+                    />
+                    {/* Live dot */}
+                    <div
+                      className="absolute top-1/2 pointer-events-none"
+                      style={{
+                        right: "68px",
+                        transform: "translateY(-50%)",
+                        width: "7px",
+                        height: "7px",
+                        borderRadius: "50%",
+                        background: ch.color,
+                        boxShadow: `0 0 10px 4px ${ch.color}50`,
+                      }}
+                    />
+                  </div>
+
+                  {/* Right: value readout */}
+                  <div
+                    className="w-24 sm:w-32 flex-shrink-0 flex flex-col justify-center items-end px-4 border-l"
+                    style={{ borderColor: "rgba(255,255,255,0.04)" }}
+                  >
+                    <div
+                      className="font-mono font-black tabular-nums leading-none"
+                      style={{ color: ch.color, fontSize: "clamp(1.25rem, 2.5vw, 1.75rem)" }}
+                    >
+                      <Counter end={ch.end} decimals={ch.dec} suffix={ch.suf} />
+                    </div>
+                    <span
+                      className="font-mono text-[9px] mt-1 uppercase tracking-widest"
+                      style={{ color: `${ch.color}50` }}
+                    >
+                      {ch.label}
+                    </span>
+                  </div>
                 </div>
-                <p className="font-mono text-[10px] text-white/55 mb-4">{m.unit} · referencia</p>
-                <p className="text-white/65 text-sm leading-relaxed text-justify">{m.desc}</p>
-                <div className="mt-4 h-px" style={{ background: `linear-gradient(to right, ${m.color}50, transparent)` }} />
+              </div>
+            ))}
+          </div>
+
+          {/* ── Ecological context ── */}
+          <div className="grid sm:grid-cols-3 gap-4 items-start">
+            {[
+              {
+                sensor: "pH",
+                color: "#00c9a7",
+                headline: "El primer signo de alarma",
+                body: "Mide la acidez del agua. Un rango entre 6.5 y 8.5 es favorable para la vida acuática. Fuera de ese margen el ecosistema empieza a degradarse: floración de algas, muerte de peces, contaminación química visible.",
+                lo: "Ácido", ok: "Óptimo 6.5 – 8.5", hi: "Alcalino",
+                pos: 0.52,
+              },
+              {
+                sensor: "Temperatura",
+                color: "#38bdf8",
+                headline: "El termómetro de todo",
+                body: "La temperatura controla cuánto oxígeno disuelve el agua, qué especies pueden sobrevivir y cuándo migran o se reproducen. Un aumento de tan solo 2 °C puede desencadenar el blanqueamiento de corales o extinciones locales.",
+                lo: "Frío", ok: "Óptimo 18 – 28 °C", hi: "Caliente",
+                pos: 0.48,
+              },
+              {
+                sensor: "Turbidez",
+                color: "#fbbf24",
+                headline: "La visibilidad del agua",
+                body: "Cuanta más turbidez, más partículas suspendidas bloquean la luz solar. Sin luz no hay fotosíntesis, y sin fotosíntesis el oxígeno desaparece del fondo — creando zonas muertas donde nada puede vivir.",
+                lo: "Clara", ok: "Tolerable < 25 NTU", hi: "Turbia",
+                pos: 0.20,
+              },
+            ].map(s => (
+              <div
+                key={s.sensor}
+                className="group rounded-2xl overflow-hidden border border-white/[0.07] hover:border-white/[0.14] transition-colors duration-300"
+                style={{ background: "linear-gradient(170deg, hsl(210,38%,7%), hsl(210,38%,5%))" }}
+              >
+                <div className="h-[3px]"
+                  style={{ background: `linear-gradient(90deg, ${s.color}, ${s.color}20 70%, transparent)` }} />
+                <div className="p-6">
+                  {/* Sensor badge */}
+                  <div className="flex items-center gap-2 mb-5">
+                    <span
+                      className="font-mono font-black text-xs px-2.5 py-1 rounded-md"
+                      style={{ background: `${s.color}14`, color: s.color, border: `1px solid ${s.color}28` }}
+                    >
+                      {s.sensor}
+                    </span>
+                    <div className="flex-1 h-px" style={{ background: `${s.color}18` }} />
+                  </div>
+                  <h4 className="text-white font-bold text-[1.05rem] leading-snug mb-3">{s.headline}</h4>
+                  <p className="text-white/60 text-sm leading-relaxed mb-6">{s.body}</p>
+                  {/* Range indicator */}
+                  <div>
+                    <div
+                      className="flex justify-between font-mono text-[9px] uppercase tracking-widest mb-2"
+                      style={{ color: "rgba(255,255,255,0.22)" }}
+                    >
+                      <span>{s.lo}</span>
+                      <span style={{ color: `${s.color}70` }}>{s.ok}</span>
+                      <span>{s.hi}</span>
+                    </div>
+                    <div className="relative h-1.5 rounded-full bg-white/[0.05]">
+                      <div
+                        className="absolute inset-y-0 left-[22%] right-[22%] rounded-full"
+                        style={{ background: `linear-gradient(90deg, ${s.color}12, ${s.color}45, ${s.color}12)` }}
+                      />
+                      <div
+                        className="absolute top-1/2 w-3 h-3 rounded-full border-2"
+                        style={{
+                          left: `${s.pos * 100}%`,
+                          transform: "translate(-50%, -50%)",
+                          borderColor: s.color,
+                          background: "hsl(210,38%,5%)",
+                          boxShadow: `0 0 8px 3px ${s.color}45`,
+                        }}
+                      />
+                    </div>
+                  </div>
+                </div>
               </div>
             ))}
           </div>

@@ -24,30 +24,20 @@ const ContactSection = lazy(() =>
   import("@/components/ContactSection").then((m) => ({ default: m.ContactSection }))
 );
 
-/** Minimal divider — pure CSS, zero JS */
-function WaveDivider({ variant = "teal" }: { variant?: "teal" | "blue" | "gold" }) {
-  const colors = {
-    teal: "hsl(168 72% 42%)",
-    blue: "hsl(204 70% 53%)",
-    gold: "hsl(50 90% 58%)",
+/** Hairline gradient separator — marks section boundaries without creating a visual gap */
+function SectionLine({ variant = "teal" }: { variant?: "teal" | "blue" | "gold" }) {
+  const stop = {
+    teal: "rgba(0,201,167,0.18)",
+    blue: "rgba(56,189,248,0.16)",
+    gold: "rgba(250,204,21,0.14)",
   }[variant];
 
   return (
-    <div className="relative h-16 md:h-20 bg-mango-dark -mt-1 -mb-1 overflow-hidden" aria-hidden="true">
-      <div
-        className="absolute left-1/2 -translate-x-1/2 top-1/2 w-[60%] max-w-xl h-px"
-        style={{
-          background: `linear-gradient(90deg, transparent, ${colors} / 0.15, transparent)`,
-        }}
-      />
-      <div
-        className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full"
-        style={{
-          background: `${colors} / 0.4`,
-          boxShadow: `0 0 12px 4px ${colors} / 0.2`,
-        }}
-      />
-    </div>
+    <div
+      className="h-px w-full pointer-events-none"
+      style={{ background: `linear-gradient(90deg, transparent 0%, ${stop} 35%, ${stop} 65%, transparent 100%)` }}
+      aria-hidden="true"
+    />
   );
 }
 
@@ -75,13 +65,11 @@ const Index = () => {
       <div id="contenido" tabIndex={-1} />
       <HeroSection />
 
-      <WaveDivider variant="teal" />
-
       <Suspense fallback={<SectionFallback />}>
         <ProjectSection />
       </Suspense>
 
-      <WaveDivider variant="blue" />
+      <SectionLine variant="blue" />
 
       <Suspense fallback={<SectionFallback />}>
         <ScrollReveal variant="fade-up" delay={0.1}>
@@ -89,7 +77,7 @@ const Index = () => {
         </ScrollReveal>
       </Suspense>
 
-      <WaveDivider variant="teal" />
+      <SectionLine variant="teal" />
 
       <Suspense fallback={<SectionFallback />}>
         <ScrollReveal variant="scale">
@@ -97,7 +85,7 @@ const Index = () => {
         </ScrollReveal>
       </Suspense>
 
-      <WaveDivider variant="gold" />
+      <SectionLine variant="gold" />
 
       <Suspense fallback={<SectionFallback />}>
         <ScrollReveal variant="fade-up">
@@ -105,7 +93,7 @@ const Index = () => {
         </ScrollReveal>
       </Suspense>
 
-      <WaveDivider variant="blue" />
+      <SectionLine variant="blue" />
 
       <Suspense fallback={<SectionFallback />}>
         <ScrollReveal variant="fade-up" delay={0.1}>
