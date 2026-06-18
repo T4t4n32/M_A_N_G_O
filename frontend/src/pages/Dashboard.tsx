@@ -154,7 +154,7 @@ const bubbleItems = [
 export default function Dashboard() {
   const { user, role, tier } = useAuth();
   const { isOffline, isDegraded } = useHealth();
-  const { sensors, refetch } = useSensorData();
+  const { sensors, context, refetch } = useSensorData();
   useSensorStream();
   const systemAlert = useSensorAlerts(sensors);
   const sustainedAlert = useSustainedAlerts();

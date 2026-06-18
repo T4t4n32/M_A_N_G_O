@@ -2,7 +2,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { RefreshCw, Thermometer, Droplets, FlaskConical, AlertCircle, WifiOff, Wrench, OctagonX, AlertTriangle, CheckCircle2 } from "lucide-react";
+import {
+  RefreshCw, Thermometer, Droplets, FlaskConical,
+  AlertCircle, WifiOff, Wrench, OctagonX, AlertTriangle,
+  CheckCircle2, BedDouble, Shield,
+} from "lucide-react";
 import type { SensorState, SensorReading, SensorType, AlertLevel } from "@/types/dashboard";
 import { SENSOR_THRESHOLDS } from "@/lib/sensorThresholds";
 
@@ -49,9 +53,11 @@ export function SensorCard({ type, state, reading, alertLevel = "normal", onRetr
   const Icon = config.icon;
   const threshold = SENSOR_THRESHOLDS[type];
 
-  const alertBorder = alertLevel === "critical"
+  // Alert ring only applies when device is actively in field
+  const isLive = state === "has-data";
+  const alertBorder = isLive && alertLevel === "critical"
     ? "ring-2 ring-[hsl(var(--alert-critical)/0.55)] animate-pulse-critical"
-    : alertLevel === "warning"
+    : isLive && alertLevel === "warning"
     ? "ring-2 ring-[hsl(var(--alert-warning)/0.45)] warn-stripe"
     : "";
 
@@ -86,6 +92,33 @@ export function SensorCard({ type, state, reading, alertLevel = "normal", onRetr
           </div>
         )}
 
+        {/* Standby — no mission active */}
+        {state === "standby" && (
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <BedDouble className="h-4 w-4 text-white/20" />
+              <p className="text-4xl font-mono font-bold text-white/20">—</p>
+            </div>
+            <p className="text-xs text-white/25 mt-1">Sin misión activa</p>
+            {reading && (
+              <p className="text-[10px] text-white/18 mt-1.5">
+                Último registro: {reading.value.toFixed(2)} {reading.unit}
+              </p>
+            )}
+          </div>
+        )}
+
+        {/* Armed — mission staged, about to deploy */}
+        {state === "armed" && (
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <Shield className="h-4 w-4 text-amber-400/60" />
+              <p className="text-4xl font-mono font-bold text-amber-400/50">—</p>
+            </div>
+            <p className="text-xs text-amber-300/50 mt-1">Preparando despliegue</p>
+          </div>
+        )}
+
         {state === "no-data" && (
           <div>
             <p className="text-4xl font-mono font-bold text-white/40">—</p>
@@ -93,6 +126,7 @@ export function SensorCard({ type, state, reading, alertLevel = "normal", onRetr
           </div>
         )}
 
+        {/* Live states: has-data, stale, offline */}
         {(state === "has-data" || state === "stale" || state === "offline") && reading && (
           <div className={
             state === "offline" ? "opacity-55" :
@@ -179,18 +213,22 @@ export function SensorCard({ type, state, reading, alertLevel = "normal", onRetr
 function StateLabel({ state }: { state: SensorState }) {
   const labels: Record<SensorState, string> = {
     loading:           "Cargando…",
-    "no-data":         "Apagado",
+    standby:           "En espera",
+    armed:             "Preparando",
+    "no-data":         "Sin datos",
     "has-data":        "Operativo",
-    stale:             "Encendido",
+    stale:             "Lectura retrasada",
     offline:           "Fuera de operación",
-    error:             "Error",
+    error:             "Error de conexión",
     disconnected:      "Fuera de operación",
     needs_calibration: "Calibración",
-    hardware_issue:    "Hardware",
+    hardware_issue:    "Fallo hardware",
   };
 
   const colors: Record<SensorState, string> = {
     loading:           "text-muted",
+    standby:           "text-white/28",
+    armed:             "text-amber-400/60",
     "no-data":         "text-white/30",
     "has-data":        "text-primary",
     stale:             "text-amber-400",
@@ -207,6 +245,8 @@ function StateLabel({ state }: { state: SensorState }) {
 function StateIndicator({ state }: { state: SensorState }) {
   const colors: Record<SensorState, string> = {
     loading:           "bg-muted",
+    standby:           "bg-white/15",
+    armed:             "bg-amber-400/50",
     "no-data":         "bg-white/20",
     "has-data":        "bg-primary",
     stale:             "bg-amber-400",
@@ -225,16 +265,16 @@ function StateIndicator({ state }: { state: SensorState }) {
       {state === "has-data" && (
         <span className={`absolute inline-flex h-full w-full rounded-full ${colors[state]} opacity-40 animate-pulse`} />
       )}
+      {state === "armed" && (
+        <span className={`absolute inline-flex h-full w-full rounded-full ${colors[state]} opacity-50 animate-ping`} />
+      )}
       <span className={`relative inline-flex rounded-full h-3 w-3 ${colors[state]}`} />
     </span>
   );
 }
 
 function RangeBar({
-  value,
-  optimal,
-  warning,
-  critical,
+  value, optimal, warning, critical,
 }: {
   value: number;
   optimal: [number, number];
@@ -246,27 +286,24 @@ function RangeBar({
   const range = max - min || 1;
   const clampedValue = Math.max(min, Math.min(max, value));
   const pos = ((clampedValue - min) / range) * 100;
-  const optLeft = ((optimal[0] - min) / range) * 100;
+  const optLeft  = ((optimal[0] - min) / range) * 100;
   const optWidth = ((optimal[1] - optimal[0]) / range) * 100;
-  const warnLeft = ((warning[0] - min) / range) * 100;
+  const warnLeft  = ((warning[0] - min) / range) * 100;
   const warnWidth = ((warning[1] - warning[0]) / range) * 100;
 
   return (
     <div className="relative h-2 rounded-full bg-[hsl(var(--alert-critical)/0.2)] overflow-hidden">
-      {/* Warning zone */}
       <div
         className="absolute h-full bg-[hsl(var(--alert-warning)/0.3)] rounded-full"
         style={{ left: `${warnLeft}%`, width: `${warnWidth}%` }}
       />
-      {/* Optimal zone */}
       <div
         className="absolute h-full bg-[hsl(var(--alert-normal)/0.4)] rounded-full"
         style={{ left: `${optLeft}%`, width: `${optWidth}%` }}
       />
-      {/* Current value indicator */}
       <div
         className="absolute top-1/2 -translate-y-1/2 h-3.5 w-1.5 rounded-full bg-secondary-foreground shadow-sm"
-        style={{ left: `${pos}%`, transform: `translate(-50%, -50%)` }}
+        style={{ left: `${pos}%`, transform: "translate(-50%, -50%)" }}
       />
     </div>
   );
