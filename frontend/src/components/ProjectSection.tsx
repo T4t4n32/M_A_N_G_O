@@ -1893,16 +1893,22 @@ export function ProjectSection() {
             0%, 100% { opacity: 1; }
             50%       { opacity: 0.45; }
           }
+          @keyframes access-flow {
+            0%   { left: -5px; opacity: 0; }
+            20%  { opacity: 1; }
+            80%  { opacity: 1; }
+            100% { left: calc(100% + 5px); opacity: 0; }
+          }
         `}</style>
 
         {/* Ambient */}
         <div className="absolute inset-0 pointer-events-none" aria-hidden>
           <div className="absolute inset-0"
-            style={{ background: "radial-gradient(ellipse 65% 55% at 50% 30%, rgba(0,201,167,0.06), transparent)" }} />
+            style={{ background: "radial-gradient(ellipse 70% 60% at 50% 65%, rgba(0,201,167,0.05), transparent)" }} />
           <div className="absolute inset-0"
-            style={{ background: "radial-gradient(ellipse 40% 40% at 15% 80%, rgba(167,139,250,0.04), transparent)" }} />
+            style={{ background: "radial-gradient(ellipse 45% 55% at 4% 70%, rgba(0,201,167,0.04), transparent)" }} />
           <div className="absolute inset-0"
-            style={{ background: "radial-gradient(ellipse 40% 40% at 85% 80%, rgba(239,68,68,0.03), transparent)" }} />
+            style={{ background: "radial-gradient(ellipse 45% 55% at 96% 70%, rgba(167,139,250,0.04), transparent)" }} />
         </div>
 
         <div className="relative max-w-7xl mx-auto px-6 lg:px-8">
@@ -1944,28 +1950,98 @@ export function ProjectSection() {
             </p>
           </div>
 
-          {/* ── Body: pitch video (left) + access cards (right) ── */}
-          <div className="flex flex-col lg:flex-row gap-10 xl:gap-16 items-start mb-14">
+          {/* ── Three-element composition: card | video | card ── */}
+          <div className="flex flex-col lg:flex-row items-stretch gap-4 mb-14">
 
-            {/* ── Left: Pitch video ── */}
-            <div className="w-full max-w-[320px] mx-auto lg:mx-0 flex-shrink-0">
-
-              {/* Label */}
-              <div className="flex items-center gap-3 mb-4">
-                <div className="h-px flex-1 bg-white/[0.06]" />
-                <span className="font-mono text-[9px] uppercase tracking-[0.25em] text-white/28">
-                  Presentación oficial
+            {/* ── LEFT: Access card ── */}
+            <a
+              href="/login"
+              className="group flex-1 flex flex-col rounded-2xl overflow-hidden border transition-all duration-300"
+              style={{
+                background: "linear-gradient(160deg, hsl(168,42%,8%), hsl(168,32%,5%))",
+                borderColor: "rgba(0,201,167,0.22)",
+                boxShadow: "0 0 52px rgba(0,201,167,0.07)",
+              }}
+            >
+              <div className="h-[3px]"
+                style={{ background: "linear-gradient(90deg, #00c9a7, #38bdf8 60%, transparent)" }} />
+              <div className="flex flex-col items-center gap-6 p-8 lg:p-10 flex-1">
+                {/* Status */}
+                <div className="flex items-center gap-2 self-stretch justify-center">
+                  <span className="w-1.5 h-1.5 rounded-full flex-shrink-0"
+                    style={{ background: "#00c9a7", animation: "node-pulse 1.5s ease-in-out infinite" }} />
+                  <span className="font-mono text-[9px] uppercase tracking-widest"
+                    style={{ color: "rgba(0,201,167,0.6)" }}>Panel activo</span>
+                </div>
+                {/* Icon */}
+                <div className="w-16 h-16 rounded-2xl flex items-center justify-center"
+                  style={{
+                    background: "rgba(0,201,167,0.08)",
+                    border: "1px solid rgba(0,201,167,0.2)",
+                    boxShadow: "0 0 40px rgba(0,201,167,0.12)",
+                  }}>
+                  <LogIn className="w-7 h-7" style={{ color: "#00c9a7" }} />
+                </div>
+                {/* Text */}
+                <div className="text-center">
+                  <h4 className="text-white font-black text-xl leading-tight mb-3">
+                    Acceder<br />al sistema
+                  </h4>
+                  <p className="text-white/42 text-xs leading-relaxed max-w-[175px] mx-auto">
+                    Datos en tiempo real de los tres sensores, historial de misiones y visualizaciones georreferenciadas.
+                  </p>
+                </div>
+                {/* CTA */}
+                <span
+                  className="mt-auto inline-flex items-center gap-2 px-6 py-2.5 rounded-full text-sm font-semibold transition-all duration-300 group-hover:shadow-lg"
+                  style={{
+                    background: "rgba(0,201,167,0.1)",
+                    border: "1px solid rgba(0,201,167,0.28)",
+                    color: "#00c9a7",
+                  }}
+                >
+                  <LogIn className="w-3.5 h-3.5" />
+                  Entrar al panel
                 </span>
-                <div className="h-px flex-1 bg-white/[0.06]" />
+              </div>
+              <div className="h-px mx-8 mb-0"
+                style={{ background: "linear-gradient(90deg, transparent, rgba(0,201,167,0.18), transparent)" }} />
+            </a>
+
+            {/* ── LEFT connector ── */}
+            <div className="hidden lg:flex items-center flex-shrink-0 w-10">
+              <div className="relative w-full h-px" style={{ background: "rgba(0,201,167,0.15)" }}>
+                <div
+                  className="absolute top-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full"
+                  style={{
+                    background: "#00c9a7",
+                    boxShadow: "0 0 8px 4px rgba(0,201,167,0.45)",
+                    animation: "access-flow 2.8s linear infinite",
+                  }}
+                />
+              </div>
+            </div>
+
+            {/* ── CENTER: Pitch video + channel CTA ── */}
+            <div className="flex-shrink-0 w-full lg:w-64 xl:w-72 flex flex-col">
+
+              {/* Pitch label */}
+              <div className="flex items-center gap-2 mb-3 justify-center">
+                <div className="h-px w-8" style={{ background: "rgba(0,201,167,0.22)" }} />
+                <span className="font-mono text-[9px] uppercase tracking-[0.28em]"
+                  style={{ color: "rgba(0,201,167,0.45)" }}>
+                  M.A.N.G.O. · Pitch
+                </span>
+                <div className="h-px w-8" style={{ background: "rgba(0,201,167,0.22)" }} />
               </div>
 
-              {/* 9:16 portrait embed */}
+              {/* Video — 9:16 portrait with broadcast marks */}
               <div
-                className="relative rounded-2xl overflow-hidden"
+                className="relative rounded-2xl overflow-hidden flex-shrink-0"
                 style={{
                   aspectRatio: "9/16",
-                  border: "1px solid rgba(0,201,167,0.22)",
-                  boxShadow: "0 0 64px rgba(0,201,167,0.12), 0 32px 80px rgba(0,0,0,0.6)",
+                  border: "1px solid rgba(0,201,167,0.2)",
+                  boxShadow: "0 0 64px rgba(0,201,167,0.14), 0 32px 80px rgba(0,0,0,0.65)",
                 }}
               >
                 <iframe
@@ -1976,142 +2052,119 @@ export function ProjectSection() {
                   loading="lazy"
                   className="absolute inset-0 w-full h-full border-0"
                 />
+                {/* Corner registration marks */}
+                <div className="absolute top-2.5 left-2.5 w-4 h-4 border-t-2 border-l-2 pointer-events-none"
+                  style={{ borderColor: "rgba(0,201,167,0.6)" }} />
+                <div className="absolute top-2.5 right-2.5 w-4 h-4 border-t-2 border-r-2 pointer-events-none"
+                  style={{ borderColor: "rgba(0,201,167,0.6)" }} />
+                <div className="absolute bottom-2.5 left-2.5 w-4 h-4 border-b-2 border-l-2 pointer-events-none"
+                  style={{ borderColor: "rgba(0,201,167,0.6)" }} />
+                <div className="absolute bottom-2.5 right-2.5 w-4 h-4 border-b-2 border-r-2 pointer-events-none"
+                  style={{ borderColor: "rgba(0,201,167,0.6)" }} />
+                {/* REC badge */}
+                <div
+                  className="absolute top-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5 px-2 py-0.5 rounded-full pointer-events-none"
+                  style={{ background: "rgba(0,0,0,0.68)", backdropFilter: "blur(6px)" }}
+                >
+                  <span className="w-1.5 h-1.5 rounded-full bg-red-500"
+                    style={{ animation: "node-pulse 1s ease-in-out infinite" }} />
+                  <span className="font-mono text-[8px] uppercase tracking-widest text-white/55">Rec</span>
+                </div>
               </div>
 
-              {/* Channel link below video */}
-              <div className="mt-5 flex justify-center">
+              {/* Channel CTA — broadcast lower-third */}
+              <div className="mt-4 p-4 rounded-xl border"
+                style={{ background: "rgba(239,68,68,0.06)", borderColor: "rgba(239,68,68,0.14)" }}>
                 <a
                   href="https://youtube.com/playlist?list=PLihEHjHiZwltNIlYLmrEdUG3jRNTNPq0M"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="group inline-flex items-center gap-2"
+                  className="group flex items-center gap-3"
                 >
-                  <svg
-                    className="w-3.5 h-3.5 text-red-400/55 group-hover:text-red-400 transition-colors"
-                    viewBox="0 0 24 24" fill="currentColor" aria-hidden
+                  <div
+                    className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
+                    style={{ background: "rgba(239,68,68,0.12)", border: "1px solid rgba(239,68,68,0.2)" }}
                   >
-                    <path d="M23.5 6.19a3.02 3.02 0 0 0-2.12-2.14C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.38.55A3.02 3.02 0 0 0 .5 6.19 31.6 31.6 0 0 0 0 12a31.6 31.6 0 0 0 .5 5.81 3.02 3.02 0 0 0 2.12 2.14c1.88.55 9.38.55 9.38.55s7.5 0 9.38-.55a3.02 3.02 0 0 0 2.12-2.14A31.6 31.6 0 0 0 24 12a31.6 31.6 0 0 0-.5-5.81zM9.75 15.02V8.98L15.5 12l-5.75 3.02z" />
-                  </svg>
-                  <span className="font-mono text-[10px] uppercase tracking-widest text-red-400/55 group-hover:text-red-400 transition-colors">
-                    Ver canal completo en YouTube
-                  </span>
-                  <ExternalLink className="w-3 h-3 text-red-400/40 group-hover:text-red-400 transition-colors" />
+                    <svg className="w-4 h-4 text-red-400" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+                      <path d="M23.5 6.19a3.02 3.02 0 0 0-2.12-2.14C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.38.55A3.02 3.02 0 0 0 .5 6.19 31.6 31.6 0 0 0 0 12a31.6 31.6 0 0 0 .5 5.81 3.02 3.02 0 0 0 2.12 2.14c1.88.55 9.38.55 9.38.55s7.5 0 9.38-.55a3.02 3.02 0 0 0 2.12-2.14A31.6 31.6 0 0 0 24 12a31.6 31.6 0 0 0-.5-5.81zM9.75 15.02V8.98L15.5 12l-5.75 3.02z" />
+                    </svg>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-mono text-[8px] uppercase tracking-widest text-red-400/50 mb-0.5">Canal oficial</p>
+                    <p className="text-white/75 text-sm font-semibold group-hover:text-white transition-colors leading-tight">
+                      Ver todos los videos →
+                    </p>
+                  </div>
+                  <ExternalLink className="w-3.5 h-3.5 text-red-400/35 group-hover:text-red-400 transition-colors flex-shrink-0" />
                 </a>
               </div>
             </div>
 
-            {/* ── Right: three horizontal access cards ── */}
-            <div className="flex-1 flex flex-col gap-4 min-w-0 w-full lg:pt-10">
-
-              {/* Login — primary */}
-              <a
-                href="/login"
-                className="group flex items-center gap-5 p-5 rounded-2xl border transition-all duration-300 relative overflow-hidden"
-                style={{
-                  background: "linear-gradient(135deg, hsl(168,40%,8%), hsl(168,30%,5%))",
-                  borderColor: "rgba(0,201,167,0.25)",
-                  boxShadow: "0 0 40px rgba(0,201,167,0.07)",
-                }}
-              >
-                {/* Hover glow */}
+            {/* ── RIGHT connector ── */}
+            <div className="hidden lg:flex items-center flex-shrink-0 w-10">
+              <div className="relative w-full h-px" style={{ background: "rgba(167,139,250,0.15)" }}>
                 <div
-                  className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
-                  style={{ background: "radial-gradient(ellipse 70% 90% at 0% 50%, rgba(0,201,167,0.07), transparent)" }}
+                  className="absolute top-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full"
+                  style={{
+                    background: "#a78bfa",
+                    boxShadow: "0 0 8px 4px rgba(167,139,250,0.45)",
+                    animation: "access-flow 2.8s 1.4s linear infinite",
+                  }}
                 />
-                {/* Left accent bar */}
-                <div className="absolute left-0 top-0 bottom-0 w-[3px] rounded-l-2xl"
-                  style={{ background: "linear-gradient(180deg, #00c9a7, #38bdf8)" }} />
+              </div>
+            </div>
+
+            {/* ── RIGHT: Request card ── */}
+            <a
+              href="#contacto"
+              className="group flex-1 flex flex-col rounded-2xl overflow-hidden border border-white/[0.07] hover:border-[#a78bfa]/25 transition-all duration-300"
+              style={{ background: "linear-gradient(160deg, hsl(265,35%,8%), hsl(265,25%,5%))" }}
+            >
+              <div className="h-[3px]"
+                style={{ background: "linear-gradient(90deg, #a78bfa, #a78bfa20 60%, transparent)" }} />
+              <div className="flex flex-col items-center gap-6 p-8 lg:p-10 flex-1">
+                {/* Label */}
+                <div className="flex items-center gap-2 justify-center">
+                  <span className="font-mono text-[9px] uppercase tracking-widest"
+                    style={{ color: "rgba(167,139,250,0.55)" }}>
+                    Investigadores · Instituciones
+                  </span>
+                </div>
                 {/* Icon */}
-                <div
-                  className="relative w-12 h-12 rounded-xl flex-shrink-0 flex items-center justify-center"
-                  style={{ background: "rgba(0,201,167,0.1)", border: "1px solid rgba(0,201,167,0.25)" }}
-                >
-                  <LogIn className="w-5 h-5" style={{ color: "#00c9a7" }} />
+                <div className="w-16 h-16 rounded-2xl flex items-center justify-center"
+                  style={{
+                    background: "rgba(167,139,250,0.08)",
+                    border: "1px solid rgba(167,139,250,0.2)",
+                    boxShadow: "0 0 40px rgba(167,139,250,0.1)",
+                  }}>
+                  <Mail className="w-7 h-7" style={{ color: "#a78bfa" }} />
                 </div>
                 {/* Text */}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-0.5">
-                    <p className="font-mono text-[9px] uppercase tracking-widest" style={{ color: "rgba(0,201,167,0.55)" }}>
-                      Acceso directo
-                    </p>
-                    <span
-                      className="flex items-center gap-1 px-1.5 py-0.5 rounded-full"
-                      style={{ background: "rgba(0,201,167,0.1)", border: "1px solid rgba(0,201,167,0.2)" }}
-                    >
-                      <span className="w-1 h-1 rounded-full"
-                        style={{ background: "#00c9a7", animation: "node-pulse 1.5s ease-in-out infinite" }} />
-                      <span className="font-mono text-[8px] uppercase tracking-widest" style={{ color: "#00c9a7" }}>Live</span>
-                    </span>
-                  </div>
-                  <h4 className="text-white font-bold text-base">Acceder al sistema</h4>
-                  <p className="text-white/42 text-xs leading-relaxed mt-1">
-                    Panel de datos en tiempo real con lecturas de los tres sensores, historial de misiones y visualizaciones georreferenciadas.
+                <div className="text-center">
+                  <h4 className="text-white font-black text-xl leading-tight mb-3">
+                    Solicitar<br />acceso
+                  </h4>
+                  <p className="text-white/42 text-xs leading-relaxed max-w-[175px] mx-auto">
+                    Acceso disponible para instituciones de investigación y organizaciones de monitoreo ambiental.
                   </p>
                 </div>
-                <div className="flex-shrink-0 font-mono text-lg text-white/22 group-hover:text-[#00c9a7] transition-colors">→</div>
-              </a>
-
-              {/* YouTube playlist */}
-              <a
-                href="https://youtube.com/playlist?list=PLihEHjHiZwltNIlYLmrEdUG3jRNTNPq0M"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group flex items-center gap-5 p-5 rounded-2xl border border-white/[0.07] hover:border-red-500/22 transition-all duration-300 relative overflow-hidden"
-                style={{ background: "linear-gradient(135deg, hsl(0,38%,7%), hsl(0,28%,5%))" }}
-              >
-                <div
-                  className="absolute left-0 top-0 bottom-0 w-[3px] rounded-l-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                  style={{ background: "#ef4444" }}
-                />
-                <div
-                  className="relative w-12 h-12 rounded-xl flex-shrink-0 flex items-center justify-center"
-                  style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.2)" }}
+                {/* CTA */}
+                <span
+                  className="mt-auto inline-flex items-center gap-2 px-6 py-2.5 rounded-full text-sm font-semibold transition-all duration-300 group-hover:shadow-lg"
+                  style={{
+                    background: "rgba(167,139,250,0.09)",
+                    border: "1px solid rgba(167,139,250,0.26)",
+                    color: "#a78bfa",
+                  }}
                 >
-                  <svg className="w-5 h-5 text-red-400" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-                    <path d="M23.5 6.19a3.02 3.02 0 0 0-2.12-2.14C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.38.55A3.02 3.02 0 0 0 .5 6.19 31.6 31.6 0 0 0 0 12a31.6 31.6 0 0 0 .5 5.81 3.02 3.02 0 0 0 2.12 2.14c1.88.55 9.38.55 9.38.55s7.5 0 9.38-.55a3.02 3.02 0 0 0 2.12-2.14A31.6 31.6 0 0 0 24 12a31.6 31.6 0 0 0-.5-5.81zM9.75 15.02V8.98L15.5 12l-5.75 3.02z" />
-                  </svg>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="font-mono text-[9px] uppercase tracking-widest mb-0.5 text-red-400/50">Canal de documentación</p>
-                  <h4 className="text-white font-bold text-base">Playlist completa en YouTube</h4>
-                  <p className="text-white/42 text-xs leading-relaxed mt-1">
-                    Registro en video de cada misión, prueba de componentes y despliegue de campo — desde el laboratorio hasta el ecosistema.
-                  </p>
-                </div>
-                <div className="flex-shrink-0 text-white/22 group-hover:text-red-400 transition-colors">
-                  <ExternalLink className="w-4 h-4" />
-                </div>
-              </a>
+                  <Mail className="w-3.5 h-3.5" />
+                  Ir a contacto
+                </span>
+              </div>
+              <div className="h-px mx-8"
+                style={{ background: "linear-gradient(90deg, transparent, rgba(167,139,250,0.16), transparent)" }} />
+            </a>
 
-              {/* Request access */}
-              <a
-                href="#contacto"
-                className="group flex items-center gap-5 p-5 rounded-2xl border border-white/[0.07] hover:border-[#a78bfa]/22 transition-all duration-300 relative overflow-hidden"
-                style={{ background: "linear-gradient(135deg, hsl(265,32%,8%), hsl(265,22%,5%))" }}
-              >
-                <div
-                  className="absolute left-0 top-0 bottom-0 w-[3px] rounded-l-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                  style={{ background: "#a78bfa" }}
-                />
-                <div
-                  className="relative w-12 h-12 rounded-xl flex-shrink-0 flex items-center justify-center"
-                  style={{ background: "rgba(167,139,250,0.1)", border: "1px solid rgba(167,139,250,0.2)" }}
-                >
-                  <Mail className="w-5 h-5" style={{ color: "#a78bfa" }} />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="font-mono text-[9px] uppercase tracking-widest mb-0.5" style={{ color: "rgba(167,139,250,0.5)" }}>
-                    Investigadores · Instituciones
-                  </p>
-                  <h4 className="text-white font-bold text-base">Solicitar acceso</h4>
-                  <p className="text-white/42 text-xs leading-relaxed mt-1">
-                    Acceso disponible para instituciones de investigación y organizaciones de monitoreo ambiental. Escríbenos para coordinarlo.
-                  </p>
-                </div>
-                <div className="flex-shrink-0 font-mono text-lg text-white/22 group-hover:text-[#a78bfa] transition-colors">↓</div>
-              </a>
-
-            </div>
           </div>
 
           {/* ── Closing note ── */}
