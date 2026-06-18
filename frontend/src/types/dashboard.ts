@@ -1,10 +1,12 @@
 // Sensor state model for UI rendering
 export type SensorState =
   | "loading"
+  | "standby"          // no active mission — device not deployed
+  | "armed"            // mission ARMED / BOOT — about to deploy
   | "no-data"          // no readings in DB
-  | "has-data"         // device online, sending data < 5 min ago
-  | "stale"            // data 5 min–1 h old: device was on, now quiet
-  | "offline"          // data > 1 h old: device off / out of field
+  | "has-data"         // device in field, data < 5 min old
+  | "stale"            // device in field, data 5 min–1 h old
+  | "offline"          // device in field, data > 1 h / mission ending
   | "error"
   | "disconnected"     // legacy alias for offline
   | "needs_calibration"
