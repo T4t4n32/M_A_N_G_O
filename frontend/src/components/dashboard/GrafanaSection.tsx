@@ -34,10 +34,10 @@ const BUILTIN_PANELS = [
 ] as const;
 
 const TIME_RANGES = [
-  { label: "1 h",  from: "now-1h"  },
-  { label: "6 h",  from: "now-6h"  },
-  { label: "24 h", from: "now-24h" },
-  { label: "7 d",  from: "now-7d"  },
+  { label: "7 d",  from: "now-7d"   },
+  { label: "30 d", from: "now-30d"  },
+  { label: "90 d", from: "now-90d"  },
+  { label: "6 m",  from: "now-180d" },
 ] as const;
 
 const REFRESH_OPTIONS = [
@@ -129,7 +129,7 @@ function PanelFrame({
 // ── Main component ────────────────────────────────────────────────────────────
 
 export function GrafanaSection() {
-  const [timeRange, setTimeRange]   = useState(TIME_RANGES[0]);
+  const [timeRange, setTimeRange]   = useState(TIME_RANGES[3]); // 6 m — shows seed data
   const [refresh,   setRefresh]     = useState(REFRESH_OPTIONS[0]);
   const [showAdd,   setShowAdd]     = useState(false);
   const [custom,    setCustom]      = useState<CustomPanel[]>(loadCustom);
@@ -157,10 +157,9 @@ export function GrafanaSection() {
       {/* ── Header bar ──────────────────────────────────────────────── */}
       <div className="flex flex-wrap items-center gap-2 rounded-xl border border-[hsl(168,72%,42%/0.2)] bg-[hsl(168,72%,42%/0.05)] px-4 py-3">
 
-        {/* Live indicator + open link */}
+        {/* Header label */}
         <div className="flex items-center gap-2.5 flex-1 min-w-0">
           <span className="relative flex h-2 w-2 shrink-0">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[hsl(168,72%,42%)] opacity-60" />
             <span className="relative inline-flex rounded-full h-2 w-2 bg-[hsl(168,72%,42%)]" />
           </span>
           <p className="text-xs font-semibold text-[hsl(168,72%,60%)] truncate">

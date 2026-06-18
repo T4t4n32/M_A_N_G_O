@@ -175,7 +175,7 @@ def readings_history():
     internal_type = _INTERNAL_ALIAS.get(sensor_type, sensor_type)
 
     try:
-        minutes = max(1, min(int(request.args.get("minutes", 60)), 60 * 24 * 14))
+        minutes = max(1, min(int(request.args.get("minutes", 60)), 60 * 24 * 180))
     except (TypeError, ValueError):
         minutes = 60
     try:

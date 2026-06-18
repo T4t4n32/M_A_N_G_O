@@ -93,27 +93,30 @@ export function SensorCard({ type, state, reading, alertLevel = "normal", onRetr
           </div>
         )}
 
-        {state === "has-data" && reading && (
-          <div>
+        {(state === "has-data" || state === "stale" || state === "offline") && reading && (
+          <div className={
+            state === "offline" ? "opacity-55" :
+            state === "stale"   ? "opacity-80" :
+            ""
+          }>
             <div className="flex items-center gap-2">
               <p className="text-[2.5rem] font-mono font-extrabold tracking-tight leading-none">
                 {reading.value.toFixed(2)}
                 <span className="text-base font-normal text-white/40 ml-1.5">{reading.unit}</span>
               </p>
-              {alertLevel === "critical" && (
+              {state === "has-data" && alertLevel === "critical" && (
                 <OctagonX className="h-5 w-5 text-[hsl(var(--alert-critical))] shrink-0" />
               )}
-              {alertLevel === "warning" && (
+              {state === "has-data" && alertLevel === "warning" && (
                 <AlertTriangle className="h-4 w-4 text-[hsl(var(--alert-warning))] shrink-0" />
               )}
-              {alertLevel === "normal" && (
+              {state === "has-data" && alertLevel === "normal" && (
                 <CheckCircle2 className="h-4 w-4 text-[hsl(var(--alert-normal))] shrink-0" />
               )}
             </div>
             <p className="text-xs text-white/30 mt-2">
               {new Date(reading.timestamp).toLocaleString("es-ES")}
             </p>
-            {/* Range bar */}
             <div className="mt-3">
               <RangeBar
                 value={reading.value}
@@ -175,23 +178,27 @@ export function SensorCard({ type, state, reading, alertLevel = "normal", onRetr
 
 function StateLabel({ state }: { state: SensorState }) {
   const labels: Record<SensorState, string> = {
-    loading: "Cargando…",
-    "no-data": "Sin datos",
-    "has-data": "Último registro",
-    error: "Error",
-    disconnected: "Desconectado",
+    loading:           "Cargando…",
+    "no-data":         "Apagado",
+    "has-data":        "Operativo",
+    stale:             "Encendido",
+    offline:           "Fuera de operación",
+    error:             "Error",
+    disconnected:      "Fuera de operación",
     needs_calibration: "Calibración",
-    hardware_issue: "Hardware",
+    hardware_issue:    "Hardware",
   };
 
   const colors: Record<SensorState, string> = {
-    loading: "text-muted",
-    "no-data": "text-muted",
-    "has-data": "text-primary",
-    error: "text-destructive",
-    disconnected: "text-muted",
+    loading:           "text-muted",
+    "no-data":         "text-white/30",
+    "has-data":        "text-primary",
+    stale:             "text-amber-400",
+    offline:           "text-white/35",
+    error:             "text-destructive",
+    disconnected:      "text-white/35",
     needs_calibration: "text-accent-foreground",
-    hardware_issue: "text-destructive",
+    hardware_issue:    "text-destructive",
   };
 
   return <p className={`text-[11px] font-medium ${colors[state]}`}>{labels[state]}</p>;
@@ -199,19 +206,24 @@ function StateLabel({ state }: { state: SensorState }) {
 
 function StateIndicator({ state }: { state: SensorState }) {
   const colors: Record<SensorState, string> = {
-    loading: "bg-muted",
-    "no-data": "bg-muted",
-    "has-data": "bg-primary",
-    error: "bg-destructive",
-    disconnected: "bg-muted",
+    loading:           "bg-muted",
+    "no-data":         "bg-white/20",
+    "has-data":        "bg-primary",
+    stale:             "bg-amber-400",
+    offline:           "bg-white/25",
+    error:             "bg-destructive",
+    disconnected:      "bg-white/25",
     needs_calibration: "bg-accent-foreground",
-    hardware_issue: "bg-destructive",
+    hardware_issue:    "bg-destructive",
   };
 
   return (
     <span className="relative flex h-3 w-3">
       {state === "loading" && (
         <span className={`absolute inline-flex h-full w-full rounded-full ${colors[state]} opacity-40 animate-ping`} />
+      )}
+      {state === "has-data" && (
+        <span className={`absolute inline-flex h-full w-full rounded-full ${colors[state]} opacity-40 animate-pulse`} />
       )}
       <span className={`relative inline-flex rounded-full h-3 w-3 ${colors[state]}`} />
     </span>
