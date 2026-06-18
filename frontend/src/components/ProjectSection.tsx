@@ -1889,10 +1889,6 @@ export function ProjectSection() {
       {/* ── 07 ACCESO ───────────────────────────────────────────────────── */}
       <div className="relative py-28 border-t border-white/[0.06] overflow-hidden">
         <style>{`
-          @keyframes ring-expand {
-            0%   { transform: scale(0.75); opacity: 0.6; }
-            100% { transform: scale(2);    opacity: 0; }
-          }
           @keyframes node-pulse {
             0%, 100% { opacity: 1; }
             50%       { opacity: 0.45; }
@@ -1902,7 +1898,7 @@ export function ProjectSection() {
         {/* Ambient */}
         <div className="absolute inset-0 pointer-events-none" aria-hidden>
           <div className="absolute inset-0"
-            style={{ background: "radial-gradient(ellipse 65% 55% at 50% 30%, rgba(0,201,167,0.07), transparent)" }} />
+            style={{ background: "radial-gradient(ellipse 65% 55% at 50% 30%, rgba(0,201,167,0.06), transparent)" }} />
           <div className="absolute inset-0"
             style={{ background: "radial-gradient(ellipse 40% 40% at 15% 80%, rgba(167,139,250,0.04), transparent)" }} />
           <div className="absolute inset-0"
@@ -1912,7 +1908,7 @@ export function ProjectSection() {
         <div className="relative max-w-7xl mx-auto px-6 lg:px-8">
 
           {/* ── Header ── */}
-          <div className="text-center mb-14">
+          <div className="text-center mb-16">
             <div className="inline-flex items-center gap-3 mb-5">
               <div className="h-px w-14 bg-[hsl(168,72%,42%)]/30" />
               <span className="font-mono text-[hsl(168,72%,55%)] text-xs tracking-[0.35em] uppercase">07 — Acceso al Panel</span>
@@ -1948,185 +1944,174 @@ export function ProjectSection() {
             </p>
           </div>
 
-          {/* ── Pulse signal visualization ── */}
-          <div className="flex justify-center mb-16" aria-hidden>
-            <div className="relative" style={{ width: "160px", height: "160px" }}>
-              {/* Expanding rings */}
-              {[0, 1, 2].map(i => (
-                <div
-                  key={i}
-                  className="absolute inset-0 rounded-full border"
-                  style={{
-                    borderColor: "rgba(0,201,167,0.35)",
-                    animation: `ring-expand 3s ${i * 1}s ease-out infinite`,
-                  }}
-                />
-              ))}
-              {/* Static inner ring */}
-              <div className="absolute inset-5 rounded-full border border-white/[0.05]" />
-              {/* Center node */}
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div
-                  className="w-14 h-14 rounded-full flex items-center justify-center"
-                  style={{
-                    background: "hsl(212,32%,6%)",
-                    border: "1px solid rgba(0,201,167,0.32)",
-                    boxShadow: "0 0 36px rgba(0,201,167,0.14)",
-                  }}
-                >
-                  <svg viewBox="0 0 32 32" className="w-7 h-7" fill="none">
-                    <path
-                      d="M4 16 Q7 8 10 16 Q13 24 16 16 Q19 8 22 16 Q25 24 28 16"
-                      stroke="#00c9a7" strokeWidth="2" strokeLinecap="round"
-                    />
-                  </svg>
-                </div>
+          {/* ── Body: pitch video (left) + access cards (right) ── */}
+          <div className="flex flex-col lg:flex-row gap-10 xl:gap-16 items-start mb-14">
+
+            {/* ── Left: Pitch video ── */}
+            <div className="w-full max-w-[320px] mx-auto lg:mx-0 flex-shrink-0">
+
+              {/* Label */}
+              <div className="flex items-center gap-3 mb-4">
+                <div className="h-px flex-1 bg-white/[0.06]" />
+                <span className="font-mono text-[9px] uppercase tracking-[0.25em] text-white/28">
+                  Presentación oficial
+                </span>
+                <div className="h-px flex-1 bg-white/[0.06]" />
               </div>
-              {/* Three sensor-color orbit nodes */}
-              {([
-                { angle: 270, color: "#00c9a7", delay: "0s"   },
-                { angle:  30, color: "#38bdf8", delay: "0.7s" },
-                { angle: 150, color: "#fbbf24", delay: "1.4s" },
-              ] as const).map(({ angle, color, delay }) => {
-                const r = 68, rad = (angle * Math.PI) / 180;
-                const x = 80 + r * Math.cos(rad);
-                const y = 80 + r * Math.sin(rad);
-                return (
-                  <div
-                    key={angle}
-                    className="absolute w-3 h-3 rounded-full"
-                    style={{
-                      left: `${x}px`, top: `${y}px`,
-                      transform: "translate(-50%, -50%)",
-                      background: color,
-                      boxShadow: `0 0 8px 3px ${color}55`,
-                      animation: `node-pulse 2s ${delay} ease-in-out infinite`,
-                    }}
-                  />
-                );
-              })}
-            </div>
-          </div>
 
-          {/* ── Three access paths ── */}
-          <div className="grid md:grid-cols-3 gap-4 mb-12">
+              {/* 9:16 portrait embed */}
+              <div
+                className="relative rounded-2xl overflow-hidden"
+                style={{
+                  aspectRatio: "9/16",
+                  border: "1px solid rgba(0,201,167,0.22)",
+                  boxShadow: "0 0 64px rgba(0,201,167,0.12), 0 32px 80px rgba(0,0,0,0.6)",
+                }}
+              >
+                <iframe
+                  src="https://www.youtube.com/embed/Z6yhP-sv_x0?rel=0&modestbranding=1&color=white"
+                  title="M.A.N.G.O. — Presentación del proyecto"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  allowFullScreen
+                  loading="lazy"
+                  className="absolute inset-0 w-full h-full border-0"
+                />
+              </div>
 
-            {/* YouTube — documentation */}
-            <a
-              href="https://youtube.com/playlist?list=PLihEHjHiZwltNIlYLmrEdUG3jRNTNPq0M"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="group rounded-2xl overflow-hidden border border-white/[0.07] hover:border-red-500/30 transition-all duration-300 flex flex-col"
-              style={{ background: "linear-gradient(170deg, hsl(0,40%,7%), hsl(0,30%,5%))" }}
-            >
-              <div className="h-[3px]"
-                style={{ background: "linear-gradient(90deg, #ef4444, #ef444420 70%, transparent)" }} />
-              <div className="p-7 flex flex-col flex-1">
-                <div
-                  className="w-12 h-12 rounded-xl flex items-center justify-center mb-5"
-                  style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.22)" }}
+              {/* Channel link below video */}
+              <div className="mt-5 flex justify-center">
+                <a
+                  href="https://youtube.com/playlist?list=PLihEHjHiZwltNIlYLmrEdUG3jRNTNPq0M"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group inline-flex items-center gap-2"
                 >
-                  <svg className="w-6 h-6 text-red-400" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+                  <svg
+                    className="w-3.5 h-3.5 text-red-400/55 group-hover:text-red-400 transition-colors"
+                    viewBox="0 0 24 24" fill="currentColor" aria-hidden
+                  >
+                    <path d="M23.5 6.19a3.02 3.02 0 0 0-2.12-2.14C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.38.55A3.02 3.02 0 0 0 .5 6.19 31.6 31.6 0 0 0 0 12a31.6 31.6 0 0 0 .5 5.81 3.02 3.02 0 0 0 2.12 2.14c1.88.55 9.38.55 9.38.55s7.5 0 9.38-.55a3.02 3.02 0 0 0 2.12-2.14A31.6 31.6 0 0 0 24 12a31.6 31.6 0 0 0-.5-5.81zM9.75 15.02V8.98L15.5 12l-5.75 3.02z" />
+                  </svg>
+                  <span className="font-mono text-[10px] uppercase tracking-widest text-red-400/55 group-hover:text-red-400 transition-colors">
+                    Ver canal completo en YouTube
+                  </span>
+                  <ExternalLink className="w-3 h-3 text-red-400/40 group-hover:text-red-400 transition-colors" />
+                </a>
+              </div>
+            </div>
+
+            {/* ── Right: three horizontal access cards ── */}
+            <div className="flex-1 flex flex-col gap-4 min-w-0 w-full lg:pt-10">
+
+              {/* Login — primary */}
+              <a
+                href="/login"
+                className="group flex items-center gap-5 p-5 rounded-2xl border transition-all duration-300 relative overflow-hidden"
+                style={{
+                  background: "linear-gradient(135deg, hsl(168,40%,8%), hsl(168,30%,5%))",
+                  borderColor: "rgba(0,201,167,0.25)",
+                  boxShadow: "0 0 40px rgba(0,201,167,0.07)",
+                }}
+              >
+                {/* Hover glow */}
+                <div
+                  className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
+                  style={{ background: "radial-gradient(ellipse 70% 90% at 0% 50%, rgba(0,201,167,0.07), transparent)" }}
+                />
+                {/* Left accent bar */}
+                <div className="absolute left-0 top-0 bottom-0 w-[3px] rounded-l-2xl"
+                  style={{ background: "linear-gradient(180deg, #00c9a7, #38bdf8)" }} />
+                {/* Icon */}
+                <div
+                  className="relative w-12 h-12 rounded-xl flex-shrink-0 flex items-center justify-center"
+                  style={{ background: "rgba(0,201,167,0.1)", border: "1px solid rgba(0,201,167,0.25)" }}
+                >
+                  <LogIn className="w-5 h-5" style={{ color: "#00c9a7" }} />
+                </div>
+                {/* Text */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-0.5">
+                    <p className="font-mono text-[9px] uppercase tracking-widest" style={{ color: "rgba(0,201,167,0.55)" }}>
+                      Acceso directo
+                    </p>
+                    <span
+                      className="flex items-center gap-1 px-1.5 py-0.5 rounded-full"
+                      style={{ background: "rgba(0,201,167,0.1)", border: "1px solid rgba(0,201,167,0.2)" }}
+                    >
+                      <span className="w-1 h-1 rounded-full"
+                        style={{ background: "#00c9a7", animation: "node-pulse 1.5s ease-in-out infinite" }} />
+                      <span className="font-mono text-[8px] uppercase tracking-widest" style={{ color: "#00c9a7" }}>Live</span>
+                    </span>
+                  </div>
+                  <h4 className="text-white font-bold text-base">Acceder al sistema</h4>
+                  <p className="text-white/42 text-xs leading-relaxed mt-1">
+                    Panel de datos en tiempo real con lecturas de los tres sensores, historial de misiones y visualizaciones georreferenciadas.
+                  </p>
+                </div>
+                <div className="flex-shrink-0 font-mono text-lg text-white/22 group-hover:text-[#00c9a7] transition-colors">→</div>
+              </a>
+
+              {/* YouTube playlist */}
+              <a
+                href="https://youtube.com/playlist?list=PLihEHjHiZwltNIlYLmrEdUG3jRNTNPq0M"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group flex items-center gap-5 p-5 rounded-2xl border border-white/[0.07] hover:border-red-500/22 transition-all duration-300 relative overflow-hidden"
+                style={{ background: "linear-gradient(135deg, hsl(0,38%,7%), hsl(0,28%,5%))" }}
+              >
+                <div
+                  className="absolute left-0 top-0 bottom-0 w-[3px] rounded-l-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                  style={{ background: "#ef4444" }}
+                />
+                <div
+                  className="relative w-12 h-12 rounded-xl flex-shrink-0 flex items-center justify-center"
+                  style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.2)" }}
+                >
+                  <svg className="w-5 h-5 text-red-400" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
                     <path d="M23.5 6.19a3.02 3.02 0 0 0-2.12-2.14C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.38.55A3.02 3.02 0 0 0 .5 6.19 31.6 31.6 0 0 0 0 12a31.6 31.6 0 0 0 .5 5.81 3.02 3.02 0 0 0 2.12 2.14c1.88.55 9.38.55 9.38.55s7.5 0 9.38-.55a3.02 3.02 0 0 0 2.12-2.14A31.6 31.6 0 0 0 24 12a31.6 31.6 0 0 0-.5-5.81zM9.75 15.02V8.98L15.5 12l-5.75 3.02z" />
                   </svg>
                 </div>
-                <p className="font-mono text-[10px] uppercase tracking-widest mb-2"
-                  style={{ color: "rgba(239,68,68,0.55)" }}>
-                  Canal de documentación
-                </p>
-                <h4 className="text-white font-bold text-lg mb-3 leading-snug">Videos en YouTube</h4>
-                <p className="text-white/48 text-sm leading-relaxed flex-1">
-                  El registro completo del proyecto — pruebas de campo, despliegues en Lago Calima y Rozo, y el sistema funcionando en tiempo real desde cero.
-                </p>
-                <div className="mt-6 flex items-center gap-2 font-mono text-xs text-red-400/60 group-hover:text-red-400 transition-colors">
-                  <span>Ver playlist completa</span>
-                  <ExternalLink className="h-3 w-3" />
+                <div className="flex-1 min-w-0">
+                  <p className="font-mono text-[9px] uppercase tracking-widest mb-0.5 text-red-400/50">Canal de documentación</p>
+                  <h4 className="text-white font-bold text-base">Playlist completa en YouTube</h4>
+                  <p className="text-white/42 text-xs leading-relaxed mt-1">
+                    Registro en video de cada misión, prueba de componentes y despliegue de campo — desde el laboratorio hasta el ecosistema.
+                  </p>
                 </div>
-              </div>
-            </a>
+                <div className="flex-shrink-0 text-white/22 group-hover:text-red-400 transition-colors">
+                  <ExternalLink className="w-4 h-4" />
+                </div>
+              </a>
 
-            {/* Login — primary */}
-            <a
-              href="/login"
-              className="group rounded-2xl overflow-hidden border transition-all duration-300 flex flex-col relative"
-              style={{
-                background: "linear-gradient(170deg, hsl(168,40%,8%), hsl(168,30%,5%))",
-                borderColor: "rgba(0,201,167,0.28)",
-                boxShadow: "0 0 48px rgba(0,201,167,0.07)",
-              }}
-            >
-              <div className="h-[3px]"
-                style={{ background: "linear-gradient(90deg, #00c9a7, #38bdf8 60%, transparent)" }} />
-              {/* Live badge */}
-              <div
-                className="absolute top-4 right-4 flex items-center gap-1.5 px-2.5 py-1 rounded-full"
-                style={{ background: "rgba(0,201,167,0.1)", border: "1px solid rgba(0,201,167,0.22)" }}
+              {/* Request access */}
+              <a
+                href="#contacto"
+                className="group flex items-center gap-5 p-5 rounded-2xl border border-white/[0.07] hover:border-[#a78bfa]/22 transition-all duration-300 relative overflow-hidden"
+                style={{ background: "linear-gradient(135deg, hsl(265,32%,8%), hsl(265,22%,5%))" }}
               >
-                <span
-                  className="w-1.5 h-1.5 rounded-full"
-                  style={{ background: "#00c9a7", animation: "node-pulse 1.5s ease-in-out infinite" }}
+                <div
+                  className="absolute left-0 top-0 bottom-0 w-[3px] rounded-l-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                  style={{ background: "#a78bfa" }}
                 />
-                <span className="font-mono text-[9px] uppercase tracking-widest" style={{ color: "#00c9a7" }}>
-                  Activo
-                </span>
-              </div>
-              <div className="p-7 flex flex-col flex-1">
                 <div
-                  className="w-12 h-12 rounded-xl flex items-center justify-center mb-5"
-                  style={{ background: "rgba(0,201,167,0.1)", border: "1px solid rgba(0,201,167,0.25)" }}
+                  className="relative w-12 h-12 rounded-xl flex-shrink-0 flex items-center justify-center"
+                  style={{ background: "rgba(167,139,250,0.1)", border: "1px solid rgba(167,139,250,0.2)" }}
                 >
-                  <LogIn className="w-6 h-6" style={{ color: "#00c9a7" }} />
+                  <Mail className="w-5 h-5" style={{ color: "#a78bfa" }} />
                 </div>
-                <p className="font-mono text-[10px] uppercase tracking-widest mb-2"
-                  style={{ color: "rgba(0,201,167,0.55)" }}>
-                  Acceso directo
-                </p>
-                <h4 className="text-white font-bold text-lg mb-3 leading-snug">Acceder al sistema</h4>
-                <p className="text-white/48 text-sm leading-relaxed flex-1">
-                  Panel de datos en tiempo real con lecturas de todos los sensores, historial de misiones y visualizaciones georreferenciadas del ecosistema.
-                </p>
-                <div className="mt-6 flex items-center justify-between">
-                  <span className="font-mono text-xs transition-colors"
-                    style={{ color: "rgba(0,201,167,0.65)" }}>
-                    Ir al panel →
-                  </span>
-                  <span className="font-mono text-[9px] text-white/18 uppercase tracking-widest">
-                    Requiere credenciales
-                  </span>
+                <div className="flex-1 min-w-0">
+                  <p className="font-mono text-[9px] uppercase tracking-widest mb-0.5" style={{ color: "rgba(167,139,250,0.5)" }}>
+                    Investigadores · Instituciones
+                  </p>
+                  <h4 className="text-white font-bold text-base">Solicitar acceso</h4>
+                  <p className="text-white/42 text-xs leading-relaxed mt-1">
+                    Acceso disponible para instituciones de investigación y organizaciones de monitoreo ambiental. Escríbenos para coordinarlo.
+                  </p>
                 </div>
-              </div>
-            </a>
+                <div className="flex-shrink-0 font-mono text-lg text-white/22 group-hover:text-[#a78bfa] transition-colors">↓</div>
+              </a>
 
-            {/* Request access */}
-            <a
-              href="#contacto"
-              className="group rounded-2xl overflow-hidden border border-white/[0.07] hover:border-[#a78bfa]/30 transition-all duration-300 flex flex-col"
-              style={{ background: "linear-gradient(170deg, hsl(265,35%,8%), hsl(265,25%,5%))" }}
-            >
-              <div className="h-[3px]"
-                style={{ background: "linear-gradient(90deg, #a78bfa, #a78bfa20 70%, transparent)" }} />
-              <div className="p-7 flex flex-col flex-1">
-                <div
-                  className="w-12 h-12 rounded-xl flex items-center justify-center mb-5"
-                  style={{ background: "rgba(167,139,250,0.1)", border: "1px solid rgba(167,139,250,0.22)" }}
-                >
-                  <Mail className="w-6 h-6" style={{ color: "#a78bfa" }} />
-                </div>
-                <p className="font-mono text-[10px] uppercase tracking-widest mb-2"
-                  style={{ color: "rgba(167,139,250,0.55)" }}>
-                  Investigadores · Instituciones
-                </p>
-                <h4 className="text-white font-bold text-lg mb-3 leading-snug">Solicitar acceso</h4>
-                <p className="text-white/48 text-sm leading-relaxed flex-1">
-                  El acceso al panel está disponible para instituciones de investigación y organizaciones vinculadas al monitoreo ambiental. Escríbenos para coordinarlo.
-                </p>
-                <div className="mt-6 flex items-center gap-2 font-mono text-xs text-[#a78bfa]/60 group-hover:text-[#a78bfa] transition-colors">
-                  <span>Ir a contacto</span>
-                  <span className="opacity-60">↓</span>
-                </div>
-              </div>
-            </a>
-
+            </div>
           </div>
 
           {/* ── Closing note ── */}
