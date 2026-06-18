@@ -177,7 +177,7 @@ function StateLabel({ state }: { state: SensorState }) {
   const labels: Record<SensorState, string> = {
     loading: "Cargando…",
     "no-data": "Sin datos",
-    "has-data": "Operativo",
+    "has-data": "Último registro",
     error: "Error",
     disconnected: "Desconectado",
     needs_calibration: "Calibración",
@@ -210,8 +210,8 @@ function StateIndicator({ state }: { state: SensorState }) {
 
   return (
     <span className="relative flex h-3 w-3">
-      {(state === "has-data" || state === "loading") && (
-        <span className={`absolute inline-flex h-full w-full rounded-full ${colors[state]} opacity-40 ${state === "loading" ? "animate-ping" : "animate-pulse"}`} />
+      {state === "loading" && (
+        <span className={`absolute inline-flex h-full w-full rounded-full ${colors[state]} opacity-40 animate-ping`} />
       )}
       <span className={`relative inline-flex rounded-full h-3 w-3 ${colors[state]}`} />
     </span>
