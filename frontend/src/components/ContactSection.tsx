@@ -16,7 +16,7 @@ import { SiteMediaVisual } from "@/components/SiteMediaVisual";
 export function ContactSection() {
   const { toast } = useToast();
   const heading = useSiteValue("contact.heading", "Contacto");
-  const subheading = useSiteValue("contact.subheading", "¿Tienes preguntas, quieres colaborar o sumarte al proyecto? Escríbenos");
+  const subheading = useSiteValue("contact.subheading", "Para colaboraciones, consultas institucionales o información sobre el proyecto, contáctanos.");
   const infoTitle = useSiteValue("contact.info.title", "Dónde encontrarnos");
   const socialTitle = useSiteValue("contact.social.title", "Síguenos en redes");
   const [form, setForm] = useState({ name: "", email: "", institution: "", message: "" });
@@ -70,10 +70,12 @@ export function ContactSection() {
   };
 
   return (
-    <section id="contacto" className="py-20 md:py-28 bg-mango-dark relative overflow-hidden">
-      {/* Lightweight CSS gradient instead of WebGL */}
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_30%_70%,hsl(168_72%_42%/0.06),transparent_60%)] pointer-events-none" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_80%_80%,hsl(204_70%_53%/0.05),transparent_50%)] pointer-events-none" />
+    <section id="contacto" className="py-20 md:py-28 bg-[hsl(210,38%,6%)] relative overflow-hidden">
+      {/* Top edge definition against AboutSection */}
+      <div className="absolute top-0 left-0 right-0 h-40 bg-gradient-to-b from-[hsl(168,72%,42%)]/[0.04] to-transparent pointer-events-none" />
+      {/* Ambient glows */}
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_30%_70%,hsl(168_72%_42%/0.07),transparent_60%)] pointer-events-none" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_80%_80%,hsl(204_70%_53%/0.06),transparent_50%)] pointer-events-none" />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="text-center mb-14">
           <h2 className="text-3xl md:text-5xl font-extrabold mb-3">
@@ -173,9 +175,9 @@ export function ContactSection() {
               <h3 className="font-bold text-white text-lg mb-4">{socialTitle}</h3>
               <div className="flex gap-3">
                 {[
-                  { icon: Instagram, href: "https://www.instagram.com/32_t4t4n?igsh=MXhhdGpseDM0MjJheg==" },
-                  { icon: Github, href: "https://github.com/T4t4n32/M_A_N_G_O.git" },
-                  { icon: Youtube, href: "https://youtube.com/playlist?list=PLihEHjHiZwltNIlYLmrEdUG3jRNTNPq0M&si=4u1WoJxnbaPwi2dX" },
+                  { icon: Instagram, href: "https://www.instagram.com/32_t4t4n?igsh=MXhhdGpseDM0MjJheg==", label: "Instagram de M.A.N.G.O." },
+                  { icon: Github, href: "https://github.com/T4t4n32/M_A_N_G_O.git", label: "GitHub de M.A.N.G.O." },
+                  { icon: Youtube, href: "https://youtube.com/playlist?list=PLihEHjHiZwltNIlYLmrEdUG3jRNTNPq0M&si=4u1WoJxnbaPwi2dX", label: "Canal de YouTube de M.A.N.G.O." },
                 ].map((s, i) => (
                   <a
                     key={i}
@@ -183,7 +185,7 @@ export function ContactSection() {
                     className="p-3 rounded-xl bg-white/[0.06] border border-white/[0.08] text-white/40 hover:text-[hsl(168,72%,42%)] hover:border-[hsl(168,72%,42%)]/30 hover:shadow-[0_0_15px_hsl(168_72%_42%/0.15)] transition-all duration-300"
                     target="_blank"
                     rel="noopener noreferrer"
-                    aria-label="Social"
+                    aria-label={s.label}
                   >
                     <s.icon className="h-5 w-5" />
                   </a>

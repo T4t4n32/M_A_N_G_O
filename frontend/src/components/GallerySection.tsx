@@ -309,8 +309,9 @@ export function GallerySection() {
   const isVideo = (src: string) => /\.(mp4|webm|ogg|mov)(\?|$)/i.test(src);
 
   return (
-    <section id="galeria" className="py-20 md:py-28 bg-mango-dark relative overflow-hidden">
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_30%_30%,hsl(204_70%_53%/0.06),transparent_50%)]" />
+    <section id="galeria" className="py-20 md:py-28 bg-[hsl(215,40%,7%)] relative overflow-hidden">
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_30%_30%,hsl(204_70%_53%/0.10),transparent_50%)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_75%_70%,hsl(168_72%_42%/0.05),transparent_50%)]" />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="text-center mb-12">
           <h2 className="text-3xl md:text-4xl font-bold"><DecryptedText text="Galería de Registro" speed={40} maxIterations={8} animateOn="view" className="text-white" encryptedClassName="text-accent/40" /></h2>

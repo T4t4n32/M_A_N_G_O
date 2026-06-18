@@ -30,7 +30,7 @@ const bubbleItems = [
   {
     label: "Sobre",
     href: "#sobre",
-    ariaLabel: "Ir a Sobre nosotros",
+    ariaLabel: "Ir a Sobre",
     rotation: 6,
     hoverStyles: { bgColor: "hsl(180, 55%, 42%)", textColor: "#ffffff" },
   },
