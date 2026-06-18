@@ -328,7 +328,7 @@ export default function Dashboard() {
             ))}
           </motion.div>
           <p className="text-[11px] text-white/25 mt-2 text-right">
-            Vista rápida (24 h – 90 d). Para análisis avanzado e intervalos personalizados usa Grafana.
+            Las líneas punteadas indican umbrales de advertencia (amarillo) y crítico (rojo). Para análisis avanzado usa Grafana.
           </p>
         </motion.section>
 
