@@ -1,10 +1,12 @@
 // Sensor state model for UI rendering
 export type SensorState =
   | "loading"
-  | "no-data"
-  | "has-data"
+  | "no-data"          // no readings in DB
+  | "has-data"         // device online, sending data < 5 min ago
+  | "stale"            // data 5 min–1 h old: device was on, now quiet
+  | "offline"          // data > 1 h old: device off / out of field
   | "error"
-  | "disconnected"
+  | "disconnected"     // legacy alias for offline
   | "needs_calibration"
   | "hardware_issue";
 

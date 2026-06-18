@@ -8,10 +8,10 @@ import { useSensorRange } from "@/hooks/useSensorRange";
 import type { SensorType } from "@/types/dashboard";
 
 const RANGE_OPTIONS = [
-  { label: "15 min", minutes: 15 },
-  { label: "1 h", minutes: 60 },
-  { label: "6 h", minutes: 360 },
-  { label: "24 h", minutes: 1440 },
+  { label: "24 h", minutes: 1440   },
+  { label: "7 d",  minutes: 10080  },
+  { label: "30 d", minutes: 43200  },
+  { label: "90 d", minutes: 129600 },
 ];
 
 const CHART_COLORS: Record<SensorType, string> = {
@@ -31,7 +31,7 @@ interface SensorChartProps {
 }
 
 export function SensorChart({ type }: SensorChartProps) {
-  const [minutes, setMinutes] = useState(60);
+  const [minutes, setMinutes] = useState(129600); // default 90 d
   const { series, count, isLoading, isError } = useSensorRange(type, minutes);
   const meta = SENSOR_META[type];
   const Icon = meta.icon;

@@ -313,7 +313,7 @@ export default function Dashboard() {
               </a>
             }
           >
-            Historial — Últimas 24 h
+            Historial de Sensores
           </SectionTitle>
           <motion.div
             className="grid grid-cols-1 lg:grid-cols-3 gap-4"
@@ -328,7 +328,7 @@ export default function Dashboard() {
             ))}
           </motion.div>
           <p className="text-[11px] text-white/25 mt-2 text-right">
-            Vista rápida (15 min – 24 h). Para series históricas y análisis avanzado usa Grafana.
+            Vista rápida (24 h – 90 d). Para análisis avanzado e intervalos personalizados usa Grafana.
           </p>
         </motion.section>
 
