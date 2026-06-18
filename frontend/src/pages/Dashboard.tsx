@@ -7,6 +7,7 @@ import { SystemStatusBar } from "@/components/dashboard/SystemStatusBar";
 import { NotificationsPanel } from "@/components/dashboard/NotificationsPanel";
 import { GrafanaSection } from "@/components/dashboard/GrafanaSection";
 import { MissionPanel } from "@/components/dashboard/MissionPanel";
+import { DataContextBanner } from "@/components/dashboard/DataContextBanner";
 import { docs } from "@/components/DocumentationSection";
 import { TierGate } from "@/components/dashboard/TierGate";
 import { useAuth } from "@/hooks/useAuth";
@@ -221,11 +222,13 @@ export default function Dashboard() {
           initial="hidden"
           animate="show"
           variants={sectionIn}
-          aria-label="Sensores en tiempo real"
+          aria-label="Estado de sensores"
         >
-          <SectionTitle icon={Activity}>Sensores en Tiempo Real</SectionTitle>
+          <SectionTitle icon={Activity}>Estado de Sensores</SectionTitle>
 
-          <TierGate minTier="dataline_high" currentTier={tier} label="Sensores en tiempo real">
+          <DataContextBanner />
+
+          <TierGate minTier="dataline_high" currentTier={tier} label="Estado de sensores">
           <motion.div
             className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"
             variants={stagger}
