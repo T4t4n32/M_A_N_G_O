@@ -130,7 +130,7 @@ export function HeroSection() {
           <EditableField siteKey="hero.titleLine" as="span" className="text-white block">
             {titleLine}
           </EditableField>
-          <span className="flex items-center justify-center gap-2 sm:gap-3 text-[1.15rem] sm:text-3xl md:text-4xl lg:text-5xl font-extrabold mt-3 mb-2 min-h-[3em] sm:min-h-[1.8em] px-2">
+          <span className="flex items-center justify-center gap-2 sm:gap-3 text-[1.15rem] xs:text-xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold mt-3 mb-2 min-h-[3em] sm:min-h-[1.8em] px-2">
             <RotatingText
               texts={["ecosistemas de manglar.", "calidad del agua en tiempo real.", "zonas costeras vulnerables.", "la biodiversidad acuática."]}
               rotationInterval={3000}
@@ -167,7 +167,7 @@ export function HeroSection() {
         >
           <Button
             size="lg"
-            className="relative overflow-hidden bg-gradient-to-r from-[hsl(168,72%,42%)] to-[hsl(204,70%,53%)] text-white rounded-full px-10 text-base font-bold shadow-[0_0_30px_hsl(168_72%_42%/0.35)] hover:shadow-[0_0_50px_hsl(168_72%_42%/0.5)] transition-all duration-500 hover:scale-105 border-0"
+            className="relative overflow-hidden bg-gradient-to-r from-[hsl(168,72%,42%)] to-[hsl(204,70%,53%)] text-white rounded-full px-10 text-base font-semibold shadow-[0_0_30px_hsl(168_72%_42%/0.35)] hover:shadow-[0_0_50px_hsl(168_72%_42%/0.5)] transition-all duration-500 hover:scale-105 border-0"
             onClick={() => document.querySelector("#proyecto")?.scrollIntoView({ behavior: "smooth" })}
           >
             <EditableField siteKey="hero.cta1">{cta1}</EditableField>
@@ -186,7 +186,7 @@ export function HeroSection() {
       <motion.button
         onClick={() => document.querySelector("#proyecto")?.scrollIntoView({ behavior: "smooth" })}
         className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 text-white/40 hover:text-white/70 transition-colors"
-        aria-label="Scroll down"
+        aria-label="Desplazar hacia abajo"
         animate={{ y: [0, 10, 0] }}
         transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
       >

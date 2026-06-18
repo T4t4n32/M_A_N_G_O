@@ -27,9 +27,9 @@ const ContactSection = lazy(() =>
 /** Hairline gradient separator — marks section boundaries without creating a visual gap */
 function SectionLine({ variant = "teal" }: { variant?: "teal" | "blue" | "gold" }) {
   const stop = {
-    teal: "rgba(0,201,167,0.18)",
-    blue: "rgba(56,189,248,0.16)",
-    gold: "rgba(250,204,21,0.14)",
+    teal: "rgba(0,201,167,0.30)",
+    blue: "rgba(56,189,248,0.26)",
+    gold: "rgba(250,204,21,0.24)",
   }[variant];
 
   return (

@@ -27,7 +27,7 @@ export function AboutSection() {
   const contributorsTitle = useSiteValue("about.contributors.title", "Personas clave del proyecto");
   const pillarsDescription = useSiteValue("about.pillars.description", "");
   return (
-    <section id="sobre" className="py-20 md:py-28 bg-mango-dark relative overflow-hidden">
+    <section id="sobre" className="py-20 md:py-28 bg-[hsl(210,35%,9%)] relative overflow-hidden">
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_70%_80%,hsl(168_72%_42%/0.05),transparent_50%)]" />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-14">
@@ -161,7 +161,7 @@ export function AboutSection() {
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-6">
                   {[
                     { name: "Yamileth Chacón", role: "Madre del líder del proyecto — Apoyo integral y soporte incondicional", photo: madreFoto },
-                    { name: "Héctor Ignacio Sánchez", role: "Padre del líder del proyecto — Apoyo integral y soporte incondicional", photo: padreFoto },
+                    { name: "Héctor Ignacio Sánchez", role: "Padre del líder del proyecto — Apoyo fundamental y presencia incondicional", photo: padreFoto },
                   ].map((c, i) => (
                     <ProfileCard
                       key={i}

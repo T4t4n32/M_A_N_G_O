@@ -739,6 +739,9 @@ function FieldMissionCard({
       className={`relative rounded-2xl overflow-hidden border border-white/[0.07] hover:border-white/[0.15] transition-colors duration-500 ${offsetClass}`}
       style={{ background: "linear-gradient(160deg, hsl(210,38%,7.5%), hsl(210,38%,5.5%))" }}
     >
+      {/* Color identity overlay */}
+      <div className="absolute inset-0 pointer-events-none" aria-hidden="true"
+        style={{ background: `radial-gradient(ellipse 90% 55% at 0% 0%, ${accentColor}10, transparent 68%)` }} />
       {/* Accent bar */}
       <div className="h-[3px]"
         style={{ background: `linear-gradient(90deg, ${accentColor}, ${accentColor}55 45%, transparent 82%)` }} />
@@ -1464,9 +1467,12 @@ export function ProjectSection() {
               out.push(
                 <div
                   key={node.label}
-                  className="flex-1 min-w-0 rounded-2xl border overflow-hidden bg-[hsl(210,35%,7%)] hover:bg-[hsl(210,32%,9%)] transition-all duration-500 group"
+                  className="relative flex-1 min-w-0 rounded-2xl border overflow-hidden bg-[hsl(210,35%,7%)] hover:bg-[hsl(210,32%,9%)] transition-all duration-500 group"
                   style={{ borderColor: node.color + "22", boxShadow: `0 4px 32px ${node.color}05` }}
                 >
+                  {/* Color identity overlay */}
+                  <div className="absolute inset-0 pointer-events-none" aria-hidden="true"
+                    style={{ background: `radial-gradient(ellipse 120% 55% at 0% 0%, ${node.color}0b, transparent 65%)` }} />
                   {/* Colored top accent */}
                   <div className="h-[3px]" style={{ background: `linear-gradient(90deg, ${node.color}95, ${node.color}12)` }} />
 
@@ -1834,9 +1840,12 @@ export function ProjectSection() {
             ].map(s => (
               <div
                 key={s.sensor}
-                className="group rounded-2xl overflow-hidden border border-white/[0.07] hover:border-white/[0.14] transition-colors duration-300"
+                className="group relative rounded-2xl overflow-hidden border border-white/[0.07] hover:border-white/[0.14] transition-colors duration-300"
                 style={{ background: "linear-gradient(170deg, hsl(210,38%,7%), hsl(210,38%,5%))" }}
               >
+                {/* Color identity overlay */}
+                <div className="absolute inset-0 pointer-events-none" aria-hidden="true"
+                  style={{ background: `radial-gradient(ellipse 100% 60% at 0% 0%, ${s.color}0e, transparent 70%)` }} />
                 <div className="h-[3px]"
                   style={{ background: `linear-gradient(90deg, ${s.color}, ${s.color}20 70%, transparent)` }} />
                 <div className="p-6">

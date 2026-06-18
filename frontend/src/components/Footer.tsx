@@ -33,7 +33,7 @@ export function Footer() {
   const { toast } = useToast();
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const tagline = useSiteValue("footer.tagline", "M.A.N.G.O. es un dispositivo autónomo que monitorea la salud del agua en ecosistemas de manglar — registrando acidez, temperatura y turbidez de forma continua y en tiempo real.");
-  const institutionsText = useSiteValue("footer.institutions.text", "El panel de datos en tiempo real está disponible para instituciones de investigación y organizaciones vinculadas al proyecto.");
+  const institutionsText = useSiteValue("footer.institutions.text", "Solicita acceso para tu institución o equipo de investigación ambiental.");
   const copyright = useSiteValue("footer.copyright", "M.A.N.G.O — Todos los derechos reservados");
   const legal = useSiteValue("footer.legal", "Proyecto de investigación con fines académicos y de conservación ambiental");
 
@@ -89,7 +89,7 @@ export function Footer() {
 
           <ScrollReveal variant="fade-up" delay={0.1}>
           <SpotlightCard className="rounded-3xl border border-white/10 bg-white/[0.02] p-6" spotlightColor="rgba(0, 201, 167, 0.15)">
-            <h4 className="text-white font-semibold mb-4">Enlaces Rápidos</h4>
+            <h4 className="text-base text-white font-semibold mb-4">Enlaces Rápidos</h4>
             <ul className="space-y-2.5">
               {links.map((l) => (
                 <li key={l.href}>
@@ -104,7 +104,7 @@ export function Footer() {
 
           <ScrollReveal variant="fade-up" delay={0.2}>
           <SpotlightCard className="rounded-3xl border border-white/10 bg-white/[0.04] p-6 shadow-[0_12px_40px_hsl(var(--background)/0.12)]" spotlightColor="rgba(0, 201, 167, 0.15)">
-            <h4 className="text-white font-semibold mb-4">Contacto</h4>
+            <h4 className="text-base text-white font-semibold mb-4">Contacto</h4>
             <ul className="space-y-3 text-sm">
               <li>
                 <a
@@ -140,7 +140,7 @@ export function Footer() {
 
           <ScrollReveal variant="fade-up" delay={0.3}>
           <SpotlightCard className="rounded-3xl border border-white/10 bg-white/[0.02] p-6" spotlightColor="rgba(0, 201, 167, 0.15)">
-            <h4 className="text-white font-semibold mb-4">Acceso institucional</h4>
+            <h4 className="text-base text-white font-semibold mb-4">Acceso institucional</h4>
             <p className="text-sm text-white/70">{institutionsText}</p>
             <StarBorder
               as="button"

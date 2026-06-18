@@ -1003,11 +1003,11 @@ export function DocumentationSection() {
   ];
 
   return (
-    <section id="documentacion" className="py-20 md:py-28 bg-mango-dark relative overflow-hidden">
+    <section id="documentacion" className="py-20 md:py-28 bg-[hsl(210,38%,6%)] relative overflow-hidden">
       {/* Ambient background glow */}
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-0 left-[15%] w-[500px] h-[400px] bg-[hsl(168,72%,42%)] opacity-[0.03] blur-[120px] rounded-full" />
-        <div className="absolute bottom-0 right-[10%] w-[400px] h-[300px] bg-[hsl(195,70%,48%)] opacity-[0.03] blur-[100px] rounded-full" />
+        <div className="absolute top-0 left-[15%] w-[500px] h-[400px] bg-[hsl(168,72%,42%)] opacity-[0.06] blur-[120px] rounded-full" />
+        <div className="absolute bottom-0 right-[10%] w-[400px] h-[300px] bg-[hsl(195,70%,48%)] opacity-[0.06] blur-[100px] rounded-full" />
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
