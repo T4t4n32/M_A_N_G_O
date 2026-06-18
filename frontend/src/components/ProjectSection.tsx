@@ -1974,12 +1974,12 @@ export function ProjectSection() {
           </div>
 
           {/* ── Three-element composition: card | video | card ── */}
-          <div className="flex flex-col lg:flex-row items-stretch gap-5 mb-14">
+          <div className="flex flex-col lg:flex-row items-stretch gap-2 mb-14">
 
             {/* ── LEFT: Access card — compact ── */}
             <a
               href="/login"
-              className="group flex flex-col rounded-2xl overflow-hidden border transition-all duration-300 flex-shrink-0 lg:w-44 xl:w-52"
+              className="group flex flex-col rounded-2xl overflow-hidden border transition-all duration-300 flex-shrink-0 lg:w-36 xl:w-40"
               style={{
                 background: "linear-gradient(160deg, hsl(168,42%,8%), hsl(168,32%,5%))",
                 borderColor: "rgba(0,201,167,0.22)",
@@ -2026,7 +2026,7 @@ export function ProjectSection() {
             </a>
 
             {/* ── LEFT connector ── */}
-            <div className="hidden lg:flex items-center flex-shrink-0 w-8">
+            <div className="hidden lg:flex items-center flex-shrink-0 w-5">
               <div className="relative w-full h-px" style={{ background: "rgba(0,201,167,0.15)" }}>
                 <div
                   className="absolute top-1/2 -translate-y-1/2 w-2 h-2 rounded-full"
@@ -2065,7 +2065,7 @@ export function ProjectSection() {
                   <iframe
                     key={videoActive ? "active" : "idle"}
                     src={videoActive
-                      ? "https://www.youtube.com/embed/Z6yhP-sv_x0?rel=0&modestbranding=1&color=white&autoplay=1&mute=1"
+                      ? "https://www.youtube.com/embed/Z6yhP-sv_x0?rel=0&modestbranding=1&color=white&autoplay=1"
                       : "https://www.youtube.com/embed/Z6yhP-sv_x0?rel=0&modestbranding=1&color=white"}
                     title="M.A.N.G.O. — Presentación del proyecto"
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
@@ -2126,7 +2126,7 @@ export function ProjectSection() {
             </div>
 
             {/* ── RIGHT connector ── */}
-            <div className="hidden lg:flex items-center flex-shrink-0 w-8">
+            <div className="hidden lg:flex items-center flex-shrink-0 w-5">
               <div className="relative w-full h-px" style={{ background: "rgba(167,139,250,0.15)" }}>
                 <div
                   className="absolute top-1/2 -translate-y-1/2 w-2 h-2 rounded-full"
@@ -2142,7 +2142,7 @@ export function ProjectSection() {
             {/* ── RIGHT: Request card — compact ── */}
             <a
               href="#contacto"
-              className="group flex flex-col rounded-2xl overflow-hidden border transition-all duration-300 flex-shrink-0 lg:w-44 xl:w-52"
+              className="group flex flex-col rounded-2xl overflow-hidden border transition-all duration-300 flex-shrink-0 lg:w-36 xl:w-40"
               style={{
                 background: "linear-gradient(160deg, hsl(265,35%,8%), hsl(265,25%,5%))",
                 borderColor: "rgba(167,139,250,0.18)",

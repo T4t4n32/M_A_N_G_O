@@ -69,7 +69,15 @@ const Index = () => {
         <ProjectSection />
       </Suspense>
 
-      <SectionLine variant="blue" />
+      {/* Gradient fade: ProjectSection → DocumentationSection */}
+      <div
+        className="h-28 pointer-events-none"
+        aria-hidden="true"
+        style={{
+          background: "linear-gradient(to bottom, hsl(210,35%,8%) 0%, hsl(210,36%,7.5%) 45%, hsl(210,38%,6%) 100%)",
+          boxShadow: "inset 0 -1px 0 rgba(56,189,248,0.20)",
+        }}
+      />
 
       <Suspense fallback={<SectionFallback />}>
         <ScrollReveal variant="fade-up" delay={0.1}>
