@@ -77,6 +77,8 @@ export const MEDIA_SECTIONS: CategorySection[] = [
       { id: "hito-ecolatas", label: "ECOLATAS" },
       { id: "hito-robisoft", label: "Copa RobiSoft" },
       { id: "hito-internacional", label: "Representación Internacional" },
+      { id: "hito-reconocimiento-electronica", label: "Reconocimiento — Mejor Proyecto" },
+      { id: "hito-reconocimiento-houston", label: "Reconocimiento — Representación Houston" },
     ],
   },
 ];

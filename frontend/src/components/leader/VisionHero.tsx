@@ -10,6 +10,9 @@ import {
   Swords,
   Recycle,
   Leaf,
+  Award,
+  Trophy,
+  Medal,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import DecryptedText from "@/components/effects/DecryptedText";
@@ -28,13 +31,15 @@ const YOUTUBE_CHANNEL = "https://youtube.com/@tatan_32?si=PV-gF7wt1bdklHtR";
 const inicisMilestone = milestones.find((m) => m.id === "inicios")!;
 const robisoftMilestone = milestones.find((m) => m.id === "robisoft")!;
 const ecolatasMilestone = milestones.find((m) => m.id === "ecolatas")!;
+const reconocimientoElectronicaMilestone = milestones.find((m) => m.id === "reconocimiento-electronica")!;
+const reconocimientoHoustonMilestone = milestones.find((m) => m.id === "reconocimiento-houston")!;
 
 interface ChipMilestoneColor {
   glow: string;
   accent: string;
   border: string;
   Icon: LucideIcon;
-  logo: string;
+  logo?: string;
 }
 
 const chipMilestoneColors: Record<string, ChipMilestoneColor> = {
@@ -59,9 +64,21 @@ const chipMilestoneColors: Record<string, ChipMilestoneColor> = {
     Icon: Recycle,
     logo: "/images/gallery/leader/ecolatas_logo.png",
   },
+  "reconocimiento-electronica": {
+    glow: "rgba(250,204,21,0.22)",
+    accent: "hsl(43 96% 56%)",
+    border: "rgba(250,204,21,0.3)",
+    Icon: Award,
+  },
+  "reconocimiento-houston": {
+    glow: "rgba(56,189,248,0.22)",
+    accent: "hsl(204 70% 53%)",
+    border: "rgba(56,189,248,0.3)",
+    Icon: Trophy,
+  },
 };
 
-type ChipId = "inicios" | "vision";
+type ChipId = "inicios" | "vision" | "reconocimientos";
 
 function MilestoneChipCard({
   milestone,
@@ -152,6 +169,10 @@ export default function VisionHero() {
       ? robisoftMilestone
       : activeMilestoneId === "ecolatas"
       ? ecolatasMilestone
+      : activeMilestoneId === "reconocimiento-electronica"
+      ? reconocimientoElectronicaMilestone
+      : activeMilestoneId === "reconocimiento-houston"
+      ? reconocimientoHoustonMilestone
       : null;
 
   const activeMilestoneColors = activeMilestoneId
@@ -232,9 +253,9 @@ export default function VisionHero() {
 
             <div className="w-full h-px bg-gradient-to-r from-accent/20 via-white/[0.06] to-transparent" />
 
-            {/* Three pillar chips + expandable panels */}
+            {/* Four pillar chips + expandable panels */}
             <div>
-              <div className="grid sm:grid-cols-3 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 {/* FORMACIÓN — link to YouTube channel */}
                 <a
                   href={YOUTUBE_CHANNEL}
@@ -328,6 +349,42 @@ export default function VisionHero() {
                     />
                   </span>
                 </button>
+
+                {/* RECONOCIMIENTOS — expandable */}
+                <button
+                  type="button"
+                  onClick={() => toggleChip("reconocimientos")}
+                  aria-expanded={expandedChip === "reconocimientos"}
+                  aria-controls="reconocimientos-expansion"
+                  className={`group relative flex flex-col items-center text-center gap-2 p-4 rounded-xl border transition-all duration-300 cursor-pointer overflow-hidden ${
+                    expandedChip === "reconocimientos"
+                      ? "border-amber-400/40 bg-amber-400/[0.10]"
+                      : "border-amber-400/[0.08] bg-amber-400/[0.04] hover:bg-amber-400/[0.08] hover:border-amber-400/20"
+                  }`}
+                >
+                  <div
+                    className={`absolute inset-0 bg-gradient-to-b from-amber-400/[0.08] to-transparent pointer-events-none transition-opacity duration-300 ${
+                      expandedChip === "reconocimientos"
+                        ? "opacity-100"
+                        : "opacity-0 group-hover:opacity-100"
+                    }`}
+                  />
+                  <div className="relative p-2.5 rounded-xl bg-amber-400/10 text-amber-400">
+                    <Medal className="h-4 w-4" />
+                  </div>
+                  <p className="text-white/90 text-xs font-semibold uppercase tracking-wider">Reconocimientos</p>
+                  <p className="text-white/50 text-xs leading-relaxed text-justify">
+                    Premiación del proyecto y representación de Comfandi
+                  </p>
+                  <span className="inline-flex items-center gap-1 mt-auto text-[10px] font-semibold text-amber-400/70 group-hover:text-amber-400 uppercase tracking-wider transition-colors">
+                    Explorar
+                    <ChevronDown
+                      className={`h-3 w-3 transition-transform duration-300 ${
+                        expandedChip === "reconocimientos" ? "rotate-180" : ""
+                      }`}
+                    />
+                  </span>
+                </button>
               </div>
 
               {/* Expansion — Inicios */}
@@ -383,6 +440,37 @@ export default function VisionHero() {
                     onClick={() => setActiveMilestoneId("ecolatas")}
                     fullWidth
                   />
+                </div>
+              </div>
+
+              {/* Expansion — Reconocimientos */}
+              <div
+                id="reconocimientos-expansion"
+                className={`overflow-hidden transition-all duration-500 ease-in-out ${
+                  expandedChip === "reconocimientos"
+                    ? "max-h-[700px] opacity-100 mt-4"
+                    : "max-h-0 opacity-0"
+                }`}
+              >
+                <div className="rounded-xl border border-amber-400/20 bg-amber-400/[0.03] p-5">
+                  <div className="flex items-center gap-2 mb-4">
+                    <div className="w-0.5 h-5 rounded-full bg-amber-400" />
+                    <span className="text-amber-400 text-xs font-semibold uppercase tracking-widest">
+                      Premiación del Proyecto
+                    </span>
+                  </div>
+                  <div className="grid sm:grid-cols-2 gap-4">
+                    <MilestoneChipCard
+                      milestone={reconocimientoElectronicaMilestone}
+                      colors={chipMilestoneColors["reconocimiento-electronica"]}
+                      onClick={() => setActiveMilestoneId("reconocimiento-electronica")}
+                    />
+                    <MilestoneChipCard
+                      milestone={reconocimientoHoustonMilestone}
+                      colors={chipMilestoneColors["reconocimiento-houston"]}
+                      onClick={() => setActiveMilestoneId("reconocimiento-houston")}
+                    />
+                  </div>
                 </div>
               </div>
             </div>
