@@ -1,5 +1,6 @@
 import DecryptedText from "@/components/effects/DecryptedText";
 import { useState, useCallback, useEffect, useMemo, useRef } from "react";
+import { createPortal } from "react-dom";
 import { X, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, RotateCcw, ChevronDown, Search as SearchIcon, Play } from "lucide-react";
 
 const filters = ["Todo", "Hardware", "Software", "Campo", "Progreso"];
@@ -438,8 +439,10 @@ export function GallerySection() {
         </div>
       </div>
 
-      {/* Lightbox */}
-      {lightbox !== null && (
+      {/* Lightbox — portaled to <body> so its `fixed` positioning can't be hijacked by an
+          ancestor's `will-change`/`transform` (e.g. ScrollReveal's wrapper), which would
+          otherwise scope it to that ancestor's box instead of the viewport. */}
+      {lightbox !== null && createPortal(
         <div
           ref={dialogRef}
           role="dialog"
@@ -548,7 +551,8 @@ export function GallerySection() {
               <p id="gallery-lightbox-desc" className="text-white/60 mt-1 text-sm">{filtered[lightbox]?.desc}</p>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body,
       )}
     </section>
   );

@@ -21,6 +21,11 @@ export const ScrollReveal = forwardRef<HTMLDivElement, ScrollRevealProps>(
           if (entry.isIntersecting) {
             el.style.opacity = "1";
             el.style.transform = "none";
+            // `will-change` left set after the transition ends keeps this element as a
+            // containing block for `position: fixed` descendants (e.g. the gallery
+            // lightbox), pinning them to this box instead of the viewport. Clear it
+            // once the reveal is done — matches the CSS will-change best practice too.
+            window.setTimeout(() => { el.style.willChange = "auto"; }, (duration + delay) * 1000 + 50);
             obs.disconnect();
           }
         },
