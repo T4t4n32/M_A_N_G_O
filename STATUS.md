@@ -109,7 +109,7 @@ Stack managed from `deploy/vps/` with `make up`.
 | CI/CD pipeline                | No automated build or deployment pipeline                |
 | End-to-end sensor tests       | Field data integration test pending full sensor calibration |
 | "Representación Internacional" photos | Only 1 of 6 referenced Houston photos exists on disk (`houston_1.png`); the other 5 were dropped from the v2.1.0 migration rather than left broken — upload the real photos via Panel Emma → Secciones → Representación Internacional |
-| `main` ahead of `origin/main` | Local history includes a rewrite that strips old unoptimized gallery images from every commit (v2.1.0 gallery work) — not yet pushed; requires a force-push and a resync on any other clone |
+| Other local clones of this repo | `main` history was rewritten and force-pushed 2026-08-14 (strips old unoptimized gallery images from every commit) — any other existing clone needs `git fetch origin && git reset --hard origin/main`, not a normal pull. Pre-rewrite state is preserved at `origin/backup-pre-history-rewrite-2026-08-14` if anything needs recovering. |
 
 ---
 
