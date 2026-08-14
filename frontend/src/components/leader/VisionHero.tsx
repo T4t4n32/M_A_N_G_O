@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import {
   GraduationCap,
   Cpu,
@@ -9,9 +9,6 @@ import {
   Wrench,
   Swords,
   Recycle,
-  Trophy,
-  RotateCcw,
-  Sparkles,
   Leaf,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
@@ -27,12 +24,6 @@ import { milestones } from "./leaderData";
 import type { MilestoneData } from "./leaderData";
 
 const YOUTUBE_CHANNEL = "https://youtube.com/@tatan_32?si=PV-gF7wt1bdklHtR";
-
-const sportImages = [
-  { src: "/images/sports/intercolegiados-1.jpg", alt: "Premiación en podio — Intercolegiados" },
-  { src: "/images/sports/intercolegiados-2.jpg", alt: "Equipo celebrando con trofeo" },
-  { src: "/images/sports/intercolegiados-3.jpg", alt: "Medalla de oro y trofeo de campeonato" },
-];
 
 const inicisMilestone = milestones.find((m) => m.id === "inicios")!;
 const robisoftMilestone = milestones.find((m) => m.id === "robisoft")!;
@@ -71,62 +62,6 @@ const chipMilestoneColors: Record<string, ChipMilestoneColor> = {
 };
 
 type ChipId = "inicios" | "vision";
-
-function usePrefersReducedMotion() {
-  const [prefers, setPrefers] = useState(false);
-  useEffect(() => {
-    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
-    setPrefers(mq.matches);
-    const handler = (e: MediaQueryListEvent) => setPrefers(e.matches);
-    mq.addEventListener("change", handler);
-    return () => mq.removeEventListener("change", handler);
-  }, []);
-  return prefers;
-}
-
-function track(event: string, payload: Record<string, unknown> = {}) {
-  if (typeof window !== "undefined") {
-    const dl = (window as unknown as { dataLayer?: unknown[] }).dataLayer;
-    if (dl) dl.push({ event, ...payload });
-    window.dispatchEvent(new CustomEvent("vision-hero:track", { detail: { event, ...payload } }));
-  }
-}
-
-function TrophyCarousel({ paused }: { paused: boolean }) {
-  const [current, setCurrent] = useState(0);
-  useEffect(() => {
-    if (paused || sportImages.length <= 1) return;
-    const id = setInterval(() => setCurrent((p) => (p + 1) % sportImages.length), 2500);
-    return () => clearInterval(id);
-  }, [paused]);
-
-  return (
-    <div className="relative w-full h-full">
-      {sportImages.map((img, i) => (
-        <img
-          key={i}
-          src={img.src}
-          alt={img.alt}
-          loading="lazy"
-          className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ${
-            i === current ? "opacity-100" : "opacity-0"
-          }`}
-        />
-      ))}
-      <div className="absolute inset-x-0 bottom-0 h-8 bg-gradient-to-t from-black/70 to-transparent" />
-      <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5" aria-hidden="true">
-        {sportImages.map((_, i) => (
-          <div
-            key={i}
-            className={`h-1 rounded-full transition-all duration-300 ${
-              i === current ? "bg-amber-400 w-4" : "bg-white/40 w-1.5"
-            }`}
-          />
-        ))}
-      </div>
-    </div>
-  );
-}
 
 function MilestoneChipCard({
   milestone,
@@ -193,11 +128,8 @@ function MilestoneChipCard({
 }
 
 export default function VisionHero() {
-  const [flipped, setFlipped] = useState(false);
   const [expandedChip, setExpandedChip] = useState<ChipId | null>(null);
   const [activeMilestoneId, setActiveMilestoneId] = useState<string | null>(null);
-  const cardRef = useRef<HTMLButtonElement>(null);
-  const prefersReducedMotion = usePrefersReducedMotion();
 
   // Editable fields
   const raw = useSiteValue("about.leader.photo", "");
@@ -207,20 +139,6 @@ export default function VisionHero() {
   const photoSrc = overrideUrl || liderFoto;
   const photoAlt = desc?.alt || "Sebastián Sánchez Chacón";
   const extraDescription = useSiteValue("about.vision.description", "");
-  const flipEyebrow = useSiteValue("about.vision.flip.eyebrow", "Logro Destacado");
-  const flipTitle = useSiteValue("about.vision.flip.title", "1er Puesto");
-  const flipSubtitle = useSiteValue("about.vision.flip.subtitle", "Intercolegiados");
-  const flipDescription = useSiteValue(
-    "about.vision.flip.description",
-    "Campeón Juegos Intercolegiados — Colegio Coomeva, Cali."
-  );
-
-  const toggleFlip = (source: "click" | "keyboard") => {
-    setFlipped((f) => {
-      track("vision_hero_flip", { source, flipped: !f });
-      return !f;
-    });
-  };
 
   const toggleChip = (id: ChipId) => {
     setExpandedChip((prev) => (prev === id ? null : id));
@@ -263,138 +181,24 @@ export default function VisionHero() {
         {/* Main layout */}
         <div className="relative grid md:grid-cols-[260px_1fr] gap-8 md:gap-10 items-start">
 
-          {/* ─── Flip Card ─── */}
-          <div
-            style={{ perspective: "1200px" }}
-            className="relative mx-auto w-full max-w-[260px]"
-          >
-            {/* Pulsing accent ring — front only, respects reduced-motion */}
-            {!prefersReducedMotion && !flipped && (
-              <div
-                className="absolute -inset-1.5 rounded-[22px] border border-accent/30 animate-pulse pointer-events-none z-10"
-                aria-hidden="true"
+          {/* ─── Photo card (static) ─── */}
+          <div className="relative mx-auto w-full max-w-[260px]">
+            <div className="relative w-full aspect-[3/4] rounded-2xl overflow-hidden">
+              <img
+                src={photoSrc}
+                alt={photoAlt}
+                className="w-full h-full object-cover"
               />
-            )}
+              <div className="absolute inset-0 bg-gradient-to-t from-[hsl(210_35%_8%)] via-transparent to-transparent opacity-70" />
+              <div className="absolute -bottom-4 -left-4 w-32 h-32 rounded-full bg-accent/20 blur-3xl pointer-events-none" />
 
-            <button
-              type="button"
-              ref={cardRef}
-              onClick={() => toggleFlip("click")}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") {
-                  e.preventDefault();
-                  toggleFlip("keyboard");
-                }
-              }}
-              aria-pressed={flipped}
-              aria-label={
-                flipped
-                  ? "Ver foto del desarrollador"
-                  : "Ver logro — 1er Puesto Intercolegiados"
-              }
-              aria-describedby="vision-hero-flip-hint"
-              className={`relative w-full aspect-[3/4] block [transform-style:preserve-3d] rounded-2xl
-                focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-accent/70
-                focus-visible:ring-offset-2 focus-visible:ring-offset-[hsl(210_35%_8%)]
-                ${prefersReducedMotion ? "" : "transition-[transform] duration-700 ease-in-out"}`}
-              style={{ transform: flipped ? "rotateY(180deg)" : "rotateY(0deg)" }}
-            >
-              {/* ── Front: photo ── */}
-              <div
-                className="absolute inset-0 rounded-2xl overflow-hidden"
-                style={{
-                  backfaceVisibility: "hidden",
-                  WebkitBackfaceVisibility: "hidden",
-                }}
-              >
-                <img
-                  src={photoSrc}
-                  alt={photoAlt}
-                  className="w-full h-full object-cover"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-[hsl(210_35%_8%)] via-transparent to-transparent opacity-70" />
-                <div className="absolute -bottom-4 -left-4 w-32 h-32 rounded-full bg-accent/20 blur-3xl pointer-events-none" />
-
-                {/* Top hint — hidden on very small / reduced-motion */}
-                {!prefersReducedMotion && (
-                  <div
-                    className="absolute top-3 left-3 right-3 hidden sm:flex items-center gap-1 opacity-65"
-                    aria-hidden="true"
-                  >
-                    <Sparkles className="h-3 w-3 text-accent flex-shrink-0" />
-                    <span className="text-accent text-[9px] font-medium">
-                      Toca para descubrir más
-                    </span>
-                  </div>
-                )}
-
-                {/* Bottom overlays */}
-                <div className="absolute bottom-4 left-3 right-3 flex items-center justify-between">
-                  <div className="flex items-center gap-1">
-                    <Leaf className="h-3.5 w-3.5 text-accent flex-shrink-0" />
-                    <span className="text-accent text-[9px] font-semibold uppercase tracking-wide">
-                      Desarrollador Principal
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-white/10 backdrop-blur-sm border border-white/20">
-                    <RotateCcw className="h-3 w-3 text-white/70" />
-                    <span className="text-white/60 text-[9px]">Voltear</span>
-                  </div>
-                </div>
+              <div className="absolute bottom-4 left-3 right-3 flex items-center gap-1">
+                <Leaf className="h-3.5 w-3.5 text-accent flex-shrink-0" />
+                <span className="text-accent text-[9px] font-semibold uppercase tracking-wide">
+                  Desarrollador Principal
+                </span>
               </div>
-
-              {/* ── Back: achievement ── */}
-              <div
-                className="absolute inset-0 rounded-2xl overflow-hidden flex flex-col"
-                style={{
-                  backfaceVisibility: "hidden",
-                  WebkitBackfaceVisibility: "hidden",
-                  transform: "rotateY(180deg)",
-                  background:
-                    "linear-gradient(160deg, hsl(30 40% 8%) 0%, hsl(210 35% 8%) 100%)",
-                }}
-              >
-                {/* Amber radial glow */}
-                <div
-                  className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_20%,hsl(40_90%_50%/0.12),transparent_65%)]"
-                  aria-hidden="true"
-                />
-
-                {/* Header */}
-                <div className="relative flex flex-col items-center pt-6 px-4 gap-0.5">
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center shadow-lg shadow-amber-500/30 mb-1">
-                    <Trophy className="h-6 w-6 text-white" />
-                  </div>
-                  <p className="text-amber-400/70 text-[9px] font-semibold uppercase tracking-widest">
-                    {flipEyebrow}
-                  </p>
-                  <h3 className="text-white font-black text-2xl leading-none">{flipTitle}</h3>
-                  <p className="text-amber-400 font-semibold text-sm">{flipSubtitle}</p>
-                </div>
-
-                {/* Carousel */}
-                <div className="relative flex-1 mx-3 mt-3 rounded-xl overflow-hidden border border-amber-500/15 min-h-0">
-                  <TrophyCarousel paused={!flipped} />
-                </div>
-
-                {/* Description */}
-                <p className="relative text-white/45 text-[10px] text-center leading-relaxed px-4 pt-2">
-                  {flipDescription}
-                </p>
-
-                {/* Flip back hint */}
-                <div className="relative flex justify-center pb-4 pt-2">
-                  <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-white/[0.08] border border-white/[0.12]">
-                    <RotateCcw className="h-3 w-3 text-white/60" />
-                    <span className="text-white/50 text-[9px]">Voltear</span>
-                  </div>
-                </div>
-              </div>
-            </button>
-
-            <span id="vision-hero-flip-hint" className="sr-only">
-              Presiona Enter o Espacio para voltear y ver el logro destacado del desarrollador
-            </span>
+            </div>
           </div>
 
           {/* ─── Text content ─── */}
