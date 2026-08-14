@@ -1,8 +1,8 @@
 # Project Status — M.A.N.G.O
 
 **Project:** M.A.N.G.O — Autonomous Monitoring of Oceanic Management Levels
-**Version:** v2.0.0
-**Last updated:** 2026-06-03
+**Version:** v2.1.0
+**Last updated:** 2026-08-14
 **Deployment:** https://integramosoe.com — Live
 
 ---
@@ -39,6 +39,7 @@ Stack managed from `deploy/vps/` with `make up`.
 | `/api/v1/admin/content`       | Working  | Editable site content                            |
 | `/api/v1/admin/docs`          | Working  | Document management                              |
 | `/api/v1/admin/media`         | Working  | Media gallery (images and videos)                |
+| `/api/v1/public/media`        | Working  | Public listing, filterable by `kind` and `category` |
 | `/api/v1/alerts/*`            | Working  | Alert rules and events                           |
 | `/api/v1/subscriptions`       | Working  | User subscription management                     |
 | `/api/v1/contact`             | Working  | Contact form with SMTP delivery                  |
@@ -62,7 +63,7 @@ Stack managed from `deploy/vps/` with `make up`.
 | Feature                    | Status   | Notes                                             |
 |----------------------------|----------|---------------------------------------------------|
 | Live content editing       | Working  | All editable sections saved to backend            |
-| Media library              | Working  | Upload, preview, delete images and videos        |
+| Media library ("Secciones")| Working  | Browse/upload/edit/delete grouped by real site section — Galería, FLL — Temporadas, Hitos. Every public photo/video is a real DB row; edits and deletes take effect on the live site immediately, no code change needed. |
 | Document library           | Working  | Upload, categorize, signed download links         |
 | User management            | Working  | Inline role editing, super-admin lock             |
 | Device cards               | Working  | Real Jetson probe, modem signal, LTE status       |
@@ -107,6 +108,8 @@ Stack managed from `deploy/vps/` with `make up`.
 | Rate limiting                 | No per-IP or per-user rate limiting on API endpoints     |
 | CI/CD pipeline                | No automated build or deployment pipeline                |
 | End-to-end sensor tests       | Field data integration test pending full sensor calibration |
+| "Representación Internacional" photos | Only 1 of 6 referenced Houston photos exists on disk (`houston_1.png`); the other 5 were dropped from the v2.1.0 migration rather than left broken — upload the real photos via Panel Emma → Secciones → Representación Internacional |
+| `main` ahead of `origin/main` | Local history includes a rewrite that strips old unoptimized gallery images from every commit (v2.1.0 gallery work) — not yet pushed; requires a force-push and a resync on any other clone |
 
 ---
 

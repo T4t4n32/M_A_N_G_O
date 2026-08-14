@@ -5,6 +5,33 @@ This project follows [Semantic Versioning](https://semver.org/) and a simplified
 
 ---
 
+## [v2.1.0] — 2026-08-14
+
+### Added
+- Panel Emma "Secciones" tab: browse, upload, edit, and delete media grouped by the real site structure (Galería pública, FLL — Temporadas, Hitos — Sebastián Sánchez), instead of only a flat kind-based view.
+- `subcategory` column on `uploaded_file`; `/api/v1/public/media` and `/api/v1/admin/uploads` accept `?category=` for section-scoped queries.
+- `scripts/migrate_static_media.py`: one-off, idempotent migration importing every previously-hardcoded gallery/leader photo and video (240 items) into the database, preserving title, description, category, and subcategory grouping.
+- WebP thumbnail (~480px) and display (~1920px) derivatives for the 133 hardware gallery photos.
+
+### Changed
+- GallerySection and every FLL/Líder section (SeasonsGrid, MilestonesGrid, PilaresSection, VisionHero) now source their photos and videos from the database by category instead of hardcoded arrays. Edits, deletes, and uploads made in Panel Emma take effect on the live site immediately, with no code change required.
+- Panel Emma's category taxonomy now mirrors the real site structure; dropped "Competencias" and generic "Líder", which existed in the panel but never routed to any visible section.
+- Gallery lightbox now renders via `createPortal` to `<body>`, immune to ancestor CSS regardless of what wraps the gallery in the future.
+- `ScrollReveal` clears `will-change` once its reveal transition completes instead of leaving it set indefinitely.
+- `ImmersivePanel`'s 3D dome gallery is only used for sections with 20+ photos; smaller sections use a plain, non-repeating grid.
+
+### Fixed
+- Gallery lightbox rendering with no visible image: `ScrollReveal`'s wrapper left `will-change: transform` set after its animation finished, which per the CSS spec creates a new containing block for `position: fixed` descendants — this pinned the lightbox overlay to the wrapper's box in the document instead of the viewport.
+- FLL/Líder galleries with few real photos showed inflated, misleading counts (e.g. "Inicios en Robótica" appeared to have ~120 photos): `DomeGallery` fills a fixed 120-tile mesh by cycling through the real photos, so a small gallery repeated the same handful of images dozens of times.
+- Five broken image references in "Representación Internacional" (`houston_5/10/15/20/25.png`) — only `houston_1.png` ever existed on disk; excluded from the migration rather than left broken.
+- Removed dead code: unused `SmartUploadForm.tsx`; a stale 7-image sample in `panelEmmaContent.ts` that referenced pre-optimization `.jpg` paths no longer present after the WebP migration.
+
+### Performance
+- Gallery image payload reduced from 192 MB to 27 MB (-86%) by converting 133 raw phone-camera JPG/PNGs to WebP thumbnail + display derivatives; raw originals kept outside the repository.
+- Local git history rewritten to strip the old, unoptimized image blobs from every commit (staged locally; not yet pushed to `origin/main`).
+
+---
+
 ## [v2.0.0] — 2026-06-03
 
 ### Added

@@ -1,7 +1,7 @@
 # Architecture — M.A.N.G.O
 
-**Version:** v2.0.0
-**Last updated:** 2026-06-03
+**Version:** v2.1.0
+**Last updated:** 2026-08-14
 
 ---
 
@@ -9,7 +9,7 @@
 
 M.A.N.G.O is a full-stack environmental monitoring system for mangrove ecosystems. It collects water quality measurements (pH, turbidity, temperature) in the field, transports them to a cloud backend, and exposes them through a web platform with real-time visualization, mission management, and an admin panel.
 
-This document describes the production architecture as of v2.0.0.
+This document describes the production architecture as of v2.1.0.
 
 ---
 
@@ -106,7 +106,7 @@ API-only server. Never serves HTML. Modules:
 - `routes/readings.py` — sensor data queries
 - `routes/devices.py` — device registry
 - `routes/missions.py` — mission lifecycle
-- `routes/uploads.py` — file upload + serving (`POST /admin/upload`, `GET /uploads/*`)
+- `routes/uploads.py` — file upload + serving (`POST /admin/upload`, `GET /uploads/*`, `GET /public/media?kind=&category=`). Every image and video on the public site — gallery, FLL seasons, Sebastián Sánchez milestones — is a row here, keyed by `category` (and optionally `subcategory` for in-panel filter chips); there is no hardcoded media left in the frontend.
 - `routes/admin_terminal.py` / `admin_terminal_ws.py` — WebSocket PTY sessions
 - `routes/stream.py` — SSE real-time feed
 - `routes/admin_cms.py` / `admin_content.py` — editable site content
@@ -120,6 +120,8 @@ Auth: session-based (Flask-Session backed by Redis). Role check via `admin_requi
 Primary data store. Tables created idempotently by `db_init.py` using a PostgreSQL advisory lock. Persistent across container restarts via Docker volume `mango_pg`.
 
 Key tables: `mango_users`, `mango_devices`, `mango_ingest_packets`, `sensor_data`, `sensor_stations`, `mango_missions`, `mango_alert_rules`, `mango_alert_events`, `mango_user_subscriptions`, `uploaded_file`, `download_logs`.
+
+`uploaded_file.category` doubles as the join key between Panel Emma and the public site: the frontend never hardcodes which photos belong to which section — `GallerySection` and every FLL/Líder component (`SeasonsGrid`, `MilestonesGrid`, `PilaresSection`, `VisionHero`) fetch `GET /public/media?category=<id>` at render time (see `frontend/src/lib/useCategoryMedia.ts`). Deleting, editing, or uploading a file from Panel Emma's "Secciones" tab takes effect on the live site on next load, with no frontend deploy.
 
 ### 3.7 Grafana
 
@@ -169,7 +171,17 @@ Panel Emma (browser)
                                 └── return { url: /api/v1/uploads/{kind}/{file} }
 ```
 
-### 4.4 Admin terminal (WebSocket PTY)
+### 4.4 Media rendering (category-driven)
+
+```
+Browser (public page — Galería / FLL / Líder section)
+  └── GET /api/v1/public/media?category=<id>  ──► Flask ──► PostgreSQL (uploaded_file)
+        └── JSON items ──► rendered directly, no build step
+```
+
+There is no per-environment rebuild between a Panel Emma edit and it showing publicly — the frontend queries by category on every render.
+
+### 4.5 Admin terminal (WebSocket PTY)
 
 ```
 Panel Emma (browser)
