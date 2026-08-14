@@ -34,23 +34,64 @@ export interface PanelItem {
   addedAt?: string;
 }
 
-export const IMAGE_CATEGORIES = [
-  "Hardware",
-  "Software",
-  "Campo",
-  "Progreso",
-  "Competencias",
-  "Líder",
-] as const;
+/**
+ * Real site taxonomy — every category here is actually read by a live
+ * section of the site (Galería pública via GallerySection.tsx, FLL seasons
+ * via SeasonsGrid/PilaresSection, hitos via MilestonesGrid/VisionHero).
+ * Grouped so Panel Emma can offer a "browse by section" view that mirrors
+ * exactly what a visitor sees, instead of a flat unrelated category list.
+ */
+export interface CategoryOption {
+  id: string;
+  label: string;
+}
 
-export const VIDEO_CATEGORIES = [
-  "Campo",
-  "Pruebas",
-  "Hardware",
-  "Demostración",
-  "Competencias",
-  "Líder",
-] as const;
+export interface CategorySection {
+  group: string;
+  categories: CategoryOption[];
+}
+
+export const MEDIA_SECTIONS: CategorySection[] = [
+  {
+    group: "Galería pública",
+    categories: [
+      { id: "Hardware", label: "Hardware" },
+      { id: "Software", label: "Software" },
+      { id: "Campo", label: "Campo" },
+      { id: "Progreso", label: "Progreso" },
+    ],
+  },
+  {
+    group: "FLL — Temporadas",
+    categories: [
+      { id: "fll-cargo-connect", label: "Cargo Connect (2021–2022)" },
+      { id: "fll-superpowered", label: "Superpowered (2022–2023)" },
+      { id: "fll-masterpiece", label: "Masterpiece (2023–2024)" },
+      { id: "fll-submerged", label: "Submerged (2024–2025)" },
+    ],
+  },
+  {
+    group: "Hitos — Sebastián Sánchez",
+    categories: [
+      { id: "hito-inicios", label: "Inicios en Robótica" },
+      { id: "hito-ecolatas", label: "ECOLATAS" },
+      { id: "hito-robisoft", label: "Copa RobiSoft" },
+      { id: "hito-internacional", label: "Representación Internacional" },
+    ],
+  },
+];
+
+/** Human-friendly label for a category id; falls back to the id itself. */
+export function categoryLabel(id: string): string {
+  for (const section of MEDIA_SECTIONS) {
+    const found = section.categories.find((c) => c.id === id);
+    if (found) return found.label;
+  }
+  return id;
+}
+
+export const IMAGE_CATEGORIES = MEDIA_SECTIONS.flatMap((s) => s.categories.map((c) => c.id));
+export const VIDEO_CATEGORIES = IMAGE_CATEGORIES;
 
 export const DOC_CATEGORIES = [
   "Investigación",
@@ -61,17 +102,6 @@ export const DOC_CATEGORIES = [
   "Pitch",
   "Fuentes",
 ] as const;
-
-/** Curated subset of currently-published images (one per category sample). */
-const EXISTING_IMAGES: PanelItem[] = [
-  { id: "img-hw-1", kind: "image", title: "Cerebro del Sistema: ESP32", description: "Microcontrolador principal del sistema M.A.N.G.O.", category: "Hardware", src: "/images/gallery/hardware/hardware_1_1_ESP32.jpg", existing: true, format: "JPG" },
-  { id: "img-hw-2", kind: "image", title: "Heltec LoRa en Case", description: "Módulo Heltec WiFi LoRa 32 en caja protectora.", category: "Hardware", src: "/images/gallery/hardware/hardware_60_HELTEC.jpg", existing: true, format: "JPG" },
-  { id: "img-hw-3", kind: "image", title: "Thruster Brushless Submarino", description: "Thruster brushless con hélice para operación subacuática.", category: "Hardware", src: "/images/gallery/hardware/hardware_21_APISQUEEN_PAQUETE_19.jpg", existing: true, format: "JPG" },
-  { id: "img-sw-1", kind: "image", title: "Código LoRa en Arduino IDE", description: "Código de comunicación LoRa en Arduino IDE.", category: "Software", src: "/images/gallery/hardware/hardware_53_COMUNICACION.jpg", existing: true, format: "JPG" },
-  { id: "img-pg-1", kind: "image", title: "Estación de Soldadura", description: "Estación de soldadura y ensamblaje del proyecto.", category: "Progreso", src: "/images/gallery/hardware/hardware_57_Estacion_Soldadura.jpg", existing: true, format: "JPG" },
-  { id: "img-pg-2", kind: "image", title: "Prueba de Comunicación LoRa", description: "Pruebas de comunicación LoRa con Arduino IDE en PC.", category: "Progreso", src: "/images/gallery/hardware/hardware_93_MONTAJE_LORA_2.jpg", existing: true, format: "JPG" },
-  { id: "img-pg-3", kind: "image", title: "Calibración de pH con Multímetro", description: "Calibración del sensor pH con multímetro en mesa de trabajo.", category: "Progreso", src: "/images/gallery/hardware/hardware_102_MONTAJE_PH_1.jpg", existing: true, format: "JPG" },
-];
 
 const EXISTING_VIDEOS: PanelItem[] = [];
 
@@ -154,8 +184,10 @@ function saveOverrides(kind: PanelKind, map: Record<string, Override>) {
 }
 
 export function listItems(kind: PanelKind): PanelItem[] {
+  // Images and videos are fully backend-driven now (Panel Emma's real upload
+  // library) — this local/curated layer only still backs document previews.
   const baseline =
-    kind === "image" ? EXISTING_IMAGES :
+    kind === "image" ? [] :
     kind === "video" ? EXISTING_VIDEOS :
     EXISTING_DOCS;
   const hidden = new Set(loadHidden(kind));

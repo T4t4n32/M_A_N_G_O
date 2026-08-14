@@ -160,6 +160,7 @@ def upload_file():
         title=(request.form.get("title") or "").strip() or file.filename,
         description=(request.form.get("description") or "").strip() or None,
         category=(request.form.get("category") or "").strip() or None,
+        subcategory=(request.form.get("subcategory") or "").strip() or None,
         size=size,
         mime_type=file.mimetype or None,
     )
@@ -172,12 +173,15 @@ def upload_file():
 @_require_admin
 def list_uploads():
     kind     = request.args.get("kind")
+    category = request.args.get("category")
     page     = max(1, request.args.get("page",     1, type=int))
     per_page = request.args.get("per_page", 0, type=int)  # 0 = all (legacy)
 
     q = UploadedFile.query
     if kind in ("image", "video", "document"):
         q = q.filter_by(kind=kind)
+    if category:
+        q = q.filter_by(category=category)
     total = q.count()
 
     if per_page > 0:
@@ -209,6 +213,8 @@ def patch_upload(upload_id: int):
         record.description = str(data["description"]).strip() or None
     if "category" in data:
         record.category = str(data["category"]).strip() or None
+    if "subcategory" in data:
+        record.subcategory = str(data["subcategory"]).strip() or None
     db.session.commit()
     return jsonify(record.to_dict()), 200
 
@@ -234,12 +240,15 @@ def delete_upload(upload_id: int):
 def public_media():
     """Lists uploaded images and videos — no auth required."""
     kind     = request.args.get("kind")
+    category = request.args.get("category")
     page     = max(1, request.args.get("page",     1, type=int))
     per_page = min(100, max(1, request.args.get("per_page", 50, type=int)))
 
     q = UploadedFile.query.filter(UploadedFile.kind.in_(["image", "video"]))
     if kind in ("image", "video"):
         q = q.filter_by(kind=kind)
+    if category:
+        q = q.filter_by(category=category)
 
     total = q.count()
     items = q.order_by(UploadedFile.uploaded_at.desc()).offset((page - 1) * per_page).limit(per_page).all()

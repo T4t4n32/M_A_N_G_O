@@ -18,6 +18,7 @@ class UploadedFile(db.Model):
     title         = db.Column(db.String(256), nullable=False,  default="")
     description   = db.Column(db.Text,        nullable=True)
     category      = db.Column(db.String(64),  nullable=True)
+    subcategory   = db.Column(db.String(64),  nullable=True)
     size          = db.Column(db.Integer,     nullable=False)
     mime_type     = db.Column(db.String(64),  nullable=True)
     uploaded_at   = db.Column(db.DateTime(timezone=True), nullable=False, default=_utcnow)
@@ -32,6 +33,7 @@ class UploadedFile(db.Model):
             "title":         self.title,
             "description":   self.description,
             "category":      self.category,
+            "subcategory":   self.subcategory,
             "size":          self.size,
             "mime_type":     self.mime_type,
             "uploaded_at":   self.uploaded_at.isoformat() if self.uploaded_at else None,

@@ -3,8 +3,9 @@ import { Trophy, Globe, Sparkles, ChevronRight } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import DecryptedText from "@/components/effects/DecryptedText";
 import ImmersivePanel from "./ImmersivePanel";
+import { useCategoryMedia } from "@/lib/useCategoryMedia";
 import { seasons, milestones } from "./leaderData";
-import type { MediaItem, SeasonData, MilestoneData } from "./leaderData";
+import type { SeasonData, MilestoneData } from "./leaderData";
 
 const masterpiece = seasons.find((s) => s.id === "masterpiece")!;
 const submerged = seasons.find((s) => s.id === "submerged")!;
@@ -20,8 +21,8 @@ interface PilarConfig {
   badge: string;
   BadgeIcon: LucideIcon;
   description: string;
-  preview: MediaItem | undefined;
-  allMedia: MediaItem[];
+  /** Panel Emma category id — the card preview and panel gallery are both fetched live. */
+  category: string;
   narrative: string;
   panelTitle: string;
   panelSubtitle: string;
@@ -41,8 +42,7 @@ const pilares: PilarConfig[] = [
     badge: "1er Puesto Nacional · Clasificación Mundial",
     BadgeIcon: Trophy,
     description: masterpiece.description,
-    preview: masterpiece.media.find((m) => m.type === "image"),
-    allMedia: masterpiece.media,
+    category: masterpiece.category,
     narrative: masterpiece.evolution,
     panelTitle: masterpiece.name,
     panelSubtitle: masterpiece.year,
@@ -59,8 +59,7 @@ const pilares: PilarConfig[] = [
     badge: "Mejor Proyecto Innovación · SiembraTech",
     BadgeIcon: Sparkles,
     description: submerged.description,
-    preview: submerged.media.find((m) => m.type === "image"),
-    allMedia: submerged.media,
+    category: submerged.category,
     narrative: submerged.evolution,
     panelTitle: submerged.name,
     panelSubtitle: submerged.year,
@@ -77,8 +76,7 @@ const pilares: PilarConfig[] = [
     badge: "Colombia en Houston, Texas · Motivate Winner",
     BadgeIcon: Globe,
     description: internacional.description,
-    preview: internacional.media.find((m) => m.type === "image"),
-    allMedia: internacional.media,
+    category: internacional.category,
     narrative: internacional.narrative,
     panelTitle: internacional.title,
     panelSubtitle: internacional.subtitle,
@@ -100,6 +98,12 @@ function PilarCard({
   const glowFaint = pilar.glowColor.replace("0.3", "0.08");
   const glowMid = pilar.glowColor.replace("0.3", "0.18");
   const glowBorder = pilar.glowColor.replace("0.3", "0.25");
+  // Lightweight eager fetch just for the card thumbnail — the full gallery
+  // loads inside ImmersivePanel only once the card is clicked. Small page
+  // size (not 1) so a video landing first in upload order doesn't leave the
+  // card without an image to show.
+  const { media: previewMedia } = useCategoryMedia(pilar.category, true, 6);
+  const preview = previewMedia.find((m) => m.type === "image");
 
   return (
     <button
@@ -122,10 +126,10 @@ function PilarCard({
 
       {/* Image preview */}
       <div className="relative h-40 sm:h-52 overflow-hidden">
-        {pilar.preview ? (
+        {preview ? (
           <img
-            src={pilar.preview.src}
-            alt={pilar.preview.alt}
+            src={preview.src}
+            alt={preview.alt}
             loading="lazy"
             decoding="async"
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
@@ -299,7 +303,7 @@ export default function PilaresSection() {
           description={active.description}
           narrative={active.narrative}
           accentColor={active.color}
-          media={active.allMedia}
+          category={active.category}
           headerIcon={active.icon}
           extraContent={extraContent}
         />

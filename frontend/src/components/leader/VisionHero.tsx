@@ -22,6 +22,7 @@ import { useSiteValue } from "@/lib/siteContent";
 import { parseValue, useResolvedSrc } from "@/lib/siteMedia";
 import { SiteMediaVisual } from "@/components/SiteMediaVisual";
 import ImmersivePanel from "./ImmersivePanel";
+import { useCategoryMedia } from "@/lib/useCategoryMedia";
 import { milestones } from "./leaderData";
 import type { MilestoneData } from "./leaderData";
 
@@ -138,7 +139,10 @@ function MilestoneChipCard({
   onClick: () => void;
   fullWidth?: boolean;
 }) {
-  const preview = milestone.media.find((m) => m.type === "image");
+  // Lightweight eager fetch just for the chip thumbnail — the full gallery
+  // loads inside ImmersivePanel only once the chip is clicked.
+  const { media: previewMedia } = useCategoryMedia(milestone.category, true, 6);
+  const preview = previewMedia.find((m) => m.type === "image");
   const Icon = colors.Icon;
   return (
     <button
@@ -609,7 +613,7 @@ export default function VisionHero() {
           description={activeMilestone.description}
           narrative={activeMilestone.narrative}
           accentColor={activeMilestoneColors.accent}
-          media={activeMilestone.media}
+          category={activeMilestone.category}
           headerIcon={activeMilestoneColors.logo}
           extraContent={
             <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-5 backdrop-blur-sm">

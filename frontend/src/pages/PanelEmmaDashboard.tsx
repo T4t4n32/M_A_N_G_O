@@ -18,6 +18,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Select,
   SelectContent,
+  SelectGroup,
+  SelectLabel,
   SelectItem,
   SelectTrigger,
   SelectValue,
@@ -65,7 +67,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { PanelItem, PanelKind, categoriesFor } from "@/lib/panelEmmaContent";
+import { PanelItem, PanelKind, categoriesFor, categoryLabel, MEDIA_SECTIONS, autoRoute } from "@/lib/panelEmmaContent";
 import { Progress } from "@/components/ui/progress";
 
 /* ─────────────────────── API record → PanelItem ─────────────── */
@@ -84,6 +86,37 @@ function recordToPanelItem(r: UploadedFileRecord): PanelItem {
     size: r.size,
     addedAt: r.uploaded_at,
   };
+}
+
+/* ─────────────────────── Category <Select> options ─────────────── */
+
+/** Documents keep a flat category list; images/videos are grouped by real site section. */
+function CategorySelectItems({ kind }: { kind: PanelKind }) {
+  if (kind === "document") {
+    return (
+      <>
+        {categoriesFor(kind).map((c) => (
+          <SelectItem key={c} value={c} className="focus:bg-white/[0.08] focus:text-white">
+            {c}
+          </SelectItem>
+        ))}
+      </>
+    );
+  }
+  return (
+    <>
+      {MEDIA_SECTIONS.map((section) => (
+        <SelectGroup key={section.group}>
+          <SelectLabel className="text-white/40">{section.group}</SelectLabel>
+          {section.categories.map((c) => (
+            <SelectItem key={c.id} value={c.id} className="focus:bg-white/[0.08] focus:text-white">
+              {c.label}
+            </SelectItem>
+          ))}
+        </SelectGroup>
+      ))}
+    </>
+  );
 }
 
 /* ─────────────────────────── Header ─────────────────────────── */
@@ -489,11 +522,7 @@ function UploadForm({
               <SelectValue />
             </SelectTrigger>
             <SelectContent className="bg-[hsl(205,35%,12%)] border-white/10 text-white">
-              {cats.map((c) => (
-                <SelectItem key={c} value={c} className="focus:bg-white/[0.08] focus:text-white">
-                  {c}
-                </SelectItem>
-              ))}
+              <CategorySelectItems kind={kind} />
             </SelectContent>
           </Select>
         </div>
@@ -639,7 +668,7 @@ function ImageCard({
         <h4 className="text-sm font-semibold text-white leading-tight">{item.title}</h4>
         {item.description && <p className="text-xs text-white/60 leading-relaxed line-clamp-3">{item.description}</p>}
         <div className="mt-1 pt-2 border-t border-white/[0.06] flex items-center justify-between text-[10px] text-white/40">
-          <span>{item.category}</span>
+          <span>{categoryLabel(item.category)}</span>
           {item.format && <span className="font-mono">{item.format}</span>}
         </div>
       </div>
@@ -667,7 +696,7 @@ function VideoCard({
         <h4 className="text-sm font-semibold text-white leading-tight">{item.title}</h4>
         {item.description && <p className="text-xs text-white/60 leading-relaxed line-clamp-2">{item.description}</p>}
         <div className="mt-auto pt-2 flex items-center justify-between text-[10px] text-white/40">
-          <span>{item.category}</span>
+          <span>{categoryLabel(item.category)}</span>
           {item.format && <span className="font-mono">{item.format}</span>}
         </div>
       </div>
@@ -701,7 +730,7 @@ function FileRow({
         </div>
         {item.description && <p className="text-xs text-white/60 leading-relaxed mt-1 line-clamp-2">{item.description}</p>}
         <div className="mt-1.5 flex items-center gap-3 text-[10px] text-white/40">
-          <span>{item.category}</span>
+          <span>{categoryLabel(item.category)}</span>
           {item.size != null && <span>{(item.size / 1024).toFixed(1)} KB</span>}
         </div>
       </div>
@@ -772,7 +801,6 @@ function EditDialog({
   }, [item]);
 
   if (!item) return null;
-  const cats = categoriesFor(item.kind);
 
   const handleSave = async () => {
     if (!title.trim()) {
@@ -827,9 +855,7 @@ function EditDialog({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent className="bg-[hsl(205,35%,12%)] border-white/10 text-white">
-                {cats.map((c) => (
-                  <SelectItem key={c} value={c} className="focus:bg-white/[0.08] focus:text-white">{c}</SelectItem>
-                ))}
+                <CategorySelectItems kind={item.kind} />
               </SelectContent>
             </Select>
           </div>
@@ -872,7 +898,6 @@ function ContentSection({
   emptyIcon: typeof ImageIcon;
   emptyLabel: string;
 }) {
-  const cats = categoriesFor(kind);
   const [items, setItems] = useState<PanelItem[]>([]);
   const [loadingItems, setLoadingItems] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -1006,9 +1031,7 @@ function ContentSection({
               <SelectContent className="bg-[hsl(205,35%,12%)] border-white/10 text-white">
                 <SelectItem value="Todas" className="focus:bg-white/[0.08] focus:text-white">Todas las categorías</SelectItem>
                 <SelectItem value="Sin categoría" className="focus:bg-white/[0.08] focus:text-white">Sin categoría</SelectItem>
-                {cats.map((c) => (
-                  <SelectItem key={c} value={c} className="focus:bg-white/[0.08] focus:text-white">{c}</SelectItem>
-                ))}
+                <CategorySelectItems kind={kind} />
               </SelectContent>
             </Select>
             <Select value={sort} onValueChange={(v) => setSort(v as "newest" | "oldest")}>
@@ -1093,6 +1116,267 @@ function ContentSection({
         onSaved={() => { setEditing(null); void refresh(); }}
         onSave={handleSaveEdit}
       />
+    </div>
+  );
+}
+
+/* ─────────────────────── Sections browser (review workflow) ─────────────────────── */
+
+/**
+ * Lets the operator go through the site section by section — exactly the
+ * "photo by photo, video by video" review workflow: pick a section (mirrors
+ * the real site structure), see every image/video already published there,
+ * and keep/edit/delete each one or upload new ones straight into it.
+ */
+function SectionUploadForm({ category, onAdded }: { category: string; onAdded: () => void }) {
+  const { toast } = useToast();
+  type Status = "queued" | "processing" | "ok" | "error";
+  type PendingItem = { file: File; title: string; kind: PanelKind; status: Status; progress: number; error?: string };
+  const [pending, setPending] = useState<PendingItem[]>([]);
+  const [description, setDescription] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [dragOver, setDragOver] = useState(false);
+
+  const handleFiles = useCallback((files: FileList | null) => {
+    if (!files || files.length === 0) return;
+    const accepted: PendingItem[] = Array.from(files)
+      .map((f) => {
+        const route = autoRoute(f);
+        if (route.kind === "document") return null; // sections only take images/videos
+        return { file: f, title: f.name.replace(/\.[^.]+$/, ""), kind: route.kind, status: "queued" as Status, progress: 0 };
+      })
+      .filter((x): x is PendingItem => x !== null);
+    const rejected = files.length - accepted.length;
+    if (rejected > 0) {
+      toast({
+        title: `${rejected} archivo${rejected > 1 ? "s" : ""} descartado${rejected > 1 ? "s" : ""}`,
+        description: "Esta sección solo admite imágenes y videos.",
+        variant: "destructive",
+      });
+    }
+    if (accepted.length) setPending((prev) => [...prev, ...accepted]);
+  }, [toast]);
+
+  const reset = () => {
+    setPending([]);
+    setDescription("");
+    const input = document.getElementById(`section-file-input-${category}`) as HTMLInputElement | null;
+    if (input) input.value = "";
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const queue = pending.filter((p) => p.status !== "ok");
+    if (queue.length === 0) {
+      toast({ title: "Faltan archivos", description: "Selecciona o arrastra al menos un archivo.", variant: "destructive" });
+      return;
+    }
+    setBusy(true);
+    let ok = 0;
+    let failed = 0;
+    try {
+      for (let i = 0; i < pending.length; i++) {
+        const p = pending[i];
+        if (p.status === "ok") continue;
+        setPending((prev) => prev.map((x, j) => (j === i ? { ...x, status: "processing", progress: 0, error: undefined } : x)));
+        try {
+          await uploadFile(
+            p.file,
+            { kind: p.kind, title: p.title.trim() || p.file.name, category, description: description.trim() },
+            (pct) => setPending((prev) => prev.map((x, j) => (j === i ? { ...x, progress: pct } : x))),
+          );
+          setPending((prev) => prev.map((x, j) => (j === i ? { ...x, status: "ok", progress: 100 } : x)));
+          ok += 1;
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : "Error desconocido.";
+          setPending((prev) => prev.map((x, j) => (j === i ? { ...x, status: "error", error: msg } : x)));
+          failed += 1;
+        }
+      }
+      if (ok > 0) toast({ title: ok === 1 ? "Archivo subido" : `${ok} archivos subidos`, description: `Sección: ${categoryLabel(category)}.${failed ? ` ${failed} fallidos.` : ""}` });
+      if (failed > 0) toast({ title: "Algunos archivos no se pudieron subir", description: "Revisa los archivos en rojo e intenta de nuevo.", variant: "destructive" });
+      setPending((prev) => prev.filter((x) => x.status === "error"));
+      onAdded();
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const openPicker = () => (document.getElementById(`section-file-input-${category}`) as HTMLInputElement | null)?.click();
+  const statusLabel: Record<Status, string> = { queued: "En cola", processing: "Procesando", ok: "Listo", error: "Error" };
+
+  return (
+    <form
+      onSubmit={handleSubmit}
+      onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+      onDragEnter={(e) => { e.preventDefault(); setDragOver(true); }}
+      onDragLeave={(e) => { if (e.currentTarget.contains(e.relatedTarget as Node)) return; setDragOver(false); }}
+      onDrop={(e) => { e.preventDefault(); setDragOver(false); handleFiles(e.dataTransfer?.files ?? null); }}
+      className={`rounded-xl border bg-white/[0.03] p-5 space-y-4 transition-colors ${dragOver ? "border-accent bg-accent/[0.06] ring-2 ring-accent/40" : "border-white/10"}`}
+    >
+      <div className="flex items-center gap-2 text-white/80">
+        <Sparkles className="h-4 w-4 text-accent" />
+        <h3 className="text-sm font-semibold">Añadir a "{categoryLabel(category)}"</h3>
+      </div>
+      <div
+        role="button"
+        tabIndex={0}
+        onClick={openPicker}
+        onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openPicker(); } }}
+        className={`flex flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed px-4 py-6 cursor-pointer transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-accent ${dragOver ? "border-accent bg-accent/10 text-accent" : "border-white/15 bg-white/[0.02] text-white/60 hover:border-accent/50 hover:text-white"}`}
+      >
+        <Upload className="h-5 w-5" />
+        <span className="text-xs text-center">
+          <span className="font-semibold">Haz clic</span> para elegir, o arrastra fotos/videos aquí
+        </span>
+      </div>
+      <Input id={`section-file-input-${category}`} type="file" accept={`${IMAGE_ACCEPT},${VIDEO_ACCEPT}`} multiple onChange={(e) => handleFiles(e.target.files)} className="hidden" aria-hidden="true" tabIndex={-1} />
+      {pending.length > 0 && (
+        <ul className="space-y-1.5 rounded-md border border-white/10 bg-black/20 p-2">
+          {pending.map((p, idx) => {
+            const statusColor = p.status === "ok" ? "text-emerald-300" : p.status === "error" ? "text-destructive" : p.status === "processing" ? "text-accent" : "text-white/40";
+            return (
+              <li key={`${p.file.name}-${idx}`} className="rounded-md p-2">
+                <div className="flex items-center gap-2">
+                  {p.kind === "video" ? <Video className="h-3.5 w-3.5 text-white/40 shrink-0" /> : <ImageIcon className="h-3.5 w-3.5 text-white/40 shrink-0" />}
+                  <Input
+                    value={p.title}
+                    onChange={(e) => { const v = e.target.value; setPending((prev) => prev.map((x, i) => (i === idx ? { ...x, title: v } : x))); }}
+                    aria-label={`Nombre para ${p.file.name}`}
+                    disabled={busy && p.status === "processing"}
+                    className="bg-white/[0.04] border-white/10 text-white h-8 text-xs flex-1"
+                  />
+                  <span className={`inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider ${statusColor}`}>
+                    {p.status === "ok" && <CheckCircle2 className="h-3 w-3" />}
+                    {p.status === "error" && <XCircle className="h-3 w-3" />}
+                    {p.status === "processing" && <Loader2 className="h-3 w-3 animate-spin" />}
+                    {statusLabel[p.status]}
+                  </span>
+                  <button type="button" onClick={() => setPending((prev) => prev.filter((_, i) => i !== idx))} disabled={busy && p.status === "processing"} aria-label={`Quitar ${p.file.name}`} className="h-7 w-7 rounded-md text-white/50 hover:text-white hover:bg-white/[0.08] flex items-center justify-center disabled:opacity-30">
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+                {(p.status === "processing" || p.status === "ok" || p.status === "error") && (
+                  <div className="mt-1.5 pl-6 pr-1">
+                    <Progress value={p.status === "ok" ? 100 : p.status === "error" ? 100 : p.progress} className={`h-1 ${p.status === "error" ? "[&>div]:bg-destructive" : p.status === "ok" ? "[&>div]:bg-emerald-500" : "[&>div]:bg-accent"}`} />
+                    {p.status === "error" && p.error && <p className="mt-1 text-[10px] text-destructive">{p.error}</p>}
+                  </div>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+      )}
+      <div className="space-y-2">
+        <Label htmlFor={`section-desc-${category}`} className="text-xs text-white/60">Descripción <span className="text-white/30">(aplica a todos)</span></Label>
+        <Textarea id={`section-desc-${category}`} value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Descripción opcional." className="bg-white/[0.04] border-white/10 text-white min-h-[60px] text-sm" />
+      </div>
+      <div className="flex items-center justify-end gap-2 pt-1">
+        <Button type="button" variant="ghost" onClick={reset} disabled={busy} className="text-white/60 hover:text-white hover:bg-white/[0.08]">Limpiar</Button>
+        <Button type="submit" disabled={busy || pending.filter((p) => p.status !== "ok").length === 0} className="bg-accent hover:bg-accent/90 text-accent-foreground">
+          {busy ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Upload className="h-4 w-4 mr-2" />}
+          {busy ? "Subiendo…" : (() => { const n = pending.filter((p) => p.status !== "ok").length; return n > 1 ? `Subir ${n} archivos` : "Subir archivo"; })()}
+        </Button>
+      </div>
+    </form>
+  );
+}
+
+function SectionsBrowser() {
+  const { toast } = useToast();
+  const flatCategories = MEDIA_SECTIONS.flatMap((s) => s.categories);
+  const [activeCategory, setActiveCategory] = useState<string>(flatCategories[0].id);
+  const [items, setItems] = useState<PanelItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [editing, setEditing] = useState<PanelItem | null>(null);
+
+  const refresh = useCallback(async () => {
+    setLoading(true);
+    try {
+      const { items: records } = await listServerUploads(undefined, 1, 200, activeCategory);
+      setItems(records.map(recordToPanelItem));
+    } catch (err) {
+      toast({ title: "Error al cargar", description: err instanceof Error ? err.message : "Error desconocido", variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
+  }, [activeCategory, toast]);
+
+  useEffect(() => { void refresh(); }, [refresh]);
+
+  const handleDelete = useCallback(async (it: PanelItem) => {
+    try {
+      await deleteServerUpload(Number(it.id));
+      void refresh();
+    } catch (err) {
+      toast({ title: "No se pudo eliminar", description: err instanceof Error ? err.message : "Error desconocido", variant: "destructive" });
+    }
+  }, [refresh, toast]);
+
+  const handleSaveEdit = useCallback(async (it: PanelItem, patch: { title: string; description: string; category: string }) => {
+    await patchServerUpload(Number(it.id), patch);
+    void refresh();
+  }, [refresh]);
+
+  return (
+    <div className="grid md:grid-cols-[220px_1fr] gap-5">
+      {/* Section picker */}
+      <nav className="space-y-4">
+        {MEDIA_SECTIONS.map((section) => (
+          <div key={section.group}>
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-white/30 mb-1.5 px-1">{section.group}</p>
+            <div className="space-y-1">
+              {section.categories.map((c) => (
+                <button
+                  key={c.id}
+                  type="button"
+                  onClick={() => setActiveCategory(c.id)}
+                  className={`w-full text-left px-3 py-2 rounded-lg text-xs font-medium transition-colors ${
+                    activeCategory === c.id
+                      ? "bg-accent text-accent-foreground"
+                      : "text-white/60 hover:text-white hover:bg-white/[0.06]"
+                  }`}
+                >
+                  {c.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        ))}
+      </nav>
+
+      {/* Selected section content */}
+      <div className="space-y-5 min-w-0">
+        <SectionUploadForm category={activeCategory} onAdded={refresh} />
+
+        <div className="rounded-xl border border-white/10 bg-white/[0.03] p-5">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-sm font-semibold text-white">{categoryLabel(activeCategory)}</h3>
+            <p className="text-[11px] text-white/40">{loading ? "Cargando…" : `${items.length} elemento${items.length !== 1 ? "s" : ""}`}</p>
+          </div>
+
+          {loading ? (
+            <div className="text-center py-10"><Loader2 className="h-8 w-8 mx-auto mb-2 animate-spin opacity-50 text-white/40" /></div>
+          ) : items.length === 0 ? (
+            <div className="text-center py-10 text-white/40 text-sm">
+              <LayoutGrid className="h-8 w-8 mx-auto mb-2 opacity-50" />
+              Aún no hay fotos ni videos en esta sección.
+            </div>
+          ) : (
+            <div className="columns-1 sm:columns-2 lg:columns-3 gap-3 [column-fill:_balance]">
+              {items.map((it) => (
+                <div key={it.id} className="mb-3 break-inside-avoid">
+                  {it.kind === "video"
+                    ? <VideoCard item={it} onEdit={setEditing} onDelete={handleDelete} />
+                    : <ImageCard item={it} onEdit={setEditing} onDelete={handleDelete} />}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      <EditDialog item={editing} open={editing !== null} onClose={() => setEditing(null)} onSaved={() => { setEditing(null); void refresh(); }} onSave={handleSaveEdit} />
     </div>
   );
 }
@@ -1244,7 +1528,7 @@ function AllLibrarySection() {
                       {it.description && <p className="text-xs text-white/50 mt-0.5 line-clamp-2">{it.description}</p>}
                       <div className="mt-1.5 flex items-center gap-2 flex-wrap">
                         <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded border ${typeColor[it.kind]}`}>{it.format ?? "FILE"}</span>
-                        <span className="text-[10px] text-white/40">{it.category}</span>
+                        <span className="text-[10px] text-white/40">{categoryLabel(it.category)}</span>
                       </div>
                     </div>
                     <div className="flex flex-col gap-1 shrink-0">
@@ -1329,8 +1613,11 @@ export default function PanelEmmaDashboard() {
           </div>
         </div>
 
-        <Tabs defaultValue="all" className="w-full">
-          <TabsList className="bg-white/[0.04] border border-white/10 grid grid-cols-4 w-full h-auto p-1">
+        <Tabs defaultValue="sections" className="w-full">
+          <TabsList className="bg-white/[0.04] border border-white/10 grid grid-cols-5 w-full h-auto p-1">
+            <TabsTrigger value="sections" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground text-white/60 gap-1.5 py-2">
+              <FolderOpen className="h-4 w-4" /> Secciones
+            </TabsTrigger>
             <TabsTrigger value="all" className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground text-white/60 gap-1.5 py-2">
               <LayoutGrid className="h-4 w-4" /> Todos
             </TabsTrigger>
@@ -1344,6 +1631,10 @@ export default function PanelEmmaDashboard() {
               <FileText className="h-4 w-4" /> Documentos
             </TabsTrigger>
           </TabsList>
+
+          <TabsContent value="sections" className="mt-5">
+            <SectionsBrowser />
+          </TabsContent>
 
           <TabsContent value="all" className="mt-5">
             <AllLibrarySection />

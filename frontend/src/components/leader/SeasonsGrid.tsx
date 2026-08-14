@@ -95,7 +95,7 @@ export default function SeasonsGrid() {
           description={displayData.description}
           narrative={displayData.evolution}
           accentColor={displayData.color}
-          media={displayData.media}
+          category={displayData.category}
           headerIcon={displayData.icon}
           extraContent={
             <>

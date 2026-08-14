@@ -344,6 +344,7 @@ export interface UploadedFileRecord {
   title: string;
   description: string | null;
   category: string | null;
+  subcategory: string | null;
   size: number;
   mime_type: string | null;
   uploaded_at: string;
@@ -398,11 +399,13 @@ export const listServerUploads = (
   kind?: "image" | "video" | "document",
   page?: number,
   per_page?: number,
+  category?: string,
 ) => {
   const p = new URLSearchParams();
   if (kind)     p.set("kind",     kind);
   if (page)     p.set("page",     String(page));
   if (per_page) p.set("per_page", String(per_page));
+  if (category) p.set("category", category);
   const qs = p.toString();
   return request<{ items: UploadedFileRecord[]; total: number; pages?: number }>(
     `/admin/uploads${qs ? `?${qs}` : ""}`,
@@ -427,7 +430,7 @@ export const deleteServerUpload = (id: number) =>
 
 export const patchServerUpload = (
   id: number,
-  patch: { title?: string; description?: string; category?: string },
+  patch: { title?: string; description?: string; category?: string; subcategory?: string },
 ) =>
   request<UploadedFileRecord>(`/admin/uploads/${id}`, {
     method: "PATCH",

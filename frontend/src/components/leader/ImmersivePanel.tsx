@@ -1,8 +1,8 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Play, Video, ZoomIn, ChevronLeft, ChevronRight } from "lucide-react";
-import type { MediaItem } from "./leaderData";
+import { X, Play, Video, ZoomIn, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
+import { useCategoryMedia } from "@/lib/useCategoryMedia";
 import DomeGallery from "@/components/effects/DomeGallery";
 
 interface ImmersivePanelProps {
@@ -13,7 +13,8 @@ interface ImmersivePanelProps {
   description: string;
   narrative: string;
   accentColor?: string;
-  media: MediaItem[];
+  /** Panel Emma category id — media is fetched live, so edits/deletes there take effect immediately. */
+  category: string;
   extraContent?: React.ReactNode;
   headerIcon?: string;
 }
@@ -213,12 +214,13 @@ export default function ImmersivePanel({
   description,
   narrative,
   accentColor = "hsl(168 72% 42%)",
-  media,
+  category,
   extraContent,
   headerIcon,
 }: ImmersivePanelProps) {
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
   const isMobile = useIsMobile();
+  const { media, loading: mediaLoading } = useCategoryMedia(category, isOpen);
 
   const subcategories = useMemo(() => {
     const subs = new Set<string>();
@@ -275,6 +277,11 @@ export default function ImmersivePanel({
   }, [media]);
 
   const domeSegments = Math.min(galleryItems.length > 20 ? 18 : 24, 24);
+  // DomeGallery fills a fixed segments×5 tile mesh by cycling through the real photos
+  // (segments=24 → 120 tiles), so a small gallery gets the same handful of photos
+  // repeated dozens of times — inflating the apparent count. Below this threshold,
+  // fall back to the plain (non-repeating) grid used on mobile.
+  const useDome = galleryItems.length >= 20;
 
   return createPortal(
     <AnimatePresence>
@@ -348,6 +355,12 @@ export default function ImmersivePanel({
 
             {/* Content */}
             <div className="px-4 pb-6 md:p-8 space-y-5">
+              {mediaLoading && media.length === 0 && (
+                <div className="flex justify-center py-10">
+                  <Loader2 className="h-6 w-6 text-white/30 animate-spin" />
+                </div>
+              )}
+
               {/* Gallery */}
               {galleryItems.length > 0 && (
                 <div>
@@ -388,7 +401,7 @@ export default function ImmersivePanel({
                     </div>
                   )}
 
-                  {isMobile ? (
+                  {isMobile || !useDome ? (
                     <MobileImageGrid images={galleryItems} />
                   ) : (
                     <>

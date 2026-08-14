@@ -81,7 +81,7 @@ export default function MilestonesGrid() {
           description={active.description}
           narrative={active.narrative}
           accentColor={colors.accent}
-          media={active.media}
+          category={active.category}
           headerIcon={colors.logo}
           extraContent={
             <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-5 backdrop-blur-sm">
