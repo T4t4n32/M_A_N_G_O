@@ -1974,12 +1974,12 @@ export function ProjectSection() {
           </div>
 
           {/* ── Three-element composition: card | video | card ── */}
-          <div className="flex flex-col lg:flex-row items-stretch gap-2 mb-14">
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto_1fr] gap-6 items-start mb-14">
 
-            {/* ── LEFT: Access card — compact ── */}
+            {/* ── LEFT: Access card ── */}
             <a
               href="/login"
-              className="group flex flex-col rounded-2xl overflow-hidden border transition-all duration-300 flex-shrink-0 lg:w-36 xl:w-40"
+              className="group flex flex-col rounded-2xl overflow-hidden border transition-all duration-300 h-full"
               style={{
                 background: "linear-gradient(160deg, hsl(168,42%,8%), hsl(168,32%,5%))",
                 borderColor: "rgba(0,201,167,0.22)",
@@ -1988,7 +1988,7 @@ export function ProjectSection() {
             >
               <div className="h-[3px]"
                 style={{ background: "linear-gradient(90deg, #00c9a7, #38bdf8 60%, transparent)" }} />
-              <div className="flex flex-col gap-5 p-6 flex-1">
+              <div className="flex flex-col gap-6 p-7 flex-1">
                 {/* Status */}
                 <div className="flex items-center gap-2">
                   <span className="w-1.5 h-1.5 rounded-full flex-shrink-0"
@@ -1997,53 +1997,53 @@ export function ProjectSection() {
                     style={{ color: "rgba(0,201,167,0.65)" }}>Panel activo</span>
                 </div>
                 {/* Icon + Title */}
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
                     style={{ background: "rgba(0,201,167,0.1)", border: "1px solid rgba(0,201,167,0.25)", boxShadow: "0 0 20px rgba(0,201,167,0.1)" }}>
-                    <LogIn className="w-5 h-5" style={{ color: "#00c9a7" }} />
+                    <LogIn className="w-6 h-6" style={{ color: "#00c9a7" }} />
                   </div>
-                  <h4 className="text-white font-black text-xl leading-tight">
+                  <h4 className="text-white font-black text-2xl leading-tight">
                     Acceder<br />al sistema
                   </h4>
                 </div>
                 {/* Description */}
                 <p className="text-white/65 text-sm leading-relaxed flex-1">
-                  Datos en tiempo real de los tres sensores, historial de misiones y visualizaciones georreferenciadas.
+                  Datos en tiempo real de los tres sensores oceánicos, historial de misiones y visualizaciones georreferenciadas. Acceso exclusivo para miembros del proyecto.
                 </p>
+                {/* Stats row */}
+                <div className="grid grid-cols-3 gap-3">
+                  {[
+                    { value: "3", label: "Sensores" },
+                    { value: "24/7", label: "Monitoreo" },
+                    { value: "Live", label: "Datos" },
+                  ].map(({ value, label }) => (
+                    <div key={label} className="text-center p-2.5 rounded-lg"
+                      style={{ background: "rgba(0,201,167,0.05)", border: "1px solid rgba(0,201,167,0.12)" }}>
+                      <p className="text-[hsl(168,72%,55%)] font-black text-base leading-none mb-0.5">{value}</p>
+                      <p className="text-white/35 text-[10px] font-medium uppercase tracking-wide">{label}</p>
+                    </div>
+                  ))}
+                </div>
                 {/* CTA */}
                 <span
-                  className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold transition-all duration-300 group-hover:shadow-[0_0_22px_rgba(0,201,167,0.22)]"
+                  className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-full text-sm font-semibold transition-all duration-300 group-hover:shadow-[0_0_28px_rgba(0,201,167,0.28)] w-full"
                   style={{
                     background: "rgba(0,201,167,0.12)",
                     border: "1px solid rgba(0,201,167,0.35)",
                     color: "#00c9a7",
                   }}
                 >
-                  <LogIn className="w-3.5 h-3.5" />
+                  <LogIn className="w-4 h-4" />
                   Entrar al panel
                 </span>
               </div>
             </a>
 
-            {/* ── LEFT connector ── */}
-            <div className="hidden lg:flex items-center flex-shrink-0 w-5">
-              <div className="relative w-full h-px" style={{ background: "rgba(0,201,167,0.15)" }}>
-                <div
-                  className="absolute top-1/2 -translate-y-1/2 w-2 h-2 rounded-full"
-                  style={{
-                    background: "#00c9a7",
-                    boxShadow: "0 0 8px 4px rgba(0,201,167,0.45)",
-                    animation: "access-flow 2.8s linear infinite",
-                  }}
-                />
-              </div>
-            </div>
-
             {/* ── CENTER: Pitch video + channel CTA — DOMINANT ── */}
-            <div className="flex-1 flex flex-col items-center min-w-0">
+            <div className="flex flex-col items-center w-full lg:w-[300px]">
 
               {/* Pitch label */}
-              <div className="flex items-center gap-2 mb-3 w-full max-w-[300px] justify-center">
+              <div className="flex items-center gap-2 mb-4 w-full justify-center">
                 <div className="h-px flex-1" style={{ background: "rgba(0,201,167,0.22)" }} />
                 <span className="font-mono text-[9px] uppercase tracking-[0.28em]"
                   style={{ color: "rgba(0,201,167,0.45)" }}>
@@ -2053,7 +2053,7 @@ export function ProjectSection() {
               </div>
 
               {/* Video — 9:16 portrait with broadcast marks */}
-              <div className="w-full max-w-[300px]">
+              <div className="w-full">
                 <div
                   className="relative rounded-2xl overflow-hidden w-full"
                   style={{
@@ -2074,17 +2074,17 @@ export function ProjectSection() {
                     className="absolute inset-0 w-full h-full border-0"
                   />
                   {/* Corner registration marks */}
-                  <div className="absolute top-2.5 left-2.5 w-4 h-4 border-t-2 border-l-2 pointer-events-none"
-                    style={{ borderColor: "rgba(0,201,167,0.6)" }} />
-                  <div className="absolute top-2.5 right-2.5 w-4 h-4 border-t-2 border-r-2 pointer-events-none"
-                    style={{ borderColor: "rgba(0,201,167,0.6)" }} />
-                  <div className="absolute bottom-2.5 left-2.5 w-4 h-4 border-b-2 border-l-2 pointer-events-none"
-                    style={{ borderColor: "rgba(0,201,167,0.6)" }} />
-                  <div className="absolute bottom-2.5 right-2.5 w-4 h-4 border-b-2 border-r-2 pointer-events-none"
-                    style={{ borderColor: "rgba(0,201,167,0.6)" }} />
+                  <div className="absolute top-2.5 left-2.5 w-5 h-5 border-t-2 border-l-2 pointer-events-none"
+                    style={{ borderColor: "rgba(0,201,167,0.7)" }} />
+                  <div className="absolute top-2.5 right-2.5 w-5 h-5 border-t-2 border-r-2 pointer-events-none"
+                    style={{ borderColor: "rgba(0,201,167,0.7)" }} />
+                  <div className="absolute bottom-2.5 left-2.5 w-5 h-5 border-b-2 border-l-2 pointer-events-none"
+                    style={{ borderColor: "rgba(0,201,167,0.7)" }} />
+                  <div className="absolute bottom-2.5 right-2.5 w-5 h-5 border-b-2 border-r-2 pointer-events-none"
+                    style={{ borderColor: "rgba(0,201,167,0.7)" }} />
                   {/* REC badge */}
                   <div
-                    className="absolute top-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5 px-2 py-0.5 rounded-full pointer-events-none"
+                    className="absolute top-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5 px-2.5 py-1 rounded-full pointer-events-none"
                     style={{ background: "rgba(0,0,0,0.68)", backdropFilter: "blur(6px)" }}
                   >
                     <span className="w-1.5 h-1.5 rounded-full bg-red-500"
@@ -2093,93 +2093,87 @@ export function ProjectSection() {
                   </div>
                 </div>
 
-                {/* Channel CTA — elevated invitation */}
+                {/* Channel CTA */}
                 <a
                   href="https://youtube.com/playlist?list=PLihEHjHiZwltNIlYLmrEdUG3jRNTNPq0M"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="group block mt-4 p-5 rounded-xl border transition-all duration-300 hover:border-red-500/40 hover:bg-red-500/[0.09]"
-                  style={{ background: "rgba(239,68,68,0.07)", borderColor: "rgba(239,68,68,0.20)", boxShadow: "0 4px 24px rgba(239,68,68,0.06)" }}
+                  className="group flex items-center gap-3 mt-4 p-4 rounded-xl border transition-all duration-300 hover:border-red-500/40 hover:bg-red-500/[0.09]"
+                  style={{ background: "rgba(239,68,68,0.07)", borderColor: "rgba(239,68,68,0.20)" }}
                 >
-                  <div className="flex items-center gap-3 mb-2.5">
-                    <div
-                      className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-all duration-300 group-hover:scale-105"
-                      style={{ background: "rgba(239,68,68,0.15)", border: "1px solid rgba(239,68,68,0.28)" }}
-                    >
-                      <svg className="w-5 h-5 text-red-400" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-                        <path d="M23.5 6.19a3.02 3.02 0 0 0-2.12-2.14C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.38.55A3.02 3.02 0 0 0 .5 6.19 31.6 31.6 0 0 0 0 12a31.6 31.6 0 0 0 .5 5.81 3.02 3.02 0 0 0 2.12 2.14c1.88.55 9.38.55 9.38.55s7.5 0 9.38-.55a3.02 3.02 0 0 0 2.12-2.14A31.6 31.6 0 0 0 24 12a31.6 31.6 0 0 0-.5-5.81zM9.75 15.02V8.98L15.5 12l-5.75 3.02z" />
-                      </svg>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-mono text-[9px] uppercase tracking-widest text-red-400/60 mb-0.5">Canal oficial</p>
-                      <p className="text-white font-bold text-base group-hover:text-white transition-colors leading-tight">
-                        Ver todos los videos
-                      </p>
-                    </div>
-                    <ExternalLink className="w-4 h-4 text-red-400/40 group-hover:text-red-400 group-hover:translate-x-0.5 transition-all flex-shrink-0" />
+                  <div
+                    className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 transition-all duration-300 group-hover:scale-105"
+                    style={{ background: "rgba(239,68,68,0.15)", border: "1px solid rgba(239,68,68,0.28)" }}
+                  >
+                    <svg className="w-4 h-4 text-red-400" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+                      <path d="M23.5 6.19a3.02 3.02 0 0 0-2.12-2.14C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.38.55A3.02 3.02 0 0 0 .5 6.19 31.6 31.6 0 0 0 0 12a31.6 31.6 0 0 0 .5 5.81 3.02 3.02 0 0 0 2.12 2.14c1.88.55 9.38.55 9.38.55s7.5 0 9.38-.55a3.02 3.02 0 0 0 2.12-2.14A31.6 31.6 0 0 0 24 12a31.6 31.6 0 0 0-.5-5.81zM9.75 15.02V8.98L15.5 12l-5.75 3.02z" />
+                    </svg>
                   </div>
-                  <p className="text-white/40 text-xs leading-relaxed">
-                    Cada prueba, cada salida de campo y cada mejora — documentado en video desde el día uno.
-                  </p>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-white font-bold text-sm leading-tight">Ver todos los videos</p>
+                    <p className="text-white/35 text-[10px] mt-0.5">Canal oficial M.A.N.G.O.</p>
+                  </div>
+                  <ExternalLink className="w-3.5 h-3.5 text-red-400/40 group-hover:text-red-400 flex-shrink-0" />
                 </a>
               </div>
             </div>
 
-            {/* ── RIGHT connector ── */}
-            <div className="hidden lg:flex items-center flex-shrink-0 w-5">
-              <div className="relative w-full h-px" style={{ background: "rgba(167,139,250,0.15)" }}>
-                <div
-                  className="absolute top-1/2 -translate-y-1/2 w-2 h-2 rounded-full"
-                  style={{
-                    background: "#a78bfa",
-                    boxShadow: "0 0 8px 4px rgba(167,139,250,0.45)",
-                    animation: "access-flow 2.8s 1.4s linear infinite",
-                  }}
-                />
-              </div>
-            </div>
-
-            {/* ── RIGHT: Request card — compact ── */}
+            {/* ── RIGHT: Request access card ── */}
             <a
               href="#contacto"
-              className="group flex flex-col rounded-2xl overflow-hidden border transition-all duration-300 flex-shrink-0 lg:w-36 xl:w-40"
+              className="group flex flex-col rounded-2xl overflow-hidden border transition-all duration-300 h-full"
               style={{
                 background: "linear-gradient(160deg, hsl(265,35%,8%), hsl(265,25%,5%))",
-                borderColor: "rgba(167,139,250,0.18)",
+                borderColor: "rgba(167,139,250,0.22)",
+                boxShadow: "0 0 40px rgba(167,139,250,0.05)",
               }}
             >
               <div className="h-[3px]"
-                style={{ background: "linear-gradient(90deg, #a78bfa, #a78bfa20 60%, transparent)" }} />
-              <div className="flex flex-col gap-5 p-6 flex-1">
+                style={{ background: "linear-gradient(90deg, #a78bfa, #c084fc 60%, transparent)" }} />
+              <div className="flex flex-col gap-6 p-7 flex-1">
                 {/* Label */}
                 <span className="font-mono text-[10px] uppercase tracking-widest"
                   style={{ color: "rgba(167,139,250,0.65)" }}>
                   Investigadores · Instituciones
                 </span>
                 {/* Icon + Title */}
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
                     style={{ background: "rgba(167,139,250,0.09)", border: "1px solid rgba(167,139,250,0.25)", boxShadow: "0 0 20px rgba(167,139,250,0.08)" }}>
-                    <Mail className="w-5 h-5" style={{ color: "#a78bfa" }} />
+                    <Mail className="w-6 h-6" style={{ color: "#a78bfa" }} />
                   </div>
-                  <h4 className="text-white font-black text-xl leading-tight">
+                  <h4 className="text-white font-black text-2xl leading-tight">
                     Solicitar<br />acceso
                   </h4>
                 </div>
                 {/* Description */}
                 <p className="text-white/65 text-sm leading-relaxed flex-1">
-                  Disponible para instituciones de investigación y organizaciones de monitoreo ambiental.
+                  Disponible para instituciones de investigación, universidades y organizaciones de monitoreo ambiental certificadas.
                 </p>
+                {/* Requirements list */}
+                <ul className="space-y-2.5">
+                  {[
+                    "Institución de investigación o universidad",
+                    "Propósito de monitoreo ambiental",
+                    "Aprobación del equipo M.A.N.G.O.",
+                  ].map((req) => (
+                    <li key={req} className="flex items-start gap-2.5">
+                      <span className="w-1.5 h-1.5 rounded-full flex-shrink-0 mt-1.5"
+                        style={{ background: "#a78bfa" }} />
+                      <span className="text-white/45 text-xs leading-relaxed">{req}</span>
+                    </li>
+                  ))}
+                </ul>
                 {/* CTA */}
                 <span
-                  className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold transition-all duration-300 group-hover:shadow-[0_0_22px_rgba(167,139,250,0.18)]"
+                  className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-full text-sm font-semibold transition-all duration-300 group-hover:shadow-[0_0_28px_rgba(167,139,250,0.22)] w-full"
                   style={{
                     background: "rgba(167,139,250,0.09)",
                     border: "1px solid rgba(167,139,250,0.30)",
                     color: "#a78bfa",
                   }}
                 >
-                  <Mail className="w-3.5 h-3.5" />
+                  <Mail className="w-4 h-4" />
                   Ir a contacto
                 </span>
               </div>

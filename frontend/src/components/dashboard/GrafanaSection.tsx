@@ -1,23 +1,11 @@
-/**
- * GrafanaSection — embeds the M.A.N.G.O. Grafana public dashboard.
- *
- * Uses Grafana 13 "Public Dashboards" feature which works without session
- * cookies and is fully embeddable in iframes without authentication issues.
- *
- * Public dashboard access token is stored in the Grafana DB (grafana_data volume).
- * If the volume is recreated, run: scripts/regenerate_grafana_public_dashboard.sh
- */
-
 import { useState } from "react";
 import { ExternalLink, Activity, RefreshCw, Maximize2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
-const GRAFANA_BASE       = "/grafana";
-const PUBLIC_TOKEN       = "213ec81a9c09412cb3a2c2c2d18ed0ec";
-const PUBLIC_DASH_PATH   = `${GRAFANA_BASE}/public-dashboards/${PUBLIC_TOKEN}`;
-const FULL_DASH_PATH     = `${GRAFANA_BASE}/d/mango-sensors-v1/`;
+const GRAFANA_BASE    = "/grafana";
+const FULL_DASH_PATH  = `${GRAFANA_BASE}/d/mango-sensors-v1/`;
 
 const TIME_RANGES = [
   { label: "24 h", from: "now-24h"  },
@@ -33,13 +21,15 @@ type TimeRange = typeof TIME_RANGES[number];
 
 function embedSrc(range: TimeRange, refreshKey: number): string {
   const params = new URLSearchParams({
-    from:    range.from,
-    to:      "now",
-    refresh: "false",
-    // cache-bust on manual refresh
-    _r:      String(refreshKey),
+    orgId:    "1",
+    from:     range.from,
+    to:       "now",
+    timezone: "browser",
+    theme:    "dark",
+    kiosk:    "tv",
+    _r:       String(refreshKey),
   });
-  return `${PUBLIC_DASH_PATH}?${params}`;
+  return `${FULL_DASH_PATH}?${params}`;
 }
 
 // ── Main component ────────────────────────────────────────────────────────────
