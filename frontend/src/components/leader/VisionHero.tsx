@@ -255,7 +255,10 @@ export default function VisionHero() {
 
             {/* Four pillar chips + expandable panels */}
             <div>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              {/* 2 cols until lg: below lg the photo+text split (md:grid-cols-[260px_1fr])
+                  leaves this column too narrow for 4 across — confirmed by testing at 768px,
+                  where sm:grid-cols-4 truncated every chip's label. */}
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
                 {/* FORMACIÓN — link to YouTube channel */}
                 <a
                   href={YOUTUBE_CHANNEL}
