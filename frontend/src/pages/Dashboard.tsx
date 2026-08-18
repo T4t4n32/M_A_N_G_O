@@ -1,6 +1,7 @@
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { ConnectionBanner } from "@/components/dashboard/ConnectionBanner";
 import { SensorCard } from "@/components/dashboard/SensorCard";
+import { OceanMetricsCard } from "@/components/dashboard/OceanMetricsCard";
 import { SensorChart } from "@/components/dashboard/SensorChart";
 import { ImuPanel } from "@/components/dashboard/ImuPanel";
 import { SystemStatusBar } from "@/components/dashboard/SystemStatusBar";
@@ -215,6 +216,24 @@ export default function Dashboard() {
             Panel de Control — M.A.N.G.O
           </GradientText>
         </motion.div>
+
+        {/* ── OCEAN METRICS — KPI summary row ──────────────────────────────
+            Consolidated card for the 3 core sensors (pH, temperatura, turbidez).
+            Uses useOceanMetrics (TanStack Query) against GET /api/v1/readings/latest;
+            handles isLoading/isError internally so the panel stays up if Flask is down. */}
+        <motion.section
+          id="metricas"
+          initial="hidden"
+          animate="show"
+          variants={sectionIn}
+          aria-label="Métricas oceánicas — resumen"
+        >
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="md:col-span-3">
+              <OceanMetricsCard />
+            </div>
+          </div>
+        </motion.section>
 
         {/* ── SENSORS + BNO080 — 4-column row ────────────────────────────── */}
         <motion.section
