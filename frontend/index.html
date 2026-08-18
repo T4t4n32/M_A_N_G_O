@@ -34,6 +34,27 @@
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+    <!--
+      Import map for dynamically-loaded Framer.com code components
+      (see src/components/effects/FramerEmbed.tsx). These are fetched at
+      runtime as an isolated React island, never bundled by Vite, so their
+      bare-specifier imports need to be resolved by the browser itself.
+      "framer" has no real npm runtime (the published package is
+      TypeScript types only) so it points at our own local shim.
+    -->
+    <script type="importmap">
+      {
+        "imports": {
+          "framer": "/framer-shim.js",
+          "react": "https://esm.sh/react@18.3.1",
+          "react/jsx-runtime": "https://esm.sh/react@18.3.1/jsx-runtime",
+          "react-dom": "https://esm.sh/react-dom@18.3.1?deps=react@18.3.1",
+          "react-dom/client": "https://esm.sh/react-dom@18.3.1/client?deps=react@18.3.1",
+          "framer-motion": "https://esm.sh/framer-motion@12.34.3?deps=react@18.3.1,react-dom@18.3.1"
+        }
+      }
+    </script>
   </head>
 
   <body>

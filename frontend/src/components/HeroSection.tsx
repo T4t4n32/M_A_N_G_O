@@ -6,8 +6,34 @@ import RotatingText from "@/components/effects/RotatingText";
 import GradientText from "@/components/effects/GradientText";
 import DecryptedText from "@/components/effects/DecryptedText";
 import LiquidBackground from "@/components/effects/LiquidBackground";
+import { FramerEmbed } from "@/components/effects/FramerEmbed";
 import { useSiteValue } from "@/lib/siteContent";
 import { EditableField } from "@/components/editor/EditableField";
+
+// Published Framer.com "AnimatedLiquidBackground" code component. Rendered
+// via FramerEmbed (isolated React island, see that file for why); falls
+// back to the native LiquidBackground shader if framer.com/CDN is unreachable.
+const FRAMER_LIQUID_BG_URL = "https://framer.com/m/AnimatedLiquidBackground-Prod-vIhm.js@ghH1aHLmGZ0iE7qXDFVk";
+const FRAMER_LIQUID_BG_PROPS = {
+  preset: "custom",
+  colorMode: "custom",
+  color1: "#00e5bf",
+  color2: "#0891b2",
+  color3: "#2563eb",
+  speed: 25,
+  scale: 0.5,
+  distortion: 15,
+  swirl: 60,
+  swirlIterations: 10,
+  softness: 100,
+  rotation: -30,
+  proportion: 35,
+  shape: "Checks",
+  shapeSize: 10,
+  offset: 0,
+  radius: "0px",
+  style: { width: "100%", height: "100%" },
+};
 
 const particles = Array.from({ length: 5 }, (_, i) => ({
   id: i,
@@ -32,18 +58,24 @@ export function HeroSection() {
 
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
-      {/* LiquidBackground WebGL Background */}
+      {/* Framer AnimatedLiquidBackground — falls back to the native LiquidBackground shader */}
       <div className="absolute inset-0 z-0">
-        <LiquidBackground
-          speed={0.15}
-          scale={1.4}
-          distortion={3.0}
-          swirl={2.5}
-          rotation={-30}
-          brightness={0.55}
-          color1="#00e5bf"
-          color2="#0891b2"
-          color3="#2563eb"
+        <FramerEmbed
+          moduleUrl={FRAMER_LIQUID_BG_URL}
+          componentProps={FRAMER_LIQUID_BG_PROPS}
+          fallback={
+            <LiquidBackground
+              speed={0.15}
+              scale={1.4}
+              distortion={3.0}
+              swirl={2.5}
+              rotation={-30}
+              brightness={0.55}
+              color1="#00e5bf"
+              color2="#0891b2"
+              color3="#2563eb"
+            />
+          }
         />
       </div>
 
