@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import RotatingText from "@/components/effects/RotatingText";
 import GradientText from "@/components/effects/GradientText";
 import DecryptedText from "@/components/effects/DecryptedText";
-import LineWaves from "@/components/effects/LineWaves";
+import LiquidBackground from "@/components/effects/LiquidBackground";
 import { useSiteValue } from "@/lib/siteContent";
 import { EditableField } from "@/components/editor/EditableField";
 
@@ -32,22 +32,18 @@ export function HeroSection() {
 
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
-      {/* LineWaves WebGL Background */}
+      {/* LiquidBackground WebGL Background */}
       <div className="absolute inset-0 z-0">
-        <LineWaves
-          speed={0.2}
-          innerLineCount={22}
-          outerLineCount={28}
-          warpIntensity={1.3}
+        <LiquidBackground
+          speed={0.15}
+          scale={1.4}
+          distortion={3.0}
+          swirl={2.5}
           rotation={-30}
-          edgeFadeWidth={0}
-          colorCycleSpeed={0.6}
-          brightness={0.22}
+          brightness={0.55}
           color1="#00e5bf"
           color2="#0891b2"
           color3="#2563eb"
-          enableMouseInteraction
-          mouseInfluence={2}
         />
       </div>
 
