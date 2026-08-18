@@ -3,7 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { useEffect } from "react";
+import { useEffect, lazy, Suspense } from "react";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
@@ -16,6 +16,17 @@ import Archivos from "./pages/Archivos";
 import { useSecretShortcut } from "@/hooks/useSecretShortcut";
 import { LiveEditProvider, useLiveEdit } from "@/contexts/LiveEditContext";
 import { LiveEditToolbar } from "@/components/editor/LiveEditToolbar";
+
+// Lazy-loaded — heavy former landing sections, only fetched when visited
+const Galeria = lazy(() => import("./pages/Galeria"));
+const Documentacion = lazy(() => import("./pages/Documentacion"));
+const Sobre = lazy(() => import("./pages/Sobre"));
+
+const RouteFallback = () => (
+  <div className="min-h-screen flex justify-center items-center bg-mango-dark">
+    <div className="w-8 h-8 border-2 border-white/20 border-t-accent rounded-full animate-spin" />
+  </div>
+);
 
 const queryClient = new QueryClient();
 
@@ -75,6 +86,9 @@ const App = () => (
               </ProtectedRoute>
             }
           />
+          <Route path="/galeria" element={<Suspense fallback={<RouteFallback />}><Galeria /></Suspense>} />
+          <Route path="/documentacion" element={<Suspense fallback={<RouteFallback />}><Documentacion /></Suspense>} />
+          <Route path="/sobre" element={<Suspense fallback={<RouteFallback />}><Sobre /></Suspense>} />
           <Route path="/panel-emma" element={<PanelEmmaLogin />} />
           <Route path="/panel-emma/dashboard" element={<PanelEmmaDashboard />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

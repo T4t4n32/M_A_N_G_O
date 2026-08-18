@@ -6,22 +6,26 @@ import { ScrollReveal } from "@/components/ScrollReveal";
 import { useSiteSeo } from "@/lib/siteSeo";
 import { syncFromPublished } from "@/lib/siteContent";
 import { useLiveEdit } from "@/contexts/LiveEditContext";
+import { useScrollToHash } from "@/hooks/useScrollToHash";
 
 // Lazy-load all heavy sections — none are needed for first paint
 const ProjectSection = lazy(() =>
   import("@/components/ProjectSection").then((m) => ({ default: m.ProjectSection }))
 );
-const DocumentationSection = lazy(() =>
-  import("@/components/DocumentationSection").then((m) => ({ default: m.DocumentationSection }))
-);
-const GallerySection = lazy(() =>
-  import("@/components/GallerySection").then((m) => ({ default: m.GallerySection }))
-);
-const AboutSection = lazy(() =>
-  import("@/components/AboutSection").then((m) => ({ default: m.AboutSection }))
-);
 const ContactSection = lazy(() =>
   import("@/components/ContactSection").then((m) => ({ default: m.ContactSection }))
+);
+
+// Documentación, Galería y Sobre now live at their own routes (/documentacion,
+// /galeria, /sobre); the landing only shows a lightweight teaser for each.
+const DocumentationTeaser = lazy(() =>
+  import("@/components/teasers/DocumentationTeaser").then((m) => ({ default: m.DocumentationTeaser }))
+);
+const GalleryTeaser = lazy(() =>
+  import("@/components/teasers/GalleryTeaser").then((m) => ({ default: m.GalleryTeaser }))
+);
+const AboutTeaser = lazy(() =>
+  import("@/components/teasers/AboutTeaser").then((m) => ({ default: m.AboutTeaser }))
 );
 
 /** Hairline gradient separator — marks section boundaries without creating a visual gap */
@@ -49,6 +53,7 @@ const SectionFallback = () => (
 
 const Index = () => {
   useSiteSeo();
+  useScrollToHash();
   const { isEditMode } = useLiveEdit();
 
   // Sync published content from backend into localStorage so all visitors
@@ -81,7 +86,7 @@ const Index = () => {
 
       <Suspense fallback={<SectionFallback />}>
         <ScrollReveal variant="fade-up" delay={0.1}>
-          <DocumentationSection />
+          <DocumentationTeaser />
         </ScrollReveal>
       </Suspense>
 
@@ -89,7 +94,7 @@ const Index = () => {
 
       <Suspense fallback={<SectionFallback />}>
         <ScrollReveal variant="scale">
-          <GallerySection />
+          <GalleryTeaser />
         </ScrollReveal>
       </Suspense>
 
@@ -97,7 +102,7 @@ const Index = () => {
 
       <Suspense fallback={<SectionFallback />}>
         <ScrollReveal variant="fade-up">
-          <AboutSection />
+          <AboutTeaser />
         </ScrollReveal>
       </Suspense>
 

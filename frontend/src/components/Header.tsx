@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import BubbleMenu from "@/components/effects/BubbleMenu";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import icono from "@/assets/icono.png";
+import { navigateToSection } from "@/lib/sectionNav";
 
 const bubbleItems = [
   {
@@ -15,21 +16,21 @@ const bubbleItems = [
   },
   {
     label: "Documentación",
-    href: "#documentacion",
+    href: "/documentacion",
     ariaLabel: "Ir a Documentación",
     rotation: 5,
     hoverStyles: { bgColor: "hsl(204, 70%, 53%)", textColor: "#ffffff" },
   },
   {
     label: "Galería",
-    href: "#galeria",
+    href: "/galeria",
     ariaLabel: "Ir a Galería",
     rotation: -4,
     hoverStyles: { bgColor: "hsl(50, 90%, 58%)", textColor: "hsl(205, 40%, 12%)" },
   },
   {
     label: "Sobre",
-    href: "#sobre",
+    href: "/sobre",
     ariaLabel: "Ir a Sobre",
     rotation: 6,
     hoverStyles: { bgColor: "hsl(180, 55%, 42%)", textColor: "#ffffff" },
@@ -104,13 +105,7 @@ export function Header() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  const handleItemClick = (href: string) => {
-    if (href.startsWith("/")) {
-      navigate(href);
-    } else {
-      document.querySelector(href)?.scrollIntoView({ behavior: "smooth" });
-    }
-  };
+  const handleItemClick = (href: string) => navigateToSection(navigate, href);
 
   const easing = "cubic-bezier(0.4, 0, 0.2, 1)";
 
@@ -141,9 +136,16 @@ export function Header() {
 
             {/* Logo */}
             <a
-              href="#"
+              href="/"
               className="flex items-center gap-2 group"
-              onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+              onClick={(e) => {
+                e.preventDefault();
+                if (window.location.pathname === "/") {
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                } else {
+                  navigate("/");
+                }
+              }}
             >
               <img src={icono} alt="M.A.N.G.O" className="h-9 w-9 rounded-full" />
               <span className="text-xl font-bold text-white tracking-wide">

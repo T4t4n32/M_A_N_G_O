@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import icono from "@/assets/icono.png";
 import { useToast } from "@/hooks/use-toast";
 import GradientText from "@/components/effects/GradientText";
@@ -9,12 +10,13 @@ import { LoginModal } from "@/components/LoginModal";
 import StarBorder from "@/components/effects/StarBorder";
 import { Cpu, Radio, Wifi, Database, BarChart3, Globe, Shield, Zap, Mail, Phone, MapPin, Lock } from "lucide-react";
 import { useSiteValue } from "@/lib/siteContent";
+import { navigateToSection } from "@/lib/sectionNav";
 
 const links = [
   { label: "Proyecto", href: "#proyecto" },
-  { label: "Documentación", href: "#documentacion" },
-  { label: "Galería", href: "#galeria" },
-  { label: "Sobre", href: "#sobre" },
+  { label: "Documentación", href: "/documentacion" },
+  { label: "Galería", href: "/galeria" },
+  { label: "Sobre", href: "/sobre" },
   { label: "Contacto", href: "#contacto" },
 ];
 
@@ -31,15 +33,14 @@ const techLogos = [
 
 export function Footer() {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const tagline = useSiteValue("footer.tagline", "M.A.N.G.O. es un dispositivo autónomo que monitorea la salud del agua en ecosistemas de manglar — registrando acidez, temperatura y turbidez de forma continua y en tiempo real.");
   const institutionsText = useSiteValue("footer.institutions.text", "Solicita acceso para tu institución o equipo de investigación ambiental.");
   const copyright = useSiteValue("footer.copyright", "M.A.N.G.O — Todos los derechos reservados");
   const legal = useSiteValue("footer.legal", "Proyecto de investigación con fines académicos y de conservación ambiental");
 
-  const scrollTo = (href: string) => {
-    document.querySelector(href)?.scrollIntoView({ behavior: "smooth" });
-  };
+  const scrollTo = (href: string) => navigateToSection(navigate, href);
 
   const handlePhoneCopy = () => {
     navigator.clipboard.writeText("+573217693339");
