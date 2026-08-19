@@ -101,7 +101,19 @@ export function DocumentationTeaser() {
     return () => { api.off("select", onSelect); };
   }, [api]);
 
-  const goToDocs = () => navigate("/documentacion");
+  // react-router doesn't reset scroll on navigate — without this, landing on
+  // /documentacion keeps whatever scroll depth this teaser was viewed at,
+  // so the new page renders scrolled past its own top instead of starting
+  // clean (matches the pattern already used by Header/Footer route links).
+  const goToDocs = () => {
+    navigate("/documentacion");
+    window.scrollTo({ top: 0 });
+  };
+
+  const goToCategory = (category: string) => {
+    navigate(`/documentacion?categoria=${encodeURIComponent(category)}`);
+    window.scrollTo({ top: 0 });
+  };
 
   return (
     <section id="documentacion" className="py-20 md:py-28 bg-[hsl(210,38%,6%)] relative overflow-hidden">
@@ -136,11 +148,11 @@ export function DocumentationTeaser() {
                   role="button"
                   tabIndex={0}
                   aria-label={`Ver documentación de ${card.category}`}
-                  onClick={() => navigate(`/documentacion?categoria=${encodeURIComponent(card.category)}`)}
+                  onClick={() => goToCategory(card.category)}
                   onKeyDown={(e) => {
                     if (e.key !== "Enter" && e.key !== " ") return;
                     e.preventDefault();
-                    navigate(`/documentacion?categoria=${encodeURIComponent(card.category)}`);
+                    goToCategory(card.category);
                   }}
                   className="h-full rounded-2xl bg-white/[0.045] border border-white/10 overflow-hidden cursor-pointer hover:border-white/20 hover:-translate-y-0.5 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
                 >
