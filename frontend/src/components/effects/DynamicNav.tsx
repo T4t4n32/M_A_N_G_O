@@ -21,14 +21,16 @@ interface DynamicNavProps {
 
 const SCROLL_THRESHOLD = 24;
 const EDGE_GAP = 24;
+const TOP_GAP = 20;
 
 /**
- * Floating "island" nav: collapsed to just the logo, expands into a pill of
- * links on click. Framer-motion `layout` drives the capsule's width/shape
- * tween so the icon and the item row share one continuous morph instead of
- * two separately-animated pieces. Past SCROLL_THRESHOLD it also drifts from
- * centered (icon + wordmark) to left-anchored (icon only), independent of
- * open/closed state.
+ * Floating nav with two shapes. At the top of the page: a centered
+ * horizontal "island" — icon + wordmark, expands sideways into a row of
+ * links on click. Past SCROLL_THRESHOLD it morphs into a left-docked,
+ * vertically-centered sidebar — icon only, expands downward into a stacked
+ * column of links on click. Same DOM/state, framer-motion `layout` handles
+ * the row⇄column reflow; the position tween (left/top/x/y) lives on the
+ * outer wrapper so it never fights the inner size tween.
  */
 export function DynamicNav({ logo, logoAlt, name, items, onLogoClick, onItemClick, className = "" }: DynamicNavProps) {
   const [open, setOpen] = useState(false);
@@ -64,14 +66,20 @@ export function DynamicNav({ logo, logoAlt, name, items, onLogoClick, onItemClic
     <motion.div
       ref={rootRef}
       className={className}
-      animate={{ left: scrolled ? EDGE_GAP : "50%", x: scrolled ? 0 : "-50%" }}
+      animate={
+        scrolled
+          ? { left: EDGE_GAP, top: "50%", x: 0, y: "-50%" }
+          : { left: "50%", top: TOP_GAP, x: "-50%", y: 0 }
+      }
       transition={positionSpring}
     >
       <motion.div
         layout
         transition={spring}
         onClick={() => !open && setOpen(true)}
-        className="flex items-center overflow-hidden rounded-full border border-white/10 bg-[hsl(210,35%,8%)]/90 backdrop-blur-md shadow-lg"
+        className={`flex overflow-hidden border border-white/10 bg-[hsl(210,35%,8%)]/90 backdrop-blur-md shadow-lg ${
+          scrolled ? "flex-col items-stretch rounded-3xl" : "flex-row items-center rounded-full"
+        }`}
         style={{ cursor: open ? "default" : "pointer" }}
       >
         <motion.button
@@ -89,8 +97,10 @@ export function DynamicNav({ logo, logoAlt, name, items, onLogoClick, onItemClic
           }}
           aria-label={open ? logoAlt : "Abrir menú de navegación"}
           aria-expanded={open}
-          className="shrink-0 flex items-center h-14 rounded-full pl-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-[hsl(210,35%,8%)]"
-          style={{ paddingRight: scrolled ? 8 : 16 }}
+          className={`shrink-0 flex items-center h-14 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-[hsl(210,35%,8%)] ${
+            scrolled ? "w-14 justify-center" : "pl-2"
+          }`}
+          style={!scrolled ? { paddingRight: 16 } : undefined}
         >
           <img src={logo} alt="" className="h-9 w-9 shrink-0 rounded-full" />
           <AnimatePresence initial={false}>
@@ -117,10 +127,17 @@ export function DynamicNav({ logo, logoAlt, name, items, onLogoClick, onItemClic
               animate={{ opacity: 1, transition: { delay: 0.12, duration: 0.18 } }}
               exit={{ opacity: 0, transition: { duration: 0.08 } }}
               aria-label="Navegación principal"
-              className="flex items-center gap-1 pr-2"
+              className={
+                scrolled
+                  ? "flex flex-col items-stretch gap-1 px-2 pb-2"
+                  : "flex flex-row items-center gap-1 pr-2"
+              }
             >
               {items.map((item, i) => {
                 const isLast = i === items.length - 1;
+                const base = scrolled
+                  ? "w-full text-left px-4 py-2.5 rounded-xl"
+                  : "whitespace-nowrap px-4 py-2 rounded-full";
                 return (
                   <button
                     key={item.href}
@@ -131,8 +148,8 @@ export function DynamicNav({ logo, logoAlt, name, items, onLogoClick, onItemClic
                     aria-label={item.ariaLabel || item.label}
                     className={
                       isLast
-                        ? "whitespace-nowrap ml-1 px-4 py-2 text-sm font-semibold rounded-full bg-accent text-accent-foreground hover:bg-accent/90 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-[hsl(210,35%,8%)]"
-                        : "whitespace-nowrap px-4 py-2 text-sm font-medium text-white/80 hover:text-white rounded-full transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-[hsl(210,35%,8%)]"
+                        ? `${base} ${scrolled ? "mt-1" : "ml-1"} text-sm font-semibold bg-accent text-accent-foreground hover:bg-accent/90 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-[hsl(210,35%,8%)]`
+                        : `${base} text-sm font-medium text-white/80 hover:text-white transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-[hsl(210,35%,8%)]`
                     }
                     style={
                       !isLast
@@ -158,7 +175,11 @@ export function DynamicNav({ logo, logoAlt, name, items, onLogoClick, onItemClic
                 type="button"
                 onClick={() => setOpen(false)}
                 aria-label="Cerrar menú"
-                className="ml-1 mr-1 h-8 w-8 shrink-0 rounded-full flex items-center justify-center text-white/40 hover:text-white/80 hover:bg-white/10 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                className={
+                  scrolled
+                    ? "mt-1 h-8 w-8 self-center shrink-0 rounded-full flex items-center justify-center text-white/40 hover:text-white/80 hover:bg-white/10 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                    : "ml-1 mr-1 h-8 w-8 shrink-0 rounded-full flex items-center justify-center text-white/40 hover:text-white/80 hover:bg-white/10 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                }
               >
                 <X className="h-4 w-4" />
               </button>
