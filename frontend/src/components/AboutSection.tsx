@@ -50,8 +50,10 @@ export function AboutSection() {
           </p>
         </div>
 
-        {/* Personas + Librería — bio hero, then Drawer Cards + the 3D
-            bookshelf, in normal document flow with scroll-reveal fades. */}
+        {/* Personas + Librería — on desktop, the bio hero pins for one
+            viewport of scroll and fades away into Drawer Cards (sticky
+            left column) + the 3D bookshelf; mobile skips the pin and just
+            stacks everything. */}
         <PersonasHero />
 
         {/* Separator */}

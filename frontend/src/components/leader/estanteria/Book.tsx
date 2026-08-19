@@ -95,8 +95,8 @@ export function Book({ book, isOpen, isActive, dimmed, onEnter, onLeave, onActiv
             transformOrigin: "left center",
             boxShadow: "2px 0 12px rgba(0,0,0,0.35)",
           }}
-          animate={{ rotateY: isOpen ? -152 : 0 }}
-          transition={{ duration: 0.5, ease: [0.45, 0, 0.2, 1] }}
+          animate={{ rotateY: isOpen ? -70 : 0 }}
+          transition={{ duration: 0.6, ease: [0.45, 0, 0.2, 1] }}
         >
           {/* Spine edge — darker strip along the hinge, reads as the book's side */}
           <div

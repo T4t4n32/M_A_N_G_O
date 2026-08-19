@@ -1,10 +1,11 @@
-import { FileText, Youtube } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { useScroll, useTransform, motion } from "framer-motion";
 import Autoplay from "embla-carousel-autoplay";
+import { FileText, Youtube } from "lucide-react";
 import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
 import { Button } from "@/components/ui/button";
 import DecryptedText from "@/components/effects/DecryptedText";
 import GradientText from "@/components/effects/GradientText";
-import { ScrollReveal } from "@/components/ScrollReveal";
 import liderFoto from "@/assets/lider-foto.jpg";
 import { useSiteValue } from "@/lib/siteContent";
 import { parseValue, useResolvedSrc, useResolvedSrcs } from "@/lib/siteMedia";
@@ -19,6 +20,20 @@ const milestoneIdsByCard: Record<string, string[]> = {
   vision: ["ecolatas"],
   reconocimientos: ["reconocimiento-electronica", "reconocimiento-houston"],
 };
+
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(() =>
+    typeof window !== "undefined" ? window.innerWidth < 768 : false,
+  );
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 767px)");
+    setIsMobile(mq.matches);
+    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
+    mq.addEventListener("change", handler);
+    return () => mq.removeEventListener("change", handler);
+  }, []);
+  return isMobile;
+}
 
 function usePersonaPhotos() {
   const overrideRaw = useSiteValue("about.leader.photo", "");
@@ -104,7 +119,7 @@ function PhotoCarousel({ slides }: { slides: { src: string; alt: string }[] }) {
       <CarouselContent>
         {slides.map((s, i) => (
           <CarouselItem key={i}>
-            <div className="relative aspect-[4/5] rounded-[22px] overflow-hidden ring-[1.5px] ring-white/[0.15]">
+            <div className="relative aspect-[4/5] rounded-[22px] overflow-hidden ring-[1.5px] ring-white/80">
               <img src={s.src} alt={s.alt} className="w-full h-full object-cover" loading={i === 0 ? "eager" : "lazy"} />
               <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/50 to-transparent" />
               <div className="absolute bottom-3 left-3 flex items-center gap-2">
@@ -133,41 +148,79 @@ function LibraryHeading() {
 }
 
 /**
- * Personas — bio + real photo carousel, then Drawer Cards (Formación /
- * Inicios / Visión / Reconocimientos) + the Librería (Estantería). Plain
- * document flow throughout, revealed with the site's existing scroll-into-
- * view fade (ScrollReveal) rather than a pinned scroll-jacked morph: the
- * pin+crossfade version shipped a real bug (books not rendering visibly,
- * reported as a blank/black area) that isn't safely fixable without a
- * browser to verify against, so this trades the scripted transition for
- * something that reliably shows every book, at any shelf height, on any
- * device — no sticky pin, no inner scroll box, no clipping.
+ * The Drawer Cards (ex-"Piso 1": Formación/Inicios/Visión/Reconocimientos)
+ * pinned in a sticky left column on desktop while the shelf — potentially
+ * taller than the viewport — scrolls past on the right. Plain CSS `sticky`,
+ * no JS/scroll-jacking involved, so it can't desync or hide content.
  */
-export function PersonasHero() {
-  const slides = usePersonaPhotos();
+function LibrarySection() {
+  return (
+    <div className="grid md:grid-cols-[280px_1fr] gap-8 items-start">
+      <div className="grid grid-cols-2 gap-3 md:sticky md:top-28">
+        {personasCards.map((c) => (
+          <DrawerCard key={c.id} card={c} milestoneIds={milestoneIdsByCard[c.id]} />
+        ))}
+      </div>
+      <div>
+        <LibraryHeading />
+        <Estanteria />
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Desktop-only: the hero (bio + photo carousel) pins for one viewport's
+ * worth of scroll and fades/scales away, then releases naturally into
+ * LibrarySection below — a single fade axis on one self-contained block,
+ * not a crossfade between two competing pieces of content. LibrarySection
+ * is never inside the pinned box and is never opacity/clip-gated by scroll
+ * progress, so it's always fully visible once you scroll to it.
+ */
+function PinnedHero({ slides }: { slides: { src: string; alt: string }[] }) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const { scrollYProgress } = useScroll({ target: containerRef, offset: ["start start", "end start"] });
+  const opacity = useTransform(scrollYProgress, [0, 1], [1, 0]);
+  const scale = useTransform(scrollYProgress, [0, 1], [1, 0.94]);
+  const pointerEvents = useTransform(scrollYProgress, (v) => (v > 0.85 ? "none" : "auto"));
 
   return (
-    <div className="space-y-16 md:space-y-20">
-      <div className="grid md:grid-cols-2 gap-10 items-center">
-        <Bio />
-        <ScrollReveal variant="fade-up" delay={0.1}>
+    <div ref={containerRef} className="relative" style={{ height: "160vh" }}>
+      <div className="sticky top-0 h-screen flex items-center overflow-hidden">
+        <motion.div
+          style={{ opacity, scale, pointerEvents }}
+          className="w-full grid md:grid-cols-2 gap-10 items-center"
+        >
+          <Bio />
           <PhotoCarousel slides={slides} />
-        </ScrollReveal>
+        </motion.div>
       </div>
+    </div>
+  );
+}
 
-      <ScrollReveal variant="fade-up">
-        <div className="grid md:grid-cols-[280px_1fr] gap-8 items-start">
-          <div className="grid grid-cols-2 gap-3">
-            {personasCards.map((c) => (
-              <DrawerCard key={c.id} card={c} milestoneIds={milestoneIdsByCard[c.id]} />
-            ))}
-          </div>
-          <div>
-            <LibraryHeading />
-            <Estanteria />
-          </div>
+export function PersonasHero() {
+  const slides = usePersonaPhotos();
+  const isMobile = useIsMobile();
+
+  if (isMobile) {
+    // No pin, no two-column stickiness: there's no real hover on touch, and
+    // pinning a touch scroll doesn't make sense — everything just stacks.
+    return (
+      <div className="space-y-14 py-4">
+        <div className="grid gap-8">
+          <Bio />
+          <PhotoCarousel slides={slides} />
         </div>
-      </ScrollReveal>
+        <LibrarySection />
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <PinnedHero slides={slides} />
+      <LibrarySection />
     </div>
   );
 }

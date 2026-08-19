@@ -29,7 +29,7 @@ export function BookExpandedCard({ book, onClose }: BookExpandedCardProps) {
       <motion.div
         layoutId={`book-panel-${book.id}`}
         onClick={(e) => e.stopPropagation()}
-        className="relative grid md:grid-cols-2 w-full max-w-4xl max-h-[85vh] overflow-y-auto rounded-3xl border bg-[hsl(210,32%,10%)] shadow-2xl"
+        className="relative grid md:grid-cols-2 w-full max-w-4xl max-h-[85vh] overflow-y-auto rounded-[32px] border bg-[hsl(210,32%,10%)] shadow-2xl"
         style={{ borderColor: book.glowColor }}
       >
         <button
