@@ -2,6 +2,7 @@ import { lazy, Suspense, useEffect } from "react";
 import { Header } from "@/components/Header";
 import { HeroSection } from "@/components/HeroSection";
 import { Footer } from "@/components/Footer";
+import { TechStackBanner } from "@/components/TechStackBanner";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import { ApertureDivider } from "@/components/effects/ApertureDivider";
 import { useSiteSeo } from "@/lib/siteSeo";
@@ -118,6 +119,13 @@ const Index = () => {
           <ContactSection />
         </ScrollReveal>
       </Suspense>
+
+      {/* Landing-page-only — a real DOM sibling of <Footer>, not part of it,
+          so it never appears on /galeria, /documentacion, /sobre, etc. and
+          the footer growing/shrinking on those pages can't move it. */}
+      <div className="pt-4 pb-6 md:pb-10">
+        <TechStackBanner />
+      </div>
 
       <Footer />
     </main>

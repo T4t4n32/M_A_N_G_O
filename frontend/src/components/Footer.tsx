@@ -4,11 +4,10 @@ import icono from "@/assets/icono.png";
 import { useToast } from "@/hooks/use-toast";
 import GradientText from "@/components/effects/GradientText";
 import { ScrollReveal } from "@/components/ScrollReveal";
-import LogoLoop from "@/components/effects/LogoLoop";
 import SpotlightCard from "@/components/effects/SpotlightCard";
 import { LoginModal } from "@/components/LoginModal";
 import StarBorder from "@/components/effects/StarBorder";
-import { Cpu, Radio, Wifi, Database, BarChart3, Globe, Shield, Zap, Mail, Phone, MapPin, Lock } from "lucide-react";
+import { Mail, Phone, MapPin, Lock } from "lucide-react";
 import { useSiteValue } from "@/lib/siteContent";
 import { navigateToSection } from "@/lib/sectionNav";
 import { FramerEmbed } from "@/components/effects/FramerEmbed";
@@ -37,17 +36,6 @@ const links = [
   { label: "Contacto", href: "#contacto" },
 ];
 
-const techLogos = [
-  { node: <a href="https://www.espressif.com/en/products/socs/esp32" target="_blank" rel="noopener noreferrer" className="group relative flex items-center gap-2 rounded-full px-3 py-2 text-white/50 hover:text-white transition-all duration-300 cursor-pointer hover:bg-white/5"><Cpu className="h-5 w-5" /><span className="text-xs font-semibold">ESP32</span><span className="absolute bottom-full mb-3 left-1/2 -translate-x-1/2 bg-popover text-popover-foreground text-[11px] px-3 py-1.5 rounded-md opacity-0 group-hover:opacity-100 transition-all duration-300 whitespace-nowrap pointer-events-none z-[70] shadow-lg border border-border/80 backdrop-blur-md group-hover:-translate-y-0.5">Microcontrolador IoT</span></a>, title: "ESP32" },
-  { node: <a href="https://lora-alliance.org" target="_blank" rel="noopener noreferrer" className="group relative flex items-center gap-2 rounded-full px-3 py-2 text-white/50 hover:text-white transition-all duration-300 cursor-pointer hover:bg-white/5"><Radio className="h-5 w-5" /><span className="text-xs font-semibold">LoRa</span><span className="absolute bottom-full mb-3 left-1/2 -translate-x-1/2 bg-popover text-popover-foreground text-[11px] px-3 py-1.5 rounded-md opacity-0 group-hover:opacity-100 transition-all duration-300 whitespace-nowrap pointer-events-none z-[70] shadow-lg border border-border/80 backdrop-blur-md group-hover:-translate-y-0.5">Comunicación de largo alcance</span></a>, title: "LoRa" },
-  { node: <a href="https://www.wi-fi.org" target="_blank" rel="noopener noreferrer" className="group relative flex items-center gap-2 rounded-full px-3 py-2 text-white/50 hover:text-white transition-all duration-300 cursor-pointer hover:bg-white/5"><Wifi className="h-5 w-5" /><span className="text-xs font-semibold">WiFi</span><span className="absolute bottom-full mb-3 left-1/2 -translate-x-1/2 bg-popover text-popover-foreground text-[11px] px-3 py-1.5 rounded-md opacity-0 group-hover:opacity-100 transition-all duration-300 whitespace-nowrap pointer-events-none z-[70] shadow-lg border border-border/80 backdrop-blur-md group-hover:-translate-y-0.5">Conectividad inalámbrica</span></a>, title: "WiFi" },
-  { node: <a href="https://www.postgresql.org" target="_blank" rel="noopener noreferrer" className="group relative flex items-center gap-2 rounded-full px-3 py-2 text-white/50 hover:text-white transition-all duration-300 cursor-pointer hover:bg-white/5"><Database className="h-5 w-5" /><span className="text-xs font-semibold">PostgreSQL</span><span className="absolute bottom-full mb-3 left-1/2 -translate-x-1/2 bg-popover text-popover-foreground text-[11px] px-3 py-1.5 rounded-md opacity-0 group-hover:opacity-100 transition-all duration-300 whitespace-nowrap pointer-events-none z-[70] shadow-lg border border-border/80 backdrop-blur-md group-hover:-translate-y-0.5">Base de datos relacional</span></a>, title: "PostgreSQL" },
-  { node: <a href="https://grafana.com" target="_blank" rel="noopener noreferrer" className="group relative flex items-center gap-2 rounded-full px-3 py-2 text-white/50 hover:text-white transition-all duration-300 cursor-pointer hover:bg-white/5"><BarChart3 className="h-5 w-5" /><span className="text-xs font-semibold">Grafana</span><span className="absolute bottom-full mb-3 left-1/2 -translate-x-1/2 bg-popover text-popover-foreground text-[11px] px-3 py-1.5 rounded-md opacity-0 group-hover:opacity-100 transition-all duration-300 whitespace-nowrap pointer-events-none z-[70] shadow-lg border border-border/80 backdrop-blur-md group-hover:-translate-y-0.5">Visualización de datos</span></a>, title: "Grafana" },
-  { node: <a href="https://react.dev" target="_blank" rel="noopener noreferrer" className="group relative flex items-center gap-2 rounded-full px-3 py-2 text-white/50 hover:text-white transition-all duration-300 cursor-pointer hover:bg-white/5"><Globe className="h-5 w-5" /><span className="text-xs font-semibold">React</span><span className="absolute bottom-full mb-3 left-1/2 -translate-x-1/2 bg-popover text-popover-foreground text-[11px] px-3 py-1.5 rounded-md opacity-0 group-hover:opacity-100 transition-all duration-300 whitespace-nowrap pointer-events-none z-[70] shadow-lg border border-border/80 backdrop-blur-md group-hover:-translate-y-0.5">Interfaz de usuario</span></a>, title: "React" },
-  { node: <a href="https://developer.nvidia.com/embedded/jetson-tk1" target="_blank" rel="noopener noreferrer" className="group relative flex items-center gap-2 rounded-full px-3 py-2 text-white/50 hover:text-white transition-all duration-300 cursor-pointer hover:bg-white/5"><Shield className="h-5 w-5" /><span className="text-xs font-semibold">Jetson TK1</span><span className="absolute bottom-full mb-3 left-1/2 -translate-x-1/2 bg-popover text-popover-foreground text-[11px] px-3 py-1.5 rounded-md opacity-0 group-hover:opacity-100 transition-all duration-300 whitespace-nowrap pointer-events-none z-[70] shadow-lg border border-border/80 backdrop-blur-md group-hover:-translate-y-0.5">GPU para edge computing</span></a>, title: "Jetson TK1" },
-  { node: <a href="https://platformio.org" target="_blank" rel="noopener noreferrer" className="group relative flex items-center gap-2 rounded-full px-3 py-2 text-white/50 hover:text-white transition-all duration-300 cursor-pointer hover:bg-white/5"><Zap className="h-5 w-5" /><span className="text-xs font-semibold">PlatformIO</span><span className="absolute bottom-full mb-3 left-1/2 -translate-x-1/2 bg-popover text-popover-foreground text-[11px] px-3 py-1.5 rounded-md opacity-0 group-hover:opacity-100 transition-all duration-300 whitespace-nowrap pointer-events-none z-[70] shadow-lg border border-border/80 backdrop-blur-md group-hover:-translate-y-0.5">IDE para embebidos</span></a>, title: "PlatformIO" },
-];
-
 export function Footer() {
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -65,31 +53,17 @@ export function Footer() {
   };
 
   return (
-    <footer className="bg-mango-dark text-white/70 relative overflow-hidden">
+    // No bg-mango-dark fill here on purpose: the real page background (set
+    // on <main>) shows straight through everywhere outside the rounded
+    // panel below, so the footer reads as a card floating on that
+    // background rather than another opaque band — the panel is the only
+    // layer with its own fill.
+    <footer className="text-white/70 relative overflow-hidden">
       {/* Breathing ambient glow — styled after the Framer "Breathing Footer"
           reference; see BreathingGlow.tsx for why it's reproduced natively
           instead of embedded. Sits at z-0 so every real section below
           needs relative z-10 to paint above it. */}
       <BreathingGlow />
-
-      {/* Subtle top glow */}
-      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[hsl(168,72%,42%)]/15 to-transparent z-10" />
-
-      {/* Tech Stack LogoLoop */}
-      <div className="border-b border-white/[0.06] py-5 overflow-visible relative z-10">
-        <div className="max-w-7xl mx-auto px-4">
-          <p className="text-[10px] uppercase tracking-widest text-white/25 text-center mb-3 font-semibold">Tecnologías utilizadas en el proyecto</p>
-          <LogoLoop
-            logos={techLogos}
-            speed={60}
-            direction="left"
-            logoHeight={28}
-            gap={56}
-            fadeOut
-            fadeOutColor="hsl(210, 35%, 8%)"
-          />
-        </div>
-      </div>
 
       {/* Liquid-glass slab — styled after the Framer "Liquid Glass Footer"
           reference (https://framer.com/m/Liquid-Glass-Footer-PpecQS.js@NwnM5wWKuZaTzAqqZTeX):
@@ -107,11 +81,11 @@ export function Footer() {
           reproduced; every card and function already in this footer moves
           inside it unchanged. */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 md:py-14 relative z-10">
-        <div className="relative overflow-hidden rounded-[32px] md:rounded-[40px] border border-white/10 bg-gradient-to-b from-white/[0.07] via-white/[0.02] to-white/[0.05] backdrop-blur-2xl shadow-[0_24px_70px_-20px_rgba(0,0,0,0.6),inset_0_1px_0_rgba(255,255,255,0.08),inset_0_-1px_0_rgba(0,0,0,0.3)]">
+        <div className="relative overflow-hidden rounded-[32px] border border-white/10 bg-white/5 backdrop-blur-xl shadow-[0_20px_60px_-20px_rgba(0,0,0,0.5)]">
         <div className="p-6 md:p-10">
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 lg:gap-8">
           <ScrollReveal variant="fade-up" delay={0}>
-          <SpotlightCard className="sm:col-span-2 lg:col-span-1 rounded-3xl border border-white/10 bg-white/[0.03] p-6 backdrop-blur-sm" spotlightColor="rgba(0, 201, 167, 0.15)">
+          <SpotlightCard className="rounded-3xl border border-white/10 bg-white/[0.03] p-6 backdrop-blur-sm" spotlightColor="rgba(0, 201, 167, 0.15)">
             <div className="flex items-center gap-2 mb-4">
               <img src={icono} alt="M.A.N.G.O" className="h-8 w-8 rounded-full" />
               <GradientText
