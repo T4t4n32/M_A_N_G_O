@@ -1,4 +1,5 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { docs } from "@/components/DocumentationSection";
 import { DOCS_CATEGORIES } from "@/components/docs/docsCategories";
 import { DocsNavbar } from "@/components/docs/DocsNavbar";
@@ -8,11 +9,28 @@ import { DocsMain } from "@/components/docs/DocsMain";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { useSiteSeo } from "@/lib/siteSeo";
 
+const isKnownCategory = (id: string | null): id is string =>
+  DOCS_CATEGORIES.some((c) => c.id === id);
+
 export default function Documentacion() {
   useSiteSeo();
   const [theme, setTheme] = useState<"light" | "dark">("dark");
-  const [activeCategory, setActiveCategory] = useState(DOCS_CATEGORIES[0].id);
+  const [searchParams] = useSearchParams();
+  const requestedCategory = searchParams.get("categoria");
+  const [activeCategory, setActiveCategory] = useState(
+    () => (isKnownCategory(requestedCategory) ? requestedCategory : DOCS_CATEGORIES[0].id),
+  );
   const contentRef = useRef<HTMLDivElement>(null);
+
+  // Arriving from a link like /documentacion?categoria=Electrónica (e.g. the
+  // landing page's documentation carousel) both selects that category and
+  // jumps straight to the content — skipping the hero's manual "explorar"
+  // step, since the visitor already told us what they want to see.
+  useEffect(() => {
+    if (!isKnownCategory(requestedCategory)) return;
+    setActiveCategory(requestedCategory);
+    contentRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [requestedCategory]);
 
   const counts = useMemo(() => {
     const c: Record<string, number> = {};

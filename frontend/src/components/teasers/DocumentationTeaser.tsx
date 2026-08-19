@@ -132,7 +132,18 @@ export function DocumentationTeaser() {
           <CarouselContent>
             {cards.map((card) => (
               <CarouselItem key={card.category} className="sm:basis-1/2 lg:basis-1/3">
-                <div className="h-full rounded-2xl bg-white/[0.045] border border-white/10 overflow-hidden hover:border-white/20 transition-colors">
+                <div
+                  role="button"
+                  tabIndex={0}
+                  aria-label={`Ver documentación de ${card.category}`}
+                  onClick={() => navigate(`/documentacion?categoria=${encodeURIComponent(card.category)}`)}
+                  onKeyDown={(e) => {
+                    if (e.key !== "Enter" && e.key !== " ") return;
+                    e.preventDefault();
+                    navigate(`/documentacion?categoria=${encodeURIComponent(card.category)}`);
+                  }}
+                  className="h-full rounded-2xl bg-white/[0.045] border border-white/10 overflow-hidden cursor-pointer hover:border-white/20 hover:-translate-y-0.5 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                >
                   <div className="relative aspect-[16/10]">
                     <img
                       src={card.photo}
