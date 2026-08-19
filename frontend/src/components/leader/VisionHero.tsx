@@ -482,20 +482,18 @@ export default function VisionHero() {
           </div>
         </div>
 
-        {(extraDescription || true) && (
-          <div className="relative mt-8 space-y-4">
-            {extraDescription && (
-              <p className="text-white/65 text-sm md:text-base leading-relaxed text-justify max-w-3xl mx-auto">
-                {extraDescription}
-              </p>
-            )}
-            <SiteMediaVisual
-              fieldKey="about.vision.media"
-              className="max-w-3xl mx-auto"
-              ariaLabel="Galería del Desarrollador Principal"
-            />
-          </div>
-        )}
+        <div className="relative mt-8 space-y-4">
+          {extraDescription && (
+            <p className="text-white/65 text-sm md:text-base leading-relaxed text-justify max-w-3xl mx-auto">
+              {extraDescription}
+            </p>
+          )}
+          <SiteMediaVisual
+            fieldKey="about.vision.media"
+            className="max-w-3xl mx-auto"
+            ariaLabel="Galería del Desarrollador Principal"
+          />
+        </div>
       </div>
 
       {/* ImmersivePanel for chip expansions */}

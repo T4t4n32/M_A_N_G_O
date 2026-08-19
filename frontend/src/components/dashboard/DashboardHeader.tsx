@@ -51,13 +51,18 @@ export function DashboardHeader({ userName, onRefresh, userRole }: DashboardHead
   return (
     <header className="bg-white/[0.04] backdrop-blur-xl border-b border-white/[0.06] px-4 sm:px-6 py-3 sticky top-0 z-30" role="banner">
       <div className="max-w-7xl mx-auto flex items-center justify-between">
-        <div className="flex items-center gap-3">
+        <button
+          type="button"
+          onClick={() => navigate("/")}
+          className="flex items-center gap-3 text-left rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+          aria-label="Ir al sitio público"
+        >
           <Leaf className="h-6 w-6 text-primary" />
           <div>
             <h1 className="text-lg font-bold text-white tracking-wide">M.A.N.G.O</h1>
             <p className="text-xs text-white/40 hidden sm:block">Panel de Monitoreo Ambiental</p>
           </div>
-        </div>
+        </button>
 
         <div className="flex items-center gap-2">
           {onRefresh && (

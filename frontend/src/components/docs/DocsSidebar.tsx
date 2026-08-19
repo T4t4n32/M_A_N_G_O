@@ -13,14 +13,16 @@ interface DocsSidebarProps {
  * sidebar, which doesn't fit here (there's a navbar + hero above this
  * section). Reuses the same styled menu primitives, just scoped to this
  * section's own flex layout so it can sit next to the content column
- * instead of overlaying the whole page.
+ * instead of overlaying the whole page. The site's global nav floats
+ * (fixed, not full-width), so nothing reserves space at the real top —
+ * both sticky offsets below just dock flush against the viewport edge.
  */
 export function DocsSidebar({ active, counts, onSelect }: DocsSidebarProps) {
   return (
     <>
       {/* Desktop — persistent left column */}
       <aside className="hidden lg:block w-64 shrink-0 border-r border-sidebar-border bg-sidebar">
-        <div className="sticky top-16 py-8 pr-4 pl-2">
+        <div className="sticky top-4 py-8 pr-4 pl-2">
           <SidebarGroup>
             <SidebarGroupLabel>Categorías</SidebarGroupLabel>
             <SidebarMenu>
@@ -48,7 +50,7 @@ export function DocsSidebar({ active, counts, onSelect }: DocsSidebarProps) {
       </aside>
 
       {/* Mobile / tablet — collapses to a horizontal scroll of pills, single column below */}
-      <div className="lg:hidden sticky top-16 z-30 -mx-4 sm:-mx-6 px-4 sm:px-6 py-3 bg-background/95 backdrop-blur-md border-b border-border overflow-x-auto">
+      <div className="lg:hidden sticky top-0 z-30 -mx-4 sm:-mx-6 px-4 sm:px-6 py-3 bg-background/95 backdrop-blur-md border-b border-border overflow-x-auto">
         <div className="flex gap-2 w-max">
           {DOCS_CATEGORIES.map((cat) => {
             const Icon = cat.icon;

@@ -1,4 +1,5 @@
 import type { Config } from "tailwindcss";
+import tailwindcssAnimate from "tailwindcss-animate";
 
 export default {
   darkMode: ["class"],
@@ -93,6 +94,16 @@ export default {
   			xl: '15px',
   			full: '50px'
   		},
+  		transitionDuration: {
+  			'1100': '1100ms',
+  			'1300': '1300ms',
+  		},
+  		transitionTimingFunction: {
+  			// Named so ApertureDivider's transitions read as `duration-1100
+  			// ease-aperture` instead of ambiguous bracketed arbitrary values
+  			// (Tailwind's JIT warns those can match multiple utilities).
+  			'aperture': 'cubic-bezier(.16,1,.3,1)',
+  		},
   		keyframes: {
   			'accordion-down': {
   				from: {
@@ -148,5 +159,5 @@ export default {
   		}
   	}
   },
-  plugins: [require("tailwindcss-animate")],
+  plugins: [tailwindcssAnimate],
 } satisfies Config;

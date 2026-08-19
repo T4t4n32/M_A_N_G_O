@@ -22,7 +22,7 @@ interface BannerConfig {
   body: React.ReactNode;
 }
 
-function useConfig(context: OperationalContext, lastMissionId: string | null, lastMissionEnded: string | null): BannerConfig {
+function resolveBannerConfig(context: OperationalContext, lastMissionId: string | null, lastMissionEnded: string | null): BannerConfig {
   switch (context) {
     case "field":
       return {
@@ -125,7 +125,7 @@ export function DataContextBanner() {
 
   if (isLoading) return null;
 
-  const config = useConfig(
+  const config = resolveBannerConfig(
     context,
     lastMission?.mission_id ?? null,
     lastMission?.ended_at ?? null,

@@ -51,7 +51,7 @@ export function ApertureDivider({ fromColor, toColor, glowColor }: ApertureDivid
       style={{ background: `linear-gradient(to bottom, ${fromColor}, ${toColor})` }}
     >
       <div
-        className="absolute left-1/2 top-1/2 h-px transition-[width,opacity] duration-[1300ms] ease-out"
+        className="absolute left-1/2 top-1/2 h-px transition-[width,opacity] duration-1300 ease-out"
         style={{
           width: open ? "72%" : "0%",
           opacity: open ? 1 : 0,
@@ -61,7 +61,7 @@ export function ApertureDivider({ fromColor, toColor, glowColor }: ApertureDivid
         }}
       />
       <div
-        className="absolute inset-y-0 left-0 transition-transform duration-[1100ms] ease-[cubic-bezier(.16,1,.3,1)]"
+        className="absolute inset-y-0 left-0 transition-transform duration-1100 ease-aperture"
         style={{
           width: "54%",
           background: fromColor,
@@ -70,7 +70,7 @@ export function ApertureDivider({ fromColor, toColor, glowColor }: ApertureDivid
         }}
       />
       <div
-        className="absolute inset-y-0 right-0 transition-transform duration-[1100ms] ease-[cubic-bezier(.16,1,.3,1)]"
+        className="absolute inset-y-0 right-0 transition-transform duration-1100 ease-aperture"
         style={{
           width: "54%",
           background: fromColor,

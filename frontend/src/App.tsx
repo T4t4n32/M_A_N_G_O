@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { useEffect, lazy, Suspense } from "react";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { RootErrorBoundary } from "@/components/RootErrorBoundary";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
@@ -49,6 +50,7 @@ function LiveEditUrlActivator() {
 }
 
 const App = () => (
+  <RootErrorBoundary>
   <QueryClientProvider client={queryClient}>
     <LiveEditProvider>
       <TooltipProvider>
@@ -98,6 +100,7 @@ const App = () => (
       </TooltipProvider>
     </LiveEditProvider>
   </QueryClientProvider>
+  </RootErrorBoundary>
 );
 
 export default App;

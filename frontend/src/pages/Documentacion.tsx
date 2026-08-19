@@ -1,8 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
+import { ArrowLeft, Moon, Sun } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Header } from "@/components/Header";
+import { Footer } from "@/components/Footer";
 import { docs } from "@/components/DocumentationSection";
 import { DOCS_CATEGORIES } from "@/components/docs/docsCategories";
-import { DocsNavbar } from "@/components/docs/DocsNavbar";
 import { DocsHero } from "@/components/docs/DocsHero";
 import { DocsSidebar } from "@/components/docs/DocsSidebar";
 import { DocsMain } from "@/components/docs/DocsMain";
@@ -47,8 +50,27 @@ export default function Documentacion() {
 
   return (
     <div className={theme === "dark" ? "dark" : ""}>
-      <div className="min-h-screen bg-background text-foreground">
-        <DocsNavbar theme={theme} onToggleTheme={() => setTheme((t) => (t === "dark" ? "light" : "dark"))} />
+      <main className="min-h-screen bg-background text-foreground">
+        <Header />
+        <div id="contenido" tabIndex={-1} />
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-28 lg:pt-32 flex items-center justify-between gap-4">
+          <Link
+            to="/"
+            className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <ArrowLeft className="h-4 w-4" /> Volver al inicio
+          </Link>
+          <div className="flex items-center gap-1.5" role="group" aria-label="Cambiar tema">
+            <Sun className={`h-3.5 w-3.5 ${theme === "light" ? "text-primary" : "text-muted-foreground"}`} />
+            <Switch
+              checked={theme === "dark"}
+              onCheckedChange={() => setTheme((t) => (t === "dark" ? "light" : "dark"))}
+              aria-label="Alternar modo oscuro"
+            />
+            <Moon className={`h-3.5 w-3.5 ${theme === "dark" ? "text-primary" : "text-muted-foreground"}`} />
+          </div>
+        </div>
 
         <DocsHero
           docCount={docs.length}
@@ -67,7 +89,9 @@ export default function Documentacion() {
             </div>
           </SidebarProvider>
         </div>
-      </div>
+
+        <Footer />
+      </main>
     </div>
   );
 }
