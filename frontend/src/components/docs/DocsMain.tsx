@@ -1,6 +1,8 @@
-import { Download } from "lucide-react";
+import { useState } from "react";
+import { Download, Eye } from "lucide-react";
 import type { Doc } from "@/components/DocumentationSection";
 import type { DocsCategoryMeta } from "./docsCategories";
+import { PdfPreviewModal } from "@/components/effects/PdfPreviewModal";
 
 interface DocsMainProps {
   category: DocsCategoryMeta;
@@ -9,6 +11,7 @@ interface DocsMainProps {
 
 export function DocsMain({ category, docs }: DocsMainProps) {
   const Icon = category.icon;
+  const [preview, setPreview] = useState<{ title: string; url: string } | null>(null);
 
   return (
     <main id="docs-main" className="flex-1 min-w-0 px-4 sm:px-6 lg:px-10 py-10 md:py-14">
@@ -48,18 +51,39 @@ export function DocsMain({ category, docs }: DocsMainProps) {
                     <p className="mt-1.5 text-xs text-muted-foreground/70">{doc.date}</p>
                   </div>
                   <div className="shrink-0 flex flex-col items-end gap-1.5">
-                    {doc.files.map((f) => (
-                      <a
-                        key={f.href}
-                        href={f.href}
-                        download
-                        className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:underline"
-                        aria-label={`Descargar ${doc.title} en formato ${f.label}`}
-                      >
-                        <Download className="h-3 w-3" />
-                        {f.label}
-                      </a>
-                    ))}
+                    {doc.files.map((f) =>
+                      f.label === "PDF" ? (
+                        <div key={f.href} className="flex items-center gap-3">
+                          <button
+                            type="button"
+                            onClick={() => setPreview({ title: doc.title, url: f.href })}
+                            className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:underline"
+                          >
+                            <Eye className="h-3 w-3" />
+                            Vista previa
+                          </button>
+                          <a
+                            href={f.href}
+                            download
+                            aria-label={`Descargar ${doc.title} en PDF`}
+                            className="text-muted-foreground hover:text-primary transition-colors"
+                          >
+                            <Download className="h-3.5 w-3.5" />
+                          </a>
+                        </div>
+                      ) : (
+                        <a
+                          key={f.href}
+                          href={f.href}
+                          download
+                          className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:underline"
+                          aria-label={`Descargar ${doc.title} en formato ${f.label}`}
+                        >
+                          <Download className="h-3 w-3" />
+                          {f.label}
+                        </a>
+                      ),
+                    )}
                   </div>
                 </div>
               </li>
@@ -67,6 +91,10 @@ export function DocsMain({ category, docs }: DocsMainProps) {
           </ul>
         )}
       </div>
+
+      {preview && (
+        <PdfPreviewModal title={preview.title} url={preview.url} onClose={() => setPreview(null)} />
+      )}
     </main>
   );
 }
