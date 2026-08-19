@@ -3,6 +3,7 @@ import { Header } from "@/components/Header";
 import { HeroSection } from "@/components/HeroSection";
 import { Footer } from "@/components/Footer";
 import { ScrollReveal } from "@/components/ScrollReveal";
+import { ApertureDivider } from "@/components/effects/ApertureDivider";
 import { useSiteSeo } from "@/lib/siteSeo";
 import { syncFromPublished } from "@/lib/siteContent";
 import { useLiveEdit } from "@/contexts/LiveEditContext";
@@ -90,7 +91,11 @@ const Index = () => {
         </ScrollReveal>
       </Suspense>
 
-      <SectionLine variant="teal" />
+      {/* Documentación → Galería: the one seam on the page where the content
+          itself changes shape (boxed docs cards → full-bleed gallery strip),
+          so it gets its own graduated transition instead of the plain
+          SectionLine hairline used everywhere else. */}
+      <ApertureDivider fromColor="hsl(210,38%,6%)" toColor="hsl(213,40%,7%)" glowColor="rgba(250,204,21,0.55)" />
 
       <Suspense fallback={<SectionFallback />}>
         <ScrollReveal variant="scale">
