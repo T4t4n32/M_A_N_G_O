@@ -151,23 +151,8 @@ export function DynamicNav({ logo, logoAlt, name, items, onLogoClick, onItemClic
                     className={
                       isLast
                         ? "whitespace-nowrap ml-1 px-4 py-2 rounded-full text-sm font-semibold bg-accent text-accent-foreground hover:bg-accent/90 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-[hsl(210,35%,8%)]"
-                        : "whitespace-nowrap px-4 py-2 rounded-full text-sm font-medium text-white/80 hover:text-white transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-[hsl(210,35%,8%)]"
+                        : "whitespace-nowrap px-4 py-2 rounded-full text-sm font-medium text-white/80 hover:text-white hover:bg-white/10 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-[hsl(210,35%,8%)]"
                     }
-                    style={
-                      !isLast
-                        ? ({ "--hover-bg": item.hoverStyles?.bgColor || "rgba(255,255,255,0.06)" } as React.CSSProperties)
-                        : undefined
-                    }
-                    onMouseEnter={(e) => {
-                      if (isLast || !item.hoverStyles?.bgColor) return;
-                      e.currentTarget.style.backgroundColor = item.hoverStyles.bgColor;
-                      if (item.hoverStyles.textColor) e.currentTarget.style.color = item.hoverStyles.textColor;
-                    }}
-                    onMouseLeave={(e) => {
-                      if (isLast) return;
-                      e.currentTarget.style.backgroundColor = "";
-                      e.currentTarget.style.color = "";
-                    }}
                   >
                     {item.label}
                   </button>
