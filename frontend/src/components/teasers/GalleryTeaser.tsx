@@ -23,6 +23,14 @@ const PREVIEW_COUNT = 10;
 // this teaser used before if framer.com is unreachable.
 const FRAMER_DEPTH_BLUR_CAROUSEL_URL = "https://framer.com/m/Depth-Blur-Carousel-fvJ2lB.js@GXN6LrtdSMkVOzHCU8CD";
 
+// Published Framer.com "ScrollRevealText": splits text into words/characters/
+// lines and reveals each unit (opacity + color-mix + optional blur/3D) as the
+// element scrolls through the viewport. Only needs react/react-jsx-runtime
+// plus addPropertyControls/ControlType/useIsStaticRenderer from "framer"
+// (shimmed) — no framer-motion or gsap. Falls back to the plain static
+// paragraph if framer.com is unreachable.
+const FRAMER_SCROLL_REVEAL_TEXT_URL = "https://framer.com/m/ScrollRevealText-vXBxyx.js@ymLCSaN7wX7cJKeayNed";
+
 export function GalleryTeaser() {
   const navigate = useNavigate();
   const [preview, setPreview] = useState<Preview[]>([]);
@@ -73,9 +81,34 @@ export function GalleryTeaser() {
             </span>
           )}
         </div>
-        <p className="mt-3 text-white/55 max-w-2xl">
-          Cientos de fotos del desarrollo: hardware, montajes, pruebas de campo y avances del prototipo.
-        </p>
+        <div className="mt-3 max-w-2xl">
+          <FramerEmbed
+            moduleUrl={FRAMER_SCROLL_REVEAL_TEXT_URL}
+            componentProps={{
+              text: "Cientos de fotos del desarrollo: hardware, montajes, pruebas de campo y avances del prototipo.",
+              preset: "Soft Words",
+              htmlTag: "p",
+              font: {
+                fontFamily: '"Source Sans 3", ui-sans-serif, system-ui, sans-serif',
+                fontWeight: 400,
+                fontSize: "16px",
+                lineHeight: "1.6em",
+                letterSpacing: "0em",
+              },
+              colorRevealed: "rgba(255,255,255,0.55)",
+              colorHidden: "rgba(255,255,255,0.12)",
+              trigger: "Scroll",
+              offsetStart: 85,
+              offsetEnd: 40,
+            }}
+            style={{ height: "auto" }}
+            fallback={
+              <p className="text-white/55">
+                Cientos de fotos del desarrollo: hardware, montajes, pruebas de campo y avances del prototipo.
+              </p>
+            }
+          />
+        </div>
       </div>
 
       {preview.length > 0 && (

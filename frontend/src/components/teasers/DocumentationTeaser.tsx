@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import Autoplay from "embla-carousel-autoplay";
 import { docs } from "@/components/DocumentationSection";
 import { RippleCta } from "@/components/effects/RippleCta";
+import { FramerEmbed } from "@/components/effects/FramerEmbed";
 import {
   Carousel,
   CarouselContent,
@@ -31,6 +32,15 @@ const ICON_PATHS = {
   presentation: '<path d="M2 3h20"/><path d="M21 3v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V3"/><path d="m7 21 5-5 5 5"/>',
   mic: '<path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" x2="12" y1="19" y2="22"/>',
 } as const;
+
+// Published Framer.com "ScrollRevealText": splits text into words/characters/
+// lines and reveals each unit (opacity + color-mix + optional blur/3D) as the
+// element scrolls through the viewport. Only needs react/react-jsx-runtime
+// plus addPropertyControls/ControlType/useIsStaticRenderer from "framer"
+// (shimmed) — no framer-motion or gsap, unlike the other embeds on this
+// page. Falls back to the plain static paragraph if framer.com is
+// unreachable.
+const FRAMER_SCROLL_REVEAL_TEXT_URL = "https://framer.com/m/ScrollRevealText-vXBxyx.js@ymLCSaN7wX7cJKeayNed";
 
 const TEAL = "#00c9a7";
 const BLUE = "#38bdf8";
@@ -130,9 +140,34 @@ export function DocumentationTeaser() {
           <h2 className="mt-4 text-3xl md:text-[38px] font-extrabold font-serif text-white">
             Documentación del Proyecto
           </h2>
-          <p className="mt-3 text-sm text-white/50">
-            {totalDocs} documentos públicos — investigación, bitácoras, presentaciones y fuentes técnicas, organizados por categoría.
-          </p>
+          <div className="mt-3">
+            <FramerEmbed
+              moduleUrl={FRAMER_SCROLL_REVEAL_TEXT_URL}
+              componentProps={{
+                text: `${totalDocs} documentos públicos — investigación, bitácoras, presentaciones y fuentes técnicas, organizados por categoría.`,
+                preset: "Soft Words",
+                htmlTag: "p",
+                font: {
+                  fontFamily: '"Source Sans 3", ui-sans-serif, system-ui, sans-serif',
+                  fontWeight: 400,
+                  fontSize: "14px",
+                  lineHeight: "1.25rem",
+                  letterSpacing: "0em",
+                },
+                colorRevealed: "rgba(255,255,255,0.5)",
+                colorHidden: "rgba(255,255,255,0.12)",
+                trigger: "Scroll",
+                offsetStart: 85,
+                offsetEnd: 40,
+              }}
+              style={{ height: "auto" }}
+              fallback={
+                <p className="text-sm text-white/50">
+                  {totalDocs} documentos públicos — investigación, bitácoras, presentaciones y fuentes técnicas, organizados por categoría.
+                </p>
+              }
+            />
+          </div>
         </div>
 
         <Carousel
