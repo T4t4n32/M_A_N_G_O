@@ -1,11 +1,10 @@
-import { useEffect, useRef, useState } from "react";
-import { useScroll, useTransform, motion } from "framer-motion";
-import Autoplay from "embla-carousel-autoplay";
 import { FileText, Youtube } from "lucide-react";
+import Autoplay from "embla-carousel-autoplay";
 import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
 import { Button } from "@/components/ui/button";
 import DecryptedText from "@/components/effects/DecryptedText";
 import GradientText from "@/components/effects/GradientText";
+import { ScrollReveal } from "@/components/ScrollReveal";
 import liderFoto from "@/assets/lider-foto.jpg";
 import { useSiteValue } from "@/lib/siteContent";
 import { parseValue, useResolvedSrc, useResolvedSrcs } from "@/lib/siteMedia";
@@ -20,20 +19,6 @@ const milestoneIdsByCard: Record<string, string[]> = {
   vision: ["ecolatas"],
   reconocimientos: ["reconocimiento-electronica", "reconocimiento-houston"],
 };
-
-function useIsMobile() {
-  const [isMobile, setIsMobile] = useState(() =>
-    typeof window !== "undefined" ? window.innerWidth < 768 : false,
-  );
-  useEffect(() => {
-    const mq = window.matchMedia("(max-width: 767px)");
-    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
-    setIsMobile(mq.matches);
-    mq.addEventListener("change", handler);
-    return () => mq.removeEventListener("change", handler);
-  }, []);
-  return isMobile;
-}
 
 function usePersonaPhotos() {
   const overrideRaw = useSiteValue("about.leader.photo", "");
@@ -140,91 +125,49 @@ function PhotoCarousel({ slides }: { slides: { src: string; alt: string }[] }) {
 
 function LibraryHeading() {
   return (
-    <div className="mb-2">
+    <div className="mb-6">
       <h3 className="text-white/85 text-xl md:text-2xl font-bold">Librería</h3>
       <p className="text-white/40 text-sm">Los libros que cuentan el camino del equipo</p>
     </div>
   );
 }
 
-/** Mobile: no scroll-jacking (there's no real hover, and a pinned viewport
- * makes no sense on a touch scroll) — hero, drawer cards and shelf just
- * stack in normal document flow. */
-function PersonasMobile() {
-  const slides = usePersonaPhotos();
-  return (
-    <div className="space-y-14 py-10">
-      <div className="grid gap-8">
-        <Bio />
-        <PhotoCarousel slides={slides} />
-      </div>
-      <div>
-        <div className="grid grid-cols-2 gap-3 mb-10">
-          {personasCards.map((c) => (
-            <DrawerCard key={c.id} card={c} milestoneIds={milestoneIdsByCard[c.id]} />
-          ))}
-        </div>
-        <LibraryHeading />
-        <Estanteria />
-      </div>
-    </div>
-  );
-}
-
-/** Desktop: pinned scroll-linked morph — full-bleed hero (bio + photo
- * carousel) crossfades into a two-column layout (Drawer Cards + Estantería)
- * as the user scrolls through the container. The whole thing renders once,
- * inside the pinned viewport (not re-rendered again after "release") —
- * content stays fully interactive there; this trades the spec's literal
- * "pin releases into normal flow" for a version that can't visually
- * desync/jump regardless of how tall the shelf ends up being. */
-function PersonasDesktop() {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const { scrollYProgress } = useScroll({ target: containerRef, offset: ["start start", "end end"] });
-  const slides = usePersonaPhotos();
-
-  const heroOpacity = useTransform(scrollYProgress, [0, 0.45, 0.7], [1, 1, 0]);
-  const heroScale = useTransform(scrollYProgress, [0.45, 0.75], [1, 0.96]);
-  const heroPointerEvents = useTransform(scrollYProgress, (v) => (v > 0.6 ? "none" : "auto"));
-
-  const columnsOpacity = useTransform(scrollYProgress, [0.55, 0.8], [0, 1]);
-  const columnsPointerEvents = useTransform(scrollYProgress, (v) => (v > 0.6 ? "auto" : "none"));
-  const drawerY = useTransform(scrollYProgress, [0.55, 0.85], [30, 0]);
-  const shelfY = useTransform(scrollYProgress, [0.65, 1], [50, 0]);
-
-  return (
-    <div ref={containerRef} className="relative" style={{ height: "220vh" }}>
-      <div className="sticky top-0 h-screen overflow-hidden flex items-center">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full relative h-[85vh] flex items-center">
-          <motion.div
-            style={{ opacity: heroOpacity, scale: heroScale, pointerEvents: heroPointerEvents }}
-            className="absolute inset-0 grid md:grid-cols-2 gap-10 items-center"
-          >
-            <Bio />
-            <PhotoCarousel slides={slides} />
-          </motion.div>
-
-          <motion.div
-            style={{ opacity: columnsOpacity, pointerEvents: columnsPointerEvents }}
-            className="absolute inset-0 grid md:grid-cols-[280px_1fr] gap-8 items-start pt-4"
-          >
-            <motion.div style={{ y: drawerY }} className="grid grid-cols-2 gap-3">
-              {personasCards.map((c) => (
-                <DrawerCard key={c.id} card={c} milestoneIds={milestoneIdsByCard[c.id]} />
-              ))}
-            </motion.div>
-            <motion.div style={{ y: shelfY }} className="h-full overflow-y-auto pr-2">
-              <LibraryHeading />
-              <Estanteria />
-            </motion.div>
-          </motion.div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
+/**
+ * Personas — bio + real photo carousel, then Drawer Cards (Formación /
+ * Inicios / Visión / Reconocimientos) + the Librería (Estantería). Plain
+ * document flow throughout, revealed with the site's existing scroll-into-
+ * view fade (ScrollReveal) rather than a pinned scroll-jacked morph: the
+ * pin+crossfade version shipped a real bug (books not rendering visibly,
+ * reported as a blank/black area) that isn't safely fixable without a
+ * browser to verify against, so this trades the scripted transition for
+ * something that reliably shows every book, at any shelf height, on any
+ * device — no sticky pin, no inner scroll box, no clipping.
+ */
 export function PersonasHero() {
-  const isMobile = useIsMobile();
-  return isMobile ? <PersonasMobile /> : <PersonasDesktop />;
+  const slides = usePersonaPhotos();
+
+  return (
+    <div className="space-y-16 md:space-y-20">
+      <div className="grid md:grid-cols-2 gap-10 items-center">
+        <Bio />
+        <ScrollReveal variant="fade-up" delay={0.1}>
+          <PhotoCarousel slides={slides} />
+        </ScrollReveal>
+      </div>
+
+      <ScrollReveal variant="fade-up">
+        <div className="grid md:grid-cols-[280px_1fr] gap-8 items-start">
+          <div className="grid grid-cols-2 gap-3">
+            {personasCards.map((c) => (
+              <DrawerCard key={c.id} card={c} milestoneIds={milestoneIdsByCard[c.id]} />
+            ))}
+          </div>
+          <div>
+            <LibraryHeading />
+            <Estanteria />
+          </div>
+        </div>
+      </ScrollReveal>
+    </div>
+  );
 }
