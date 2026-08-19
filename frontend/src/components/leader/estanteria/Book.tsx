@@ -93,9 +93,10 @@ export function Book({ book, isOpen, isActive, dimmed, onEnter, onLeave, onActiv
           style={{
             background: `linear-gradient(135deg, ${book.color}, ${spine})`,
             transformOrigin: "left center",
+            backfaceVisibility: "hidden",
             boxShadow: "2px 0 12px rgba(0,0,0,0.35)",
           }}
-          animate={{ rotateY: isOpen ? -70 : 0 }}
+          animate={{ rotateY: isOpen ? -100 : 0 }}
           transition={{ duration: 0.6, ease: [0.45, 0, 0.2, 1] }}
         >
           {/* Spine edge — darker strip along the hinge, reads as the book's side */}
