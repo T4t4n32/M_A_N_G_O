@@ -33,13 +33,13 @@ export function Book({ book, isOpen, isActive, dimmed, onEnter, onLeave, onActiv
       onClick={onActivate}
       aria-label={`Ver ${book.title}`}
       aria-expanded={isOpen}
-      className="group relative h-64 sm:h-72 w-full text-left focus:outline-none"
+      className="group relative h-64 sm:h-72 w-full text-left focus:outline-none rounded-r-md rounded-l-sm transition-[transform,box-shadow,opacity] duration-[400ms] ease-out shadow-[0px_48px_66px_-18px_rgba(0,0,0,0.1)] hover:-translate-y-[18px] hover:scale-[1.035] hover:shadow-[0px_42px_56px_0px_rgba(0,0,0,0.34),0px_42px_62px_0px_var(--glow)]"
       style={{
         perspective: "1400px",
         willChange: isOpen ? "transform" : undefined,
         opacity: dimmed ? 0.35 : 1,
-        transition: "opacity 300ms ease",
         zIndex: isOpen ? 20 : 1,
+        ["--glow" as string]: book.glowColor,
       }}
     >
       {/* Shelf shadow */}

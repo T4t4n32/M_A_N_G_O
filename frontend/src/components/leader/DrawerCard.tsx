@@ -41,8 +41,12 @@ export function DrawerCard({ card, milestoneIds = [] }: DrawerCardProps) {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="group relative flex flex-col items-center justify-center text-center gap-2.5 h-40 rounded-2xl overflow-hidden border transition-all duration-300 cursor-pointer w-full"
-        style={{ borderColor: hslAlpha(card.color, 0.2), background: `linear-gradient(160deg, ${hslAlpha(card.color, 0.13)}, hsl(210,35%,9%))` }}
+        className="group relative flex flex-col items-center justify-center text-center gap-2.5 h-40 rounded-2xl overflow-hidden border transition-[transform,box-shadow,background,border-color] duration-[400ms] ease-out cursor-pointer w-full shadow-[0px_48px_66px_-18px_rgba(0,0,0,0.1)] hover:-translate-y-[18px] hover:scale-[1.035] hover:shadow-[0px_42px_56px_0px_rgba(0,0,0,0.34),0px_42px_62px_0px_var(--glow)]"
+        style={{
+          borderColor: hslAlpha(card.color, 0.2),
+          background: `linear-gradient(160deg, ${hslAlpha(card.color, 0.13)}, hsl(210,35%,9%))`,
+          ["--glow" as string]: hslAlpha(card.color, 0.25),
+        }}
       >
         <div
           className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
