@@ -80,7 +80,7 @@ export function Header() {
         items={bubbleItems}
         onLogoClick={handleLogoClick}
         onItemClick={handleItemClick}
-        className="fixed top-5 left-1/2 -translate-x-1/2 z-50 hidden lg:block"
+        className="fixed top-5 z-50 hidden lg:block"
       />
 
       {/* ── Mobile + Tablet BubbleMenu (unchanged) ──────────────────────── */}

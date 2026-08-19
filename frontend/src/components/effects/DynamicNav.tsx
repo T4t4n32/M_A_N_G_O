@@ -19,15 +19,27 @@ interface DynamicNavProps {
   className?: string;
 }
 
+const SCROLL_THRESHOLD = 24;
+const EDGE_GAP = 24;
+
 /**
  * Floating "island" nav: collapsed to just the logo, expands into a pill of
  * links on click. Framer-motion `layout` drives the capsule's width/shape
  * tween so the icon and the item row share one continuous morph instead of
- * two separately-animated pieces.
+ * two separately-animated pieces. Past SCROLL_THRESHOLD it also drifts from
+ * centered (icon + wordmark) to left-anchored (icon only), independent of
+ * open/closed state.
  */
 export function DynamicNav({ logo, logoAlt, name, items, onLogoClick, onItemClick, className = "" }: DynamicNavProps) {
   const [open, setOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(() => window.scrollY > SCROLL_THRESHOLD);
   const rootRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > SCROLL_THRESHOLD);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   useEffect(() => {
     if (!open) return;
@@ -46,9 +58,15 @@ export function DynamicNav({ logo, logoAlt, name, items, onLogoClick, onItemClic
   }, [open]);
 
   const spring = { type: "spring" as const, stiffness: 420, damping: 34, mass: 0.9 };
+  const positionSpring = { type: "spring" as const, stiffness: 300, damping: 30 };
 
   return (
-    <div ref={rootRef} className={className}>
+    <motion.div
+      ref={rootRef}
+      className={className}
+      animate={{ left: scrolled ? EDGE_GAP : "50%", x: scrolled ? 0 : "-50%" }}
+      transition={positionSpring}
+    >
       <motion.div
         layout
         transition={spring}
@@ -57,7 +75,8 @@ export function DynamicNav({ logo, logoAlt, name, items, onLogoClick, onItemClic
         style={{ cursor: open ? "default" : "pointer" }}
       >
         <motion.button
-          layout="position"
+          layout
+          transition={spring}
           type="button"
           onClick={(e) => {
             e.stopPropagation();
@@ -70,10 +89,24 @@ export function DynamicNav({ logo, logoAlt, name, items, onLogoClick, onItemClic
           }}
           aria-label={open ? logoAlt : "Abrir menú de navegación"}
           aria-expanded={open}
-          className="shrink-0 flex items-center gap-2.5 h-14 pl-2 pr-4 rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-[hsl(210,35%,8%)]"
+          className="shrink-0 flex items-center h-14 rounded-full pl-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-[hsl(210,35%,8%)]"
+          style={{ paddingRight: scrolled ? 8 : 16 }}
         >
           <img src={logo} alt="" className="h-9 w-9 shrink-0 rounded-full" />
-          <span className="whitespace-nowrap text-base font-bold tracking-wide text-white">{name}</span>
+          <AnimatePresence initial={false}>
+            {!scrolled && (
+              <motion.span
+                key="name"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.15 }}
+                className="ml-2.5 whitespace-nowrap text-base font-bold tracking-wide text-white"
+              >
+                {name}
+              </motion.span>
+            )}
+          </AnimatePresence>
         </motion.button>
 
         <AnimatePresence initial={false}>
@@ -133,6 +166,6 @@ export function DynamicNav({ logo, logoAlt, name, items, onLogoClick, onItemClic
           )}
         </AnimatePresence>
       </motion.div>
-    </div>
+    </motion.div>
   );
 }
