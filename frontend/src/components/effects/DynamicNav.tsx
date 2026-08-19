@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
+import { SidebarMenuDrawer } from "@/components/effects/SidebarMenuDrawer";
 
 export type DynamicNavItem = {
   label: string;
@@ -26,11 +27,12 @@ const TOP_GAP = 20;
 /**
  * Floating nav with two shapes. At the top of the page: a centered
  * horizontal "island" — icon + wordmark, expands sideways into a row of
- * links on click. Past SCROLL_THRESHOLD it morphs into a left-docked,
- * vertically-centered sidebar — icon only, expands downward into a stacked
- * column of links on click. Same DOM/state, framer-motion `layout` handles
- * the row⇄column reflow; the position tween (left/top/x/y) lives on the
- * outer wrapper so it never fights the inner size tween.
+ * links on click. Past SCROLL_THRESHOLD it collapses to a left-docked,
+ * vertically-centered icon-only circle; clicking it opens a fullscreen
+ * editorial drawer (SidebarMenuDrawer) instead of a small popover. The
+ * position tween (left/top/x/y) lives on the outer wrapper so it never
+ * fights the inner size tween (framer-motion `layout`) used for the
+ * horizontal-mode expansion.
  */
 export function DynamicNav({ logo, logoAlt, name, items, onLogoClick, onItemClick, className = "" }: DynamicNavProps) {
   const [open, setOpen] = useState(false);
@@ -45,24 +47,30 @@ export function DynamicNav({ logo, logoAlt, name, items, onLogoClick, onItemClic
 
   useEffect(() => {
     if (!open) return;
-    const onPointerDown = (e: MouseEvent) => {
-      if (rootRef.current && !rootRef.current.contains(e.target as Node)) setOpen(false);
-    };
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") setOpen(false);
     };
-    document.addEventListener("mousedown", onPointerDown);
     document.addEventListener("keydown", onKeyDown);
-    return () => {
-      document.removeEventListener("mousedown", onPointerDown);
-      document.removeEventListener("keydown", onKeyDown);
-    };
+    return () => document.removeEventListener("keydown", onKeyDown);
   }, [open]);
+
+  // The fullscreen drawer (scrolled mode) closes via its own backdrop click;
+  // outside-pointerdown closing only applies to the compact horizontal
+  // popover.
+  useEffect(() => {
+    if (!open || scrolled) return;
+    const onPointerDown = (e: MouseEvent) => {
+      if (rootRef.current && !rootRef.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", onPointerDown);
+    return () => document.removeEventListener("mousedown", onPointerDown);
+  }, [open, scrolled]);
 
   const spring = { type: "spring" as const, stiffness: 420, damping: 34, mass: 0.9 };
   const positionSpring = { type: "spring" as const, stiffness: 300, damping: 30 };
 
   return (
+    <>
     <motion.div
       ref={rootRef}
       className={className}
@@ -72,6 +80,7 @@ export function DynamicNav({ logo, logoAlt, name, items, onLogoClick, onItemClic
           : { left: "50%", top: TOP_GAP, x: "-50%", y: 0 }
       }
       transition={positionSpring}
+      style={open && scrolled ? { opacity: 0, pointerEvents: "none" } : undefined}
     >
       <motion.div
         layout
@@ -120,24 +129,17 @@ export function DynamicNav({ logo, logoAlt, name, items, onLogoClick, onItemClic
         </motion.button>
 
         <AnimatePresence initial={false}>
-          {open && (
+          {open && !scrolled && (
             <motion.nav
               key="items"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1, transition: { delay: 0.12, duration: 0.18 } }}
               exit={{ opacity: 0, transition: { duration: 0.08 } }}
               aria-label="Navegación principal"
-              className={
-                scrolled
-                  ? "flex flex-col items-stretch gap-1 px-2 pb-2"
-                  : "flex flex-row items-center gap-1 pr-2"
-              }
+              className="flex flex-row items-center gap-1 pr-2"
             >
               {items.map((item, i) => {
                 const isLast = i === items.length - 1;
-                const base = scrolled
-                  ? "w-full text-left px-4 py-2.5 rounded-xl"
-                  : "whitespace-nowrap px-4 py-2 rounded-full";
                 return (
                   <button
                     key={item.href}
@@ -148,8 +150,8 @@ export function DynamicNav({ logo, logoAlt, name, items, onLogoClick, onItemClic
                     aria-label={item.ariaLabel || item.label}
                     className={
                       isLast
-                        ? `${base} ${scrolled ? "mt-1" : "ml-1"} text-sm font-semibold bg-accent text-accent-foreground hover:bg-accent/90 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-[hsl(210,35%,8%)]`
-                        : `${base} text-sm font-medium text-white/80 hover:text-white transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-[hsl(210,35%,8%)]`
+                        ? "whitespace-nowrap ml-1 px-4 py-2 rounded-full text-sm font-semibold bg-accent text-accent-foreground hover:bg-accent/90 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-[hsl(210,35%,8%)]"
+                        : "whitespace-nowrap px-4 py-2 rounded-full text-sm font-medium text-white/80 hover:text-white transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-[hsl(210,35%,8%)]"
                     }
                     style={
                       !isLast
@@ -175,11 +177,7 @@ export function DynamicNav({ logo, logoAlt, name, items, onLogoClick, onItemClic
                 type="button"
                 onClick={() => setOpen(false)}
                 aria-label="Cerrar menú"
-                className={
-                  scrolled
-                    ? "mt-1 h-8 w-8 self-center shrink-0 rounded-full flex items-center justify-center text-white/40 hover:text-white/80 hover:bg-white/10 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
-                    : "ml-1 mr-1 h-8 w-8 shrink-0 rounded-full flex items-center justify-center text-white/40 hover:text-white/80 hover:bg-white/10 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
-                }
+                className="ml-1 mr-1 h-8 w-8 shrink-0 rounded-full flex items-center justify-center text-white/40 hover:text-white/80 hover:bg-white/10 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -188,5 +186,22 @@ export function DynamicNav({ logo, logoAlt, name, items, onLogoClick, onItemClic
         </AnimatePresence>
       </motion.div>
     </motion.div>
+
+    <AnimatePresence>
+      {open && scrolled && (
+        <SidebarMenuDrawer
+          key="drawer"
+          logo={logo}
+          name={name}
+          items={items}
+          onClose={() => setOpen(false)}
+          onItemClick={(href) => {
+            setOpen(false);
+            onItemClick(href);
+          }}
+        />
+      )}
+    </AnimatePresence>
+    </>
   );
 }
