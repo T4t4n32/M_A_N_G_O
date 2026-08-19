@@ -2,6 +2,16 @@ import DecryptedText from "@/components/effects/DecryptedText";
 import { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import { createPortal } from "react-dom";
 import { X, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, RotateCcw, ChevronDown, Search as SearchIcon, Play } from "lucide-react";
+import { FramerEmbed } from "@/components/effects/FramerEmbed";
+
+// Published Framer.com "DragableCarousel": a draggable 3D carousel with
+// arrows/dots navigation and autoplay (uses "gsap" for its snap animation
+// — see the "gsap" entry in index.html's import map). Only needs
+// addPropertyControls/ControlType from "framer" (shimmed). Falls back to
+// nothing (not just null) if framer.com is unreachable — the searchable
+// grid below is the real content, so a failed teaser carousel simply
+// doesn't render rather than showing a placeholder.
+const FRAMER_DRAGABLE_CAROUSEL_URL = "https://framer.com/m/DragableCarousel-ADAPEh.js@fXOJxTG2NAtXIGjIOPmn";
 
 const filters = ["Todo", "Hardware", "Software", "Campo", "Progreso"];
 
@@ -186,6 +196,36 @@ export function GallerySection() {
             Registro visual del desarrollo y pruebas del proyecto
           </p>
         </div>
+
+        {/* Destacados — featured carousel over the most recent uploads */}
+        {images.length > 0 && (
+          <div className="max-w-4xl mx-auto mb-14">
+            <FramerEmbed
+              moduleUrl={FRAMER_DRAGABLE_CAROUSEL_URL}
+              componentProps={{
+                preset: "Soft Cover",
+                images: images.slice(0, 10).map((img) => gridSrc(img.src)),
+                slideWidth: 320,
+                slideHeight: 240,
+                gap: 20,
+                borderRadius: 16,
+                objectFit: "cover",
+                showArrows: true,
+                arrowColor: "#ffffff",
+                arrowSize: 40,
+                showDots: true,
+                dotColor: "#00c9a7",
+                dotSize: 7,
+                autoplay: true,
+                autoplayDelay: 3500,
+                pauseOnHover: true,
+                loop: true,
+              }}
+              style={{ width: "100%", height: 340 }}
+              fallback={null}
+            />
+          </div>
+        )}
 
         {/* Search bar */}
         <div className="max-w-md mx-auto mb-8">
