@@ -6,6 +6,13 @@ import { navigateToSection } from "@/lib/sectionNav";
 
 const bubbleItems = [
   {
+    label: "Inicio",
+    href: "/",
+    ariaLabel: "Ir a Inicio",
+    rotation: -3,
+    hoverStyles: { bgColor: "hsl(150, 55%, 45%)", textColor: "#ffffff" },
+  },
+  {
     label: "Proyecto",
     href: "#proyecto",
     ariaLabel: "Ir a Proyecto",
