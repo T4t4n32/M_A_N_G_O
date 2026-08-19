@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import DecryptedText from "@/components/effects/DecryptedText";
 import { FramerEmbed } from "@/components/effects/FramerEmbed";
+import { GalleryFeatureFlipper } from "./GalleryFeatureFlipper";
 import { Button } from "@/components/ui/button";
 
 type Preview = { src: string; title: string };
@@ -171,9 +172,13 @@ export function GalleryTeaser() {
         </div>
       )}
 
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+        <GalleryFeatureFlipper />
+      </div>
+
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 relative mt-9">
         <Button
-          onClick={() => navigate("/galeria")}
+          onClick={() => { navigate("/galeria"); window.scrollTo({ top: 0 }); }}
           className="bg-accent hover:bg-accent/90 text-accent-foreground rounded-full px-6 font-semibold gap-2"
         >
           Ver galería completa <ArrowRight className="h-4 w-4" />

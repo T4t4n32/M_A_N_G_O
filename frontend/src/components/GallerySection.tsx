@@ -1,6 +1,7 @@
 import DecryptedText from "@/components/effects/DecryptedText";
 import { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import { createPortal } from "react-dom";
+import { useSearchParams } from "react-router-dom";
 import { X, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, RotateCcw, ChevronDown, Search as SearchIcon, Play } from "lucide-react";
 import { FramerEmbed } from "@/components/effects/FramerEmbed";
 
@@ -23,7 +24,22 @@ type GalleryItem = { src: string; title: string; cat: string; desc: string };
 const VALID_CATS = new Set(["Hardware", "Software", "Campo", "Progreso"]);
 
 export function GallerySection() {
-  const [active, setActive] = useState("Todo");
+  const [searchParams] = useSearchParams();
+  const requestedCategory = searchParams.get("categoria");
+  const [active, setActive] = useState(
+    () => (requestedCategory && VALID_CATS.has(requestedCategory) ? requestedCategory : "Todo"),
+  );
+  const filtersRef = useRef<HTMLDivElement>(null);
+
+  // Arriving from a link like /galeria?categoria=Hardware (e.g. the landing
+  // page's category flipper) both selects that filter and scrolls straight
+  // to the search/filter bar, skipping past the featured carousel above it.
+  useEffect(() => {
+    if (!requestedCategory || !VALID_CATS.has(requestedCategory)) return;
+    setActive(requestedCategory);
+    filtersRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [requestedCategory]);
+
   const [lightbox, setLightbox] = useState<number | null>(null);
   const [zoom, setZoom] = useState(1);
   const [expanded, setExpanded] = useState(false);
@@ -228,7 +244,7 @@ export function GallerySection() {
         )}
 
         {/* Search bar */}
-        <div className="max-w-md mx-auto mb-8">
+        <div ref={filtersRef} className="max-w-md mx-auto mb-8">
           <label htmlFor="gallery-search" className="sr-only">Buscar imágenes</label>
           <div className="relative">
             <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/30" />
