@@ -11,6 +11,22 @@ import StarBorder from "@/components/effects/StarBorder";
 import { Cpu, Radio, Wifi, Database, BarChart3, Globe, Shield, Zap, Mail, Phone, MapPin, Lock } from "lucide-react";
 import { useSiteValue } from "@/lib/siteContent";
 import { navigateToSection } from "@/lib/sectionNav";
+import { FramerEmbed } from "@/components/effects/FramerEmbed";
+
+// Published Framer.com "ProTextType": classic type/delete/pause typewriter,
+// cycling through a list of strings. Only needs addPropertyControls/
+// ControlType from "framer" (shimmed) plus framer-motion. Placed as a
+// standalone line — not swapped in for the editable `tagline` above, which
+// stays under Panel Emma's control — cycling real project facts already
+// stated elsewhere on the site (ProjectSection's LoRa range spec, the
+// footer's own location). Falls back to the first fact as plain static
+// text if framer.com is unreachable.
+const FRAMER_PRO_TEXT_TYPE_URL = "https://framer.com/m/ProTextType-KXoZ.js@zQQ6Rh7yVYyuhKxBRwZJ";
+const FOOTER_TYPED_FACTS = [
+  "pH · Temperatura · Turbidez — medidos cada pocos minutos",
+  "Radio LoRa — hasta 5 km sin WiFi ni red celular",
+  "Diseñado y ensamblado en Cali, Colombia",
+];
 
 const links = [
   { label: "Proyecto", href: "#proyecto" },
@@ -156,6 +172,32 @@ export function Footer() {
             </StarBorder>
           </SpotlightCard>
           </ScrollReveal>
+        </div>
+      </div>
+
+      <div className="border-t border-white/[0.06] py-4">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-center">
+          <FramerEmbed
+            moduleUrl={FRAMER_PRO_TEXT_TYPE_URL}
+            componentProps={{
+              text: FOOTER_TYPED_FACTS,
+              as: "p",
+              font: { fontSize: 12 },
+              sizingMode: "fixed",
+              typingSpeed: 45,
+              deletingSpeed: 25,
+              initialDelay: 400,
+              pauseDuration: 2200,
+              loop: true,
+              startOnVisible: true,
+              showCursor: true,
+              cursorCharacterPreset: "|",
+              textColors: ["rgba(255,255,255,0.4)"],
+              textAlign: "center",
+            }}
+            style={{ width: "100%", height: 24 }}
+            fallback={<p className="text-xs text-white/40 text-center">{FOOTER_TYPED_FACTS[0]}</p>}
+          />
         </div>
       </div>
 
