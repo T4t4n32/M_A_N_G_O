@@ -1,36 +1,24 @@
-import { GraduationCap, Settings, Eye, Medal } from "lucide-react";
+import { Settings, Eye, Medal } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
 export const YOUTUBE_CHANNEL = "https://youtube.com/@tatan_32?si=PV-gF7wt1bdklHtR";
 
 export interface PersonaCardData {
-  id: "formacion" | "inicios" | "vision" | "reconocimientos";
+  id: "inicios" | "vision" | "reconocimientos";
   color: string;
   Icon: LucideIcon;
   title: string;
   description: string;
   ctaLabel: string;
-  /** External link (Formación → YouTube channel) instead of opening a drawer. */
-  externalHref?: string;
 }
 
 /**
- * The ex-"Piso 1" content — Formación/Inicios/Visión/Reconocimientos — now
- * lives here as Drawer Card data for the Personas section instead of shelf
- * books. Colors/icons/copy match the spec exactly where given; "Inicios"
- * moves from the accent teal it accidentally shared with "Visión" to its
- * own slate tone (the spec's color choice, and a real differentiation).
+ * The ex-"Piso 1" content, now Drawer Card data rendered inside the shelf
+ * (Estanteria). "Formación" was dropped — its only real function (the
+ * YouTube channel link) already exists as the "Ver Canal" button in the
+ * Personas bio above, so the card was a pure duplicate.
  */
 export const personasCards: PersonaCardData[] = [
-  {
-    id: "formacion",
-    color: "hsl(0 55% 38%)",
-    Icon: GraduationCap,
-    title: "Formación",
-    description: "Comfandi El Prado · Técnico en Electrónica (SENA)",
-    ctaLabel: "VER CANAL",
-    externalHref: YOUTUBE_CHANNEL,
-  },
   {
     id: "inicios",
     color: "hsl(215 20% 45%)",
@@ -56,3 +44,10 @@ export const personasCards: PersonaCardData[] = [
     ctaLabel: "EXPLORAR",
   },
 ];
+
+/** Real dated milestones nested inside each card's drawer. */
+export const milestoneIdsByCard: Record<string, string[]> = {
+  inicios: ["inicios", "robisoft"],
+  vision: ["ecolatas"],
+  reconocimientos: ["reconocimiento-electronica", "reconocimiento-houston"],
+};

@@ -9,17 +9,9 @@ import GradientText from "@/components/effects/GradientText";
 import liderFoto from "@/assets/lider-foto.jpg";
 import { useSiteValue } from "@/lib/siteContent";
 import { parseValue, useResolvedSrc, useResolvedSrcs } from "@/lib/siteMedia";
-import { DrawerCard } from "./DrawerCard";
 import { Estanteria } from "./estanteria/Estanteria";
-import { personasCards, YOUTUBE_CHANNEL } from "./personasData";
+import { YOUTUBE_CHANNEL } from "./personasData";
 import { seasons, milestones } from "./leaderData";
-
-const milestoneIdsByCard: Record<string, string[]> = {
-  formacion: [],
-  inicios: ["inicios", "robisoft"],
-  vision: ["ecolatas"],
-  reconocimientos: ["reconocimiento-electronica", "reconocimiento-houston"],
-};
 
 function useIsMobile() {
   const [isMobile, setIsMobile] = useState(() =>
@@ -148,23 +140,17 @@ function LibraryHeading() {
 }
 
 /**
- * The Drawer Cards (ex-"Piso 1": Formación/Inicios/Visión/Reconocimientos)
- * pinned in a sticky left column on desktop while the shelf — potentially
- * taller than the viewport — scrolls past on the right. Plain CSS `sticky`,
- * no JS/scroll-jacking involved, so it can't desync or hide content.
+ * The Drawer Cards (ex-"Piso 1": Inicios/Visión/Reconocimientos — Formación
+ * was dropped, see personasData.ts) render inside Estanteria itself now, as
+ * a row within the same bordered shelf panel as the book floors, instead of
+ * a separate column beside it — they read as part of the shelf, not
+ * floating next to it.
  */
 function LibrarySection() {
   return (
-    <div className="grid md:grid-cols-[280px_1fr] gap-8 items-start">
-      <div className="grid grid-cols-2 gap-3 md:sticky md:top-28">
-        {personasCards.map((c) => (
-          <DrawerCard key={c.id} card={c} milestoneIds={milestoneIdsByCard[c.id]} />
-        ))}
-      </div>
-      <div>
-        <LibraryHeading />
-        <Estanteria />
-      </div>
+    <div>
+      <LibraryHeading />
+      <Estanteria />
     </div>
   );
 }
