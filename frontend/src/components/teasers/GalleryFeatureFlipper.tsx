@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Cpu, Code2, Waves, TrendingUp, type LucideIcon } from "lucide-react";
+import { Cpu, Code2, Waves, TrendingUp, ArrowRight, type LucideIcon } from "lucide-react";
 
 // Inspired by the published Framer "Feature Flipper" component — a row of
 // panels that widens the one under the pointer while the rest compress —
@@ -12,7 +12,10 @@ import { Cpu, Code2, Waves, TrendingUp, type LucideIcon } from "lucide-react";
 // just the interaction with framer-motion (already a project dependency)
 // keeps full control over source and content per MANGO.md's component
 // philosophy, and lets every icon/label/photo below be real M.A.N.G.O.
-// gallery content instead of placeholder marketing copy.
+// gallery content instead of placeholder marketing copy. This is now the
+// main visual of the gallery teaser — full-bleed, at the source
+// component's own 420px design height — instead of a secondary strip
+// under a carousel.
 
 type CategoryId = "Hardware" | "Software" | "Campo" | "Progreso";
 
@@ -39,6 +42,16 @@ interface Snapshot {
 const HARDWARE_DIR = "/images/gallery/hardware/";
 const gridSrc = (src: string) =>
   src.startsWith(HARDWARE_DIR) ? src.replace(HARDWARE_DIR, `${HARDWARE_DIR}thumb/`) : src;
+
+/** Small always-visible affordance so a panel reads as clickable even
+ *  before anyone hovers it — not just on the hover-revealed detail. */
+function ViewPill({ label }: { label: string }) {
+  return (
+    <span className="inline-flex items-center gap-1 self-start text-[11px] font-semibold text-amber-300 bg-black/40 backdrop-blur-sm px-2.5 py-1 rounded-full border border-amber-300/25">
+      {label} <ArrowRight className="h-3 w-3" />
+    </span>
+  );
+}
 
 export function GalleryFeatureFlipper() {
   const navigate = useNavigate();
@@ -76,85 +89,100 @@ export function GalleryFeatureFlipper() {
   if (Object.keys(snapshots).length === 0) return null;
 
   return (
-    <div className="mt-10">
-      <p className="text-[11px] font-semibold text-white/35 uppercase tracking-[0.15em] mb-3">
-        Explora por categoría
-      </p>
-
-      {/* Desktop/tablet — hover-expandable panel row */}
-      <div className="hidden md:flex gap-2 h-64" onMouseLeave={() => setActive(null)}>
-        {CATEGORY_CARDS.map((card, i) => {
-          const snap = snapshots[card.id];
-          const isActive = active === i;
-          const Icon = card.icon;
-          return (
-            <motion.button
-              key={card.id}
-              type="button"
-              onMouseEnter={() => setActive(i)}
-              onFocus={() => setActive(i)}
-              onBlur={() => setActive(null)}
-              onClick={() => goToCategory(card.id)}
-              animate={{ flexGrow: isActive ? 3.4 : 1 }}
-              transition={{ duration: 0.6, ease: [0.44, 0, 0.56, 1] }}
-              className="relative min-w-0 rounded-2xl overflow-hidden border border-white/10 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
-              style={{
-                flexBasis: 0,
-                flexShrink: 1,
-                backgroundImage: snap?.photo ? `url(${gridSrc(snap.photo)})` : undefined,
-                backgroundSize: "cover",
-                backgroundPosition: "center",
-                backgroundColor: "rgba(255,255,255,0.04)",
-              }}
-              aria-label={`Ver fotos de ${card.id}`}
-            >
-              <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-black/10" />
-              <div className="relative h-full flex flex-col justify-end p-4">
-                <Icon className="h-6 w-6 text-amber-300 shrink-0" />
-                <h3 className="mt-2 font-serif font-bold text-white text-lg whitespace-nowrap">{card.id}</h3>
-                <motion.div
-                  initial={false}
-                  animate={{ opacity: isActive ? 1 : 0, height: isActive ? "auto" : 0 }}
-                  transition={{ duration: 0.3 }}
-                  className="overflow-hidden"
-                >
-                  <p className="mt-1.5 text-xs text-white/70 leading-relaxed max-w-[220px]">{card.desc}</p>
-                  {snap && <p className="mt-1.5 text-[11px] text-amber-300/90 font-semibold">{snap.total} fotos →</p>}
-                </motion.div>
-              </div>
-            </motion.button>
-          );
-        })}
+    <div>
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+        <p className="text-[11px] font-semibold text-amber-400/80 uppercase tracking-[0.15em]">
+          Elige por dónde empezar
+        </p>
       </div>
 
-      {/* Mobile — no hover, so a plain tap-to-jump grid instead of the flip */}
-      <div className="grid grid-cols-2 gap-2 md:hidden">
-        {CATEGORY_CARDS.map((card) => {
-          const snap = snapshots[card.id];
-          const Icon = card.icon;
-          return (
-            <button
-              key={card.id}
-              type="button"
-              onClick={() => goToCategory(card.id)}
-              className="relative h-32 rounded-2xl overflow-hidden border border-white/10 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
-              style={{
-                backgroundImage: snap?.photo ? `url(${gridSrc(snap.photo)})` : undefined,
-                backgroundSize: "cover",
-                backgroundPosition: "center",
-                backgroundColor: "rgba(255,255,255,0.04)",
-              }}
-              aria-label={`Ver fotos de ${card.id}`}
-            >
-              <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent" />
-              <div className="relative h-full flex flex-col justify-end p-3">
-                <Icon className="h-5 w-5 text-amber-300" />
-                <h3 className="mt-1 font-serif font-bold text-white text-sm">{card.id}</h3>
-                {snap && <p className="text-[10px] text-white/60">{snap.total} fotos</p>}
-              </div>
-            </button>
-          );
-        })}
+      {/* Full-bleed, like the rest of this section — breaks out of the
+          centered column so the panels read as the section's main event. */}
+      <div className="relative left-1/2 right-1/2 -mx-[50vw] w-screen mt-4">
+        {/* Desktop/tablet — hover-expandable panel row at the source
+            component's own intrinsic height (420px). */}
+        <div className="hidden md:flex gap-1.5 h-[420px] px-4" onMouseLeave={() => setActive(null)}>
+          {CATEGORY_CARDS.map((card, i) => {
+            const snap = snapshots[card.id];
+            const isActive = active === i;
+            const Icon = card.icon;
+            return (
+              <motion.button
+                key={card.id}
+                type="button"
+                onMouseEnter={() => setActive(i)}
+                onFocus={() => setActive(i)}
+                onBlur={() => setActive(null)}
+                onClick={() => goToCategory(card.id)}
+                animate={{ flexGrow: isActive ? 3.6 : 1 }}
+                transition={{ duration: 0.6, ease: [0.44, 0, 0.56, 1] }}
+                className="group relative min-w-0 overflow-hidden border border-white/10 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:z-10"
+                style={{
+                  flexBasis: 0,
+                  flexShrink: 1,
+                  backgroundImage: snap?.photo ? `url(${gridSrc(snap.photo)})` : undefined,
+                  backgroundSize: "cover",
+                  backgroundPosition: "center",
+                  backgroundColor: "rgba(255,255,255,0.04)",
+                }}
+                aria-label={`Ver fotos de ${card.id}`}
+              >
+                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/45 to-black/10 transition-opacity group-hover:from-black/80" />
+                <div className="relative h-full flex flex-col justify-between p-5">
+                  <Icon className="h-7 w-7 text-amber-300 shrink-0" />
+                  <div>
+                    <h3 className="font-serif font-bold text-white text-2xl whitespace-nowrap">{card.id}</h3>
+                    <motion.div
+                      initial={false}
+                      animate={{ opacity: isActive ? 1 : 0, height: isActive ? "auto" : 0 }}
+                      transition={{ duration: 0.3 }}
+                      className="overflow-hidden"
+                    >
+                      <p className="mt-2 text-sm text-white/75 leading-relaxed max-w-[260px]">{card.desc}</p>
+                    </motion.div>
+                    <div className="mt-3">
+                      <ViewPill label={snap ? `${snap.total} fotos` : "Ver fotos"} />
+                    </div>
+                  </div>
+                </div>
+              </motion.button>
+            );
+          })}
+        </div>
+
+        {/* Mobile — no hover, so a plain tap-to-jump grid instead of the flip */}
+        <div className="grid grid-cols-2 gap-1.5 px-4 md:hidden">
+          {CATEGORY_CARDS.map((card) => {
+            const snap = snapshots[card.id];
+            const Icon = card.icon;
+            return (
+              <button
+                key={card.id}
+                type="button"
+                onClick={() => goToCategory(card.id)}
+                className="relative h-40 overflow-hidden border border-white/10 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                style={{
+                  backgroundImage: snap?.photo ? `url(${gridSrc(snap.photo)})` : undefined,
+                  backgroundSize: "cover",
+                  backgroundPosition: "center",
+                  backgroundColor: "rgba(255,255,255,0.04)",
+                }}
+                aria-label={`Ver fotos de ${card.id}`}
+              >
+                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
+                <div className="relative h-full flex flex-col justify-between p-3">
+                  <Icon className="h-5 w-5 text-amber-300" />
+                  <div>
+                    <h3 className="font-serif font-bold text-white text-base">{card.id}</h3>
+                    <div className="mt-1.5">
+                      <ViewPill label={snap ? `${snap.total} fotos` : "Ver fotos"} />
+                    </div>
+                  </div>
+                </div>
+              </button>
+            );
+          })}
+        </div>
       </div>
     </div>
   );
