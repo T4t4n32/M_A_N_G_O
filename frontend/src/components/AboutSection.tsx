@@ -1,11 +1,11 @@
 import { useState } from "react";
-import { Rocket, Users, ExternalLink, Star, Heart, ImageIcon, ChevronDown } from "lucide-react";
+import { Users, ExternalLink, Star, Heart, ImageIcon, ChevronDown } from "lucide-react";
 import DecryptedText from "@/components/effects/DecryptedText";
 import BorderGlow from "@/components/effects/BorderGlow";
 import ProfileCard from "@/components/effects/ProfileCard";
 import SpotlightCard from "@/components/effects/SpotlightCard";
 import { Button } from "@/components/ui/button";
-import LeaderShowcase from "@/components/leader/LeaderShowcase";
+import { PersonasHero } from "@/components/leader/PersonasHero";
 import { SiteMediaVisual } from "@/components/SiteMediaVisual";
 import calibotsLogo from "@/assets/calibots-logo.png";
 import calibotsSubmerged from "@/assets/calibots-submerged.jpeg";
@@ -27,8 +27,12 @@ export function AboutSection() {
   const contributorsTitle = useSiteValue("about.contributors.title", "Personas clave del proyecto");
   const pillarsDescription = useSiteValue("about.pillars.description", "");
   return (
-    <section id="sobre" className="py-20 md:py-28 bg-[hsl(210,35%,9%)] relative overflow-hidden">
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_70%_80%,hsl(168_72%_42%/0.05),transparent_50%)]" />
+    // No section-level background paint here — the page's own bg-mango-dark
+    // (set on Sobre.tsx's <main>) carries through uninterrupted from hero to
+    // footer. Painting a slightly different tone here (as before) created a
+    // visible seam right where this section ended and the footer began.
+    <section id="sobre" className="py-20 md:py-28 relative overflow-hidden">
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_70%_20%,hsl(168_72%_42%/0.05),transparent_50%)]" />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-14">
           <h2 className="text-3xl md:text-4xl font-bold">
@@ -46,11 +50,17 @@ export function AboutSection() {
           </p>
         </div>
 
-        {/* Leader Showcase — nueva sección interactiva */}
-        <LeaderShowcase />
+        {/* Personas + Librería — bio hero (pinned scroll morph on desktop,
+            stacked on mobile) into Drawer Cards + the 3D bookshelf. */}
+        <PersonasHero />
 
         {/* Separator */}
         <div className="h-px bg-gradient-to-r from-transparent via-accent/20 to-transparent my-10" />
+
+        <div className="text-center mb-10">
+          <p className="text-accent/70 text-xs font-semibold uppercase tracking-[0.2em] mb-2">Agradecimientos</p>
+          <h3 className="text-2xl md:text-3xl font-bold text-white">Raíces y apoyo del proyecto</h3>
+        </div>
 
          {/* Bottom row: Calibots + Contribuyentes */}
          <div className="grid md:grid-cols-2 gap-8">
@@ -156,8 +166,10 @@ export function AboutSection() {
                   </h3>
                 </div>
 
-                {/* Pilares Fundamentales — ProfileCards */}
-                <p className="text-amber-400 text-xs font-semibold uppercase tracking-wider mb-4">Pilares Fundamentales</p>
+                {/* Familia — ProfileCards. This label used to wrongly read
+                    "Pilares Fundamentales" (copy-pasted from the Logros
+                    section) instead of naming what this card actually is. */}
+                <p className="text-amber-400 text-xs font-semibold uppercase tracking-wider mb-4">Apoyo y Mentoría</p>
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-6">
                   {[
                     { name: "Yamileth Chacón", role: "Madre del líder del proyecto — Apoyo integral y soporte incondicional", photo: madreFoto },
@@ -185,7 +197,7 @@ export function AboutSection() {
                 <SiteMediaVisual
                   fieldKey="about.pillars.media"
                   className="mb-6"
-                  ariaLabel="Galería de Pilares Fundamentales"
+                  ariaLabel="Galería de apoyo y mentoría"
                 />
 
                 {/* Mención Honorífica — SpotlightCard collapsible */}

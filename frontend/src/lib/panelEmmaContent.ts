@@ -37,9 +37,10 @@ export interface PanelItem {
 /**
  * Real site taxonomy — every category here is actually read by a live
  * section of the site (Galería pública via GallerySection.tsx, FLL seasons
- * via SeasonsGrid/PilaresSection, hitos via MilestonesGrid/VisionHero).
- * Grouped so Panel Emma can offer a "browse by section" view that mirrors
- * exactly what a visitor sees, instead of a flat unrelated category list.
+ * and hitos via the About page's Estantería/DrawerCard, reached through
+ * PersonasHero.tsx). Grouped so Panel Emma can offer a "browse by section"
+ * view that mirrors exactly what a visitor sees, instead of a flat
+ * unrelated category list.
  */
 export interface CategoryOption {
   id: string;

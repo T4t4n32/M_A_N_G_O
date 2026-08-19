@@ -1,5 +1,3 @@
-import { Link } from "react-router-dom";
-import { ArrowLeft } from "lucide-react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { AboutSection } from "@/components/AboutSection";
@@ -12,14 +10,11 @@ export default function Sobre() {
     <main className="min-h-screen bg-mango-dark">
       <Header />
       <div id="contenido" tabIndex={-1} />
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-28 lg:pt-32">
-        <Link
-          to="/"
-          className="inline-flex items-center gap-1.5 text-sm text-white/50 hover:text-white transition-colors"
-        >
-          <ArrowLeft className="h-4 w-4" /> Volver al inicio
-        </Link>
-      </div>
+      {/* No "volver al inicio" breadcrumb here — the header logo already
+          navigates home (Header.tsx's onLogoClick), so this was a redundant
+          second way to do the same thing, taking up space right under the
+          nav on every visit. */}
+      <div className="pt-28 lg:pt-32" />
       <AboutSection />
       <Footer />
     </main>

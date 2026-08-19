@@ -106,6 +106,32 @@ function blobUrlFor(id: string): Promise<string | null> {
   });
 }
 
+/** Same resolution as useResolvedSrc, batched for a whole gallery field (array-valued) at once. */
+export function useResolvedSrcs(descs: MediaDescriptor[]): { src: string; alt: string }[] {
+  const key = descs.map((d) => d.id).join(",");
+  const [items, setItems] = useState<{ src: string; alt: string }[]>([]);
+  useEffect(() => {
+    let alive = true;
+    const resolve = () =>
+      Promise.all(
+        descs.map(async (d) => {
+          const src = d.remoteUrl ?? (await blobUrlFor(d.id));
+          return src ? { src, alt: d.alt || d.name } : null;
+        }),
+      ).then((resolved) => {
+        if (alive) setItems(resolved.filter((x): x is { src: string; alt: string } => x !== null));
+      });
+    resolve();
+    window.addEventListener(EVENT, resolve);
+    return () => {
+      alive = false;
+      window.removeEventListener(EVENT, resolve);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [key]);
+  return items;
+}
+
 export function useResolvedSrc(d: MediaDescriptor | null | undefined): string | null {
   const id = d?.id;
   const remote = d?.remoteUrl;
