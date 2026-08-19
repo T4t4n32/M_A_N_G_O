@@ -1,5 +1,5 @@
 import { Cpu, Radio, Wifi, Database, BarChart3, Globe, Shield, Zap } from "lucide-react";
-import LogoLoop from "@/components/effects/LogoLoop";
+import BendingMarquee from "@/components/effects/BendingMarquee";
 
 const techLogos = [
   { node: <a href="https://www.espressif.com/en/products/socs/esp32" target="_blank" rel="noopener noreferrer" className="group relative flex items-center gap-2 rounded-full px-3 py-2 text-white/50 hover:text-white transition-all duration-300 cursor-pointer hover:bg-white/5"><Cpu className="h-5 w-5" /><span className="text-xs font-semibold">ESP32</span><span className="absolute bottom-full mb-3 left-1/2 -translate-x-1/2 bg-popover text-popover-foreground text-[11px] px-3 py-1.5 rounded-md opacity-0 group-hover:opacity-100 transition-all duration-300 whitespace-nowrap pointer-events-none z-[70] shadow-lg border border-border/80 backdrop-blur-md group-hover:-translate-y-0.5">Microcontrolador IoT</span></a>, title: "ESP32" },
@@ -36,7 +36,7 @@ export function TechStackBanner() {
         <p className="text-[10px] uppercase tracking-widest text-white/25 text-center mb-3 font-semibold">
           Tecnologías utilizadas en el proyecto
         </p>
-        <LogoLoop
+        <BendingMarquee
           logos={techLogos}
           speed={60}
           direction="left"
