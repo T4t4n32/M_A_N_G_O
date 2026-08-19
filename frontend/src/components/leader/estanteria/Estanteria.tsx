@@ -1,8 +1,6 @@
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import DecryptedText from "@/components/effects/DecryptedText";
-import { DrawerCard } from "../DrawerCard";
-import { personasCards, milestoneIdsByCard } from "../personasData";
 import { Book } from "./Book";
 import { BookExpandedCard } from "./BookExpandedCard";
 import { estanteriaFloors } from "./estanteriaData";
@@ -84,12 +82,6 @@ export function Estanteria() {
 
   return (
     <div className="space-y-10 rounded-3xl border border-white/10 bg-white/[0.02] p-6 md:p-8">
-      <div className="grid grid-cols-3 gap-3 sm:gap-4">
-        {personasCards.map((c) => (
-          <DrawerCard key={c.id} card={c} milestoneIds={milestoneIdsByCard[c.id]} />
-        ))}
-      </div>
-
       {estanteriaFloors.map((floor) => (
         <div key={floor.floor}>
           <div className="flex items-center gap-2 mb-1">
@@ -110,7 +102,7 @@ export function Estanteria() {
           )}
 
           <div
-            className={`grid gap-6 sm:gap-8 ${floor.books.length >= 3 ? "grid-cols-2 sm:grid-cols-3" : "grid-cols-2 max-w-md"}`}
+            className={`grid gap-6 sm:gap-8 ${floor.books.length >= 3 ? "grid-cols-2 sm:grid-cols-3" : "grid-cols-2 max-w-md mx-auto"}`}
           >
             {floor.books.map((book) => (
               <Book

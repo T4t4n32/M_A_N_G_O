@@ -1,3 +1,5 @@
+import { Settings, Eye, Medal } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { seasons, milestones } from "../leaderData";
 
 const masterpiece = seasons.find((s) => s.id === "masterpiece")!;
@@ -5,6 +7,11 @@ const submerged = seasons.find((s) => s.id === "submerged")!;
 const cargoConnect = seasons.find((s) => s.id === "cargo-connect")!;
 const superpowered = seasons.find((s) => s.id === "superpowered")!;
 const internacional = milestones.find((m) => m.id === "internacional")!;
+const inicios = milestones.find((m) => m.id === "inicios")!;
+const robisoft = milestones.find((m) => m.id === "robisoft")!;
+const ecolatas = milestones.find((m) => m.id === "ecolatas")!;
+const reconocimientoElectronica = milestones.find((m) => m.id === "reconocimiento-electronica")!;
+const reconocimientoHouston = milestones.find((m) => m.id === "reconocimiento-houston")!;
 
 export interface EstanteriaBook {
   id: string;
@@ -19,11 +26,13 @@ export interface EstanteriaBook {
   tags?: string[];
   badge?: string;
   ctaLabel?: string;
-  visualType: "photo" | "logo";
+  visualType: "photo" | "logo" | "icon";
   /** photo: Panel Emma category id, media fetched live via useCategoryMedia. */
   category?: string;
   /** logo: real static asset path. */
   visualSrc?: string;
+  /** icon: no real photo exists for these (conceptual/profile books) — a big centered lucide icon instead. */
+  Icon?: LucideIcon;
 }
 
 export interface EstanteriaFloor {
@@ -34,15 +43,62 @@ export interface EstanteriaFloor {
 }
 
 /**
- * Piso 2 — "Pilares Fundamentales" and Piso 3 — "Los Comienzos en FLL".
- * Content is the real seasons/milestones data already live elsewhere on
- * this page (PilaresSection/SeasonsGrid before this rebuild) — colors,
- * descriptions and categories are the established ones, not re-invented.
- * "Representación Internacional"'s description was reported as visually
- * clipped by CSS in the old card; this is the real, un-clamped text from
- * leaderData.ts.
+ * 3 floors, 3/3/2 books. Piso 1 (Inicios/Visión/Reconocimientos) used to
+ * live outside the shelf as Drawer Cards — now real books like everything
+ * else, same flip/expand mechanic. Their nested real milestones (Inicios en
+ * Robótica, Copa RobiSoft, ECOLATAS, the two school recognitions) fold into
+ * each book's tags instead of a separate nested-drawer UI. Piso 2
+ * ("Pilares Fundamentales") and Piso 3 ("Los Comienzos en FLL") are
+ * unchanged. All content is the real seasons/milestones data already used
+ * elsewhere on the site — nothing invented.
  */
 export const estanteriaFloors: EstanteriaFloor[] = [
+  {
+    floor: 1,
+    label: "Sebastián Sánchez Chacón",
+    sublabel: "Líder de Desarrollo — M.A.N.G.O.",
+    books: [
+      {
+        id: "inicios",
+        floor: 1,
+        position: 1,
+        color: "hsl(215 20% 45%)",
+        glowColor: "hsl(215 20% 45% / 0.3)",
+        eyebrow: "01 · TRAYECTORIA",
+        title: "Inicios",
+        description: "Robótica educativa desde temprana edad — Scratch + SB-TDS",
+        tags: [inicios.title, robisoft.title],
+        visualType: "icon",
+        Icon: Settings,
+      },
+      {
+        id: "vision",
+        floor: 1,
+        position: 2,
+        color: "hsl(168 72% 42%)",
+        glowColor: "hsl(168 72% 42% / 0.3)",
+        eyebrow: "02 · TRAYECTORIA",
+        title: "Visión",
+        description: "Tecnología al servicio de la conservación de ecosistemas marítimos",
+        tags: [ecolatas.title],
+        visualType: "icon",
+        Icon: Eye,
+      },
+      {
+        id: "reconocimientos",
+        floor: 1,
+        position: 3,
+        color: "hsl(43 96% 56%)",
+        glowColor: "hsl(43 96% 56% / 0.3)",
+        eyebrow: "03 · TRAYECTORIA",
+        title: "Reconocimientos",
+        description: "Premiación del proyecto y representación de Comfandi",
+        tags: [reconocimientoElectronica.title, reconocimientoHouston.title],
+        visualType: "icon",
+        Icon: Medal,
+      },
+    ],
+  },
   {
     floor: 2,
     label: "Pilares Fundamentales",

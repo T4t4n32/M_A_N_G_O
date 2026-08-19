@@ -88,6 +88,12 @@ export function BookExpandedCard({ book, onClose }: BookExpandedCardProps) {
             <div className="absolute inset-0 flex items-center justify-center p-10">
               <img src={book.visualSrc} alt={book.title} className="max-w-[60%] max-h-[60%] object-contain" />
             </div>
+          ) : book.visualType === "icon" && book.Icon ? (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="p-8 rounded-full" style={{ background: hslAlpha(book.color, 0.13) }}>
+                <book.Icon className="h-16 w-16" style={{ color: book.color }} />
+              </div>
+            </div>
           ) : (
             <div className="absolute inset-0 flex items-center justify-center">
               <BookOpen className="h-10 w-10" style={{ color: book.color, opacity: 0.3 }} />
