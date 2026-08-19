@@ -17,6 +17,9 @@ export default {
   			sans: ['Source Sans 3', 'ui-sans-serif', 'system-ui', 'sans-serif'],
   			serif: ['Merriweather', 'ui-serif', 'Georgia', 'serif'],
   			mono: ['JetBrains Mono', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'monospace'],
+  			// Wide geometric display face for the footer's giant wordmark —
+  			// matches the Framer "Breathing Footer" reference's own typography.
+  			brand: ['Syne', 'ui-sans-serif', 'system-ui', 'sans-serif'],
   		},
   		colors: {
   			border: 'hsl(var(--border))',

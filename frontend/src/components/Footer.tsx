@@ -12,6 +12,7 @@ import { Cpu, Radio, Wifi, Database, BarChart3, Globe, Shield, Zap, Mail, Phone,
 import { useSiteValue } from "@/lib/siteContent";
 import { navigateToSection } from "@/lib/sectionNav";
 import { FramerEmbed } from "@/components/effects/FramerEmbed";
+import { BreathingGlow } from "@/components/effects/BreathingGlow";
 
 // Published Framer.com "ProTextType": classic type/delete/pause typewriter,
 // cycling through a list of strings. Only needs addPropertyControls/
@@ -64,9 +65,15 @@ export function Footer() {
   };
 
   return (
-    <footer className="bg-mango-dark text-white/70 relative">
+    <footer className="bg-mango-dark text-white/70 relative overflow-hidden">
+      {/* Breathing ambient glow — styled after the Framer "Breathing Footer"
+          reference; see BreathingGlow.tsx for why it's reproduced natively
+          instead of embedded. Sits at z-0 so every real section below
+          needs relative z-10 to paint above it. */}
+      <BreathingGlow />
+
       {/* Subtle top glow */}
-      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[hsl(168,72%,42%)]/15 to-transparent" />
+      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[hsl(168,72%,42%)]/15 to-transparent z-10" />
 
       {/* Tech Stack LogoLoop */}
       <div className="border-b border-white/[0.06] py-5 overflow-visible relative z-10">
@@ -84,7 +91,7 @@ export function Footer() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 relative z-10">
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
           <ScrollReveal variant="fade-up" delay={0}>
           <SpotlightCard className="sm:col-span-2 lg:col-span-1 rounded-3xl border border-white/10 bg-white/[0.03] p-6 backdrop-blur-sm" spotlightColor="rgba(0, 201, 167, 0.15)">
@@ -107,10 +114,13 @@ export function Footer() {
           <ScrollReveal variant="fade-up" delay={0.1}>
           <SpotlightCard className="rounded-3xl border border-white/10 bg-white/[0.02] p-6" spotlightColor="rgba(0, 201, 167, 0.15)">
             <h4 className="text-base text-white font-semibold mb-4">Enlaces Rápidos</h4>
-            <ul className="space-y-2.5">
+            <ul className="space-y-1.5 -mx-3">
               {links.map((l) => (
                 <li key={l.href}>
-                  <button onClick={() => scrollTo(l.href)} className="text-sm text-white/65 hover:text-[hsl(168,72%,42%)] transition-colors duration-300">
+                  <button
+                    onClick={() => scrollTo(l.href)}
+                    className="inline-flex text-sm text-white/65 hover:text-white hover:bg-white/[0.06] rounded-full px-3 py-1.5 transition-all duration-300"
+                  >
                     {l.label}
                   </button>
                 </li>
@@ -175,7 +185,7 @@ export function Footer() {
         </div>
       </div>
 
-      <div className="border-t border-white/[0.06] py-4">
+      <div className="border-t border-white/[0.06] py-4 relative z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-center">
           <FramerEmbed
             moduleUrl={FRAMER_PRO_TEXT_TYPE_URL}
@@ -201,7 +211,21 @@ export function Footer() {
         </div>
       </div>
 
-      <div className="border-t border-white/10">
+      {/* Giant low-opacity wordmark — the other half of the "Breathing
+          Footer" reference's signature look, alongside the glow above.
+          Purely decorative (real "M.A.N.G.O" branding already appears
+          accessibly in the top card), so it's hidden from assistive tech. */}
+      <div className="relative z-[1] overflow-hidden pointer-events-none select-none -mb-4 sm:-mb-6">
+        <p
+          aria-hidden="true"
+          className="font-brand font-extrabold text-white/[0.05] text-center leading-none tracking-tight whitespace-nowrap"
+          style={{ fontSize: "clamp(3.5rem, 15vw, 11rem)" }}
+        >
+          M.A.N.G.O
+        </p>
+      </div>
+
+      <div className="border-t border-white/10 relative z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 flex flex-col sm:flex-row justify-between items-center gap-3 text-xs text-white/40">
           <p>© {new Date().getFullYear()} {copyright}</p>
           <p>{legal}</p>
