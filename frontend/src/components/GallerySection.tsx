@@ -23,19 +23,27 @@ type GalleryItem = { src: string; title: string; cat: string; desc: string };
 
 const VALID_CATS = new Set(["Hardware", "Software", "Campo", "Progreso"]);
 
+// "Proceso" isn't a real backend category — it's the landing page's gallery
+// teaser grouping everything built indoors (Hardware + Software + Progreso)
+// as one story beat opposite "Campo" (field tests). Since every image's
+// `cat` always resolves to one of VALID_CATS (see the fallback below),
+// "not Campo" is a complete, accurate stand-in for that group.
+const isSelectableCategory = (id: string | null): id is string =>
+  id === "Proceso" || (!!id && VALID_CATS.has(id));
+
 export function GallerySection() {
   const [searchParams] = useSearchParams();
   const requestedCategory = searchParams.get("categoria");
   const [active, setActive] = useState(
-    () => (requestedCategory && VALID_CATS.has(requestedCategory) ? requestedCategory : "Todo"),
+    () => (isSelectableCategory(requestedCategory) ? requestedCategory : "Todo"),
   );
   const filtersRef = useRef<HTMLDivElement>(null);
 
   // Arriving from a link like /galeria?categoria=Hardware (e.g. the landing
-  // page's category flipper) both selects that filter and scrolls straight
+  // page's category cards) both selects that filter and scrolls straight
   // to the search/filter bar, skipping past the featured carousel above it.
   useEffect(() => {
-    if (!requestedCategory || !VALID_CATS.has(requestedCategory)) return;
+    if (!isSelectableCategory(requestedCategory)) return;
     setActive(requestedCategory);
     filtersRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   }, [requestedCategory]);
@@ -90,7 +98,9 @@ export function GallerySection() {
   }, []);
 
   const filtered = useMemo(() => {
-    let result = active === "Todo" ? images : images.filter((img) => img.cat === active);
+    let result = images;
+    if (active === "Proceso") result = images.filter((img) => img.cat !== "Campo");
+    else if (active !== "Todo") result = images.filter((img) => img.cat === active);
     if (search.trim()) {
       const q = search.toLowerCase();
       result = result.filter(
