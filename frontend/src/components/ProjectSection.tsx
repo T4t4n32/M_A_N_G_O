@@ -8,6 +8,14 @@ import {
 import DecryptedText from "@/components/effects/DecryptedText";
 import { useSiteValue } from "@/lib/siteContent";
 import FloatingModel3D from "@/components/effects/FloatingModel3D";
+import { FramerEmbed } from "@/components/effects/FramerEmbed";
+
+// Published Framer.com "Tilt-Flip-card": tilts on hover, flips on click to
+// reveal a description. Only needs addPropertyControls/ControlType from
+// "framer" (shimmed) plus framer-motion — falls back to the plain
+// ComponentCard (a static mini-gallery card already in this file) if
+// framer.com is unreachable.
+const FRAMER_TILT_FLIP_CARD_URL = "https://framer.com/m/Tilt-Flip-card-oapvPI.js@BcF18UQ6eUS86GiIzuOc";
 
 // MANGO V2 GLB — shown as ambient rotating device in the hero
 const HERO_MODEL_URL = "/api/v1/uploads/document/0b58fcfefa034d49bf6d7503678b9269.glb";
@@ -319,6 +327,43 @@ function ComponentCard({ title, role, desc, images, accent }: {
         <h4 className="text-white font-bold text-sm mb-2">{title}</h4>
         <p className="text-white/65 text-sm leading-relaxed flex-1">{desc}</p>
       </div>
+    </div>
+  );
+}
+
+// ── Component flip-card quick preview ─────────────────────────────────────────
+// A tactile "at a glance" row above the detailed ComponentShowcase explorer:
+// hover-tilt + click-to-flip per real hardware part, reusing the exact same
+// COMPONENTS data (photo, title, description) — no new content authored.
+function ComponentFlipGrid() {
+  return (
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-10 justify-items-center">
+      {COMPONENTS.map((c) => (
+        <FramerEmbed
+          key={c.id}
+          moduleUrl={FRAMER_TILT_FLIP_CARD_URL}
+          componentProps={{
+            image: { src: c.images[0] },
+            title: c.title,
+            // First sentence of the real description — the flip-back face
+            // clips overflow, so a short, real excerpt reads best there.
+            description: c.desc.split(".")[0] + ".",
+            radius: 20,
+            tiltStrength: 12,
+            shimmerEnabled: true,
+            shimmerColor: `${c.accent}55`,
+            backgroundColor: "hsl(210,38%,8%)",
+            textColor: "#ffffff",
+            textAlign: "flex-end",
+          }}
+          style={{ width: 220, height: 280 }}
+          fallback={
+            <div style={{ width: 220, height: 280 }}>
+              <ComponentCard title={c.title} role={c.role} desc={c.desc} images={c.images} accent={c.accent} />
+            </div>
+          }
+        />
+      ))}
     </div>
   );
 }
@@ -1381,6 +1426,7 @@ export function ProjectSection() {
               <p className="text-white/60 text-[11px] font-mono uppercase tracking-widest">Componentes</p>
               <div className="h-px flex-1 bg-white/[0.06]" />
             </div>
+            <ComponentFlipGrid />
             <ComponentShowcase />
           </div>
 
