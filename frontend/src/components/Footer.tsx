@@ -11,7 +11,6 @@ import { Mail, Phone, MapPin, Lock } from "lucide-react";
 import { useSiteValue } from "@/lib/siteContent";
 import { navigateToSection } from "@/lib/sectionNav";
 import { FramerEmbed } from "@/components/effects/FramerEmbed";
-import { BreathingGlow } from "@/components/effects/BreathingGlow";
 
 // Published Framer.com "ProTextType": classic type/delete/pause typewriter,
 // cycling through a list of strings. Only needs addPropertyControls/
@@ -53,18 +52,12 @@ export function Footer() {
   };
 
   return (
-    // No bg-mango-dark fill here on purpose: the real page background (set
-    // on <main>) shows straight through everywhere outside the rounded
-    // panel below, so the footer reads as a card floating on that
-    // background rather than another opaque band — the panel is the only
-    // layer with its own fill.
+    // Nothing painted here on purpose — no fill, no ambient glow. Whatever
+    // sits behind the footer (the page's own background, set by whichever
+    // page renders it) shows straight through everywhere outside the
+    // rounded panel below, so the footer reads as a card floating directly
+    // on the page rather than another band with its own backdrop.
     <footer className="text-white/70 relative overflow-hidden">
-      {/* Breathing ambient glow — styled after the Framer "Breathing Footer"
-          reference; see BreathingGlow.tsx for why it's reproduced natively
-          instead of embedded. Sits at z-0 so every real section below
-          needs relative z-10 to paint above it. */}
-      <BreathingGlow />
-
       {/* Liquid-glass slab — styled after the Framer "Liquid Glass Footer"
           reference (https://framer.com/m/Liquid-Glass-Footer-PpecQS.js@NwnM5wWKuZaTzAqqZTeX):
           its whole footer is one big rounded panel (gradient + layered soft

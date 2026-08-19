@@ -120,14 +120,24 @@ const Index = () => {
         </ScrollReveal>
       </Suspense>
 
-      {/* Landing-page-only — a real DOM sibling of <Footer>, not part of it,
-          so it never appears on /galeria, /documentacion, /sobre, etc. and
-          the footer growing/shrinking on those pages can't move it. */}
-      <div className="pt-4 pb-6 md:pb-10">
-        <TechStackBanner />
-      </div>
+      {/* Same background as ContactSection right above (hsl(210,38%,6%)) —
+          <main>'s own bg-mango-dark is a slightly different shade
+          (hsl(210,35%,8%)), which read as a visible seam right where this
+          region starts. Neither TechStackBanner nor Footer paint their own
+          fill, so this one flat color is the only backdrop behind both,
+          all the way to the bottom of the page — no seam between them
+          either. */}
+      <div className="bg-[hsl(210,38%,6%)]">
+        {/* Landing-page-only — a real DOM sibling of <Footer>, not part of
+            it, so it never appears on /galeria, /documentacion, /sobre,
+            etc. and the footer growing/shrinking on those pages can't
+            move it. */}
+        <div className="pt-4 pb-6 md:pb-10">
+          <TechStackBanner />
+        </div>
 
-      <Footer />
+        <Footer />
+      </div>
     </main>
   );
 };

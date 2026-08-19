@@ -15,15 +15,19 @@ const techLogos = [
 /**
  * Floating "technologies used" strip — landing page only. Deliberately not
  * part of Footer.tsx (which is shared across every route): it's its own
- * rounded card, a DOM sibling of the footer panel with a real gap between
- * them, so the footer growing/shrinking on other pages never touches it,
- * and it simply doesn't render outside the landing page at all.
+ * card, a DOM sibling of the footer panel with a real gap between them, so
+ * the footer growing/shrinking on other pages never touches it, and it
+ * simply doesn't render outside the landing page at all.
+ *
+ * Full-bleed (edge to edge of the viewport, not capped at max-w-7xl like
+ * the footer panel) — same height as before, just the full page width, so
+ * the marquee has real room to flow.
  */
 export function TechStackBanner() {
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+    <div className="relative left-1/2 right-1/2 -mx-[50vw] w-screen z-10">
       <div
-        className="rounded-[28px] border border-white/10 bg-white/[0.04] py-5 px-6 md:px-10 overflow-hidden"
+        className="border-y border-white/10 bg-white/[0.04] py-5 px-6 md:px-10 overflow-hidden"
         style={{
           boxShadow:
             "-60px 0 100px -40px rgba(0,201,167,0.4), 60px 0 100px -40px rgba(192,132,252,0.35)",
@@ -39,7 +43,7 @@ export function TechStackBanner() {
           logoHeight={28}
           gap={56}
           fadeOut
-          fadeOutColor="hsl(210, 35%, 8%)"
+          fadeOutColor="hsl(210, 38%, 6%)"
         />
       </div>
     </div>
