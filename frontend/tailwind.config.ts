@@ -129,6 +129,10 @@ export default {
 				'0%, 100%': { opacity: '1' },
 				'50%':       { opacity: '0.65' },
 			},
+			'ripple-expand': {
+				'0%':   { transform: 'scale(0)', opacity: '0.45' },
+				'100%': { transform: 'scale(1)', opacity: '0' },
+			},
 		},
 		animation: {
 			'accordion-down': 'accordion-down 0.2s ease-out',
@@ -137,6 +141,7 @@ export default {
 			'star-movement-bottom': 'star-movement-bottom linear infinite alternate',
 			'star-movement-top': 'star-movement-top linear infinite alternate',
 			'pulse-critical': 'pulse-critical 2s ease-in-out infinite',
+			'ripple-expand': 'ripple-expand 700ms ease-out forwards',
   		}
   	}
   },
