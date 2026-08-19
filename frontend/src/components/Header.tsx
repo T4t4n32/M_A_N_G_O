@@ -76,6 +76,7 @@ export function Header() {
       <DynamicNav
         logo={icono}
         logoAlt="M.A.N.G.O — inicio"
+        name="M.A.N.G.O"
         items={bubbleItems}
         onLogoClick={handleLogoClick}
         onItemClick={handleItemClick}

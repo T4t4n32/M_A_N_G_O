@@ -12,6 +12,7 @@ export type DynamicNavItem = {
 interface DynamicNavProps {
   logo: string;
   logoAlt: string;
+  name: string;
   items: DynamicNavItem[];
   onLogoClick: () => void;
   onItemClick: (href: string) => void;
@@ -24,7 +25,7 @@ interface DynamicNavProps {
  * tween so the icon and the item row share one continuous morph instead of
  * two separately-animated pieces.
  */
-export function DynamicNav({ logo, logoAlt, items, onLogoClick, onItemClick, className = "" }: DynamicNavProps) {
+export function DynamicNav({ logo, logoAlt, name, items, onLogoClick, onItemClick, className = "" }: DynamicNavProps) {
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
 
@@ -60,13 +61,19 @@ export function DynamicNav({ logo, logoAlt, items, onLogoClick, onItemClick, cla
           type="button"
           onClick={(e) => {
             e.stopPropagation();
+            if (!open) {
+              setOpen(true);
+              return;
+            }
+            setOpen(false);
             onLogoClick();
           }}
-          aria-label={logoAlt}
+          aria-label={open ? logoAlt : "Abrir menú de navegación"}
           aria-expanded={open}
-          className="shrink-0 flex items-center justify-center h-14 w-14 rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-[hsl(210,35%,8%)]"
+          className="shrink-0 flex items-center gap-2.5 h-14 pl-2 pr-4 rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-[hsl(210,35%,8%)]"
         >
-          <img src={logo} alt="" className="h-9 w-9 rounded-full" />
+          <img src={logo} alt="" className="h-9 w-9 shrink-0 rounded-full" />
+          <span className="whitespace-nowrap text-base font-bold tracking-wide text-white">{name}</span>
         </motion.button>
 
         <AnimatePresence initial={false}>
