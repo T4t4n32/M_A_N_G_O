@@ -20,6 +20,7 @@ from app.db import (
     insert_sensor_reading,
     update_mission_state,
 )
+from app.validation import validate_mission_id
 
 log = logging.getLogger("mango.edge.ingest")
 
@@ -67,7 +68,15 @@ def ingest():
         return jsonify({"error": "expected JSON object"}), 400
 
     payload_type = (payload.get("type") or "").strip()
-    mission_id = (payload.get("mission_id") or "").strip() or None
+    raw_mission_id = payload.get("mission_id")
+    if raw_mission_id is None or (
+        isinstance(raw_mission_id, str) and not raw_mission_id.strip()
+    ):
+        mission_id = None
+    else:
+        mission_id = validate_mission_id(raw_mission_id)
+        if mission_id is None:
+            return jsonify({"error": "invalid mission_id"}), 400
 
     db_path = _db_path()
 
@@ -132,7 +141,8 @@ def state_change():
     if not isinstance(payload, dict):
         return jsonify({"error": "expected JSON object"}), 400
 
-    mission_id = (payload.get("mission_id") or "").strip()
+    raw_mission_id = payload.get("mission_id")
+    mission_id = validate_mission_id(raw_mission_id)
     state = (payload.get("state") or "").strip().upper()
 
     VALID_STATES = (
@@ -141,8 +151,10 @@ def state_change():
         "ERROR", "MISSION_FINISHED", "SYNCING", "STANDBY",
     )
 
-    if not mission_id:
+    if not isinstance(raw_mission_id, str) or not raw_mission_id.strip():
         return jsonify({"error": "mission_id required"}), 400
+    if mission_id is None:
+        return jsonify({"error": "invalid mission_id"}), 400
     if state not in VALID_STATES:
         return jsonify({"error": "invalid state '%s'" % state}), 400
 

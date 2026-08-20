@@ -285,10 +285,8 @@ def serve_upload(filename: str):
     """Serve an uploaded file. Path format: <kind>/<stored_name>"""
     upload_dir = current_app.config.get("UPLOAD_FOLDER", "/app/uploads")
     parts = filename.split("/", 1)
-    if len(parts) == 2:
-        directory = os.path.join(upload_dir, parts[0])
-        fname     = parts[1]
-    else:
-        directory = upload_dir
-        fname     = parts[0]
+    if len(parts) != 2 or parts[0] not in {"image", "video", "document"}:
+        return jsonify({"error": "not_found"}), 404
+    directory = os.path.join(upload_dir, parts[0])
+    fname     = parts[1]
     return send_from_directory(directory, fname)
