@@ -22,7 +22,6 @@ Endpoints que el frontend consume:
 from __future__ import annotations
 
 from datetime import datetime, timezone
-from functools import wraps
 
 from flask import Blueprint, current_app, jsonify, request, session
 
@@ -30,6 +29,12 @@ from app.extensions import db
 from app.middleware.rate_limit_middleware import limiter
 from app.models.subscription import UserSubscription, tier_for_user
 from app.models.user import MangoLoginEvent, MangoUser
+from app.utils.auth import (
+    current_user,
+    find_user_by_identifier,
+    require_auth,
+    require_session,
+)
 
 users_bp = Blueprint("users", __name__, url_prefix="/api/v1/users")
 
@@ -48,13 +53,6 @@ def _utcnow() -> datetime:
     return datetime.now(timezone.utc)
 
 
-def _current_user() -> MangoUser | None:
-    uid = session.get("user_id")
-    if not uid:
-        return None
-    return db.session.get(MangoUser, uid)
-
-
 def _is_super_admin(user: MangoUser) -> bool:
     if not user.active or user.role != "admin":
         return False
@@ -68,37 +66,13 @@ def _is_super_admin(user: MangoUser) -> bool:
     return not sa_email and not sa_username
 
 
-def _find_user_by_identifier(identifier: str) -> MangoUser | None:
-    """Look up a user by username OR email (case-insensitive)."""
-    ident = identifier.strip().lower()
-    return MangoUser.query.filter(
-        db.or_(
-            db.func.lower(MangoUser.email)    == ident,
-            db.func.lower(MangoUser.username) == ident,
-        )
-    ).first()
+_require_auth = require_auth(error="unauthorized", message="Sesión requerida")
 
-
-def _require_auth(fn):
-    @wraps(fn)
-    def wrapper(*args, **kwargs):
-        user = _current_user()
-        if not user or not user.active:
-            return jsonify({"error": "unauthorized", "message": "Sesión requerida"}), 401
-        return fn(*args, **kwargs)
-    return wrapper
-
-
-def _require_super_admin(fn):
-    @wraps(fn)
-    def wrapper(*args, **kwargs):
-        user = _current_user()
-        if not user or not user.active:
-            return jsonify({"error": "unauthorized"}), 401
-        if not _is_super_admin(user):
-            return jsonify({"error": "forbidden", "message": "Acceso exclusivo al administrador principal"}), 403
-        return fn(*args, **kwargs)
-    return wrapper
+_require_super_admin = require_session(
+    check=_is_super_admin,
+    auth_error="unauthorized",
+    forbidden_message="Acceso exclusivo al administrador principal",
+)
 
 
 def _first_user_exists() -> bool:
@@ -111,7 +85,7 @@ def _first_user_exists() -> bool:
 
 @users_bp.get("/status")
 def status():
-    user = _current_user()
+    user = current_user()
     if not user or not user.active:
         return jsonify({"authenticated": False}), 200
 
@@ -160,7 +134,7 @@ def register():
             }), 403
         role = "admin"
     else:
-        current = _current_user()
+        current = current_user()
         if not current or not _is_super_admin(current):
             return jsonify({
                 "error": "forbidden",
@@ -196,7 +170,7 @@ def login():
     if not identifier or not password:
         return jsonify({"error": "usuario y password requeridos"}), 400
 
-    user = _find_user_by_identifier(identifier)
+    user = find_user_by_identifier(identifier)
 
     # Always run check_password to avoid timing side-channels.
     # Using a dummy hash when user is None keeps constant time.
@@ -258,7 +232,7 @@ def logout():
 @users_bp.get("/me")
 @_require_auth
 def me():
-    user = _current_user()
+    user = current_user()
     data = user.to_dict()
     data["tier"] = tier_for_user(user)
     return jsonify(data), 200
@@ -267,7 +241,7 @@ def me():
 @users_bp.get("/me/subscription")
 @_require_auth
 def me_subscription():
-    user = _current_user()
+    user = current_user()
     sub  = UserSubscription.active_for_user(user.id)
     if not sub:
         return jsonify({
@@ -280,7 +254,7 @@ def me_subscription():
 @users_bp.get("/me/history")
 @_require_auth
 def my_history():
-    user  = _current_user()
+    user  = current_user()
     limit = min(int(request.args.get("limit", 20)), 200)
     events = (
         MangoLoginEvent.query
@@ -346,7 +320,7 @@ def change_role(user_id: int):
 def toggle_active(user_id: int):
     user    = db.get_or_404(MangoUser, user_id)
     data    = request.get_json(silent=True) or {}
-    current = _current_user()
+    current = current_user()
 
     if user.id == current.id:
         return jsonify({"error": "No puedes desactivarte a ti mismo"}), 400
@@ -378,7 +352,7 @@ def delete_user(user_id: int):
 @users_bp.patch("/me/password")
 @_require_auth
 def change_own_password():
-    user    = _current_user()
+    user    = current_user()
     data    = request.get_json(silent=True) or {}
     current_pw = data.get("current_password") or ""
     new_pw     = data.get("new_password") or ""

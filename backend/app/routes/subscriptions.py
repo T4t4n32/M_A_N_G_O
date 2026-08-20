@@ -21,9 +21,8 @@ Rangos válidos (tier):
 from __future__ import annotations
 
 from datetime import datetime, timezone
-from functools import wraps
 
-from flask import Blueprint, jsonify, request, session
+from flask import Blueprint, jsonify, request
 
 from app.extensions import db
 from app.models.subscription import (
@@ -33,25 +32,11 @@ from app.models.subscription import (
     tier_for_user,
 )
 from app.models.user import MangoUser
+from app.utils.auth import current_user, require_admin
 
 subscriptions_bp = Blueprint("subscriptions", __name__, url_prefix="/api/v1/subscriptions")
 
-
-def _current_user() -> MangoUser | None:
-    uid = session.get("user_id")
-    return db.session.get(MangoUser, uid) if uid else None
-
-
-def _require_admin(fn):
-    @wraps(fn)
-    def wrapper(*args, **kwargs):
-        user = _current_user()
-        if not user or not user.active:
-            return jsonify({"error": "unauthorized"}), 401
-        if user.role != "admin":
-            return jsonify({"error": "forbidden", "message": "Solo administradores"}), 403
-        return fn(*args, **kwargs)
-    return wrapper
+_require_admin = require_admin(auth_error="unauthorized", forbidden_message="Solo administradores")
 
 
 def _parse_dt(value: str | None) -> datetime | None:
@@ -105,7 +90,7 @@ def list_subscriptions():
 @subscriptions_bp.post("/")
 @_require_admin
 def grant_subscription():
-    admin = _current_user()
+    admin = current_user()
     data  = request.get_json(silent=True) or {}
 
     user_id = data.get("user_id")
@@ -160,7 +145,7 @@ def get_subscription(sub_id: int):
 @subscriptions_bp.delete("/<int:sub_id>")
 @_require_admin
 def revoke_subscription(sub_id: int):
-    admin = _current_user()
+    admin = current_user()
     sub   = db.get_or_404(UserSubscription, sub_id)
 
     if sub.revoked_at is not None:

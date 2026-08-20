@@ -11,32 +11,15 @@ Endpoints (url_prefix=/api/v1/stations):
 
 from __future__ import annotations
 
-from functools import wraps
-
-from flask import Blueprint, jsonify, request, session
+from flask import Blueprint, jsonify, request
 
 from app.extensions import db
 from app.models.sensor import Sensor, SensorStation
-from app.models.user import MangoUser
+from app.utils.auth import require_admin
 
 stations_mgmt_bp = Blueprint("stations_mgmt", __name__, url_prefix="/api/v1/stations")
 
-
-def _current_user() -> MangoUser | None:
-    uid = session.get("user_id")
-    return db.session.get(MangoUser, uid) if uid else None
-
-
-def _require_admin(fn):
-    @wraps(fn)
-    def wrapper(*args, **kwargs):
-        user = _current_user()
-        if not user or not user.active:
-            return jsonify({"error": "unauthorized"}), 401
-        if user.role != "admin":
-            return jsonify({"error": "forbidden", "message": "Solo administradores"}), 403
-        return fn(*args, **kwargs)
-    return wrapper
+_require_admin = require_admin(auth_error="unauthorized", forbidden_message="Solo administradores")
 
 
 def _station_dict(st: SensorStation) -> dict:

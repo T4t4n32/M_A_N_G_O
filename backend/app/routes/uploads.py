@@ -14,35 +14,17 @@ from __future__ import annotations
 
 import os
 import uuid
-from functools import wraps
 
-from flask import Blueprint, current_app, jsonify, request, send_from_directory, session
+from flask import Blueprint, current_app, jsonify, request, send_from_directory
 from werkzeug.utils import secure_filename
 
 from app.extensions import db
 from app.models.uploaded_file import UploadedFile
-from app.models.user import MangoUser
+from app.utils.auth import require_admin
 
 uploads_bp = Blueprint("uploads", __name__, url_prefix="/api/v1")
 
-
-# ─── Auth ────────────────────────────────────────────────────────────────────
-
-def _current_user() -> MangoUser | None:
-    uid = session.get("user_id")
-    return db.session.get(MangoUser, uid) if uid else None
-
-
-def _require_admin(fn):
-    @wraps(fn)
-    def wrapper(*args, **kwargs):
-        u = _current_user()
-        if not u or not u.active:
-            return jsonify({"error": "authentication required"}), 401
-        if u.role != "admin":
-            return jsonify({"error": "forbidden"}), 403
-        return fn(*args, **kwargs)
-    return wrapper
+_require_admin = require_admin()
 
 
 # ─── MIME / kind detection ───────────────────────────────────────────────────

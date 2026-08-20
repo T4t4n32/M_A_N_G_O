@@ -19,6 +19,7 @@ from app.extensions import db
 from app.middleware.admin_required import login_required, admin_required
 from app.models.mission import Mission, MissionEvent, VALID_STATES
 from app.models_compat import CompatReading
+from app.utils.auth import current_user, is_admin
 
 log = logging.getLogger("mango.missions")
 
@@ -28,8 +29,6 @@ missions_bp = Blueprint("missions", __name__, url_prefix="/api/v1/missions")
 def _require_ingest_or_admin(f):
     """Allow requests authenticated by either the ingest key OR an admin session."""
     from functools import wraps
-    from flask import session
-    from app.models.user import MangoUser
 
     @wraps(f)
     def wrapper(*args, **kwargs):
@@ -52,11 +51,9 @@ def _require_ingest_or_admin(f):
             return f(*args, **kwargs)
 
         # Session admin path
-        uid = session.get("user_id")
-        if uid:
-            user = db.session.get(MangoUser, uid)
-            if user and user.active and user.role == "admin":
-                return f(*args, **kwargs)
+        user = current_user()
+        if user and user.active and is_admin(user):
+            return f(*args, **kwargs)
 
         return jsonify({"error": "authentication required"}), 401
 

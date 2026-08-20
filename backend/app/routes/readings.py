@@ -76,6 +76,41 @@ def _compute_value_status(sensor_type: str, value: float) -> str:
     return "normal"
 
 
+def _coerce_dt(value: Any) -> datetime | None:
+    """Normalize a raw `ts` column (datetime or ISO string) to an aware datetime."""
+    if value is None:
+        return None
+    ts = value
+    if not hasattr(ts, "tzinfo"):
+        try:
+            ts = datetime.fromisoformat(str(ts).replace("Z", "+00:00"))
+        except ValueError:
+            return None
+    if ts.tzinfo is None:
+        ts = ts.replace(tzinfo=timezone.utc)
+    return ts
+
+
+def _latest_by_sensor(table: str, scan: int) -> Dict[str, Dict[str, Any]]:
+    """Most recent value/unit/ts per display sensor type, scanning the newest `scan` rows."""
+    rows = db.session.execute(
+        text(f"SELECT ts, type, value, unit FROM {table} ORDER BY ts DESC LIMIT :scan"),
+        {"scan": scan},
+    ).mappings().all()
+
+    latest: Dict[str, Dict[str, Any]] = {}
+    for r in rows:
+        t = str(r.get("type") or "")
+        display_t = _DISPLAY_ALIAS.get(t, t)
+        if display_t in SENSOR_TYPES and display_t not in latest:
+            latest[display_t] = {
+                "value": float(r["value"]) if r.get("value") is not None else None,
+                "unit": r.get("unit") or "",
+                "ts": r.get("ts"),
+            }
+    return latest
+
+
 def _staleness_status(ts: datetime) -> str:
     age = (_utcnow() - ts).total_seconds()
     if age < 300:
@@ -98,27 +133,10 @@ def readings_latest():
         }), 200
 
     now = _utcnow()
-    scan = 1000
     try:
-        rows = db.session.execute(
-            text(f"SELECT ts, type, value, unit FROM {table} ORDER BY ts DESC LIMIT :scan"),
-            {"scan": scan},
-        ).mappings().all()
+        latest = _latest_by_sensor(table, scan=1000)
     except Exception as e:
         return jsonify({"error": "query_failed", "detail": str(e)}), 500
-
-    latest: Dict[str, Any] = {}
-    for r in rows:
-        t = str(r.get("type") or "")
-        display_t = _DISPLAY_ALIAS.get(t, t)
-        if display_t in SENSOR_TYPES and display_t not in latest:
-            latest[display_t] = {
-                "value": float(r["value"]) if r.get("value") is not None else None,
-                "unit": r.get("unit") or "",
-                "timestamp": _ts_iso(r.get("ts")),
-                "status": "unknown",
-                "value_status": "unknown",
-            }
 
     sensors: Dict[str, Any] = {}
     for sensor in SENSOR_TYPES:
@@ -132,22 +150,16 @@ def readings_latest():
                 "value_status": "unknown",
             }
         else:
-            ts = None
-            if entry["timestamp"]:
-                try:
-                    ts = datetime.fromisoformat(entry["timestamp"].replace("Z", "+00:00"))
-                    if ts.tzinfo is None:
-                        ts = ts.replace(tzinfo=timezone.utc)
-                except Exception:
-                    pass
-            conn_status = _staleness_status(ts) if ts else "no_data"
+            ts = _coerce_dt(entry["ts"])
             val_status = (
                 _compute_value_status(sensor, entry["value"])
                 if entry["value"] is not None else "unknown"
             )
             sensors[sensor] = {
-                **entry,
-                "status": conn_status,
+                "value": entry["value"],
+                "unit": entry["unit"],
+                "timestamp": _ts_iso(entry["ts"]),
+                "status": _staleness_status(ts) if ts else "no_data",
                 "value_status": val_status,
             }
 
@@ -291,25 +303,10 @@ def sensors_status():
             "sensors": {t: {"status": "no_data", "value": None, "timestamp": None} for t in SENSOR_TYPES},
         }), 200
 
-    scan = 500
     try:
-        rows = db.session.execute(
-            text(f"SELECT ts, type, value, unit FROM {table} ORDER BY ts DESC LIMIT :scan"),
-            {"scan": scan},
-        ).mappings().all()
+        latest = _latest_by_sensor(table, scan=500)
     except Exception as e:
         return jsonify({"error": "query_failed", "detail": str(e)}), 500
-
-    latest: Dict[str, Any] = {}
-    for r in rows:
-        t = str(r.get("type") or "")
-        display_t = _DISPLAY_ALIAS.get(t, t)
-        if display_t in SENSOR_TYPES and display_t not in latest:
-            latest[display_t] = {
-                "value": float(r["value"]) if r.get("value") is not None else None,
-                "unit": r.get("unit") or "",
-                "ts": r.get("ts"),
-            }
 
     sensors = {}
     for sensor in SENSOR_TYPES:
@@ -317,14 +314,7 @@ def sensors_status():
         if not entry:
             sensors[sensor] = {"status": "no_data", "value": None, "timestamp": None, "unit": ""}
             continue
-        ts = entry["ts"]
-        if ts and not hasattr(ts, "tzinfo"):
-            try:
-                ts = datetime.fromisoformat(str(ts).replace("Z", "+00:00"))
-            except Exception:
-                ts = None
-        if ts and hasattr(ts, "tzinfo") and ts.tzinfo is None:
-            ts = ts.replace(tzinfo=timezone.utc)
+        ts = _coerce_dt(entry["ts"])
         conn_status = _staleness_status(ts) if ts else "no_data"
         val_status = _compute_value_status(sensor, entry["value"]) if entry["value"] is not None else "unknown"
         sensors[sensor] = {

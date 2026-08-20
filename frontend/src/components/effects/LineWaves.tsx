@@ -1,6 +1,7 @@
 import { Renderer, Program, Mesh, Triangle } from 'ogl';
 import { useEffect, useRef } from 'react';
 import './LineWaves.css';
+import { hexToVec3, FULLSCREEN_VERTEX_SHADER } from '@/lib/glUtils';
 
 interface LineWavesProps {
   speed?: number;
@@ -18,24 +19,6 @@ interface LineWavesProps {
   mouseInfluence?: number;
 }
 
-function hexToVec3(hex: string): [number, number, number] {
-  const h = hex.replace('#', '');
-  return [
-    parseInt(h.slice(0, 2), 16) / 255,
-    parseInt(h.slice(2, 4), 16) / 255,
-    parseInt(h.slice(4, 6), 16) / 255
-  ];
-}
-
-const vertexShader = `
-attribute vec2 uv;
-attribute vec2 position;
-varying vec2 vUv;
-void main() {
-  vUv = uv;
-  gl_Position = vec4(position, 0, 1);
-}
-`;
 
 const fragmentShader = `
 precision highp float;
@@ -198,7 +181,7 @@ export default function LineWaves({
     const geometry = new Triangle(gl);
     const rotationRad = (rotation * Math.PI) / 180;
     program = new Program(gl, {
-      vertex: vertexShader,
+      vertex: FULLSCREEN_VERTEX_SHADER,
       fragment: fragmentShader,
       uniforms: {
         uTime: { value: 0 },

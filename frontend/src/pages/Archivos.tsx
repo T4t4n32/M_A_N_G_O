@@ -9,12 +9,13 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { docs, type Doc } from "@/components/DocumentationSection";
-import { requestDocLink, listPublicDocs } from "@/lib/api";
+import { listPublicDocs } from "@/lib/api";
+import { DOC_FORMATS, useDocLink } from "@/hooks/useDocLink";
 import DecryptedText from "@/components/effects/DecryptedText";
 import GradientText from "@/components/effects/GradientText";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
-const EDITABLE_FORMATS = ["PDF", "DOCX", "XLSX", "PPTX", "MD", "TXT", "ZIP"];
+const EDITABLE_FORMATS = DOC_FORMATS;
 
 const FEATURED_TITLES = new Set([
   "M.A.N.G.O — Documento Principal",
@@ -51,36 +52,11 @@ function catCfg(cat: string) {
   return CAT_CFG[cat] ?? { color: "text-white/50", bg: "bg-white/[0.06]", border: "border-white/15", dot: "bg-white/30", icon: FileText };
 }
 
-// ── Link state machine ────────────────────────────────────────────────────────
-type LS = { s: "idle" } | { s: "loading" } | { s: "ready"; url: string; filename: string } | { s: "error"; msg: string };
-
 // ── FormatBtn ─────────────────────────────────────────────────────────────────
 function FormatBtn({ label, href, size = "sm" }: { label: string; href: string; size?: "sm" | "lg" }) {
-  const [ls, setLs] = useState<LS>({ s: "idle" });
-  const [copied, setCopied] = useState(false);
+  const { state: ls, copied, generate, copy, reset } = useDocLink(href);
   const cfg = FMT[label];
   const Icon = cfg?.icon ?? FileText;
-
-  const generate = useCallback(async () => {
-    if (ls.s === "loading") return;
-    if (ls.s === "ready") { setLs({ s: "idle" }); return; }
-    setLs({ s: "loading" });
-    try {
-      const data = await requestDocLink(href);
-      setLs({ s: "ready", url: data.url, filename: data.filename });
-    } catch (e: unknown) {
-      setLs({ s: "error", msg: e instanceof Error ? e.message : "Error" });
-      setTimeout(() => setLs({ s: "idle" }), 3000);
-    }
-  }, [href, ls.s]);
-
-  const copy = useCallback(() => {
-    if (ls.s !== "ready") return;
-    navigator.clipboard.writeText(`${window.location.origin}${ls.url}`).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    });
-  }, [ls]);
 
   const base = size === "lg"
     ? "px-4 py-2 text-xs rounded-lg gap-2"
@@ -102,7 +78,7 @@ function FormatBtn({ label, href, size = "sm" }: { label: string; href: string; 
           className="px-2.5 border-l border-white/[0.08] text-white/30 hover:text-white/70 hover:bg-white/[0.05] self-stretch flex items-center transition-colors">
           {copied ? <Check className="h-3 w-3 text-emerald-400" /> : <Copy className="h-3 w-3" />}
         </button>
-        <button type="button" onClick={() => setLs({ s: "idle" })}
+        <button type="button" onClick={reset}
           className="px-1.5 border-l border-white/[0.08] text-white/20 hover:text-white/50 self-stretch flex items-center transition-colors">
           <X className="h-3 w-3" />
         </button>
