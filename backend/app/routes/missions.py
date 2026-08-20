@@ -14,7 +14,7 @@ from datetime import datetime, timezone
 
 from flask import Blueprint, jsonify, request
 
-from app.auth_ingest import _anonymous_ingest_allowed, _get_configured_key
+from app.auth_ingest import anonymous_ingest_allowed, get_configured_key
 from app.extensions import db
 from app.middleware.admin_required import login_required, admin_required
 from app.models.mission import Mission, MissionEvent, VALID_STATES
@@ -35,7 +35,7 @@ def _require_ingest_or_admin(f):
     def wrapper(*args, **kwargs):
         import hmac
 
-        configured_key = _get_configured_key()
+        configured_key = get_configured_key()
         provided_key = (
             request.headers.get("X-Api-Key", "").strip()
             or request.headers.get("Authorization", "").removeprefix("Bearer ").strip()
@@ -46,7 +46,7 @@ def _require_ingest_or_admin(f):
             if hmac.compare_digest(provided_key.encode(), configured_key.encode()):
                 return f(*args, **kwargs)
 
-        if configured_key is None and _anonymous_ingest_allowed():
+        if configured_key is None and anonymous_ingest_allowed():
             log.warning(
                 "INGEST_ALLOW_ANONYMOUS is active; mission authentication is bypassed"
             )

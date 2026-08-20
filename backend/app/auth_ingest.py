@@ -30,22 +30,22 @@ from app.config import _truthy
 log = logging.getLogger("mango.auth_ingest")
 
 
-def _get_configured_key() -> str | None:
+def get_configured_key() -> str | None:
     key = os.getenv("INGEST_API_KEY", "").strip()
     return key if key else None
 
 
-def _anonymous_ingest_allowed() -> bool:
+def anonymous_ingest_allowed() -> bool:
     return _truthy(os.getenv("INGEST_ALLOW_ANONYMOUS", "0"))
 
 
 def require_ingest_key(fn):
     @wraps(fn)
     def wrapper(*args, **kwargs):
-        configured = _get_configured_key()
+        configured = get_configured_key()
 
         if configured is None:
-            if _anonymous_ingest_allowed():
+            if anonymous_ingest_allowed():
                 log.warning(
                     "INGEST_ALLOW_ANONYMOUS is active; ingest authentication is bypassed"
                 )
