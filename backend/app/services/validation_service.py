@@ -1,4 +1,7 @@
+import logging
 import math
+
+log = logging.getLogger("mango.validation")
 
 REASON = {
     "NOT_A_NUMBER":              "NOT_A_NUMBER",
@@ -27,7 +30,7 @@ def validate_reading(sensor, value, *, last_valid_value=None, meta=None):
 
     try:
         v = float(value)
-    except Exception:
+    except (TypeError, ValueError):
         return {"valid": False, "reason": REASON["NOT_A_NUMBER"], "quality": "error"}
 
     if _is_bad_number(v):
@@ -56,7 +59,8 @@ def validate_reading(sensor, value, *, last_valid_value=None, meta=None):
             if abs(v - float(last_valid_value)) > 2.0:
                 quality = "warn"
                 reason = REASON["SUSPECT_JUMP_PH"]
-        except Exception:
-            pass
+        except (TypeError, ValueError):
+            log.warning("pH jump check skipped: last_valid_value=%r is not numeric",
+                        last_valid_value)
 
     return {"valid": True, "reason": reason, "quality": quality}

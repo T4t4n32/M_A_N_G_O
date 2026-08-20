@@ -53,9 +53,10 @@ def _sse_generator() -> Generator[str, None, None]:
             if msg and msg["type"] == "message":
                 try:
                     payload = json.loads(msg["data"])
+                except (TypeError, ValueError):
+                    log.warning("SSE: dropping malformed message on %s: %r", CHANNEL, msg["data"])
+                else:
                     yield _frame(json.dumps(payload))
-                except Exception:
-                    pass
 
             now = time.monotonic()
             if now - last_hb >= KEEPALIVE_INTERVAL:
@@ -66,12 +67,15 @@ def _sse_generator() -> Generator[str, None, None]:
 
     except GeneratorExit:
         pass
+    except Exception:
+        log.exception("SSE: stream aborted")
+        raise
     finally:
         try:
             pubsub.unsubscribe(CHANNEL)
             pubsub.close()
         except Exception:
-            pass
+            log.warning("SSE: pubsub cleanup failed", exc_info=True)
 
 
 @stream_bp.get("/stream")

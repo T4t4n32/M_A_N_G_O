@@ -263,7 +263,10 @@ export default function Archivos() {
         }));
         setAllDocs([...apiDocs.filter((d) => !seen.has(d.title)), ...staticDocs]);
       })
-      .catch(() => {});
+      .catch((err) => {
+        // Static docs stay visible; surface why the uploaded ones are missing.
+        console.error("No se pudieron cargar los documentos publicados", err);
+      });
   }, []);
 
   const featuredDocs = useMemo(() => allDocs.filter((d) => FEATURED_TITLES.has(d.title)), [allDocs]);

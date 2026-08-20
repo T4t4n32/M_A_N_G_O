@@ -17,6 +17,7 @@ Compatibility:
 
 from __future__ import annotations
 
+import logging
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, Optional, Set
 
@@ -25,6 +26,8 @@ from sqlalchemy import inspect, text
 
 from app.extensions import db
 from app.models_compat import DeviceRegistry, MangoModemStatus
+
+log = logging.getLogger("mango.dashboard")
 
 dashboard_bp = Blueprint("dashboard_api", __name__, url_prefix="/api/v1")
 
@@ -56,15 +59,26 @@ def _safe_int(value: Any, default: int | None = None) -> int | None:
         return default
     try:
         return int(value)
-    except Exception:
+    except (TypeError, ValueError):
+        log.warning("Ignoring non-integer query param %r — using default %r", value, default)
         return default
+
+
+class DatabaseUnavailable(RuntimeError):
+    """The schema could not be inspected, so a missing table cannot be
+    distinguished from an unreachable database."""
+
+
+def _db_unavailable_error():
+    return _json_error("DB_UNAVAILABLE", "No se pudo consultar la base de datos.", 503)
 
 
 def _get_table_names() -> set[str]:
     try:
         return set(inspect(db.engine).get_table_names())
-    except Exception:
-        return set()
+    except Exception as exc:
+        log.error("Cannot inspect database schema", exc_info=True)
+        raise DatabaseUnavailable(str(exc)) from exc
 
 
 def _resolve_tables() -> dict[str, str | None]:
@@ -101,6 +115,8 @@ def _resolve_station_id(stations_table: str | None, station_id: int | None, stat
         if row and row.get("id") is not None:
             return int(row["id"])
     except Exception:
+        db.session.rollback()
+        log.error("Station lookup failed for name=%r", station_name, exc_info=True)
         return None
     return None
 
@@ -136,7 +152,10 @@ def _pack_ui(item: Optional[dict[str, Any]]) -> Optional[dict[str, Any]]:
 # -----------------------------
 @dashboard_bp.get("/metrics")
 def metrics():
-    tables = _resolve_tables()
+    try:
+        tables = _resolve_tables()
+    except DatabaseUnavailable:
+        return _db_unavailable_error()
     readings_table = tables["readings"]
     stations_table = tables["stations"]
 
@@ -174,13 +193,18 @@ def metrics():
                 "station_id": station_id,
             }
         ), 200
-    except Exception as e:
-        return _json_error("QUERY_FAILED", "Failed to query metrics.", 500, {"reason": str(e)})
+    except Exception:
+        db.session.rollback()
+        log.error("metrics query failed", exc_info=True)
+        return _json_error("QUERY_FAILED", "Failed to query metrics.", 500)
 
 
 @dashboard_bp.get("/stations")
 def stations():
-    tables = _resolve_tables()
+    try:
+        tables = _resolve_tables()
+    except DatabaseUnavailable:
+        return _db_unavailable_error()
     stations_table = tables["stations"]
     if not stations_table:
         return jsonify({"stations": []}), 200
@@ -191,13 +215,18 @@ def stations():
         ).mappings().all()
         out = [{"id": int(r["id"]), "name": r.get("name")} for r in rows if r.get("id") is not None]
         return jsonify({"stations": out}), 200
-    except Exception as e:
-        return _json_error("QUERY_FAILED", "Failed to query stations.", 500, {"reason": str(e)})
+    except Exception:
+        db.session.rollback()
+        log.error("stations query failed", exc_info=True)
+        return _json_error("QUERY_FAILED", "Failed to query stations.", 500)
 
 
 @dashboard_bp.get("/latest/by_type")
 def latest_by_type():
-    tables = _resolve_tables()
+    try:
+        tables = _resolve_tables()
+    except DatabaseUnavailable:
+        return _db_unavailable_error()
     readings_table = tables["readings"]
     stations_table = tables["stations"]
 
@@ -256,13 +285,18 @@ def latest_by_type():
         ui = {k: v for k, v in ui.items() if v is not None}
 
         return jsonify({"station_id": station_id, "latest": latest, **ui}), 200
-    except Exception as e:
-        return _json_error("QUERY_FAILED", "Failed to query latest values.", 500, {"reason": str(e)})
+    except Exception:
+        db.session.rollback()
+        log.error("latest/by_type query failed", exc_info=True)
+        return _json_error("QUERY_FAILED", "Failed to query latest values.", 500)
 
 
 @dashboard_bp.get("/range")
 def range_series():
-    tables = _resolve_tables()
+    try:
+        tables = _resolve_tables()
+    except DatabaseUnavailable:
+        return _db_unavailable_error()
     readings_table = tables["readings"]
     stations_table = tables["stations"]
 
@@ -333,8 +367,10 @@ def range_series():
                 "series": series,
             }
         ), 200
-    except Exception as e:
-        return _json_error("QUERY_FAILED", "Failed to query time series.", 500, {"reason": str(e)})
+    except Exception:
+        db.session.rollback()
+        log.error("range query failed (type=%s)", metric_internal, exc_info=True)
+        return _json_error("QUERY_FAILED", "Failed to query time series.", 500)
 
 
 @dashboard_bp.get("/edge/status")
@@ -355,7 +391,9 @@ def edge_status():
             modems = MangoModemStatus.query.all()
             modem_map = {m.device_id: m.to_dict() for m in modems}
         except Exception:
-            pass
+            db.session.rollback()
+            log.error("Modem telemetry query failed — devices reported without modem data",
+                      exc_info=True)
 
         result = []
         for dev in devices:
@@ -368,6 +406,7 @@ def edge_status():
             "devices": result,
             "count": len(result),
         }), 200
-    except Exception as exc:
-        return _json_error("QUERY_FAILED", "Failed to query edge status.", 500,
-                           {"reason": str(exc)})
+    except Exception:
+        db.session.rollback()
+        log.error("edge/status query failed", exc_info=True)
+        return _json_error("QUERY_FAILED", "Failed to query edge status.", 500)

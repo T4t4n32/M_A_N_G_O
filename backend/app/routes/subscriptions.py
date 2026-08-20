@@ -123,7 +123,14 @@ def grant_subscription():
 
     # Expiry: use provided value, fall back to tier default
     raw_expires = data.get("expires_at")
-    expires_at  = _parse_dt(raw_expires) if raw_expires else default_expires_at(tier)
+    if raw_expires:
+        expires_at = _parse_dt(raw_expires)
+        if expires_at is None:
+            # Without this check an unparseable date silently granted a
+            # never-expiring subscription.
+            return jsonify({"error": "expires_at inválido (se espera ISO-8601)"}), 400
+    else:
+        expires_at = default_expires_at(tier)
 
     sub = UserSubscription(
         user_id=target.id,

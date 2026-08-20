@@ -1,3 +1,4 @@
+import logging
 import os
 import time
 import sys
@@ -6,6 +7,8 @@ from sqlalchemy import text
 from app import create_app
 from app.extensions import db
 
+
+log = logging.getLogger("mango.db_init")
 
 LOCK_KEY = 88442211  # cualquier entero fijo, pero constante
 
@@ -23,6 +26,8 @@ def wait_for_db(max_wait_s: int = 90) -> None:
                 conn.execute(text("SELECT 1"))
             return
         except Exception as e:
+            if last_err is None:
+                log.warning("DB not reachable yet, retrying for up to %ss: %s", max_wait_s, e)
             last_err = e
             time.sleep(1)
 
@@ -59,13 +64,15 @@ def main() -> int:
         try:
             import app.models_compat  # noqa: F401 — mango_compat_stations, mango_compat_readings
         except ImportError:
-            pass
+            log.warning("app.models_compat not importable — compat tables will not be created",
+                        exc_info=True)
         try:
             from app.models.media import Media          # noqa: F401
             from app.models.document import Document    # noqa: F401
             from app.models.content import EditableContent  # noqa: F401
         except ImportError:
-            pass
+            log.warning("CMS models not importable — media/document/content tables "
+                        "will not be created", exc_info=True)
 
         max_wait = int(os.getenv("DB_WAIT_S", "90"))
         print(f"[db_init] Waiting for DB up to {max_wait}s...")

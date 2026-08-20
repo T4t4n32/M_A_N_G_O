@@ -1,4 +1,6 @@
+import logging
 import os
+
 from celery import Celery
 
 from app import create_app
@@ -51,7 +53,10 @@ def make_celery() -> tuple[Celery, object]:
         celery.autodiscover_tasks(["app.tasks"])
     except Exception:
         # No forzamos a que exista app/tasks todavía
-        pass
+        logging.getLogger("mango.celery").warning(
+            "Celery task autodiscovery failed — no tasks registered from app.tasks",
+            exc_info=True,
+        )
 
     return celery, flask_app
 

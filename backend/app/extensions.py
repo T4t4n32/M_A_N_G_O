@@ -10,7 +10,11 @@ So we define `redis_client` here and initialise it safely.
 
 from __future__ import annotations
 
+import logging
+
 from flask_sqlalchemy import SQLAlchemy
+
+log = logging.getLogger("mango.extensions")
 
 # SQLAlchemy instance
 db: SQLAlchemy = SQLAlchemy()
@@ -31,19 +35,23 @@ def init_redis(app):
 
     redis_url = app.config.get("REDIS_URL")
     if not redis_url:
+        log.warning("REDIS_URL not configured — SSE stream and caching disabled")
         redis_client = None
         return None
 
     try:
         import redis  # type: ignore
-    except Exception:
+    except ImportError:
+        log.warning("redis package not installed — SSE stream and caching disabled")
         redis_client = None
         return None
 
     try:
         client = redis.Redis.from_url(redis_url)
         client.ping()
-    except Exception:
+    except Exception as exc:
+        log.warning("Redis unreachable at %s (%s: %s) — SSE stream and caching disabled",
+                    redis_url, type(exc).__name__, exc)
         redis_client = None
         return None
 

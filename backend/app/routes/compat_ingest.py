@@ -13,6 +13,7 @@ from datetime import datetime, timezone
 
 from flask import Blueprint, jsonify, request
 from sqlalchemy import desc
+from sqlalchemy.exc import SQLAlchemyError
 
 from app.auth_ingest import require_ingest_key
 from app.extensions import db, redis_client
@@ -33,6 +34,19 @@ def _ensure_tables() -> None:
     _tables_ready = True
 
 
+def _publish_readings(station: str, count: int, ts: datetime) -> None:
+    """Notify SSE subscribers. A Redis failure must not fail the ingest."""
+    try:
+        redis_client.publish("mango:readings", json.dumps({
+            "station": station,
+            "count": count,
+            "ts": ts.isoformat(),
+        }))
+    except Exception:
+        log.warning("Ingest: Redis publish failed — SSE clients will not see this batch",
+                    exc_info=True)
+
+
 def _get_or_create_station(station_name: str) -> CompatStation:
     st = CompatStation.query.filter_by(name=station_name).first()
     if not st:
@@ -47,7 +61,8 @@ def _parse_dt(raw) -> datetime | None:
         return None
     try:
         return datetime.fromisoformat(str(raw).replace("Z", "+00:00"))
-    except Exception:
+    except ValueError:
+        log.warning("Ingest: unparseable timestamp %r — stored as null", raw)
         return None
 
 
@@ -78,6 +93,8 @@ def _process_new_sensor_reading(payload: dict, station_name: str, mission_id: st
     """Handle Sensors_V2 sensor_reading payload. Returns count of inserted rows."""
     readings_dict = payload.get("readings") or {}
     if not isinstance(readings_dict, dict):
+        log.warning("Ingest: sensor_reading payload has non-object 'readings' (%s) — nothing stored",
+                    type(readings_dict).__name__)
         return 0
 
     st = _get_or_create_station(station_name)
@@ -94,6 +111,8 @@ def _process_new_sensor_reading(payload: dict, station_name: str, mission_id: st
         try:
             value = float(val)
         except (TypeError, ValueError):
+            log.warning("Ingest: dropping non-numeric reading %s=%r (station=%s, packet=%s)",
+                        key, val, station_name, packet_id)
             continue
         unit = UNIT_MAP.get(key)
         row = CompatReading(
@@ -131,6 +150,8 @@ def _process_imu(payload: dict, station_name: str, mission_id: str | None,
         try:
             value = float(val)
         except (TypeError, ValueError):
+            log.warning("Ingest: dropping non-numeric IMU field %s=%r (station=%s, packet=%s)",
+                        key, val, station_name, packet_id)
             continue
         db.session.add(CompatReading(
             station_id=st.id,
@@ -163,6 +184,8 @@ def _process_pose(payload: dict, station_name: str, mission_id: str | None,
         try:
             value = float(val)
         except (TypeError, ValueError):
+            log.warning("Ingest: dropping non-numeric pose field %s=%r (station=%s, packet=%s)",
+                        key, val, station_name, packet_id)
             continue
         db.session.add(CompatReading(
             station_id=st.id,
@@ -191,6 +214,7 @@ def _process_packet(payload: dict, now: datetime) -> dict:
         try:
             seq = int(seq)
         except (TypeError, ValueError):
+            log.warning("Ingest: non-numeric seq %r (packet=%s) — stored as null", seq, packet_id)
             seq = None
 
     payload_type = (payload.get("type") or "").strip()
@@ -229,10 +253,14 @@ def _process_packet(payload: dict, now: datetime) -> dict:
         for r in readings:
             r_type = str(r.get("type", "")).strip()
             if not r_type:
+                log.warning("Ingest: dropping reading without type (station=%s, packet=%s)",
+                            station_name, packet_id)
                 continue
             try:
                 value = float(r.get("value"))
             except (TypeError, ValueError):
+                log.warning("Ingest: dropping non-numeric reading %s=%r (station=%s, packet=%s)",
+                            r_type, r.get("value"), station_name, packet_id)
                 continue
 
             unit = r.get("unit")
@@ -275,17 +303,18 @@ def ingest():
     now = datetime.now(timezone.utc)
     payload = request.get_json(force=True, silent=True) or {}
     result = _process_packet(payload, now)
-    db.session.commit()
+    try:
+        db.session.commit()
+    except SQLAlchemyError:
+        db.session.rollback()
+        log.exception("Ingest: commit failed for packet %r", payload.get("packet_id"))
+        return jsonify({
+            "error": "ingest_failed",
+            "message": "No se pudo guardar el paquete. Reintente.",
+        }), 503
 
     if redis_client is not None and result["inserted"] > 0:
-        try:
-            redis_client.publish("mango:readings", json.dumps({
-                "station": result["station_name"],
-                "count": result["inserted"],
-                "ts": now.isoformat(),
-            }))
-        except Exception:
-            pass
+        _publish_readings(result["station_name"], result["inserted"], now)
 
     status = 200
     if result["duplicated"]:
@@ -318,8 +347,10 @@ def ingest_batch():
     total_duplicated = 0
     results = []
 
+    skipped = 0
     for pkt in packets:
         if not isinstance(pkt, dict):
+            skipped += 1
             continue
         r = _process_packet(pkt, now)
         total_inserted += r["inserted"]
@@ -327,21 +358,27 @@ def ingest_batch():
             total_duplicated += 1
         results.append(r)
 
-    db.session.commit()
+    if skipped:
+        log.warning("Ingest batch: %d of %d entries were not JSON objects and were skipped",
+                    skipped, len(packets))
+
+    try:
+        db.session.commit()
+    except SQLAlchemyError:
+        db.session.rollback()
+        log.exception("Ingest batch: commit failed for %d packets", len(packets))
+        return jsonify({
+            "error": "ingest_failed",
+            "message": "No se pudo guardar el lote. Reintente.",
+        }), 503
 
     if redis_client is not None and total_inserted > 0:
-        try:
-            redis_client.publish("mango:readings", json.dumps({
-                "station": "batch",
-                "count": total_inserted,
-                "ts": now.isoformat(),
-            }))
-        except Exception:
-            pass
+        _publish_readings("batch", total_inserted, now)
 
     return jsonify({
         "ok": True,
         "packets_received": len(packets),
+        "packets_skipped": skipped,
         "total_inserted": total_inserted,
         "total_duplicated": total_duplicated,
     }), 200
@@ -369,10 +406,11 @@ def ingest_status():
 def latest():
     _ensure_tables()
 
+    raw_limit = request.args.get("limit", 50)
     try:
-        n = max(1, min(500, int(request.args.get("limit", 50))))
+        n = max(1, min(500, int(raw_limit)))
     except (TypeError, ValueError):
-        n = 50
+        return jsonify({"error": "invalid_limit", "message": "limit must be an integer"}), 400
 
     rows = CompatReading.query.order_by(desc(CompatReading.ts)).limit(n).all()
     return jsonify([

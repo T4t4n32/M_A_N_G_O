@@ -39,7 +39,12 @@ def _read_modem_sidecar():
     try:
         with open(_MODEM_STATUS_FILE) as fh:
             return json.load(fh)
-    except Exception:
+    except IOError:
+        # Sidecar absent: modem_monitor is not running or has not written yet.
+        return None
+    except ValueError as exc:
+        print("[sync] modem status file {} is not valid JSON: {}".format(
+            _MODEM_STATUS_FILE, exc))
         return None
 
 

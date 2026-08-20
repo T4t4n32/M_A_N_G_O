@@ -32,18 +32,22 @@ def _set_pty_size(fd: int, cols: int, rows: int) -> None:
     try:
         fcntl.ioctl(fd, termios.TIOCSWINSZ,
                     struct.pack("HHHH", rows, cols, 0, 0))
-    except Exception:
-        pass
+    except OSError:
+        log.warning("Could not resize PTY to %sx%s", cols, rows, exc_info=True)
 
 
 def _parse_resize(msg: str):
     """Return (cols, rows) if msg is a resize JSON, else None."""
     try:
         d = json.loads(msg)
-        if d.get("type") == "resize":
+    except ValueError:
+        # Ordinary keystrokes are not JSON; nothing to report.
+        return None
+    if isinstance(d, dict) and d.get("type") == "resize":
+        try:
             return int(d["cols"]), int(d["rows"])
-    except Exception:
-        pass
+        except (KeyError, TypeError, ValueError):
+            log.warning("Ignoring malformed resize message: %r", msg[:200])
     return None
 
 

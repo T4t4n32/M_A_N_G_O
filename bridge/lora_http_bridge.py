@@ -50,7 +50,8 @@ def _env_float(key: str, default: float) -> float:
     v = os.getenv(key)
     try:
         return float(v) if v not in (None, "") else default
-    except Exception:
+    except (TypeError, ValueError):
+        logging.warning("%s=%r is not a number — using %s", key, v, default)
         return default
 
 
@@ -58,7 +59,8 @@ def _env_int(key: str, default: int) -> int:
     v = os.getenv(key)
     try:
         return int(v) if v not in (None, "") else default
-    except Exception:
+    except (TypeError, ValueError):
+        logging.warning("%s=%r is not an integer — using %s", key, v, default)
         return default
 
 
@@ -88,7 +90,8 @@ def normalize_payload(
             continue
         try:
             value = float(r.get("value"))
-        except Exception:
+        except (TypeError, ValueError):
+            logging.warning("Dropping reading %s: non-numeric value %r", r_type, r.get("value"))
             continue
         unit = r.get("unit")
         unit = str(unit).strip() if unit not in (None, "") else None
@@ -136,10 +139,12 @@ def parse_line(line: str) -> Optional[Dict[str, Any]]:
     if s.startswith("{") and s.endswith("}"):
         try:
             obj = json.loads(s)
+        except ValueError as exc:
+            logging.warning("Malformed JSON line (%s): %r", exc, s[:200])
+        else:
             if isinstance(obj, dict):
                 return obj
-        except Exception:
-            pass
+            logging.warning("JSON line is not an object — skipped: %r", s[:200])
 
     # key=value pairs
     if "=" in s:
@@ -215,6 +220,7 @@ def serial_loop(
                     try:
                         line = raw.decode("utf-8", errors="ignore").strip()
                     except Exception:
+                        logging.warning("Undecodable serial frame — using repr", exc_info=True)
                         line = str(raw)
 
                     obj = parse_line(line)

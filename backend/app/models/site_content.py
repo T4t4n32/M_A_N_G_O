@@ -1,9 +1,12 @@
 from __future__ import annotations
 
 import json
+import logging
 from datetime import datetime, timezone
 
 from app.extensions import db
+
+log = logging.getLogger("mango.models.site_content")
 
 
 def _utcnow() -> datetime:
@@ -20,7 +23,8 @@ class SiteContent(db.Model):
     def get_content(self) -> dict:
         try:
             return json.loads(self.content)
-        except Exception:
+        except (TypeError, ValueError):
+            log.error("SiteContent id=%s holds invalid JSON — serving empty content", self.id)
             return {}
 
     def set_content(self, data: dict) -> None:
