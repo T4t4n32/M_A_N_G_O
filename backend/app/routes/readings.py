@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import csv
 import io
+import logging
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, Optional
 
@@ -21,6 +22,7 @@ from app.extensions import db
 from app.middleware.admin_required import login_required
 
 readings_bp = Blueprint("readings", __name__, url_prefix="/api/v1")
+log = logging.getLogger("mango.readings")
 
 SENSOR_TYPES = ("ph", "temperature", "turbidity")
 
@@ -104,8 +106,9 @@ def readings_latest():
             text(f"SELECT ts, type, value, unit FROM {table} ORDER BY ts DESC LIMIT :scan"),
             {"scan": scan},
         ).mappings().all()
-    except Exception as e:
-        return jsonify({"error": "query_failed", "detail": str(e)}), 500
+    except Exception:
+        log.exception("Failed to query latest readings")
+        return jsonify({"error": "query_failed", "detail": "database query failed"}), 500
 
     latest: Dict[str, Any] = {}
     for r in rows:
@@ -202,8 +205,9 @@ def readings_history():
             ),
             {"type": internal_type, "start": start_ts, "limit": limit},
         ).mappings().all()
-    except Exception as e:
-        return jsonify({"error": "query_failed", "detail": str(e)}), 500
+    except Exception:
+        log.exception("Failed to query reading history")
+        return jsonify({"error": "query_failed", "detail": "database query failed"}), 500
 
     series = [
         {"ts": _ts_iso(r["ts"]), "value": float(r["value"]) if r.get("value") is not None else None}
@@ -297,8 +301,9 @@ def sensors_status():
             text(f"SELECT ts, type, value, unit FROM {table} ORDER BY ts DESC LIMIT :scan"),
             {"scan": scan},
         ).mappings().all()
-    except Exception as e:
-        return jsonify({"error": "query_failed", "detail": str(e)}), 500
+    except Exception:
+        log.exception("Failed to query sensor status")
+        return jsonify({"error": "query_failed", "detail": "database query failed"}), 500
 
     latest: Dict[str, Any] = {}
     for r in rows:

@@ -16,6 +16,15 @@ def create_app() -> Flask:
     app = Flask(__name__)
     app.config.from_object(Config())
 
+    if (
+        app.config.get("SESSION_COOKIE_SECURE")
+        and app.config.get("SECRET_KEY", "").strip().lower()
+        in {"", "change-me", "local-dev-secret"}
+    ):
+        raise RuntimeError(
+            "SECRET_KEY must be explicitly configured when SESSION_SECURE=1"
+        )
+
     CORS(
         app,
         supports_credentials=True,

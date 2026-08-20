@@ -39,8 +39,12 @@ Out of scope: third-party dependencies (Flask, PostgreSQL, Grafana). Report thos
 ## Security Design Notes
 
 - Sessions use server-side cookies with `HttpOnly`, `SameSite=Lax`, and `Secure` in production.
-- Ingest endpoints are protected by a shared API key (`INGEST_API_KEY`).
+- Ingest endpoints are protected by a shared API key (`INGEST_API_KEY`) and
+  reject requests with HTTP 503 when the key is not configured. The explicit
+  `INGEST_ALLOW_ANONYMOUS=1` bypass is for local development only and logs a
+  warning when active; never enable it in production.
 - Passwords are hashed with Werkzeug's PBKDF2-HMAC-SHA256.
 - API keys stored in the database are plaintext tokens — rotate them on any suspected exposure.
 - The admin terminal (`/api/v1/admin/terminal`) exposes SSH to the VPS. Do not expose port 8000 directly.
-- `SESSION_SECURE` must be set to `1` in production. The compose file defaults to `1`.
+- `SESSION_SECURE` must be set to `1` in production. The VPS compose file defaults
+  to `1`; the root compose file defaults to `0` for local HTTP development.

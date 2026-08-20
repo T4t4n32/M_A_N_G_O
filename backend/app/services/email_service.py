@@ -12,11 +12,32 @@ Configurar en .env:
 
 from __future__ import annotations
 
+import html
 import os
+import re
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from typing import List
+
+MAX_NAME_LENGTH = 100
+MAX_EMAIL_LENGTH = 254
+MAX_SUBJECT_LENGTH = 200
+MAX_MESSAGE_LENGTH = 5000
+
+_EMAIL_RE = re.compile(r"^[^@\s<>]+@[^@\s<>]+\.[^@\s<>]+$")
+
+
+def is_valid_email(value: str) -> bool:
+    return (
+        isinstance(value, str)
+        and len(value) <= MAX_EMAIL_LENGTH
+        and bool(_EMAIL_RE.fullmatch(value))
+    )
+
+
+def _strip_header(value: str) -> str:
+    return value.replace("\r", "").replace("\n", "").strip()
 
 
 def _get_config() -> dict:
@@ -46,21 +67,37 @@ def send_contact_email(
     Envía el formulario de contacto a los destinatarios configurados.
     Devuelve (True, "") en éxito o (False, error_message) en fallo.
     """
+    sender_name = _strip_header(sender_name)
+    sender_email = _strip_header(sender_email)
+    subject = _strip_header(subject)
+    if not (
+        1 <= len(sender_name) <= MAX_NAME_LENGTH
+        and is_valid_email(sender_email)
+        and 1 <= len(subject) <= MAX_SUBJECT_LENGTH
+        and 1 <= len(message) <= MAX_MESSAGE_LENGTH
+    ):
+        return False, "Datos de contacto inválidos"
+
     cfg = _get_config()
 
     if not cfg["user"] or not cfg["password"]:
         return False, "SMTP no configurado (faltan SMTP_USER / SMTP_PASSWORD)"
 
+    escaped_name = html.escape(sender_name, quote=True)
+    escaped_email = html.escape(sender_email, quote=True)
+    escaped_subject = html.escape(subject, quote=True)
+    escaped_message = html.escape(message, quote=True)
+    escaped_message = escaped_message.replace("\r\n", "\n").replace("\r", "\n")
     body_html = f"""
     <html><body>
     <h2>Nuevo mensaje de contacto — M.A.N.G.O.</h2>
     <table>
-      <tr><td><b>Nombre:</b></td><td>{sender_name}</td></tr>
-      <tr><td><b>Email:</b></td><td>{sender_email}</td></tr>
-      <tr><td><b>Asunto:</b></td><td>{subject}</td></tr>
+      <tr><td><b>Nombre:</b></td><td>{escaped_name}</td></tr>
+      <tr><td><b>Email:</b></td><td>{escaped_email}</td></tr>
+      <tr><td><b>Asunto:</b></td><td>{escaped_subject}</td></tr>
     </table>
     <hr>
-    <p>{message.replace(chr(10), '<br>')}</p>
+    <p>{escaped_message.replace(chr(10), '<br>')}</p>
     <hr>
     <small>Enviado desde integramosoe.com</small>
     </body></html>

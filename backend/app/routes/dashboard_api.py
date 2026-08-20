@@ -17,6 +17,7 @@ Compatibility:
 
 from __future__ import annotations
 
+import logging
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, Optional, Set
 
@@ -27,6 +28,7 @@ from app.extensions import db
 from app.models_compat import DeviceRegistry, MangoModemStatus
 
 dashboard_bp = Blueprint("dashboard_api", __name__, url_prefix="/api/v1")
+log = logging.getLogger("mango.dashboard")
 
 
 # -----------------------------
@@ -174,8 +176,10 @@ def metrics():
                 "station_id": station_id,
             }
         ), 200
-    except Exception as e:
-        return _json_error("QUERY_FAILED", "Failed to query metrics.", 500, {"reason": str(e)})
+    except Exception:
+        log.exception("Failed to query metrics")
+        return _json_error("QUERY_FAILED", "Failed to query metrics.", 500,
+                           {"reason": "query failed"})
 
 
 @dashboard_bp.get("/stations")
@@ -191,8 +195,10 @@ def stations():
         ).mappings().all()
         out = [{"id": int(r["id"]), "name": r.get("name")} for r in rows if r.get("id") is not None]
         return jsonify({"stations": out}), 200
-    except Exception as e:
-        return _json_error("QUERY_FAILED", "Failed to query stations.", 500, {"reason": str(e)})
+    except Exception:
+        log.exception("Failed to query stations")
+        return _json_error("QUERY_FAILED", "Failed to query stations.", 500,
+                           {"reason": "query failed"})
 
 
 @dashboard_bp.get("/latest/by_type")
@@ -256,8 +262,10 @@ def latest_by_type():
         ui = {k: v for k, v in ui.items() if v is not None}
 
         return jsonify({"station_id": station_id, "latest": latest, **ui}), 200
-    except Exception as e:
-        return _json_error("QUERY_FAILED", "Failed to query latest values.", 500, {"reason": str(e)})
+    except Exception:
+        log.exception("Failed to query latest values")
+        return _json_error("QUERY_FAILED", "Failed to query latest values.", 500,
+                           {"reason": "query failed"})
 
 
 @dashboard_bp.get("/range")
@@ -333,8 +341,10 @@ def range_series():
                 "series": series,
             }
         ), 200
-    except Exception as e:
-        return _json_error("QUERY_FAILED", "Failed to query time series.", 500, {"reason": str(e)})
+    except Exception:
+        log.exception("Failed to query time series")
+        return _json_error("QUERY_FAILED", "Failed to query time series.", 500,
+                           {"reason": "query failed"})
 
 
 @dashboard_bp.get("/edge/status")
@@ -368,6 +378,7 @@ def edge_status():
             "devices": result,
             "count": len(result),
         }), 200
-    except Exception as exc:
+    except Exception:
+        log.exception("Failed to query edge status")
         return _json_error("QUERY_FAILED", "Failed to query edge status.", 500,
-                           {"reason": str(exc)})
+                           {"reason": "query failed"})

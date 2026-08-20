@@ -71,6 +71,8 @@ services:
 
       # API key for edge-node ingest endpoints
       INGEST_API_KEY: "${INGEST_API_KEY:-}"
+      # Local development only; never enable in production.
+      INGEST_ALLOW_ANONYMOUS: "${INGEST_ALLOW_ANONYMOUS:-0}"
 
       # Optional env-based admin fallback (lovable_auth)
       ADMIN_EMAIL: "${ADMIN_EMAIL:-}"

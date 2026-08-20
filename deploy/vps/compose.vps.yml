@@ -62,6 +62,7 @@ services:
       DATABASE_URL: "postgresql+psycopg2://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME}"
       REDIS_URL: "redis://redis:6379/0"
       SECRET_KEY: "${SECRET_KEY}"
+      SESSION_SECURE: "${SESSION_SECURE:-1}"
 
       # opcional auth (Lovable)
       ADMIN_EMAIL: "${ADMIN_EMAIL:-}"
@@ -74,6 +75,7 @@ services:
 
       # Ingest API key — required by edge sync_worker and ESP32 bridge
       INGEST_API_KEY: "${INGEST_API_KEY:-}"
+      INGEST_ALLOW_ANONYMOUS: "${INGEST_ALLOW_ANONYMOUS:-0}"
 
       # Jetson TK1 — acceso via reverse SSH tunnel (puerto 9200 en localhost)
       JETSON_HOST: "${JETSON_HOST:-localhost}"
