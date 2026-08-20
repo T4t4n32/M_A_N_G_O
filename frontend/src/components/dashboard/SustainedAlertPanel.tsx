@@ -1,40 +1,11 @@
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
-import { Clock, ShieldAlert, ShieldCheck, AlertTriangle, ChevronDown, ChevronUp, Timer, TrendingDown, TrendingUp } from "lucide-react";
+import { Clock, ChevronDown, ChevronUp, Timer, TrendingDown, TrendingUp } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
-import type { AlertLevel } from "@/types/dashboard";
 import type { SustainedSystemAlert, SustainedViolation } from "@/hooks/useSustainedAlerts";
+import { ALERT_LEVEL_STYLES } from "@/lib/alertLevelStyles";
 
-const LEVEL_CONFIG: Record<AlertLevel, {
-  icon: React.ElementType;
-  bg: string;
-  border: string;
-  text: string;
-  badgeBg: string;
-}> = {
-  normal: {
-    icon: ShieldCheck,
-    bg: "bg-[hsl(var(--alert-normal)/0.1)]",
-    border: "border-[hsl(var(--alert-normal)/0.3)]",
-    text: "text-[hsl(var(--alert-normal))]",
-    badgeBg: "bg-[hsl(var(--alert-normal)/0.15)] text-[hsl(var(--alert-normal))]",
-  },
-  warning: {
-    icon: AlertTriangle,
-    bg: "bg-[hsl(var(--alert-warning)/0.1)]",
-    border: "border-[hsl(var(--alert-warning)/0.3)]",
-    text: "text-[hsl(var(--alert-warning))]",
-    badgeBg: "bg-[hsl(var(--alert-warning)/0.15)] text-[hsl(var(--alert-warning))]",
-  },
-  critical: {
-    icon: ShieldAlert,
-    bg: "bg-[hsl(var(--alert-critical)/0.1)]",
-    border: "border-[hsl(var(--alert-critical)/0.3)]",
-    text: "text-[hsl(var(--alert-critical))]",
-    badgeBg: "bg-[hsl(var(--alert-critical)/0.15)] text-[hsl(var(--alert-critical))]",
-  },
-};
 
 function formatDuration(minutes: number): string {
   if (minutes >= 1440) return `${Math.round(minutes / 1440)}d`;
@@ -44,7 +15,7 @@ function formatDuration(minutes: number): string {
 
 function ViolationRow({ v }: { v: SustainedViolation }) {
   const severity = v.rule.severity;
-  const config = LEVEL_CONFIG[severity];
+  const config = ALERT_LEVEL_STYLES[severity];
   const SIcon = config.icon;
   const TrendIcon = v.rule.direction === "below" ? TrendingDown : TrendingUp;
   const pct = Math.round(v.actualRatio * 100);
@@ -94,7 +65,7 @@ interface SustainedAlertPanelProps {
 
 export function SustainedAlertPanel({ alert }: SustainedAlertPanelProps) {
   const [expanded, setExpanded] = useState(alert.level !== "normal");
-  const config = LEVEL_CONFIG[alert.level];
+  const config = ALERT_LEVEL_STYLES[alert.level];
   const Icon = config.icon;
   const triggered = alert.violations.filter((v) => v.triggered);
 
@@ -125,12 +96,12 @@ export function SustainedAlertPanel({ alert }: SustainedAlertPanelProps) {
           </div>
           <div className="flex items-center gap-2">
             {alert.criticalCount > 0 && (
-              <Badge className={LEVEL_CONFIG.critical.badgeBg + " border-0 text-[10px]"}>
+              <Badge className={ALERT_LEVEL_STYLES.critical.badgeBg + " border-0 text-[10px]"}>
                 {alert.criticalCount} crítica{alert.criticalCount > 1 ? "s" : ""}
               </Badge>
             )}
             {alert.warningCount > 0 && (
-              <Badge className={LEVEL_CONFIG.warning.badgeBg + " border-0 text-[10px]"}>
+              <Badge className={ALERT_LEVEL_STYLES.warning.badgeBg + " border-0 text-[10px]"}>
                 {alert.warningCount} advertencia{alert.warningCount > 1 ? "s" : ""}
               </Badge>
             )}

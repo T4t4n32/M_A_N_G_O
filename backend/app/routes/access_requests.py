@@ -11,47 +11,22 @@ Endpoints (url_prefix=/api/v1/access-requests):
 from __future__ import annotations
 
 from datetime import datetime, timezone
-from functools import wraps
 
-from flask import Blueprint, jsonify, request, session
+from flask import Blueprint, jsonify, request
 
 from app.extensions import db
 from app.models.access_request import MangoAccessRequest
 from app.models.subscription import VALID_TIERS, UserSubscription, default_expires_at, tier_for_user
-from app.models.user import MangoUser
+from app.utils.auth import current_user, require_admin, require_auth
 
 access_requests_bp = Blueprint("access_requests", __name__, url_prefix="/api/v1/access-requests")
+
+_require_auth = require_auth(error="unauthorized")
+_require_admin = require_admin(auth_error="unauthorized", forbidden_message="Solo administradores")
 
 
 def _utcnow() -> datetime:
     return datetime.now(timezone.utc)
-
-
-def _current_user() -> MangoUser | None:
-    uid = session.get("user_id")
-    return db.session.get(MangoUser, uid) if uid else None
-
-
-def _require_auth(fn):
-    @wraps(fn)
-    def wrapper(*args, **kwargs):
-        user = _current_user()
-        if not user or not user.active:
-            return jsonify({"error": "unauthorized"}), 401
-        return fn(*args, **kwargs)
-    return wrapper
-
-
-def _require_admin(fn):
-    @wraps(fn)
-    def wrapper(*args, **kwargs):
-        user = _current_user()
-        if not user or not user.active:
-            return jsonify({"error": "unauthorized"}), 401
-        if user.role != "admin":
-            return jsonify({"error": "forbidden", "message": "Solo administradores"}), 403
-        return fn(*args, **kwargs)
-    return wrapper
 
 
 # ------------------------------------------------------------------
@@ -61,7 +36,7 @@ def _require_admin(fn):
 @access_requests_bp.post("/", strict_slashes=False)
 @_require_auth
 def submit_request():
-    user = _current_user()
+    user = current_user()
     data = request.get_json(silent=True) or {}
 
     requested_tier = (data.get("requested_tier") or "").strip()
@@ -101,7 +76,7 @@ def submit_request():
 @access_requests_bp.get("/mine")
 @_require_auth
 def my_requests():
-    user = _current_user()
+    user = current_user()
     reqs = (
         MangoAccessRequest.query
         .filter_by(user_id=user.id)
@@ -137,7 +112,7 @@ def list_requests():
 @access_requests_bp.patch("/<int:req_id>/approve")
 @_require_admin
 def approve_request(req_id: int):
-    admin = _current_user()
+    admin = current_user()
     req   = db.get_or_404(MangoAccessRequest, req_id)
 
     if req.status != "pending":
@@ -188,7 +163,7 @@ def approve_request(req_id: int):
 @access_requests_bp.patch("/<int:req_id>/reject")
 @_require_admin
 def reject_request(req_id: int):
-    admin = _current_user()
+    admin = current_user()
     req   = db.get_or_404(MangoAccessRequest, req_id)
 
     if req.status != "pending":

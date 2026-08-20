@@ -15,7 +15,8 @@ from flask import Blueprint, jsonify, request, session
 
 from app.extensions import db
 from app.middleware.rate_limit_middleware import limiter
-from app.models.user import MangoLoginEvent, MangoUser
+from app.models.user import MangoLoginEvent
+from app.utils.auth import current_user, find_user_by_identifier
 
 auth_bp = Blueprint("lovable_auth", __name__)
 
@@ -26,20 +27,9 @@ def _now_iso() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
-def _find_user(identifier: str) -> MangoUser | None:
-    ident = identifier.strip().lower()
-    return MangoUser.query.filter(
-        db.or_(
-            db.func.lower(MangoUser.email)    == ident,
-            db.func.lower(MangoUser.username) == ident,
-        )
-    ).first()
-
-
 @auth_bp.get("/api/v1/auth/status")
 def auth_status():
-    uid = session.get("user_id")
-    user = db.session.get(MangoUser, uid) if uid else None
+    user = current_user()
     if not user or not user.active:
         return jsonify({"authenticated": False, "time": _now_iso()}), 200
 
@@ -61,7 +51,7 @@ def auth_login():
     if not identifier or not password:
         return jsonify({"error": "missing_fields", "message": "usuario y password requeridos"}), 400
 
-    user       = _find_user(identifier)
+    user       = find_user_by_identifier(identifier)
     password_ok = user.check_password(password) if user else False
 
     if not user or not password_ok or not user.active:

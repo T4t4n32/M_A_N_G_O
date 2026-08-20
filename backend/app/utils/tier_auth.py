@@ -14,16 +14,10 @@ from __future__ import annotations
 
 from functools import wraps
 
-from flask import jsonify, session
+from flask import jsonify
 
-from app.extensions import db
 from app.models.subscription import TIER_ORDER, tier_for_user
-from app.models.user import MangoUser
-
-
-def _current_user() -> MangoUser | None:
-    uid = session.get("user_id")
-    return db.session.get(MangoUser, uid) if uid else None
+from app.utils.auth import current_user
 
 
 def require_tier(min_tier: str):
@@ -31,7 +25,7 @@ def require_tier(min_tier: str):
     def decorator(fn):
         @wraps(fn)
         def wrapper(*args, **kwargs):
-            user = _current_user()
+            user = current_user()
             if not user or not user.active:
                 return jsonify({"error": "unauthorized", "message": "Sesión requerida"}), 401
             effective = tier_for_user(user)

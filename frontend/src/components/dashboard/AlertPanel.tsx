@@ -1,40 +1,11 @@
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
-import { ShieldAlert, ShieldCheck, AlertTriangle, ChevronDown, ChevronUp } from "lucide-react";
+import { ChevronDown, ChevronUp } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
-import type { SystemAlert, AlertLevel } from "@/types/dashboard";
+import type { SystemAlert } from "@/types/dashboard";
 import { SENSOR_THRESHOLDS } from "@/lib/sensorThresholds";
-
-const LEVEL_CONFIG: Record<AlertLevel, {
-  icon: React.ElementType;
-  bg: string;
-  border: string;
-  text: string;
-  badgeBg: string;
-}> = {
-  normal: {
-    icon: ShieldCheck,
-    bg: "bg-[hsl(var(--alert-normal)/0.1)]",
-    border: "border-[hsl(var(--alert-normal)/0.3)]",
-    text: "text-[hsl(var(--alert-normal))]",
-    badgeBg: "bg-[hsl(var(--alert-normal)/0.15)] text-[hsl(var(--alert-normal))]",
-  },
-  warning: {
-    icon: AlertTriangle,
-    bg: "bg-[hsl(var(--alert-warning)/0.1)]",
-    border: "border-[hsl(var(--alert-warning)/0.3)]",
-    text: "text-[hsl(var(--alert-warning))]",
-    badgeBg: "bg-[hsl(var(--alert-warning)/0.15)] text-[hsl(var(--alert-warning))]",
-  },
-  critical: {
-    icon: ShieldAlert,
-    bg: "bg-[hsl(var(--alert-critical)/0.1)]",
-    border: "border-[hsl(var(--alert-critical)/0.3)]",
-    text: "text-[hsl(var(--alert-critical))]",
-    badgeBg: "bg-[hsl(var(--alert-critical)/0.15)] text-[hsl(var(--alert-critical))]",
-  },
-};
+import { ALERT_LEVEL_STYLES } from "@/lib/alertLevelStyles";
 
 interface AlertPanelProps {
   alert: SystemAlert;
@@ -42,7 +13,7 @@ interface AlertPanelProps {
 
 export function AlertPanel({ alert }: AlertPanelProps) {
   const [expanded, setExpanded] = useState(alert.level !== "normal");
-  const config = LEVEL_CONFIG[alert.level];
+  const config = ALERT_LEVEL_STYLES[alert.level];
   const Icon = config.icon;
 
   return (
@@ -66,12 +37,12 @@ export function AlertPanel({ alert }: AlertPanelProps) {
           </div>
           <div className="flex items-center gap-2">
             {alert.criticalCount > 0 && (
-              <Badge className={LEVEL_CONFIG.critical.badgeBg + " border-0 text-[10px]"}>
+              <Badge className={ALERT_LEVEL_STYLES.critical.badgeBg + " border-0 text-[10px]"}>
                 {alert.criticalCount} crítico{alert.criticalCount > 1 ? "s" : ""}
               </Badge>
             )}
             {alert.warningCount > 0 && (
-              <Badge className={LEVEL_CONFIG.warning.badgeBg + " border-0 text-[10px]"}>
+              <Badge className={ALERT_LEVEL_STYLES.warning.badgeBg + " border-0 text-[10px]"}>
                 {alert.warningCount} advertencia{alert.warningCount > 1 ? "s" : ""}
               </Badge>
             )}
@@ -96,7 +67,7 @@ export function AlertPanel({ alert }: AlertPanelProps) {
                 {alert.sensorAlerts
                   .filter((a) => a.level !== "normal")
                   .map((sa) => {
-                    const sConfig = LEVEL_CONFIG[sa.level];
+                    const sConfig = ALERT_LEVEL_STYLES[sa.level];
                     const SIcon = sConfig.icon;
                     const threshold = SENSOR_THRESHOLDS[sa.type];
                     return (

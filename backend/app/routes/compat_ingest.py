@@ -73,6 +73,43 @@ def _upsert_device(device_id: str, station_name: str, seq: int | None) -> None:
         dev.status = "online"
 
 
+# Unit map for well-known sensor types
+_UNIT_MAP = {
+    "ph": "pH",
+    "turbidity_ntu": "NTU",
+    "temperature_c": "°C",
+}
+
+
+def _insert_numeric_readings(fields: dict, station_name: str, mission_id: str | None,
+                            packet_id: str | None, now: datetime,
+                            units: dict[str, str] | None = None) -> int:
+    """Store each numeric `fields` entry as a CompatReading row. Returns rows inserted.
+
+    Non-numeric and missing values are skipped.
+    """
+    st = _get_or_create_station(station_name)
+    inserted = 0
+    for key, val in fields.items():
+        if val is None:
+            continue
+        try:
+            value = float(val)
+        except (TypeError, ValueError):
+            continue
+        db.session.add(CompatReading(
+            station_id=st.id,
+            type=key,
+            value=value,
+            unit=(units or {}).get(key),
+            ts=now,
+            packet_id=packet_id,
+            mission_id=mission_id,
+        ))
+        inserted += 1
+    return inserted
+
+
 def _process_new_sensor_reading(payload: dict, station_name: str, mission_id: str | None,
                                  packet_id: str | None, now: datetime) -> int:
     """Handle Sensors_V2 sensor_reading payload. Returns count of inserted rows."""
@@ -80,40 +117,13 @@ def _process_new_sensor_reading(payload: dict, station_name: str, mission_id: st
     if not isinstance(readings_dict, dict):
         return 0
 
-    st = _get_or_create_station(station_name)
-
-    # Unit map for well-known sensor types
-    UNIT_MAP = {
-        "ph": "pH",
-        "turbidity_ntu": "NTU",
-        "temperature_c": "°C",
-    }
-
-    inserted = 0
-    for key, val in readings_dict.items():
-        try:
-            value = float(val)
-        except (TypeError, ValueError):
-            continue
-        unit = UNIT_MAP.get(key)
-        row = CompatReading(
-            station_id=st.id,
-            type=key,
-            value=value,
-            unit=unit,
-            ts=now,
-            packet_id=packet_id,
-            mission_id=mission_id,
-        )
-        db.session.add(row)
-        inserted += 1
-    return inserted
+    return _insert_numeric_readings(readings_dict, station_name, mission_id, packet_id, now,
+                                    units=_UNIT_MAP)
 
 
 def _process_imu(payload: dict, station_name: str, mission_id: str | None,
                  packet_id: str | None, now: datetime) -> int:
     """Store IMU fields as individual CompatReading rows."""
-    st = _get_or_create_station(station_name)
     fields = {
         "imu_yaw": payload.get("yaw"),
         "imu_pitch": payload.get("pitch"),
@@ -124,31 +134,12 @@ def _process_imu(payload: dict, station_name: str, mission_id: str | None,
         "imu_qw": payload.get("qw"),
         "imu_calibration": payload.get("calibration"),
     }
-    inserted = 0
-    for key, val in fields.items():
-        if val is None:
-            continue
-        try:
-            value = float(val)
-        except (TypeError, ValueError):
-            continue
-        db.session.add(CompatReading(
-            station_id=st.id,
-            type=key,
-            value=value,
-            unit=None,
-            ts=now,
-            packet_id=packet_id,
-            mission_id=mission_id,
-        ))
-        inserted += 1
-    return inserted
+    return _insert_numeric_readings(fields, station_name, mission_id, packet_id, now)
 
 
 def _process_pose(payload: dict, station_name: str, mission_id: str | None,
                   packet_id: str | None, now: datetime) -> int:
     """Store pose fields as CompatReading rows."""
-    st = _get_or_create_station(station_name)
     fields = {
         "pose_x": payload.get("x"),
         "pose_y": payload.get("y"),
@@ -156,25 +147,7 @@ def _process_pose(payload: dict, station_name: str, mission_id: str | None,
         "pose_yaw": payload.get("yaw"),
         "pose_confidence": payload.get("confidence"),
     }
-    inserted = 0
-    for key, val in fields.items():
-        if val is None:
-            continue
-        try:
-            value = float(val)
-        except (TypeError, ValueError):
-            continue
-        db.session.add(CompatReading(
-            station_id=st.id,
-            type=key,
-            value=value,
-            unit=None,
-            ts=now,
-            packet_id=packet_id,
-            mission_id=mission_id,
-        ))
-        inserted += 1
-    return inserted
+    return _insert_numeric_readings(fields, station_name, mission_id, packet_id, now)
 
 
 def _process_packet(payload: dict, now: datetime) -> dict:

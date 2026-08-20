@@ -15,39 +15,14 @@ Endpoints (url_prefix=/api/v1):
 
 from __future__ import annotations
 
-from functools import wraps
-
-from flask import Blueprint, jsonify, request, session
+from flask import Blueprint, jsonify, request
 
 from app.extensions import db
 from app.models.site_content import SiteContent
-from app.models.user import MangoUser
 from app.models.uploaded_file import UploadedFile
+from app.middleware.admin_required import admin_required
 
 admin_cms_bp = Blueprint("admin_cms", __name__, url_prefix="/api/v1")
-
-
-# ------------------------------------------------------------------
-# Auth helpers
-# ------------------------------------------------------------------
-
-def _current_user() -> MangoUser | None:
-    uid = session.get("user_id")
-    if not uid:
-        return None
-    return db.session.get(MangoUser, uid)
-
-
-def _require_admin(fn):
-    @wraps(fn)
-    def wrapper(*args, **kwargs):
-        user = _current_user()
-        if not user or not user.active:
-            return jsonify({"error": "authentication required"}), 401
-        if user.role != "admin":
-            return jsonify({"error": "forbidden — admin role required"}), 403
-        return fn(*args, **kwargs)
-    return wrapper
 
 
 # ------------------------------------------------------------------
@@ -67,7 +42,7 @@ def site_content_public():
 # ------------------------------------------------------------------
 
 @admin_cms_bp.get("/admin/site-content")
-@_require_admin
+@admin_required
 def admin_get_site_content():
     record = SiteContent.query.first()
     if not record:
@@ -76,7 +51,7 @@ def admin_get_site_content():
 
 
 @admin_cms_bp.put("/admin/site-content")
-@_require_admin
+@admin_required
 def admin_put_site_content():
     data = request.get_json(silent=True) or {}
 
@@ -109,7 +84,7 @@ def admin_put_site_content():
 
 
 @admin_cms_bp.get("/admin/media")
-@_require_admin
+@admin_required
 def admin_list_media():
     kind = request.args.get("type", "")
     query = UploadedFile.query.filter(UploadedFile.kind.in_(["image", "video"]))
@@ -120,7 +95,7 @@ def admin_list_media():
 
 
 @admin_cms_bp.get("/admin/docs")
-@_require_admin
+@admin_required
 def admin_list_docs():
     docs = (
         UploadedFile.query

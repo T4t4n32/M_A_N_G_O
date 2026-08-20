@@ -6,7 +6,7 @@ import {
 } from "lucide-react";
 import { docs, type Doc } from "@/components/DocumentationSection";
 import { listItems as listPanelItems } from "@/lib/panelEmmaContent";
-import { requestDocLink } from "@/lib/api";
+import { DOC_FORMATS, useDocLink } from "@/hooks/useDocLink";
 
 // ── Format config ─────────────────────────────────────────────────────────────
 const FORMAT_CFG: Record<string, {
@@ -21,7 +21,7 @@ const FORMAT_CFG: Record<string, {
   ZIP:  { color: "text-yellow-300",  bg: "bg-yellow-500/12",  border: "border-yellow-500/25",  icon: FileArchive },
 };
 
-const EDITABLE_FORMATS = Object.keys(FORMAT_CFG);
+const EDITABLE_FORMATS = DOC_FORMATS;
 
 // ── Category config ───────────────────────────────────────────────────────────
 const CATEGORY_COLOR: Record<string, string> = {
@@ -38,38 +38,10 @@ function catBadge(cat: string) {
   return CATEGORY_COLOR[cat] ?? "bg-white/[0.06] text-white/45 border-white/10";
 }
 
-// ── Link state ────────────────────────────────────────────────────────────────
-type LS =
-  | { s: "idle" }
-  | { s: "loading" }
-  | { s: "ready"; url: string; filename: string }
-  | { s: "error"; msg: string };
-
 // ── FormatButton ──────────────────────────────────────────────────────────────
 function FormatButton({ label, href }: { label: string; href: string }) {
-  const [ls, setLs] = useState<LS>({ s: "idle" });
-  const [copied, setCopied] = useState(false);
+  const { state: ls, copied, generate, copy, reset } = useDocLink(href);
   const cfg = FORMAT_CFG[label];
-
-  const generate = useCallback(async () => {
-    if (ls.s === "ready") { setLs({ s: "idle" }); return; }
-    setLs({ s: "loading" });
-    try {
-      const data = await requestDocLink(href);
-      setLs({ s: "ready", url: data.url, filename: data.filename });
-    } catch (e: unknown) {
-      setLs({ s: "error", msg: e instanceof Error ? e.message : "Error" });
-      setTimeout(() => setLs({ s: "idle" }), 3000);
-    }
-  }, [href, ls.s]);
-
-  const copy = useCallback(() => {
-    const full = `${window.location.origin}${ls.s === "ready" ? ls.url : ""}`;
-    navigator.clipboard.writeText(full).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    });
-  }, [ls]);
 
   if (ls.s === "ready") {
     return (
@@ -93,7 +65,7 @@ function FormatButton({ label, href }: { label: string; href: string }) {
         </button>
         <button
           type="button"
-          onClick={() => setLs({ s: "idle" })}
+          onClick={reset}
           title="Cerrar"
           className="px-2 py-1.5 border-l border-white/[0.08] text-white/20 hover:text-white/50 transition-colors"
         >
