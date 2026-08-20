@@ -1,11 +1,14 @@
 from __future__ import annotations
 
+import logging
 from datetime import datetime, timezone
 
 from flask import Blueprint, jsonify
 from sqlalchemy import text
 
 from app.extensions import db
+
+log = logging.getLogger("mango.health")
 
 health_bp = Blueprint("health", __name__, url_prefix="/api/v1")
 
@@ -21,7 +24,8 @@ def health():
         db.session.execute(text("SELECT 1"))
         db_ok = True
     except Exception:
-        pass
+        db.session.rollback()
+        log.error("Health check: database probe failed", exc_info=True)
 
     status = "ok" if db_ok else "degraded"
     return jsonify({
@@ -52,7 +56,8 @@ def system_status():
         db.session.execute(text("SELECT 1"))
         db_ok = True
     except Exception:
-        pass
+        db.session.rollback()
+        log.error("System status: database probe failed", exc_info=True)
 
     last_ts = None
     readings_count = 0
@@ -73,8 +78,8 @@ def system_status():
                     else:
                         try:
                             last_ts = datetime.fromisoformat(str(last_ts_raw).replace(" ", "T"))
-                        except Exception:
-                            pass
+                        except ValueError:
+                            log.warning("Unparseable reading timestamp from DB: %r", last_ts_raw)
                     if last_ts:
                         if last_ts.tzinfo is None:
                             last_ts = last_ts.replace(tzinfo=timezone.utc)
@@ -86,14 +91,16 @@ def system_status():
                         else:
                             system_state = "offline"
         except Exception:
-            pass
+            db.session.rollback()
+            log.error("System status: readings summary query failed", exc_info=True)
 
         try:
             device_count = db.session.execute(
                 text("SELECT COUNT(*) FROM mango_devices")
             ).scalar() or 0
         except Exception:
-            pass
+            db.session.rollback()
+            log.error("System status: device count query failed", exc_info=True)
 
     return jsonify({
         "status": system_state,

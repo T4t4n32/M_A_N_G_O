@@ -10,6 +10,7 @@ All endpoints require INGEST_API_KEY (same key as /ingest) or admin session.
 
 from __future__ import annotations
 
+import logging
 from datetime import datetime, timezone
 
 from flask import Blueprint, jsonify, request
@@ -19,6 +20,8 @@ from app.auth_ingest import require_ingest_key
 from app.extensions import db
 from app.middleware.admin_required import admin_required
 from app.models_compat import DeviceRegistry, IngestPacket, MangoModemStatus
+
+log = logging.getLogger("mango.sync")
 
 sync_bp = Blueprint("sync", __name__, url_prefix="/api/v1/sync")
 
@@ -46,12 +49,14 @@ def sync_status():
     total_packets = IngestPacket.query.count()
 
     # Readings totals
+    readings_count = None
     try:
         readings_count = db.session.execute(
             text("SELECT COUNT(*) FROM mango_compat_readings")
         ).scalar() or 0
     except Exception:
-        readings_count = 0
+        db.session.rollback()
+        log.error("Sync status: readings count query failed", exc_info=True)
 
     device_summaries = []
     for dev in devices:
@@ -63,6 +68,8 @@ def sync_status():
     return jsonify({
         "server_time": now.isoformat(),
         "total_packets_received": total_packets,
+        # null (not 0) when the count could not be read, so an outage is not
+        # reported to the edge as "nothing stored".
         "total_readings_stored": readings_count,
         "devices": device_summaries,
     }), 200
@@ -84,10 +91,13 @@ def sync_ack():
         dev.last_seen = now
         dev.status = "online"
         db.session.commit()
+    else:
+        log.warning("Sync ack from unregistered device %r — last_seen not updated", device_id)
 
     return jsonify({
         "ok": True,
         "device_id": device_id,
+        "device_registered": dev is not None,
         "acked_at": now.isoformat(),
     }), 200
 
@@ -159,8 +169,9 @@ def sync_telemetry():
             ms.modem_sampled_at = datetime.fromisoformat(
                 sampled.replace("Z", "+00:00")
             )
-        except (ValueError, TypeError):
-            pass
+        except (ValueError, TypeError, AttributeError):
+            log.warning("Telemetry from %s: unparseable sampled_at %r — stored as null",
+                        device_id, sampled)
 
     db.session.commit()
     return jsonify({

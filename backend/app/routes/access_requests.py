@@ -150,9 +150,9 @@ def approve_request(req_id: int):
     # Resolve expiry: explicit override > tier default
     if expires_at_raw:
         try:
-            expires_at = datetime.fromisoformat(expires_at_raw.replace("Z", "+00:00"))
-        except Exception:
-            expires_at = default_expires_at(req.requested_tier)
+            expires_at = datetime.fromisoformat(str(expires_at_raw).replace("Z", "+00:00"))
+        except (TypeError, ValueError):
+            return jsonify({"error": "expires_at inválido (se espera ISO-8601)"}), 400
     else:
         expires_at = default_expires_at(req.requested_tier)
 

@@ -140,9 +140,11 @@ def _probe_jetson_tunnel() -> bool:
     try:
         import paramiko  # type: ignore
     except ImportError:
+        log.error("Jetson tunnel probe skipped: paramiko is not installed")
         return False
 
     if not key_path or not os.path.exists(key_path):
+        log.error("Jetson tunnel probe skipped: SSH key not found at %r", key_path)
         return False
 
     jump = paramiko.SSHClient()
@@ -157,12 +159,14 @@ def _probe_jetson_tunnel() -> bool:
         chan.close()
         return True
     except Exception:
+        log.warning("Jetson tunnel probe failed via %s:%s -> 127.0.0.1:%s",
+                    vps_host, vps_port, jetson_port, exc_info=True)
         return False
     finally:
         try:
             jump.close()
         except Exception:
-            pass
+            log.debug("Closing jump-host connection failed", exc_info=True)
 
 
 @admin_terminal_bp.get("/jetson/status")

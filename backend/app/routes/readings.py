@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import csv
 import io
+import logging
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, Optional
 
@@ -19,6 +20,8 @@ from sqlalchemy import text
 
 from app.extensions import db
 from app.middleware.admin_required import login_required
+
+log = logging.getLogger("mango.readings")
 
 readings_bp = Blueprint("readings", __name__, url_prefix="/api/v1")
 
@@ -48,12 +51,37 @@ def _ts_iso(v: Any) -> str | None:
     return str(v)
 
 
+class DatabaseUnavailable(RuntimeError):
+    """The schema could not be inspected, so "no data" cannot be distinguished
+    from "database down"."""
+
+
+def _db_unavailable_response():
+    return jsonify({
+        "error": "database_unavailable",
+        "message": "No se pudo consultar la base de datos.",
+    }), 503
+
+
+def _query_failed_response():
+    return jsonify({
+        "error": "query_failed",
+        "message": "La consulta de lecturas falló.",
+    }), 500
+
+
 def _get_readings_table() -> str | None:
+    """Return the readings table name, or None when the schema has none.
+
+    Raises DatabaseUnavailable when the database itself cannot be inspected —
+    reporting that as "no readings yet" hides outages behind an empty dashboard.
+    """
     from sqlalchemy import inspect as sa_inspect
     try:
         names = set(sa_inspect(db.engine).get_table_names())
-    except Exception:
-        return None
+    except Exception as exc:
+        log.error("Cannot inspect database schema", exc_info=True)
+        raise DatabaseUnavailable(str(exc)) from exc
     for candidate in ("mango_compat_readings", "readings"):
         if candidate in names:
             return candidate
@@ -89,7 +117,10 @@ def _staleness_status(ts: datetime) -> str:
 @login_required
 def readings_latest():
     """Return the latest value for each of the three core sensors."""
-    table = _get_readings_table()
+    try:
+        table = _get_readings_table()
+    except DatabaseUnavailable:
+        return _db_unavailable_response()
     if not table:
         return jsonify({
             "status": "no_data",
@@ -104,8 +135,10 @@ def readings_latest():
             text(f"SELECT ts, type, value, unit FROM {table} ORDER BY ts DESC LIMIT :scan"),
             {"scan": scan},
         ).mappings().all()
-    except Exception as e:
-        return jsonify({"error": "query_failed", "detail": str(e)}), 500
+    except Exception:
+        db.session.rollback()
+        log.error("readings/latest query failed", exc_info=True)
+        return _query_failed_response()
 
     latest: Dict[str, Any] = {}
     for r in rows:
@@ -138,8 +171,9 @@ def readings_latest():
                     ts = datetime.fromisoformat(entry["timestamp"].replace("Z", "+00:00"))
                     if ts.tzinfo is None:
                         ts = ts.replace(tzinfo=timezone.utc)
-                except Exception:
-                    pass
+                except ValueError:
+                    log.warning("Unparseable %s timestamp %r — reported as no_data",
+                                sensor, entry["timestamp"])
             conn_status = _staleness_status(ts) if ts else "no_data"
             val_status = (
                 _compute_value_status(sensor, entry["value"])
@@ -176,14 +210,17 @@ def readings_history():
 
     try:
         minutes = max(1, min(int(request.args.get("minutes", 60)), 60 * 24 * 180))
-    except (TypeError, ValueError):
-        minutes = 60
-    try:
         limit = max(10, min(int(request.args.get("limit", 360)), 5000))
     except (TypeError, ValueError):
-        limit = 360
+        return jsonify({
+            "error": "invalid_range",
+            "message": "minutes and limit must be integers",
+        }), 400
 
-    table = _get_readings_table()
+    try:
+        table = _get_readings_table()
+    except DatabaseUnavailable:
+        return _db_unavailable_response()
     if not table:
         return jsonify({"type": sensor_type, "series": [], "count": 0,
                         "message": "No data available yet."}), 200
@@ -202,8 +239,10 @@ def readings_history():
             ),
             {"type": internal_type, "start": start_ts, "limit": limit},
         ).mappings().all()
-    except Exception as e:
-        return jsonify({"error": "query_failed", "detail": str(e)}), 500
+    except Exception:
+        db.session.rollback()
+        log.error("readings/history query failed (type=%s)", internal_type, exc_info=True)
+        return _query_failed_response()
 
     series = [
         {"ts": _ts_iso(r["ts"]), "value": float(r["value"]) if r.get("value") is not None else None}
@@ -234,9 +273,12 @@ def readings_export():
     try:
         hours = max(1, min(int(request.args.get("hours", 24)), 24 * 30))
     except (TypeError, ValueError):
-        hours = 24
+        return jsonify({"error": "invalid_hours", "message": "hours must be an integer"}), 400
 
-    table = _get_readings_table()
+    try:
+        table = _get_readings_table()
+    except DatabaseUnavailable:
+        return _db_unavailable_response()
     if not table:
         return Response("ts,value,unit\n", mimetype="text/csv",
                         headers={"Content-Disposition": f"attachment; filename=mango_{sensor_type}.csv"})
@@ -256,7 +298,10 @@ def readings_export():
             {"type": internal_type, "start": start_ts},
         ).mappings().all()
     except Exception:
-        rows = []
+        db.session.rollback()
+        log.error("readings/export query failed (type=%s)", internal_type, exc_info=True)
+        # An empty CSV is indistinguishable from "no readings in range", so fail loudly.
+        return _query_failed_response()
 
     buf = io.StringIO()
     writer = csv.writer(buf)
@@ -280,7 +325,10 @@ def readings_export():
 @login_required
 def sensors_status():
     """Return connection + freshness status for each of the three sensors."""
-    table = _get_readings_table()
+    try:
+        table = _get_readings_table()
+    except DatabaseUnavailable:
+        return _db_unavailable_response()
     now = _utcnow()
 
     if not table:
@@ -297,8 +345,10 @@ def sensors_status():
             text(f"SELECT ts, type, value, unit FROM {table} ORDER BY ts DESC LIMIT :scan"),
             {"scan": scan},
         ).mappings().all()
-    except Exception as e:
-        return jsonify({"error": "query_failed", "detail": str(e)}), 500
+    except Exception:
+        db.session.rollback()
+        log.error("sensors/status query failed", exc_info=True)
+        return _query_failed_response()
 
     latest: Dict[str, Any] = {}
     for r in rows:
@@ -321,7 +371,8 @@ def sensors_status():
         if ts and not hasattr(ts, "tzinfo"):
             try:
                 ts = datetime.fromisoformat(str(ts).replace("Z", "+00:00"))
-            except Exception:
+            except ValueError:
+                log.warning("Unparseable %s timestamp %r — reported as no_data", sensor, ts)
                 ts = None
         if ts and hasattr(ts, "tzinfo") and ts.tzinfo is None:
             ts = ts.replace(tzinfo=timezone.utc)

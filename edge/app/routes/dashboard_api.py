@@ -53,7 +53,8 @@ def _check_vps_reachable():
         )
         with urllib.request.urlopen(req, timeout=3) as resp:
             return resp.status == 200
-    except Exception:
+    except Exception as exc:
+        log.warning("VPS health check failed for %s: %s", vps_url, exc)
         return False
 
 
@@ -78,9 +79,11 @@ def status():
 
 @dashboard_bp.route("/missions")
 def list_missions_route():
+    raw_limit = request.args.get("limit", 50)
     try:
-        limit = max(1, min(200, int(request.args.get("limit", 50))))
+        limit = max(1, min(200, int(raw_limit)))
     except (TypeError, ValueError):
+        log.warning("Invalid limit=%r — using 50", raw_limit)
         limit = 50
 
     missions = list_missions(_db_path(), limit=limit)

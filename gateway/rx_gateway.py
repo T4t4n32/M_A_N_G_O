@@ -148,15 +148,16 @@ def build_ingest(meta: Optional[dict[str, Any]], data: dict[str, Any]) -> dict[s
     readings: list[dict[str, Any]] = []
 
     def add(name: str, value: Any, unit: Optional[str] = None):
-        try:
-            if value is None:
-                return
-            v = float(value)
-            if DROP_NEG1 and v == -1.0:
-                return
-            readings.append({"type": name, "value": v, "unit": unit})
-        except Exception:
+        if value is None:
             return
+        try:
+            v = float(value)
+        except (TypeError, ValueError):
+            print(f"[gateway] dropping non-numeric reading {name}={value!r}")
+            return
+        if DROP_NEG1 and v == -1.0:
+            return
+        readings.append({"type": name, "value": v, "unit": unit})
 
     add("temp", data.get("t"), "C")
     add("ph", data.get("ph"), "pH")
@@ -223,7 +224,8 @@ def parse_meta_line(line: str) -> Optional[dict[str, Any]]:
     raw = line[len("MANGO_META:"):].strip()
     try:
         return json.loads(raw)
-    except Exception:
+    except ValueError as e:
+        print(f"[gateway] malformed MANGO_META line dropped ({e}): {raw[:200]!r}")
         return None
 
 
@@ -234,7 +236,8 @@ def parse_data_line(line: str) -> Optional[dict[str, Any]]:
     raw = line[len("MANGO_JSON:"):].strip()
     try:
         return json.loads(raw)
-    except Exception:
+    except ValueError as e:
+        print(f"[gateway] malformed MANGO_JSON line dropped ({e}): {raw[:200]!r}")
         return None
 
 
@@ -254,7 +257,8 @@ def _get_latest_by_type_from_db() -> dict[str, Any]:
                 if not t or t in latest:
                     continue
                 latest[t] = {"type": t, "value": r.get("value"), "unit": r.get("unit"), "ts": ts}
-        except Exception:
+        except ValueError as e:
+            print(f"[gateway] skipping corrupt inbox row in /latest ({e})")
             continue
     return {"latest": latest}
 
@@ -273,7 +277,8 @@ def _get_metrics_from_db() -> dict[str, Any]:
                 t = str(r.get("type") or "").strip()
                 if t:
                     metrics.add(t)
-        except Exception:
+        except ValueError as e:
+            print(f"[gateway] skipping corrupt inbox row in /metrics ({e})")
             continue
     return {"metrics": sorted(metrics)}
 
@@ -301,7 +306,8 @@ def _get_range_from_db(metric: str, minutes: int, limit: int = 5000) -> dict[str
                 if str(r.get("type")) == metric:
                     series.append({"ts": recv_ts.isoformat(), "value": r.get("value"), "unit": r.get("unit")})
                     break
-        except Exception:
+        except ValueError as e:
+            print(f"[gateway] skipping corrupt inbox row in /range ({e})")
             continue
         if len(series) >= limit:
             break

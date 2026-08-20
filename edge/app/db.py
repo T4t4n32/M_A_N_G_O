@@ -5,8 +5,11 @@ WAL mode is enabled for concurrent reader/writer access.
 """
 
 import json
+import logging
 import sqlite3
 from datetime import datetime, timezone
+
+log = logging.getLogger("mango.edge.db")
 
 
 # ─── Schema ──────────────────────────────────────────────────────────────────
@@ -181,8 +184,8 @@ def get_mission(path, mission_id):
     if d.get("summary"):
         try:
             d["summary"] = json.loads(d["summary"])
-        except Exception:
-            pass
+        except ValueError:
+            log.warning("Mission %s has non-JSON summary — returned as raw text", mission_id)
     return d
 
 
@@ -215,6 +218,8 @@ def insert_sensor_reading(path, mission_id, station, source, readings, ts_device
             try:
                 value = float(val)
             except (TypeError, ValueError):
+                log.warning("Dropping reading %s=%r (not numeric) for mission %s",
+                            key, val, mission_id)
                 continue
             conn.execute(
                 """INSERT INTO sensor_readings
@@ -296,8 +301,8 @@ def list_pending_commands(path):
         if d.get("params"):
             try:
                 d["params"] = json.loads(d["params"])
-            except Exception:
-                pass
+            except ValueError:
+                log.warning("Command %s has non-JSON params — returned as raw text", d.get("id"))
         result.append(d)
     return result
 
@@ -343,8 +348,9 @@ def get_unsynced_missions(path):
         if d.get("summary"):
             try:
                 d["summary"] = json.loads(d["summary"])
-            except Exception:
-                pass
+            except ValueError:
+                log.warning("Mission %s has non-JSON summary — returned as raw text",
+                            d.get("mission_id"))
         result.append(d)
     return result
 

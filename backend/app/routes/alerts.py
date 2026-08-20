@@ -20,6 +20,7 @@ Edge routes (require INGEST_API_KEY via X-Api-Key header):
 
 from __future__ import annotations
 
+import logging
 from datetime import datetime, timedelta, timezone
 
 from flask import Blueprint, jsonify, request
@@ -36,6 +37,8 @@ from app.models.alert import (
     AlertEvent,
     AlertRule,
 )
+
+log = logging.getLogger("mango.alerts")
 
 alerts_bp = Blueprint("alerts", __name__, url_prefix="/api/v1/alerts")
 
@@ -351,7 +354,14 @@ def alert_status():
                 "message": "No se han recibido lecturas — Verificar que el nodo Jetson esté operativo",
             })
     except Exception:
-        pass
+        db.session.rollback()
+        log.error("Alert status: readings window query failed — maintenance alerts omitted",
+                  exc_info=True)
+        maintenance.append({
+            "type": "status_unavailable",
+            "level": "warning",
+            "message": "No se pudo evaluar el estado de las lecturas — revisar la base de datos",
+        })
 
     if active_contacts == 0:
         maintenance.append({
@@ -398,7 +408,7 @@ def log_alert_event():
         try:
             measured_at = datetime.fromisoformat(str(raw_ts).replace("Z", "+00:00"))
         except ValueError:
-            pass
+            log.warning("Alert event: unparseable measured_at %r — stored as null", raw_ts)
 
     sms_sent_at = None
     raw_sms_ts = body.get("sms_sent_at")
@@ -406,11 +416,12 @@ def log_alert_event():
         try:
             sms_sent_at = datetime.fromisoformat(str(raw_sms_ts).replace("Z", "+00:00"))
         except ValueError:
-            pass
+            log.warning("Alert event: unparseable sms_sent_at %r — stored as null", raw_sms_ts)
 
     try:
         value = float(body["value"]) if body.get("value") is not None else None
     except (TypeError, ValueError):
+        log.warning("Alert event: non-numeric value %r — stored as null", body.get("value"))
         value = None
 
     event = AlertEvent(

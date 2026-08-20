@@ -81,8 +81,11 @@ def init_db():
 def _add_column_if_missing(cur, table, column, definition):
     try:
         cur.execute("ALTER TABLE {} ADD COLUMN {} {}".format(table, column, definition))
-    except Exception:
-        pass
+    except sqlite3.OperationalError as exc:
+        # Only "column already exists" is expected here; anything else is a real
+        # migration failure and must not be hidden.
+        if "duplicate column" not in str(exc).lower():
+            raise
 
 
 def _utc_now_iso():

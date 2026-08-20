@@ -344,7 +344,8 @@ export interface EdgeStatusResponse {
 export interface SyncStatusResponse {
   server_time: string;
   total_packets_received: number;
-  total_readings_stored: number;
+  /** null when the backend could not read the readings count (DB error). */
+  total_readings_stored: number | null;
   devices: Array<DeviceRecord & { sync_state: string }>;
 }
 

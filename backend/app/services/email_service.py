@@ -12,11 +12,14 @@ Configurar en .env:
 
 from __future__ import annotations
 
+import logging
 import os
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from typing import List
+
+log = logging.getLogger("mango.email")
 
 
 def _get_config() -> dict:
@@ -49,6 +52,7 @@ def send_contact_email(
     cfg = _get_config()
 
     if not cfg["user"] or not cfg["password"]:
+        log.error("Contact email not sent: SMTP_USER/SMTP_PASSWORD are not configured")
         return False, "SMTP no configurado (faltan SMTP_USER / SMTP_PASSWORD)"
 
     body_html = f"""
@@ -92,8 +96,11 @@ def send_contact_email(
         return True, ""
 
     except smtplib.SMTPAuthenticationError:
+        log.error("Contact email failed: SMTP authentication rejected for user=%s", cfg["user"])
         return False, "Error de autenticación SMTP — revisa SMTP_USER y SMTP_PASSWORD"
     except smtplib.SMTPException as e:
+        log.error("Contact email failed via %s:%s", cfg["host"], cfg["port"], exc_info=True)
         return False, f"SMTP error: {e}"
     except Exception as e:
+        log.exception("Contact email failed unexpectedly")
         return False, f"Error inesperado: {e}"
