@@ -4,13 +4,14 @@ import { ArrowLeft, Moon, Sun } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
-import { docs } from "@/components/DocumentationSection";
+import { docs, buildPublicDocs, mapBackendDoc, type Doc } from "@/components/DocumentationSection";
 import { DOCS_CATEGORIES } from "@/components/docs/docsCategories";
 import { DocsHero } from "@/components/docs/DocsHero";
 import { DocsSidebar } from "@/components/docs/DocsSidebar";
 import { DocsMain } from "@/components/docs/DocsMain";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { useSiteSeo } from "@/lib/siteSeo";
+import { listPublicDocs } from "@/lib/api";
 
 const isKnownCategory = (id: string | null): id is string =>
   DOCS_CATEGORIES.some((c) => c.id === id);
@@ -25,6 +26,25 @@ export default function Documentacion() {
   );
   const contentRef = useRef<HTMLDivElement>(null);
 
+  // Fuente real de documentos públicos: arranca con el listado estático como
+  // fallback inmediato y se reemplaza en cuanto responde el backend, para no
+  // depender de un rebuild del frontend cada vez que se sube un PDF nuevo.
+  const [allDocs, setAllDocs] = useState<Doc[]>(docs);
+  useEffect(() => {
+    let cancelled = false;
+    listPublicDocs()
+      .then(({ items }) => {
+        if (cancelled) return;
+        setAllDocs(buildPublicDocs(items.map(mapBackendDoc)));
+      })
+      .catch(() => {
+        // Sin conexión al backend: seguimos mostrando el listado estático.
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   // Arriving from a link like /documentacion?categoria=Electrónica (e.g. the
   // landing page's documentation carousel) both selects that category and
   // jumps straight to the content — skipping the hero's manual "explorar"
@@ -37,13 +57,13 @@ export default function Documentacion() {
 
   const counts = useMemo(() => {
     const c: Record<string, number> = {};
-    for (const d of docs) c[d.category] = (c[d.category] ?? 0) + 1;
+    for (const d of allDocs) c[d.category] = (c[d.category] ?? 0) + 1;
     return c;
-  }, []);
+  }, [allDocs]);
 
   const activeDocs = useMemo(
-    () => docs.filter((d) => d.category === activeCategory),
-    [activeCategory],
+    () => allDocs.filter((d) => d.category === activeCategory),
+    [allDocs, activeCategory],
   );
 
   const activeCategoryMeta = DOCS_CATEGORIES.find((c) => c.id === activeCategory) ?? DOCS_CATEGORIES[0];
@@ -73,7 +93,7 @@ export default function Documentacion() {
         </div>
 
         <DocsHero
-          docCount={docs.length}
+          docCount={allDocs.length}
           onExplore={() => contentRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })}
         />
 

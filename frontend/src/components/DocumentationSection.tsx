@@ -4,6 +4,7 @@ import SpotlightCard from "@/components/effects/SpotlightCard";
 import { useEffect, useState, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { useSiteValue } from "@/lib/siteContent";
+import { listPublicDocs, type UploadedFileRecord } from "@/lib/api";
 import { listItems as listPanelItems } from "@/lib/panelEmmaContent";
 import {
   FileText,
@@ -817,12 +818,29 @@ const staticPublicDocs: Doc[] = docs
   .map((d) => ({ ...d, files: d.files.filter((f) => f.label === PUBLIC_FORMAT) }))
   .filter((d) => d.files.length > 0);
 
+/** Mapea un registro real del backend (`/api/v1/public/docs`) a `Doc`. */
+export function mapBackendDoc(it: UploadedFileRecord): Doc {
+  return {
+    title: it.title,
+    desc: it.description ?? "",
+    category: it.category ?? "Fuentes",
+    date: new Date(it.uploaded_at).toLocaleDateString(),
+    icon: FileText,
+    files: [{ label: PUBLIC_FORMAT, href: it.url }],
+  };
+}
+
 /**
- * Extiende la lista pública con los PDFs que el super-admin haya subido al
- * panel local (`panelEmmaContent`). Se filtra estrictamente por formato PDF
- * para preservar la regla "solo PDFs son públicos".
+ * Extiende la lista pública con los PDFs subidos vía Panel Emma.
+ * Fuente de verdad: el backend (`/api/v1/public/docs`, `backendDocs`),
+ * que es lo que ven todos los visitantes. `panelEmmaContent` es un
+ * remanente local (localStorage) de cuando el panel no tenía backend
+ * propio para documentos — se conserva solo como fallback offline y para
+ * overrides/hide locales, nunca pisa un doc que ya vino del servidor.
+ * Se filtra estrictamente por formato PDF para preservar la regla
+ * "solo PDFs son públicos".
  */
-function buildPublicDocs(): Doc[] {
+export function buildPublicDocs(backendDocs: Doc[] = []): Doc[] {
   const local = listPanelItems("document")
     .filter((it) => {
       const fmt = (it.format ?? "").toUpperCase();
@@ -841,10 +859,10 @@ function buildPublicDocs(): Doc[] {
       icon: FileText,
       files: [{ label: PUBLIC_FORMAT, href: it.src }], // se muestra como "Descargar" — la vista pública no expone tipos.
     }));
-  // Locales primero (recientes arriba)
-  const seen = new Set(staticPublicDocs.map((d) => d.title));
+  // Backend primero (fuente real, recientes arriba), luego local, luego estático.
+  const seen = new Set([...backendDocs.map((d) => d.title), ...staticPublicDocs.map((d) => d.title)]);
   const dedupedLocal = local.filter((d) => !seen.has(d.title));
-  return [...dedupedLocal, ...staticPublicDocs];
+  return [...backendDocs, ...dedupedLocal, ...staticPublicDocs];
 }
 
 /* ─── DocCard ───────────────────────────────────────────────────────────────── */
@@ -933,7 +951,28 @@ export function DocumentationSection() {
   const [search, setSearch] = useState("");
 
   const [catOpen, setCatOpen] = useState(false);
+  const [backendDocs, setBackendDocs] = useState<Doc[]>([]);
   const [publicDocs, setPublicDocs] = useState<Doc[]>(() => buildPublicDocs());
+
+  // Trae los PDFs reales subidos vía Panel Emma. Esta es la fuente que ven
+  // TODOS los visitantes (a diferencia de `panelEmmaContent`, que es local
+  // al navegador de quien subió el archivo).
+  useEffect(() => {
+    let cancelled = false;
+    listPublicDocs()
+      .then(({ items }) => {
+        if (cancelled) return;
+        const mapped = items.map(mapBackendDoc);
+        setBackendDocs(mapped);
+        setPublicDocs(buildPublicDocs(mapped));
+      })
+      .catch(() => {
+        // Sin conexión al backend: seguimos mostrando local + estático.
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   // Persistimos la preferencia "ver todos / colapsado" en localStorage para
   // que el usuario no tenga que volver a desplegar la lista en cada visita.
@@ -948,16 +987,16 @@ export function DocumentationSection() {
   }, [showAll]);
 
   // Re-sincroniza si el super-admin sube/edita documentos en otra pestaña
-  // o en la misma sesión.
+  // o en la misma sesión (overrides/hide locales sobre `backendDocs`).
   useEffect(() => {
-    const refresh = () => setPublicDocs(buildPublicDocs());
+    const refresh = () => setPublicDocs(buildPublicDocs(backendDocs));
     window.addEventListener("storage", refresh);
     window.addEventListener("panel-emma::content-changed", refresh);
     return () => {
       window.removeEventListener("storage", refresh);
       window.removeEventListener("panel-emma::content-changed", refresh);
     };
-  }, []);
+  }, [backendDocs]);
 
   const filtered = useMemo(() => {
     let result = active === "Todos" ? publicDocs : publicDocs.filter((d) => d.category === active);
