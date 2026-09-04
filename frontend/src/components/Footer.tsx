@@ -29,7 +29,6 @@ const FOOTER_TYPED_FACTS = [
 
 const links = [
   { label: "Proyecto", href: "#proyecto" },
-  { label: "Documentación", href: "/documentacion" },
   { label: "Galería", href: "/galeria" },
   { label: "Sobre", href: "/sobre" },
   { label: "Contacto", href: "#contacto" },

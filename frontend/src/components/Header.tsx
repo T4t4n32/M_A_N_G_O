@@ -20,13 +20,6 @@ const bubbleItems = [
     hoverStyles: { bgColor: "hsl(168, 72%, 42%)", textColor: "#ffffff" },
   },
   {
-    label: "Documentación",
-    href: "/documentacion",
-    ariaLabel: "Ir a Documentación",
-    rotation: 5,
-    hoverStyles: { bgColor: "hsl(204, 70%, 53%)", textColor: "#ffffff" },
-  },
-  {
     label: "Galería",
     href: "/galeria",
     ariaLabel: "Ir a Galería",
