@@ -18,11 +18,9 @@ const ContactSection = lazy(() =>
   import("@/components/ContactSection").then((m) => ({ default: m.ContactSection }))
 );
 
-// Documentación, Galería y Sobre now live at their own routes (/documentacion,
-// /galeria, /sobre); the landing only shows a lightweight teaser for each.
-const DocumentationTeaser = lazy(() =>
-  import("@/components/teasers/DocumentationTeaser").then((m) => ({ default: m.DocumentationTeaser }))
-);
+// Galería y Sobre now live at their own routes (/galeria, /sobre); the landing
+// only shows a lightweight teaser for each. Documentación fue retirada del
+// sitio público bajo el Protocolo Legal.
 const GalleryTeaser = lazy(() =>
   import("@/components/teasers/GalleryTeaser").then((m) => ({ default: m.GalleryTeaser }))
 );
@@ -76,26 +74,10 @@ const Index = () => {
         <ProjectSection />
       </Suspense>
 
-      {/* Gradient fade: ProjectSection → DocumentationSection */}
-      <div
-        className="h-28 pointer-events-none"
-        aria-hidden="true"
-        style={{
-          background: "linear-gradient(to bottom, hsl(210,35%,8%) 0%, hsl(210,36%,7.5%) 45%, hsl(210,38%,6%) 100%)",
-          boxShadow: "inset 0 -1px 0 rgba(56,189,248,0.20)",
-        }}
-      />
-
-      <Suspense fallback={<SectionFallback />}>
-        <ScrollReveal variant="fade-up" delay={0.1}>
-          <DocumentationTeaser />
-        </ScrollReveal>
-      </Suspense>
-
-      {/* Documentación → Galería: the one seam on the page where the content
-          itself changes shape (boxed docs cards → full-bleed gallery strip),
-          so it gets its own graduated transition instead of the plain
-          SectionLine hairline used everywhere else. */}
+      {/* Proyecto → Galería: the one seam on the page where the content itself
+          changes shape (boxed project cards → full-bleed gallery strip), so it
+          gets its own graduated transition instead of the plain SectionLine
+          hairline used everywhere else. */}
       <ApertureDivider fromColor="hsl(210,38%,6%)" toColor="hsl(213,40%,7%)" glowColor="rgba(250,204,21,0.55)" />
 
       <Suspense fallback={<SectionFallback />}>
@@ -129,9 +111,8 @@ const Index = () => {
           either. */}
       <div className="bg-[hsl(210,38%,6%)]">
         {/* Landing-page-only — a real DOM sibling of <Footer>, not part of
-            it, so it never appears on /galeria, /documentacion, /sobre,
-            etc. and the footer growing/shrinking on those pages can't
-            move it. */}
+            it, so it never appears on /galeria, /sobre, etc. and the footer
+            growing/shrinking on those pages can't move it. */}
         <div className="pt-4 pb-6 md:pb-10">
           <TechStackBanner />
         </div>

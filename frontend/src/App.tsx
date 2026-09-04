@@ -20,7 +20,6 @@ import { LiveEditToolbar } from "@/components/editor/LiveEditToolbar";
 
 // Lazy-loaded — heavy former landing sections, only fetched when visited
 const Galeria = lazy(() => import("./pages/Galeria"));
-const Documentacion = lazy(() => import("./pages/Documentacion"));
 const Sobre = lazy(() => import("./pages/Sobre"));
 
 const RouteFallback = () => (
@@ -89,7 +88,6 @@ const App = () => (
             }
           />
           <Route path="/galeria" element={<Suspense fallback={<RouteFallback />}><Galeria /></Suspense>} />
-          <Route path="/documentacion" element={<Suspense fallback={<RouteFallback />}><Documentacion /></Suspense>} />
           <Route path="/sobre" element={<Suspense fallback={<RouteFallback />}><Sobre /></Suspense>} />
           <Route path="/panel-emma" element={<PanelEmmaLogin />} />
           <Route path="/panel-emma/dashboard" element={<PanelEmmaDashboard />} />

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useScroll, useTransform, motion } from "framer-motion";
 import Autoplay from "embla-carousel-autoplay";
-import { FileText, Youtube } from "lucide-react";
+import { Youtube } from "lucide-react";
 import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
 import { Button } from "@/components/ui/button";
 import DecryptedText from "@/components/effects/DecryptedText";
@@ -91,11 +91,6 @@ function Bio() {
 
       <div className="flex flex-wrap justify-center md:justify-start gap-3 pt-1">
         <Button asChild className="bg-accent hover:bg-accent/90 text-accent-foreground rounded-full px-6 gap-2">
-          <a href="/documentacion">
-            <FileText className="h-4 w-4" /> Ver Documentación
-          </a>
-        </Button>
-        <Button asChild variant="outline" className="rounded-full px-6 gap-2 border-white/15 text-white/80 hover:bg-white/5">
           <a href={YOUTUBE_CHANNEL} target="_blank" rel="noopener noreferrer">
             <Youtube className="h-4 w-4" /> Ver Canal
           </a>

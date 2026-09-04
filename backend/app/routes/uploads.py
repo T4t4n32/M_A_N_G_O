@@ -263,19 +263,17 @@ def public_media():
     }), 200
 
 
-# ─── Public document listing (PDFs only) ─────────────────────────────────────
+# ─── Public document listing ────────────────────────────────────────────────
 
 @uploads_bp.get("/public/docs")
 def public_docs():
-    """Lists only PDF documents — no auth required."""
-    items = UploadedFile.query.filter(
-        UploadedFile.kind == "document",
-        db.or_(
-            UploadedFile.mime_type == "application/pdf",
-            UploadedFile.original_name.ilike("%.pdf"),
-        ),
-    ).order_by(UploadedFile.uploaded_at.desc()).all()
-    return jsonify({"items": [i.to_dict() for i in items], "total": len(items)}), 200
+    """Protocolo Legal: la biblioteca pública de documentos está retirada.
+
+    Se conserva la ruta para no romper a los clientes que aún la consultan,
+    pero nunca expone documentos. La gestión de archivos vive en el panel
+    autenticado.
+    """
+    return jsonify({"items": [], "total": 0}), 200
 
 
 # ─── Public file serving ─────────────────────────────────────────────────────
